@@ -4,6 +4,7 @@ using namespace std;
 
 /* Revisado por:
    1. Ernesto Cuadros-Vargas
+    Eladio Huamani Valentin
   30. Mitchel Soto-Cuya
 */
 
