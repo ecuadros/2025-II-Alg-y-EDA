@@ -3,8 +3,8 @@
 using namespace std;
 
 /* Revisado por:
-   1. Ernesto Cuadros-Vargas
-  
+    1. Ernesto Cuadros-Vargas
+    2. Jose Manuel Ravichagua Marin
 */
 
 int main(){
