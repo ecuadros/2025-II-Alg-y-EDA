@@ -4,6 +4,7 @@ using namespace std;
 
 /* Revisado por:
    1. Ernesto Cuadros-Vargas
+   20. Ortiz Lozano Eric Hernan
    22. Chandler Steven Perez Cueva
 */
 
