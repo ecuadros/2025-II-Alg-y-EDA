@@ -6,6 +6,7 @@ using namespace std;
    1. Ernesto Cuadros-Vargas
    2. Olivera Calderón Renato Steven
    4. Yoel Mantari Sairitupac
+   7. Max Jairo Serrano Arostegui
 */
 
 int main(){
