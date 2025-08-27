@@ -4,7 +4,7 @@ using namespace std;
 
 /* Revisado por:
    1. Ernesto Cuadros-Vargas
-  
+   20. Ortiz Lozano Eric Hernan
 */
 
 int main(){
