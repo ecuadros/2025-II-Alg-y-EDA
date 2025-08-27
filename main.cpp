@@ -5,6 +5,8 @@ using namespace std;
 /* Revisado por:
    1. Ernesto Cuadros-Vargas
   
+
+   29. Oscar Torres Minaya c:
 */
 
 int main(){
