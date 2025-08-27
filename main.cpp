@@ -5,6 +5,8 @@ using namespace std;
 /* Revisado por:
    1. Ernesto Cuadros-Vargas
    Chavez Chico Joel Jhotan
+    Eladio Huamani Valentin
+  30. Mitchel Soto-Cuya
 */
 
 int main(){
