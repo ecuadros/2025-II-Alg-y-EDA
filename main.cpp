@@ -1,7 +1,7 @@
 #include <iostream>
 #include "vector.h"
 #include "DemoVector.h"
-
+#include "hilos.h"
 using namespace std;
 
 /* Revisado por:
@@ -17,18 +17,19 @@ using namespace std;
 // Forma #2 de Compilar (requiere el archivo Makefile)
 // make
 
-// int main(){
-//     cout << "Hello Alg y EDA-UNI" << endl;
-//     return 0;
-// }
-
-int main(int nArgs, char *pArgs[]){
-    cout << "Hello Alg y EDA-UNI (forma #2)" << endl;
-    int i;
-    for(i = 0 ; i < nArgs ; ++i){
-        cout << pArgs[i] << endl;
-    }
+int main(){
+    cout << "Hello Alg y EDA-UNI" << endl;
+    DemoThreads();
+    return 0;
 }
+
+// int main(int nArgs, char *pArgs[]){
+//     cout << "Hello Alg y EDA-UNI (forma #2)" << endl;
+//     int i;
+//     for(i = 0 ; i < nArgs ; ++i){
+//         cout << pArgs[i] << endl;
+//     }
+// }
 
 
 
