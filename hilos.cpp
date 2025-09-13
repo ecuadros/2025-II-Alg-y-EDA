@@ -26,16 +26,16 @@ void func(int thread_id, CVector<int> &v) {
 void DemoThreads(){
     const int num_threads = 3;
     vector<thread> threads;
-    CVector<int>   vect(10);
+    CVector<int>   vect(1);
     cout << "Creando " << num_threads << " threads..." << endl;
 
     // Crear y lanzar los threads
     for (int i = 0; i < num_threads; ++i) {
         // Crear el objeto thread
-        thread t(func, i, vect);
+        thread t(func, i, std::ref(vect));
         
         // Mover el thread al vector (no se puede copiar, solo mover)
-        threads.push_back(move(t));
+        threads.push_back(std::move(t));
     }
 
     // Esperar a que todos los threads terminen
