@@ -28,7 +28,7 @@ public:
     CVector(CVector &&v);
 
     // TODO: (Nivel 1) implementar el destructor de forma segura
-    vrtual CVector();
+    virtual ~CVector();
     void insert(T &elem);
     void resize();
 };
@@ -36,6 +36,15 @@ public:
 template <typename T>
 CVector<T>::CVector(size_t n){
 
+}
+
+// Implementacion del destructor de forma segura
+template <typename T>
+CVector<T>::~CVector(){
+    if(m_pVect != nullptr){
+        delete[] m_pVect;
+        m_pVect = nullptr;
+    }
 }
 
 // TODO (Nivel 1): hacer dinamico el delta de crecimiento
