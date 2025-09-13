@@ -35,7 +35,15 @@ public:
 
 template <typename T>
 CVector<T>::CVector(size_t n){
-
+    if(n==0){
+        m_pVect = nullptr;
+        m_max = 0;
+        m_count = 0;
+    } else {
+        m_pVect = new T[n];
+        m_max = n;
+        m_count = 0;
+    }
 }
 
 // Implementacion del destructor de forma segura
