@@ -1,5 +1,18 @@
 ## PC1
 
+> [!TIP]
+> Recomendaciones para manejar flujo de revisión:
+> 
+> - Manejar todo el código del docente en una rama principal (usar carpetas en vez de ramas)
+> - Cada alumno tiene su propia rama en donde haria sus PRs a la rama main (rama del profesor)
+> - Implementar un formateador de código para evitar confusion en la lectura de cambios del PR
+>   
+> ✅ Ventajas:
+> - Cada estudiante trabaja en su espacio sin interferir con otros (no habría conflictos)
+> - El profesor puede rastrear el progreso individual de cada alumno
+> - Los PRs muestran solo los cambios específicos del estudiante
+> - Cuando el profesor haga un cambio en main, los alumnos solo harian un merge a su rama
+
 ## Nivel 1
 
 ### a) Habilitar el uso de []
