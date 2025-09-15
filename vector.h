@@ -22,7 +22,7 @@ class CVector
     size_t m_max = 0;   // Max capacity
 public:
     // TODO  (Nivel 1) Agregar un constructor por copia
-    CVector(CVector &v);
+    CVector(const CVector &v);
 
     CVector(size_t n);
     // TODO  (Nivel 2): Agregar un move constructor
@@ -33,6 +33,34 @@ public:
     void insert(T &elem);
     void resize();
 };
+
+// Implementacion de constructor por copia
+template <typename T>
+CVector<T>::CVector(const CVector &v) : m_pVect(nullptr), m_count(0), m_max(0)
+{
+    std::shared_lock<std::shared_mutex> lock(v.m_mutex);
+
+    if (v.m_count == 0)
+    {
+        return;
+    }
+
+    m_max = v.m_count;
+    m_pVect = new T[m_max];
+    m_count = v.m_count;
+
+    if constexpr (traits_type::is_trivially_copyable)
+    {
+        std::memcpy(m_pVect, v.m_pVect, m_count * sizeof(T));
+    }
+    else
+    {
+        for (size_t i = 0; i < m_count; ++i)
+        {
+            m_pVect[i] = v.m_pVect[i];
+        }
+    }
+}
 
 template <typename T>
 CVector<T>::CVector(size_t n) : m_pVect(nullptr), m_count(0), m_max(0)
