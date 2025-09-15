@@ -28,7 +28,7 @@ public:
     CVector(CVector &&v);
 
     // TODO: (Nivel 1) implementar el destructor de forma segura
-    vrtual CVector();
+    virtual ~CVector();
     void insert(T &elem);
     void resize();
 };
@@ -55,6 +55,17 @@ void CVector<T>::insert(T &elem){
     if(m_count == m_max)
         resize();
     m_pVect[m_count++] = elem;
+}
+
+// Implementación del Destructor
+template <typename T>
+CVector<T>::~CVector(){
+    if(m_pVect != nullptr){ // Evita borrar un puntero nulo
+        delete [] m_pVect;
+        m_pVect = nullptr; // Evita dangling pointer
+        m_count = 0;
+        m_max   = 0;
+    }
 }
 
 #endif // __VECTOR_H__
