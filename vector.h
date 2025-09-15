@@ -1,6 +1,8 @@
 #ifndef __VECTOR_H__
 #define __VECTOR_H__
 
+#include <iostream>
+
 // PC1: deben hacer:
 //      2 problemas de nivel 2
 //      3 problemas de nivel 1
@@ -34,6 +36,16 @@ public:
     void insert(T &elem);
     void resize();
     void resize(double delta);
+
+    friend std::ostream& operator<<(std::ostream &os, const CVector<T> &v){
+        os << "[";
+        for(size_t i=0;i<v.m_count;i++){
+            os<< v.m_pVect[i];
+            if(i+1 <v.m_count ) os << ", ";
+        }
+        os << "]";
+        return os;
+    }
 };
 
 template <typename T>
@@ -44,7 +56,7 @@ CVector<T>::CVector(size_t n){
 
 template <typename T>
 CVector<T>::CVector(CVector &v)
-    :m_count(v.m_count),m_max(v.m_max),m_pVect(v.m_max ? new T[m_max] : nullptr)
+    :m_pVect(v.m_max ? new T[v.m_max] : nullptr),m_count(v.m_count),m_max(v.m_max),m_delta(v.m_delta)
 {
     for (size_t i = 0; i < m_count; ++i) {
         m_pVect[i] = v.m_pVect[i];
@@ -53,7 +65,7 @@ CVector<T>::CVector(CVector &v)
 
 template <typename T>
 CVector<T>::CVector(CVector &&v)
-    :m_pVect(v.m_pVect),m_count(v.m_count),m_max(v.m_max)
+    :m_pVect(v.m_pVect),m_count(v.m_count),m_max(v.m_max),m_delta(v.m_delta)
     {
         v.m_pVect =nullptr;
         v.m_count =0;
@@ -65,7 +77,7 @@ CVector<T>::~CVector(){
     delete [] m_pVect;
 }
 
-// TODO (Nivel 1): hacer dinamico el delta de crecimiento
+// TODO (Nivel 1) (listo): hacer dinamico el delta de crecimiento
 template <typename T>
 void CVector<T>::resize(double delta){
     size_t new_cap = (m_max == 0) ? 1 : static_cast<size_t>(m_max * delta);
