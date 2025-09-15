@@ -31,7 +31,16 @@ public:
     virtual ~CVector();
     void insert(T &elem);
     void resize();
-};
+
+    // TODO:  (Nivel 1) habilitar el uso de []
+    T& operator[](size_t index){ // Permite modificar el valor (vector[i] = nuevo_valor)
+        return m_pVect[index];
+    }
+
+    const T& operator[](size_t index) const { // version solo lectura
+        return m_pVect[index];
+    }
+};  
 
 template <typename T>
 CVector<T>::CVector(size_t n){
