@@ -24,10 +24,10 @@ public:
     CVector(CVector &v);
 
     CVector(size_t n);
-    // TODO  (Nivel 2): Agregar un move constructor
+    // TODO  (Nivel 2) (listo): Agregar un move constructor
     CVector(CVector &&v);
 
-    // TODO: (Nivel 1) implementar el destructor de forma segura
+    // TODO: (Nivel 1) (listo) implementar el destructor de forma segura
     virtual ~CVector();
     void insert(T &elem);
     void resize();
@@ -57,6 +57,11 @@ CVector<T>::CVector(CVector &&v)
         v.m_max   =0;
     }
 
+
+template <typename T>
+CVector<T>::~CVector(){
+    delete [] m_pVect;
+}
 
 // TODO (Nivel 1): hacer dinamico el delta de crecimiento
 template <typename T>
