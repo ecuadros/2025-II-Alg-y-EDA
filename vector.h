@@ -37,6 +37,10 @@ public:
     void resize();
     void resize(double delta);
 
+    // Operador [] para acceso por índice
+    T& operator[](size_t index);
+    const T& operator[](size_t index) const;
+
     friend std::ostream& operator<<(std::ostream &os, const CVector<T> &v){
         os << "[";
         for(size_t i=0;i<v.m_count;i++){
@@ -75,6 +79,16 @@ CVector<T>::CVector(CVector &&v)
 template <typename T>
 CVector<T>::~CVector(){
     delete [] m_pVect;
+}
+
+template <typename T>
+T& CVector<T>::operator[](size_t index){
+    return m_pVect[index];
+}
+
+template <typename T>
+const T& CVector<T>::operator[](size_t index) const {
+    return m_pVect[index];
 }
 
 // TODO (Nivel 1) (listo): hacer dinamico el delta de crecimiento
