@@ -11,8 +11,10 @@ mutex cout_mutex;
 // Function to be run by the thread
 void func(int thread_id, CVector<int> &v)
 {
-    lock_guard<mutex> lock(cout_mutex);
-    cout << "Hello from the thread!" << endl;
+    {
+        lock_guard<mutex> lock(cout_mutex);
+        cout << "Hello from the thread!" << endl;
+    }
     for (int i = 0; i < 5; ++i)
     {
         // Bloqueamos el mutex para que la salida sea atómica
@@ -23,7 +25,8 @@ void func(int thread_id, CVector<int> &v)
              << " | Iteración: " << i << endl;
     }
 
-    for (int i = 0; i < 5; ++i) {
+    for (int i = 0; i < 5; ++i)
+    {
         v.insert(i);
         {
             lock_guard<mutex> lock(cout_mutex);
@@ -46,7 +49,7 @@ void DemoThreads()
     for (int i = 0; i < num_threads; ++i)
     {
         // Crear el objeto thread
-        thread t(func, i, vect);
+        thread t(func, i, ref(vect));
 
         // Mover el thread al vector (no se puede copiar, solo mover)
         threads.push_back(move(t));
