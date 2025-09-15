@@ -26,13 +26,24 @@ public:
 
     CVector(size_t n);
     // TODO  (Nivel 2): Agregar un move constructor
-    CVector(CVector &&v);
+    CVector(CVector &&v) noexcept;
 
     // TODO: (Nivel 1) implementar el destructor de forma segura
     virtual ~CVector();
     void insert(T &elem);
     void resize();
 };
+
+// Implementacion de constructor move
+template <typename T>
+CVector<T>::CVector(CVector &&v) noexcept
+    : m_pVect(v.m_pVect), m_count(v.m_count), m_max(v.m_max), m_growth_factor(v.m_growth_factor)
+{
+    v.m_pVect = nullptr;
+    v.m_count = 0;
+    v.m_max = 0;
+    v.m_growth_factor = 1.5;
+}
 
 // Implementacion de constructor por copia
 template <typename T>
