@@ -19,6 +19,8 @@ class CVector{
     T      *m_pVect = nullptr;
     size_t  m_count = 0; // How many elements we have now?
     size_t  m_max   = 0; // Max capacity
+    double  m_delta = 2.0;
+
 public:
     // TODO  (Nivel 1) (listo) Agregar un constructor por copia
     CVector(CVector &v);
@@ -31,6 +33,7 @@ public:
     virtual ~CVector();
     void insert(T &elem);
     void resize();
+    void resize(double delta);
 };
 
 template <typename T>
@@ -57,7 +60,6 @@ CVector<T>::CVector(CVector &&v)
         v.m_max   =0;
     }
 
-
 template <typename T>
 CVector<T>::~CVector(){
     delete [] m_pVect;
@@ -65,13 +67,22 @@ CVector<T>::~CVector(){
 
 // TODO (Nivel 1): hacer dinamico el delta de crecimiento
 template <typename T>
-void CVector<T>::resize(){
-    T *pTmp = new T[m_max+10];
-    for(auto i=0; i < m_max ; ++i)
+void CVector<T>::resize(double delta){
+    size_t new_cap = (m_max == 0) ? 1 : static_cast<size_t>(m_max * delta);
+    if (new_cap <= m_max) new_cap = m_max + 1; 
+
+    T *pTmp = new T[new_cap];
+    for (size_t i = 0; i < m_count; ++i)
         pTmp[i] = m_pVect[i];
+
     delete [] m_pVect;
-    m_max += 10;
     m_pVect = pTmp;
+    m_max   = new_cap;
+}
+
+template <typename T>
+void CVector<T>::resize(){
+    resize(m_delta);
 }
 
 // TODO (ya está hecha): la funcion insert debe permitir que el vector crezca si ha desbordado
