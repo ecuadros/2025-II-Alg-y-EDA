@@ -55,7 +55,7 @@ CVector<T>::CVector(size_t n){
 template <typename T>
 void CVector<T>::resize(){
     T *pTmp = new T[m_max+10];
-    for(auto i=0; i < m_max ; ++i)
+    for(size_t i=0; i < m_max ; ++i) // Cambiar auto por size_t para evitar warnings
         pTmp[i] = m_pVect[i];
     delete [] m_pVect;
     m_max += 10;
@@ -97,9 +97,9 @@ std::ostream& operator<<(std::ostream& os, const CVector<T>& vector){
 // Implementación del constructor por copia
 template <typename T>
 CVector<T>::CVector(const CVector<T>& v)
-    : m_count(v.m_pVect != nullptr ? v.m_count : 0), // Inicializa m_count
-      m_max(v.m_pVect != nullptr ? v.m_max : 0),      // Inicializa m_max
-      m_pVect(nullptr)                                 // Inicializa m_pVect
+    : m_pVect(nullptr),                               // Inicializa m_pVect
+      m_count(v.m_pVect != nullptr ? v.m_count : 0), // Inicializa m_count
+      m_max(v.m_pVect != nullptr ? v.m_max : 0)    // Inicializa m_max 
 {
     if (v.m_pVect != nullptr){
         // Reserva memoria
@@ -114,9 +114,9 @@ CVector<T>::CVector(const CVector<T>& v)
 // Implementación del move constructor
 template <typename T>
 CVector<T>::CVector(CVector<T>&& v) // El operador && indica que es una referencia rvalue (temporal)
-    : m_count(v.m_count), // Transfiere el conteo
-      m_max(v.m_max),    // Transfiere la capacidad
-      m_pVect(v.m_pVect) // Transfiere el puntero
+    : m_pVect(v.m_pVect), // Transfiere el puntero
+      m_count(v.m_count), // Transfiere el conteo
+      m_max(v.m_max)    // Transfiere la capacidad
 {
     // Deja vacío el objeto original
     v.m_count = 0;
