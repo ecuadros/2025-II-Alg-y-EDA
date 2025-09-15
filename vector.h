@@ -27,6 +27,7 @@ class CVector
     size_t m_count = 0; // How many elements we have now?
     size_t m_max = 0;   // Max capacity
     double m_growth_factor = 1.5;
+    mutable std::shared_mutex m_mutex;
 
 public:
     // TODO  (Nivel 1) Agregar un constructor por copia
@@ -42,8 +43,18 @@ public:
     void resize();
     T &operator[](size_t index);
     const T &operator[](size_t index) const;
+    using size_type = size_t;
     void set_growth_factor(double factor);
+    size_type size() const noexcept;
+    using traits_type = std::conditional_t<std::is_trivially_copyable_v<T>, std::true_type, std::false_type>;
 };
+
+template <typename T>
+typename CVector<T>::size_type CVector<T>::size() const noexcept
+{
+    std::shared_lock<std::shared_mutex> lock(m_mutex);
+    return m_count;
+}
 
 // Implementacion del operador de salida <<
 template <typename T>
@@ -194,6 +205,7 @@ void CVector<T>::resize()
 template <typename T>
 void CVector<T>::insert(T &elem)
 {
+    std::unique_lock<std::shared_mutex> lock(m_mutex);
     if (m_count == m_max)
         resize();
     m_pVect[m_count++] = elem;
