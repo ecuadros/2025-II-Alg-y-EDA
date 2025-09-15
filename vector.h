@@ -3,7 +3,7 @@
 
 #include <type_traits>
 #include <shared_mutex>
-#include <cstring> 
+#include <cstring>
 #include <mutex>
 #include <iostream>
 
@@ -27,6 +27,7 @@ class CVector
     size_t m_count = 0; // How many elements we have now?
     size_t m_max = 0;   // Max capacity
     double m_growth_factor = 1.5;
+
 public:
     // TODO  (Nivel 1) Agregar un constructor por copia
     CVector(const CVector &v);
@@ -43,6 +44,26 @@ public:
     const T &operator[](size_t index) const;
     void set_growth_factor(double factor);
 };
+
+// Implementacion del operador de salida <<
+template <typename T>
+std::ostream &operator<<(std::ostream &os, const CVector<T> &vec)
+{
+    os << "[";
+
+    for (size_t i = 0; i < vec.size(); ++i)
+    {
+        os << vec[i];
+
+        if (i < vec.size() - 1)
+        {
+            os << ", ";
+        }
+    }
+
+    os << "]";
+    return os;
+}
 
 template <typename T>
 void CVector<T>::set_growth_factor(double factor)
