@@ -21,7 +21,7 @@ class CVector{
     size_t  m_max   = 0; // Max capacity
 public:
     // TODO  (Nivel 1) Agregar un constructor por copia
-    CVector(CVector &v);
+    CVector(const CVector &v); // El constructor por copia no debe modificar al objeto original
 
     CVector(size_t n);
     // TODO  (Nivel 2): Agregar un move constructor
@@ -93,5 +93,23 @@ std::ostream& operator<<(std::ostream& os, const CVector<T>& vector){
     os << "]";
     return os;  //Retorna el stream para permitir encadenamiento 
 }
+
+// Implementación del constructor por copia
+template <typename T>
+CVector<T>::CVector(const CVector<T>& v)
+    : m_count(v.m_pVect != nullptr ? v.m_count : 0), // Inicializa m_count
+      m_max(v.m_pVect != nullptr ? v.m_max : 0),      // Inicializa m_max
+      m_pVect(nullptr)                                 // Inicializa m_pVect
+{
+    if (v.m_pVect != nullptr){
+        // Reserva memoria
+        m_pVect = new T[m_max];
+        // Copiar elementos
+        for(size_t i = 0; i < m_count; ++i){
+            m_pVect[i] = v.m_pVect[i];
+        }
+    }
+}
+
 
 #endif // __VECTOR_H__
