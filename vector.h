@@ -1,6 +1,7 @@
 #ifndef __VECTOR_H__
 #define __VECTOR_H__
 
+#include <iostream>
 // PC1: deben hacer:
 //      2 problemas de nivel 2
 //      3 problemas de nivel 1
@@ -31,6 +32,8 @@ public:
     vrtual CVector();
     void insert(T &elem);
     void resize();
+
+    friend std::ostream& operator<<(std::ostream& os, CVector& v);
 };
 
 template <typename T>
@@ -56,6 +59,20 @@ void CVector<T>::insert(T &elem){
     if(m_count == m_max)
         resize();
     m_pVect[m_count++] = elem;
+}
+
+// TODO  (Nivel 2) habilitar que el vector pueda ser escrito con cout <<
+// cout << vector << endl;
+template <typename T>
+std::ostream& operator<<(std::ostream& os, CVector<T>& v){
+    os << "CVector: [ ";
+
+    for(size_t i = 0; i<v.m_max; i++){
+        os << v.m_pVect[i]<< " ";
+    }
+    os << "]"<< endl;
+
+    return os;
 }
 
 #endif // __VECTOR_H__
