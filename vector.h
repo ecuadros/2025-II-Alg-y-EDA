@@ -111,5 +111,17 @@ CVector<T>::CVector(const CVector<T>& v)
     }
 }
 
+// Implementación del move constructor
+template <typename T>
+CVector<T>::CVector(CVector<T>&& v) // El operador && indica que es una referencia rvalue (temporal)
+    : m_count(v.m_count), // Transfiere el conteo
+      m_max(v.m_max),    // Transfiere la capacidad
+      m_pVect(v.m_pVect) // Transfiere el puntero
+{
+    // Deja vacío el objeto original
+    v.m_count = 0;
+    v.m_max = 0;
+    v.m_pVect = nullptr;
+}
 
 #endif // __VECTOR_H__
