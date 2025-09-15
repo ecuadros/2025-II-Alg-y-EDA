@@ -32,7 +32,24 @@ public:
     virtual ~CVector();
     void insert(T &elem);
     void resize();
+    T &operator[](size_t index);
+    const T &operator[](size_t index) const;
 };
+
+// Implementacion del operador []
+template <typename T>
+T &CVector<T>::operator[](size_t index)
+{
+    std::shared_lock<std::shared_mutex> lock(m_mutex);
+    return m_pVect[index];
+}
+
+template <typename T>
+const T &CVector<T>::operator[](size_t index) const
+{
+    std::shared_lock<std::shared_mutex> lock(m_mutex);
+    return m_pVect[index];
+}
 
 // Implementacion de constructor move
 template <typename T>
