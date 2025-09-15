@@ -41,11 +41,12 @@ CVector<T>::CVector(size_t n){
 // TODO (Nivel 1): hacer dinamico el delta de crecimiento
 template <typename T>
 void CVector<T>::resize(){
-    T *pTmp = new T[m_max+10];
+    size_t delta = m_max * 0.5;
+    T *pTmp = new T[m_max + delta];
     for(auto i=0; i < m_max ; ++i)
         pTmp[i] = m_pVect[i];
     delete [] m_pVect;
-    m_max += 10;
+    m_max += delta;
     m_pVect = pTmp;
 }
 
