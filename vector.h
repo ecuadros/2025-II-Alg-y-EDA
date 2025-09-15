@@ -40,6 +40,10 @@ public:
     const T& operator[](size_t index) const { // version solo lectura
         return m_pVect[index];
     }
+    // TODO  (Nivel 2) habilitar que el vector pueda ser escrito con cout <<
+    template <typename U>
+    friend std::ostream& operator<<(std::ostream& os, const CVector<U>& vector); // Una función friend (no es miembro de la clase pero puede acceder a sus miembros privados)
+
 };  
 
 template <typename T>
@@ -75,6 +79,19 @@ CVector<T>::~CVector(){
         m_count = 0;
         m_max   = 0;
     }
+}
+
+// Implementación del operador << como función amiga
+template<typename T>
+std::ostream& operator<<(std::ostream& os, const CVector<T>& vector){
+    os << "[";
+    for(size_t i = 0; i < vector.m_count; ++i){
+        os << vector.m_pVect[i];
+        if(i < vector.m_count - 1)
+            os << ", ";
+    }
+    os << "]";
+    return os;  //Retorna el stream para permitir encadenamiento 
 }
 
 #endif // __VECTOR_H__
