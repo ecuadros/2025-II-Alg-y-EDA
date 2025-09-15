@@ -14,6 +14,24 @@
 // Cada solucion enviarla como un Pull request
 
 // TODO (Nivel 2): Agregar Traits
+template <typename T>
+struct vector_traits
+{
+    using value_type = T;
+    using reference = T&;
+    using const_reference = const T&;
+    using pointer = T*;
+    using const_pointer = const T*;
+    using size_type = size_t;
+    using difference_type = ptrdiff_t;
+
+    static constexpr bool is_trivially_copyable = std::is_trivially_copyable_v<T>;
+    static constexpr bool is_default_constructible = std::is_default_constructible_v<T>;
+    static constexpr bool is_move_constructible = std::is_move_constructible_v<T>;
+    static constexpr bool is_copy_constructible = std::is_copy_constructible_v<T>;
+    static constexpr bool is_arithmetic = std::is_arithmetic_v<T>;
+    static constexpr bool is_pointer = std::is_pointer_v<T>;
+};
 
 // TODO (Nivel 2): Agregar Iterators (forward, backward)
 
@@ -25,14 +43,20 @@ class CVector
 {
 
     T *m_pVect = nullptr;
-    size_t m_count = 0; // How many elements we have now?
-    size_t m_max = 0;   // Max capacity
+    size_t m_count = 0;
+    size_t m_max = 0;
     double m_growth_factor = 1.5;
     mutable std::shared_mutex m_mutex;
 
 public:
-    using size_type = size_t;
-    using traits_type = std::conditional_t<std::is_trivially_copyable_v<T>, std::true_type, std::false_type>;
+    using traits_type = vector_traits<T>;
+    using value_type = typename traits_type::value_type;
+    using reference = typename traits_type::reference;
+    using const_reference = typename traits_type::const_reference;
+    using pointer = typename traits_type::pointer;
+    using const_pointer = typename traits_type::const_pointer;
+    using size_type = typename traits_type::size_type;
+    using difference_type = typename traits_type::difference_type;
 
     class iterator
     {
@@ -136,12 +160,18 @@ public:
     const_reverse_iterator crbegin() const;
     const_reverse_iterator crend() const;
 
+    // Constructor por defecto
+    CVector() : m_pVect(nullptr), m_count(0), m_max(0), m_growth_factor(1.5) {}
+    
     // TODO  (Nivel 1) Agregar un constructor por copia
     CVector(const CVector &v);
 
     CVector(size_t n);
     // TODO  (Nivel 2): Agregar un move constructor
     CVector(CVector &&v) noexcept;
+
+    CVector& operator=(const CVector& other);
+    CVector& operator=(CVector&& other) noexcept;
 
     // TODO: (Nivel 1) implementar el destructor de forma segura
     virtual ~CVector();
@@ -150,6 +180,19 @@ public:
     T &operator[](size_t index);
     const T &operator[](size_t index) const;
     void set_growth_factor(double factor);
+    
+    constexpr bool is_arithmetic_type() const noexcept {
+        return traits_type::is_arithmetic;
+    }
+    
+    constexpr bool is_trivially_copyable_type() const noexcept {
+        return traits_type::is_trivially_copyable;
+    }
+    
+    constexpr bool is_pointer_type() const noexcept {
+        return traits_type::is_pointer;
+    }
+    
     size_type size() const noexcept;
     size_type capacity() const noexcept;
     bool empty() const noexcept;
@@ -336,6 +379,68 @@ CVector<T>::CVector(const CVector &v) : m_pVect(nullptr), m_count(0), m_max(0)
             m_pVect[i] = v.m_pVect[i];
         }
     }
+}
+
+template <typename T>
+CVector<T>& CVector<T>::operator=(const CVector& other)
+{
+    if (this != &other)
+    {
+        std::unique_lock<std::shared_mutex> lock1(m_mutex, std::defer_lock);
+        std::shared_lock<std::shared_mutex> lock2(other.m_mutex, std::defer_lock);
+        std::lock(lock1, lock2);
+        
+        delete[] m_pVect;
+        m_pVect = nullptr;
+        m_count = 0;
+        m_max = 0;
+        
+        if (other.m_count > 0)
+        {
+            m_max = other.m_count;
+            m_pVect = new T[m_max];
+            m_count = other.m_count;
+            
+            if constexpr (traits_type::is_trivially_copyable)
+            {
+                std::memcpy(m_pVect, other.m_pVect, m_count * sizeof(T));
+            }
+            else
+            {
+                for (size_t i = 0; i < m_count; ++i)
+                {
+                    m_pVect[i] = other.m_pVect[i];
+                }
+            }
+        }
+        
+        m_growth_factor = other.m_growth_factor;
+    }
+    return *this;
+}
+
+template <typename T>
+CVector<T>& CVector<T>::operator=(CVector&& other) noexcept
+{
+    if (this != &other)
+    {
+        std::unique_lock<std::shared_mutex> lock1(m_mutex, std::defer_lock);
+        std::unique_lock<std::shared_mutex> lock2(other.m_mutex, std::defer_lock);
+        std::lock(lock1, lock2);
+        
+        delete[] m_pVect;
+        
+        m_pVect = other.m_pVect;
+        m_count = other.m_count;
+        m_max = other.m_max;
+        m_growth_factor = other.m_growth_factor;
+        
+        other.m_pVect = nullptr;
+        other.m_count = 0;
+        other.m_max = 0;
+        other.m_growth_factor = 1.5;
+    }
+    return *this;
 }
 
 template <typename T>
