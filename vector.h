@@ -48,6 +48,15 @@ CVector<T>::CVector(CVector &v)
     }
 }
 
+template <typename T>
+CVector<T>::CVector(CVector &&v)
+    :m_pVect(v.m_pVect),m_count(v.m_count),m_max(v.m_max)
+    {
+        v.m_pVect =nullptr;
+        v.m_count =0;
+        v.m_max   =0;
+    }
+
 
 // TODO (Nivel 1): hacer dinamico el delta de crecimiento
 template <typename T>
