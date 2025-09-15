@@ -1,6 +1,12 @@
 #ifndef __VECTOR_H__
 #define __VECTOR_H__
 
+#include <type_traits>
+#include <shared_mutex>
+#include <cstring> 
+#include <mutex>
+#include <iostream>
+
 // PC1: deben hacer:
 //      2 problemas de nivel 2
 //      3 problemas de nivel 1
@@ -20,6 +26,7 @@ class CVector
     T *m_pVect = nullptr;
     size_t m_count = 0; // How many elements we have now?
     size_t m_max = 0;   // Max capacity
+    double m_growth_factor = 1.5;
 public:
     // TODO  (Nivel 1) Agregar un constructor por copia
     CVector(const CVector &v);
@@ -34,7 +41,18 @@ public:
     void resize();
     T &operator[](size_t index);
     const T &operator[](size_t index) const;
+    void set_growth_factor(double factor);
 };
+
+template <typename T>
+void CVector<T>::set_growth_factor(double factor)
+{
+    std::unique_lock<std::shared_mutex> lock(m_mutex);
+    if (factor > 1.0)
+    {
+        m_growth_factor = factor;
+    }
+}
 
 // Implementacion del operador []
 template <typename T>
@@ -115,11 +133,39 @@ CVector<T>::~CVector()
 template <typename T>
 void CVector<T>::resize()
 {
-    T *pTmp = new T[m_max + 10];
-    for (auto i = 0; i < m_max; ++i)
-        pTmp[i] = m_pVect[i];
+    size_t new_size;
+    if (m_max == 0)
+    {
+        new_size = 1;
+    }
+    else
+    {
+        new_size = static_cast<size_t>(m_max * m_growth_factor);
+        if (new_size <= m_max)
+        {
+            new_size = m_max + 1;
+        }
+    }
+
+    T *pTmp = new T[new_size];
+
+    if constexpr (traits_type::is_trivially_copyable)
+    {
+        if (m_pVect != nullptr && m_count > 0)
+        {
+            std::memcpy(pTmp, m_pVect, m_count * sizeof(T));
+        }
+    }
+    else
+    {
+        for (size_t i = 0; i < m_count; ++i)
+        {
+            pTmp[i] = std::move(m_pVect[i]);
+        }
+    }
+
     delete[] m_pVect;
-    m_max += 10;
+    m_max = new_size;
     m_pVect = pTmp;
 }
 
