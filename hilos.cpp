@@ -3,6 +3,8 @@
 #include <vector>
 #include "hilos.h"
 #include "vector.h"
+#include <mutex>
+
 using namespace std;
 
 mutex cout_mutex;
@@ -32,7 +34,7 @@ void DemoThreads(){
     // Crear y lanzar los threads
     for (int i = 0; i < num_threads; ++i) {
         // Crear el objeto thread
-        thread t(func, i, vect);
+        thread t(func, i, ref(vect));
         
         // Mover el thread al vector (no se puede copiar, solo mover)
         threads.push_back(move(t));
