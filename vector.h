@@ -6,6 +6,7 @@
 #include <cstring>
 #include <mutex>
 #include <iostream>
+#include <iterator>
 
 // PC1: deben hacer:
 //      2 problemas de nivel 2
@@ -30,6 +31,111 @@ class CVector
     mutable std::shared_mutex m_mutex;
 
 public:
+    using size_type = size_t;
+    using traits_type = std::conditional_t<std::is_trivially_copyable_v<T>, std::true_type, std::false_type>;
+
+    class iterator
+    {
+    private:
+        T* ptr;
+
+    public:
+        using value_type = T;
+        using difference_type = std::ptrdiff_t;
+        using pointer = T*;
+        using reference = T&;
+        using iterator_category = std::random_access_iterator_tag;
+
+        iterator(T* p = nullptr) : ptr(p) {}
+
+        reference operator*() const { return *ptr; }
+        pointer operator->() const { return ptr; }
+
+        iterator& operator++() { ++ptr; return *this; }
+        iterator operator++(int) { iterator temp = *this; ++ptr; return temp; }
+
+        iterator& operator--() { --ptr; return *this; }
+        iterator operator--(int) { iterator temp = *this; --ptr; return temp; }
+
+        iterator operator+(difference_type n) const { return iterator(ptr + n); }
+        iterator operator-(difference_type n) const { return iterator(ptr - n); }
+        iterator& operator+=(difference_type n) { ptr += n; return *this; }
+        iterator& operator-=(difference_type n) { ptr -= n; return *this; }
+
+        difference_type operator-(const iterator& other) const { return ptr - other.ptr; }
+
+        reference operator[](difference_type n) const { return ptr[n]; }
+
+        bool operator==(const iterator& other) const { return ptr == other.ptr; }
+        bool operator!=(const iterator& other) const { return ptr != other.ptr; }
+        bool operator<(const iterator& other) const { return ptr < other.ptr; }
+        bool operator<=(const iterator& other) const { return ptr <= other.ptr; }
+        bool operator>(const iterator& other) const { return ptr > other.ptr; }
+        bool operator>=(const iterator& other) const { return ptr >= other.ptr; }
+    };
+
+    class const_iterator
+    {
+    private:
+        const T* ptr;
+
+    public:
+        using value_type = T;
+        using difference_type = std::ptrdiff_t;
+        using pointer = const T*;
+        using reference = const T&;
+        using iterator_category = std::random_access_iterator_tag;
+
+        const_iterator(const T* p = nullptr) : ptr(p) {}
+        const_iterator(const iterator& it) : ptr(&(*it)) {}
+
+        reference operator*() const { return *ptr; }
+        pointer operator->() const { return ptr; }
+
+        const_iterator& operator++() { ++ptr; return *this; }
+        const_iterator operator++(int) { const_iterator temp = *this; ++ptr; return temp; }
+
+        const_iterator& operator--() { --ptr; return *this; }
+        const_iterator operator--(int) { const_iterator temp = *this; --ptr; return temp; }
+
+        const_iterator operator+(difference_type n) const { return const_iterator(ptr + n); }
+        const_iterator operator-(difference_type n) const { return const_iterator(ptr - n); }
+        const_iterator& operator+=(difference_type n) { ptr += n; return *this; }
+        const_iterator& operator-=(difference_type n) { ptr -= n; return *this; }
+
+        difference_type operator-(const const_iterator& other) const { return ptr - other.ptr; }
+
+        reference operator[](difference_type n) const { return ptr[n]; }
+
+        bool operator==(const const_iterator& other) const { return ptr == other.ptr; }
+        bool operator!=(const const_iterator& other) const { return ptr != other.ptr; }
+        bool operator<(const const_iterator& other) const { return ptr < other.ptr; }
+        bool operator<=(const const_iterator& other) const { return ptr <= other.ptr; }
+        bool operator>(const const_iterator& other) const { return ptr > other.ptr; }
+        bool operator>=(const const_iterator& other) const { return ptr >= other.ptr; }
+    };
+
+    using reverse_iterator = std::reverse_iterator<iterator>;
+    using const_reverse_iterator = std::reverse_iterator<const_iterator>;
+
+    iterator begin();
+    iterator end();
+    
+    const_iterator begin() const;
+    const_iterator end() const;
+    
+    const_iterator cbegin() const;
+    const_iterator cend() const;
+    
+    reverse_iterator rbegin();
+    reverse_iterator rend();
+    
+    const_reverse_iterator rbegin() const;
+    const_reverse_iterator rend() const;
+    
+    const_reverse_iterator crbegin() const;
+    const_reverse_iterator crend() const;
+
     // TODO  (Nivel 1) Agregar un constructor por copia
     CVector(const CVector &v);
 
@@ -43,17 +149,109 @@ public:
     void resize();
     T &operator[](size_t index);
     const T &operator[](size_t index) const;
-    using size_type = size_t;
     void set_growth_factor(double factor);
     size_type size() const noexcept;
-    using traits_type = std::conditional_t<std::is_trivially_copyable_v<T>, std::true_type, std::false_type>;
+    size_type capacity() const noexcept;
+    bool empty() const noexcept;
 };
+
+template <typename T>
+typename CVector<T>::iterator CVector<T>::begin()
+{
+    std::shared_lock<std::shared_mutex> lock(m_mutex);
+    return iterator(m_pVect);
+}
+
+template <typename T>
+typename CVector<T>::iterator CVector<T>::end()
+{
+    std::shared_lock<std::shared_mutex> lock(m_mutex);
+    return iterator(m_pVect + m_count);
+}
+
+template <typename T>
+typename CVector<T>::const_iterator CVector<T>::begin() const
+{
+    std::shared_lock<std::shared_mutex> lock(m_mutex);
+    return const_iterator(m_pVect);
+}
+
+template <typename T>
+typename CVector<T>::const_iterator CVector<T>::end() const
+{
+    std::shared_lock<std::shared_mutex> lock(m_mutex);
+    return const_iterator(m_pVect + m_count);
+}
+
+template <typename T>
+typename CVector<T>::const_iterator CVector<T>::cbegin() const
+{
+    std::shared_lock<std::shared_mutex> lock(m_mutex);
+    return const_iterator(m_pVect);
+}
+
+template <typename T>
+typename CVector<T>::const_iterator CVector<T>::cend() const
+{
+    std::shared_lock<std::shared_mutex> lock(m_mutex);
+    return const_iterator(m_pVect + m_count);
+}
+
+template <typename T>
+typename CVector<T>::reverse_iterator CVector<T>::rbegin()
+{
+    return reverse_iterator(end());
+}
+
+template <typename T>
+typename CVector<T>::reverse_iterator CVector<T>::rend()
+{
+    return reverse_iterator(begin());
+}
+
+template <typename T>
+typename CVector<T>::const_reverse_iterator CVector<T>::rbegin() const
+{
+    return const_reverse_iterator(end());
+}
+
+template <typename T>
+typename CVector<T>::const_reverse_iterator CVector<T>::rend() const
+{
+    return const_reverse_iterator(begin());
+}
+
+template <typename T>
+typename CVector<T>::const_reverse_iterator CVector<T>::crbegin() const
+{
+    return const_reverse_iterator(end());
+}
+
+template <typename T>
+typename CVector<T>::const_reverse_iterator CVector<T>::crend() const
+{
+    return const_reverse_iterator(begin());
+}
 
 template <typename T>
 typename CVector<T>::size_type CVector<T>::size() const noexcept
 {
     std::shared_lock<std::shared_mutex> lock(m_mutex);
     return m_count;
+}
+
+template <typename T>
+typename CVector<T>::size_type CVector<T>::capacity() const noexcept
+{
+    std::shared_lock<std::shared_mutex> lock(m_mutex);
+    return m_max;
+}
+
+template <typename T>
+bool CVector<T>::empty() const noexcept
+{
+    std::shared_lock<std::shared_mutex> lock(m_mutex);
+    return m_count == 0;
 }
 
 // Implementacion del operador de salida <<
