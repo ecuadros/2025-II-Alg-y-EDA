@@ -19,6 +19,10 @@ using namespace std;
 
 int main(){
     cout << "Hello Alg y EDA-UNI" << endl;
+
+    cout << "\n***** Probando Vector basico *****" << endl;
+    DemoVector();
+    cout << "\n***** Probando Hilos *****" << endl;
     DemoThreads();
     return 0;
 }
