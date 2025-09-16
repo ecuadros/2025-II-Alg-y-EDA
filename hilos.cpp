@@ -5,8 +5,6 @@
 #include "vector.h"
 using namespace std;
 
-mutex cout_mutex;
-
 // Function to be run by the thread
 void func(int thread_id, CVector<int> &v) {
     cout << "Hello from the thread!" << endl;
