@@ -1,6 +1,7 @@
 {
     "files.associations": {
         "__threading_support": "cpp",
-        "__mutex_base": "cpp"
+        "__mutex_base": "cpp",
+        "thread": "cpp"
     }
 }
