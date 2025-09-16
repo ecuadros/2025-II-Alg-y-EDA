@@ -19,6 +19,7 @@ class CVector{
     T      *m_pVect = nullptr;
     size_t  m_count = 0; // How many elements we have now?
     size_t  m_max   = 0; // Max capacity
+    size_t  m_delta = 10; // Growth factor (dynamic)
 public:
     // TODO  (Nivel 1) Agregar un constructor por copia
     CVector(const CVector &v);
@@ -32,6 +33,7 @@ public:
     virtual ~CVector();
     void insert(T &elem);
     void resize();
+    void set_delta(size_t d){ m_delta = d; }
 };
 
 // destructor seguro
