@@ -4,7 +4,11 @@ using namespace std;
 
 /* Revisado por:
    1. Ernesto Cuadros-Vargas
+   2. Jharvy Jonas Cadillo Tarazona
+   4. Héctor Bobbio Hermoza 
    7. Piero Violeta Estrella
+   20. Ortiz Lozano Eric Hernan
+   22. Chandler Steven Perez Cueva
 */
 
 int main(){
