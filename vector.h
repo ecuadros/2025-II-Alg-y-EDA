@@ -16,7 +16,6 @@
 template <typename T>
 class CVector{
 	T      *m_pVect = nullptr;
-	size_t  m_count = 0; // How many elements we have now?
 	size_t  m_max   = 0; // Max capacity
 	size_t m_currentDelta = 0;
 public:
@@ -32,11 +31,9 @@ public:
 	// TODO: (Nivel 1) implementar el destructor de forma segura
 	virtual ~CVector();
 	
-	void insert(const T &elem);
+	void insert(const T &elem, const size_t position);
 	
 	T& operator[](size_t index);
-	
-	size_t size() const { return m_count; }
 
 private:
 
@@ -53,13 +50,7 @@ CVector<T>::CVector(size_t n){
 
 template <typename T>
 CVector<T>::CVector(CVector &v) 
-	: m_max(v.m_max), m_count(v.m_count) {
-
-	if (m_max > 0)
-		m_pVect = new T[m_max];
-	for (size_t i = 0; i < m_count; ++i)
-		m_pVect[i] = v[i];       
-}
+	: m_pVect(v.m_pVect), m_max(v.m_max) {}
 
 template <typename T>
 void CVector<T>::resize(size_t delta) {
@@ -91,7 +82,6 @@ template <typename T>
 
 template <typename T>
 void CVector<T>::Destroy(){
-	m_count = 0; 
 	m_max   = 0;
 	delete [] m_pVect;
 	m_pVect = nullptr;
@@ -99,10 +89,8 @@ void CVector<T>::Destroy(){
 
 // TODO (ya está hecha): la funcion insert debe permitir que el vector crezca si ha desbordado
 template <typename T>
-void CVector<T>::insert(const T &elem){
-	if(m_count == m_max)
-		resize();
-	m_pVect[m_count++] = elem;
+void CVector<T>::insert(const T &elem, const size_t position){
+	this->operator[](position) = elem;
 }
 
 template <typename T>
