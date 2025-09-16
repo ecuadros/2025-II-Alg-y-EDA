@@ -28,10 +28,20 @@ public:
     CVector(CVector &&v);
 
     // TODO: (Nivel 1) implementar el destructor de forma segura
-    vrtual CVector();
+    // virtual CVector();
+    virtual ~CVector();
     void insert(T &elem);
     void resize();
 };
+
+// destructor seguro
+template <typename T>
+CVector<T>::~CVector() {
+    delete [] m_pVect;   // libera el buffer dinámico
+    m_pVect = nullptr;   // deja el puntero en estado nulo
+    m_count = 0;         
+    m_max   = 0;         
+}
 
 template <typename T>
 CVector<T>::CVector(size_t n){
