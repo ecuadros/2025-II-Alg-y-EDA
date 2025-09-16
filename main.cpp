@@ -1,7 +1,6 @@
 #include <iostream>
 #include "vector.h"
 #include "DemoVector.h"
-#include "hilos.h"
 using namespace std;
 
 /* Revisado por:
@@ -19,7 +18,7 @@ using namespace std;
 
 int main(){
     cout << "Hello Alg y EDA-UNI" << endl;
-    DemoThreads();
+    DemoVector();
     return 0;
 }
 
