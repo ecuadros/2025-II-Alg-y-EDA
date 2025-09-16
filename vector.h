@@ -34,6 +34,8 @@ public:
     void resize();
 
     friend std::ostream& operator<<(std::ostream& os, CVector& v);
+
+    T& operator[](size_t index);
 };
 
 template <typename T>
@@ -74,5 +76,17 @@ std::ostream& operator<<(std::ostream& os, CVector<T>& v){
 
     return os;
 }
+
+// TODO  (Nivel 1) habilitar el uso de []
+// vector[3] = 8;
+template <typename T>
+T& CVector<T>::operator[](size_t index){
+    if(index >= m_max){
+        std::cerr<<"Error de ìndice";
+        exit(0);
+    }
+    return m_pVect[index];
+}
+
 
 #endif // __VECTOR_H__
