@@ -109,7 +109,7 @@ template <typename T>
 T& CVector<T>::operator[](size_t index) {
 	if(index > m_max)
 		resize(index - m_max + 1);
-	return m_pVect[n];
+	return m_pVect[index];
 }
 
 template <typename T>
