@@ -34,7 +34,7 @@ public:
 	
 	void insert(const T &elem);
 	
-	T&   operator[](size_t index);
+	T& operator[](size_t index);
 	
 	size_t size() const { return m_count; }
 
@@ -107,10 +107,9 @@ void CVector<T>::insert(const T &elem){
 
 template <typename T>
 T& CVector<T>::operator[](size_t index) {
-	if (index >= m_count) {
-		throw std::out_of_range("Index out of range");
-	}
-	return m_pVect[index];
+	if(index > m_max)
+		resize(index - m_max + 1);
+	return m_pVect[n];
 }
 
 template <typename T>
