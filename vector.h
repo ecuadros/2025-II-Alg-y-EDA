@@ -38,9 +38,21 @@ public:
     T& operator[](size_t index);
 };
 
-template <typename T>
-CVector<T>::CVector(size_t n){
+template <typename T> 
+CVector<T>::CVector(CVector &v){
+    m_count = v.m_count;
+    m_max = v.m_max;
 
+    m_pVect = new T[m_max];
+
+    for(size_t i=0; i<m_count; i++){
+        m_pVect[i] = v.m_pVect[i];
+    }
+}
+
+template <typename T>
+CVector<T>::CVector(size_t n)
+{
 }
 
 // TODO (Nivel 1): hacer dinamico el delta de crecimiento
