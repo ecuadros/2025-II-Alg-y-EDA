@@ -3,6 +3,7 @@
 #include <vector>
 #include "hilos.h"
 #include "vector.h"
+#include <mutex>
 using namespace std;
 
 mutex cout_mutex;

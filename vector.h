@@ -24,7 +24,6 @@ public:
     CVector(CVector &v);
 
     CVector(size_t n);
-    CVector(CVector &v);
     // TODO  (Nivel 2): Agregar un move constructor
     CVector(CVector &&v);
 
