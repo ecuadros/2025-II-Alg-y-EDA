@@ -21,7 +21,7 @@ class CVector{
     size_t  m_max   = 0; // Max capacity
 public:
     // TODO  (Nivel 1) Agregar un constructor por copia
-    CVector(CVector &v);
+    CVector(const CVector &v);
 
     CVector(size_t n);
     // TODO  (Nivel 2): Agregar un move constructor
@@ -46,6 +46,17 @@ CVector<T>::~CVector() {
 template <typename T>
 CVector<T>::CVector(size_t n){
 
+}
+
+// TODO (Nivel 1): hacer el constructor por copia
+template <typename T>
+CVector<T>::CVector(const CVector<T> &v)
+: m_pVect(nullptr), m_count(v.m_count), m_max(v.m_max) {
+    if (m_max > 0) {
+        m_pVect = new T[m_max];
+        for (size_t i = 0; i < m_count; ++i)
+            m_pVect[i] = v.m_pVect[i];
+    }
 }
 
 // TODO (Nivel 1): hacer dinamico el delta de crecimiento
