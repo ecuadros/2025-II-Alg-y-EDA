@@ -35,6 +35,8 @@ public:
 	
 	T& operator[](size_t index);
 
+	size_t getMaxSize() const { return m_max; }
+
 private:
 
 	void resize(size_t delta = 0);
@@ -102,10 +104,12 @@ T& CVector<T>::operator[](size_t index) {
 
 template <typename T>
 std::ostream& operator<<(std::ostream& os, CVector<T>& vec) {
-	// os << "[";
-	for (size_t i = 0; i < vec.size(); ++i)
-		os << vec[i] << " ";
-	// os << "]";
+	os << "[";
+		for (size_t i = 0; i < vector.m_max; i++) {
+			os << vector[i];
+			os << ", ";
+		}
+	os << "]";
 	return os;
 }
 

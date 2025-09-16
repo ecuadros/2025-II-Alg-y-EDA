@@ -5,9 +5,9 @@ using namespace std;
 
 void DemoVector(){
     CVector<int> vector(10);
-    vector.insert(5);
+    vector.insert(5, 0);
     // TODO  (Nivel 1) habilitar el uso de []
     vector[3] = 8;
     // TODO  (Nivel 2) habilitar que el vector pueda ser escrito con cout <<
-    cout << vector[3] << endl;
+    cout << vector << endl;
 }
