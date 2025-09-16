@@ -20,28 +20,28 @@ class CVector{
 	size_t m_currentDelta = 0;
 public:
 	
-// TODO  (Nivel 1) Agregar un constructor por copia
+	CVector();
 	CVector(CVector &v);
-
 	CVector(size_t n);
-
-	// TODO  (Nivel 2): Agregar un move constructor
 	CVector(CVector &&v);
 
 	// TODO: (Nivel 1) implementar el destructor de forma segura
 	virtual ~CVector();
 	
-	void insert(const T &elem, const size_t position);
+	void Insert(const T &elem, const size_t position);
 	
 	T& operator[](size_t index);
 
-	size_t getMaxSize() const { return m_max; }
+	size_t GetMaxSize() const { return m_max; }
 
 private:
 
-	void resize(size_t delta = 0);
+	void Resize(size_t delta = 0);
 	void Destroy();
 };
+
+template <typename T>
+CVector<T>::CVector() : CVector(5) {};
 
 template <typename T>
 CVector<T>::CVector(size_t n){
@@ -55,7 +55,10 @@ CVector<T>::CVector(CVector &v)
 	: m_pVect(v.m_pVect), m_max(v.m_max) {}
 
 template <typename T>
-void CVector<T>::resize(size_t delta) {
+CVector<T>::CVector(CVector &&v) : CVector(v) {}
+
+template <typename T>
+void CVector<T>::Resize(size_t delta) {
 	size_t auxDelta = m_currentDelta;
 
 	if(delta != 0){
@@ -91,7 +94,7 @@ void CVector<T>::Destroy(){
 
 // TODO (ya está hecha): la funcion insert debe permitir que el vector crezca si ha desbordado
 template <typename T>
-void CVector<T>::insert(const T &elem, const size_t position){
+void CVector<T>::Insert(const T &elem, const size_t position){
 	this->operator[](position) = elem;
 }
 
