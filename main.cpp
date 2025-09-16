@@ -10,6 +10,7 @@ using namespace std;
    2. Jharvy Jonas Cadillo Tarazona
    20. Ortiz Lozano Eric Hernan
    22. Chandler Steven Perez Cueva
+   26. Omar Vite Allca
 */
 
 // Forma 1 de Compilar: 
