@@ -1,39 +1,110 @@
 #ifndef __VECTOR_H__
 #define __VECTOR_H__
+#include <ostream>
+#include <utility> // std::move
 
-// PC1: deben hacer:
-//      2 problemas de nivel 2
-//      3 problemas de nivel 1
-// Cada solucion enviarla como un Pull request
+/**
+ * @file
+ * @brief Definición de la clase plantilla CVector (vector dinámico minimal).
+ *
+ * Crece con delta lineal configurable o en modo multiplicativo (delta=0).
+ * Incluye constructor por copia (deep copy), move constructor, y operator<<.
+ */
 
-// TODO (Nivel 2): Agregar Traits
-
-// TODO (Nivel 2): Agregar Iterators (forward, backward)
-
-// TODO (Nivel 1): Agregar Documentacion para generar con doxygen
-
-// TODO  (Nivel 2): Agregar control de concurrencia en todo el vector
+/**
+ * @brief Vector dinámico inspirado en el enfoque del curso/libro.
+ *
+ * @tparam T Tipo de dato almacenado.
+ *
+ * Características:
+ * - Inserción amortizada con @c resize() cuando hay desbordamiento.
+ * - Crecimiento lineal (delta>0) o multiplicativo (delta==0).
+ * - Gestión segura de memoria (destructor) y semántica de copia/movimiento.
+ */
 template <typename T>
 class CVector{
-   
+    /** @brief Puntero al buffer dinámico. */
     T      *m_pVect = nullptr;
-    size_t  m_count = 0; // How many elements we have now?
-    size_t  m_max   = 0; // Max capacity
-    size_t  m_delta = 10; // Growth factor (dynamic)
+    /** @brief Número de elementos actualmente ocupados. */
+    size_t  m_count = 0;
+    /** @brief Capacidad reservada del buffer. */
+    size_t  m_max   = 0;
+    /** @brief Delta de crecimiento (0 => modo multiplicativo). */
+    size_t  m_delta = 10;
+
 public:
-    // TODO  (Nivel 1) Agregar un constructor por copia
+    /**
+     * @brief Constructor por copia (deep copy).
+     * @param v Otro vector a copiar.
+     */
     CVector(const CVector &v);
 
+    /**
+     * @brief Constructor con capacidad inicial.
+     * @param n Capacidad inicial (si n>0 se reserva memoria).
+     */
     CVector(size_t n);
-    // TODO  (Nivel 2): Agregar un move constructor
+
+    /**
+     * @brief Move constructor.
+     * @param v Vector de origen cuyos recursos serán transferidos.
+     */
     CVector(CVector &&v) noexcept;
 
-    // TODO: (Nivel 1) implementar el destructor de forma segura
-    // virtual CVector();
+    /**
+     * @brief Destructor seguro (libera el buffer y deja estado válido).
+     */
     virtual ~CVector();
-    void insert(T &elem);
+
+    /**
+     * @brief Inserta un elemento por copia.
+     * @param elem Elemento a insertar.
+     *
+     * Si @c size()==capacity() se invoca @c resize().
+     */
+    void insert(const T &elem);
+
+    /**
+     * @brief Inserta un elemento por movimiento.
+     * @param elem Elemento a insertar (rvalue).
+     *
+     * Si @c size()==capacity() se invoca @c resize().
+     */
+    void insert(T &&elem);
+
+    /**
+     * @brief Aumenta la capacidad del vector.
+     *
+     * - @c m_delta > 0  ⇒ crecimiento lineal (@c m_max += m_delta).
+     * - @c m_delta == 0 ⇒ crecimiento multiplicativo (~x2).
+     */
     void resize();
+
+    /**
+     * @brief Configura el delta de crecimiento.
+     * @param d Nuevo delta (0 activa modo multiplicativo).
+     */
     void set_delta(size_t d){ m_delta = d; }
+
+    /// @name Accesores
+    ///@{
+    /** @brief Número de elementos. */ 
+    size_t size() const noexcept { return m_count; }
+    /** @brief Capacidad actual. */
+    size_t capacity() const noexcept { return m_max; }
+    ///@}
+
+    /**
+     * @brief Operador de salida para imprimir el vector.
+     * @tparam U Tipo almacenado
+     * @param os Stream de salida
+     * @param v  Vector a imprimir
+     * @return @c os para encadenar
+     *
+     * Imprime con el formato: @code [e0, e1, e2, ...] @endcode
+     */
+    template <typename U>
+    friend std::ostream& operator<<(std::ostream& os, const CVector<U>& v);
 };
 
 // destructor seguro
@@ -45,6 +116,7 @@ CVector<T>::~CVector() {
     m_max   = 0;         
 }
 
+// TODO (Nivel 1): hacer el constructor por tamaño
 template <typename T>
 CVector<T>::CVector(size_t n)
 : m_pVect(nullptr), m_count(0), m_max(n) {
@@ -61,6 +133,15 @@ CVector<T>::CVector(const CVector<T> &v)
         for (size_t i = 0; i < m_count; ++i)
             m_pVect[i] = v.m_pVect[i];
     }
+}
+
+/// Move constructor (Nivel 2)
+template <typename T>
+CVector<T>::CVector(CVector<T> &&v) noexcept
+: m_pVect(v.m_pVect), m_count(v.m_count), m_max(v.m_max), m_delta(v.m_delta) {
+    v.m_pVect = nullptr;
+    v.m_count = 0;
+    v.m_max   = 0;
 }
 
 // TODO (Nivel 1): hacer dinamico el delta de crecimiento
@@ -89,20 +170,27 @@ void CVector<T>::resize(){
 
 // TODO (ya está hecha): la funcion insert debe permitir que el vector crezca si ha desbordado
 template <typename T>
-void CVector<T>::insert(T &elem){
-    if(m_count == m_max)
-        resize();
+void CVector<T>::insert(const T &elem){
+    if (m_count == m_max) resize();
     m_pVect[m_count++] = elem;
 }
 
-// Move constructor (Nivel 2)
+// insert por movimiento
 template <typename T>
-CVector<T>::CVector(CVector<T> &&v) noexcept
-: m_pVect(v.m_pVect), m_count(v.m_count), m_max(v.m_max), m_delta(v.m_delta) {
-    v.m_pVect = nullptr;
-    v.m_count = 0;
-    v.m_max   = 0;
-    // m_delta del origen lo dejamos tal cual (no es un recurso dinámico)
+void CVector<T>::insert(T &&elem){
+    if (m_count == m_max) resize();
+    m_pVect[m_count++] = std::move(elem);
+}
+
+/// operator<< (Nivel 2)
+template <typename U>
+std::ostream& operator<<(std::ostream& os, const CVector<U>& v){
+    os << "[";
+    for (size_t i = 0; i < v.m_count; ++i) {
+        if (i) os << ", ";
+        os << v.m_pVect[i];
+    }
+    return os << "]";
 }
 
 
