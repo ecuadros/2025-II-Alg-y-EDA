@@ -10,8 +10,6 @@
 
 // TODO (Nivel 2): Agregar Iterators (forward, backward)
 
-// TODO (Nivel 1): Agregar Documentacion para generar con doxygen
-
 // TODO  (Nivel 2): Agregar control de concurrencia en todo el vector
 template <typename T>
 class CVector{
@@ -20,18 +18,39 @@ class CVector{
 	size_t m_currentDelta = 0;
 public:
 	
+	/// @brief Default constructor that initialize the vector with a size of 5.
 	CVector();
+
+	/// @brief Constructor that initialize the vector witha size of n.
+	/// @param n The size to initialize the vector.
 	CVector(CVector &v);
+
+	/// @brief Constructor that copy the value of another vector.
+	/// @param v The vector to copy.
 	CVector(size_t n);
+
+	/// @brief 
+	/// Constructor that moves a vector by reference to another vector.
+	/// @param v The vector to move.
 	CVector(CVector &&v);
 
 	// TODO: (Nivel 1) implementar el destructor de forma segura
+
 	virtual ~CVector();
 	
+	/// @brief Inserts the given element into the given position.
+	/// @param elem The element to insert.
+	/// @param position The position where to insert the element.
+	/// @note You can also use the [] operator.
 	void Insert(const T &elem, const size_t position);
 	
+	/// @brief Operator that returns the reference of the element of position n.
+	/// @param index The position to return the reference.
+	/// @return The reference of the element of position n.
 	T& operator[](size_t index);
 
+	/// @brief Returns the current max size of the vector.
+	/// @return The max size of the vector.
 	size_t GetMaxSize() const { return m_max; }
 
 private:
