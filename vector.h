@@ -31,12 +31,23 @@ public:
     vrtual CVector();
     void insert(T &elem);
     void resize();
+
+    T& operator[](size_t index);
 };
 
 template <typename T>
 CVector<T>::CVector(size_t n){
 
 }
+
+//definimos el operador []
+template <typename T>
+T& CVector<T>::operator[](size_t index){
+    if(index >= m_count)
+        throw std::out_of_range("Index out of range");
+    return m_pVect[index];
+}
+
 
 // TODO (Nivel 1): hacer dinamico el delta de crecimiento
 template <typename T>
