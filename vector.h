@@ -46,8 +46,10 @@ CVector<T>::~CVector() {
 }
 
 template <typename T>
-CVector<T>::CVector(size_t n){
-
+CVector<T>::CVector(size_t n)
+: m_pVect(nullptr), m_count(0), m_max(n) {
+    if (m_max > 0)
+        m_pVect = new T[m_max];
 }
 
 // TODO (Nivel 1): hacer el constructor por copia
@@ -64,12 +66,25 @@ CVector<T>::CVector(const CVector<T> &v)
 // TODO (Nivel 1): hacer dinamico el delta de crecimiento
 template <typename T>
 void CVector<T>::resize(){
-    T *pTmp = new T[m_max+10];
-    for(auto i=0; i < m_max ; ++i)
+    size_t new_cap;
+
+    if (m_max == 0) {
+        new_cap = (m_delta > 0) ? m_delta : 1;
+    } else if (m_delta > 0) {
+        new_cap = m_max + m_delta;   // crecimiento lineal (delta)
+    } else {
+        new_cap = m_max * 2;         // crecimiento multiplicativo
+    }
+
+    T *pTmp = new T[new_cap];
+
+    // Copiar solo los elementos usados
+    for (size_t i = 0; i < m_count; ++i)
         pTmp[i] = m_pVect[i];
+
     delete [] m_pVect;
-    m_max += 10;
     m_pVect = pTmp;
+    m_max   = new_cap;
 }
 
 // TODO (ya está hecha): la funcion insert debe permitir que el vector crezca si ha desbordado
