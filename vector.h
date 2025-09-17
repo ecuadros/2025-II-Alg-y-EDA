@@ -27,17 +27,20 @@ public:
     CVector(CVector &v);
 
     CVector(size_t n);
-    // TODO  (Nivel 2): Agregar un move constructor
+
+  // TODO  (Nivel 2): Agregar un move constructor
     CVector(CVector &&v);
 
     // TODO: (Nivel 1) implementar el destructor de forma segura
-    vrtual CVector();
+    virtual ~CVector();
     void insert(T &elem);
+    T&   operator[](size_t index);
+    size_t size();
+private:
     void resize();
 
-    T& operator[](size_t index);
-    
-    size_t size();
+    void Init(size_t n);
+    void Destroy();
 };
 
 template <typename T>
@@ -47,50 +50,22 @@ CVector<T>::CVector(size_t n){
     m_count = 0;
 }
 
-//destructor
-template <typename T>
-CVector<T>::~CVector(){
-    delete [] m_pVect;
-}
-
-// constructor por copia
-template <typename T>
-CVector<T>::CVector(CVector<T> &v) {
-    m_count = v.m_count;
-    m_max = v.m_max;
-    m_pVect = new T[m_max];
-    for (size_t i = 0; i < m_count; ++i) {
-        m_pVect[i] = v.m_pVect[i];  
-    }
-}
-
-//definimos el operador []
-template <typename T>
-T& CVector<T>::operator[](size_t index){
-    if(index >= m_count)
-        throw std::out_of_range("Index out of range");
-    return m_pVect[index];
-}
-
 //funcion para determinar el tamaño del vector
 template <typename T>
 size_t CVector<T>::size() {
     return m_count;
+    Init(n);
 }
 
 template <typename T>
-std::ostream& operator<<(std::ostream& os, CVector<T>& v) {
-    size_t n = v.size();
-    os << "[";
-    for (size_t i = 0; i < n; ++i) {
-        os << v[i];
-        if (i + 1 < n) 
-            os << ", ";
-    }
-    os << "]";
-    return os;
+CVector<T>::CVector(CVector &v) 
+          : m_max(v.m_max), 
+            m_count(v.m_count) {
+    if (m_max > 0)
+        m_pVect = new T[m_max];
+    for (size_t i = 0; i < m_count; ++i)
+        m_pVect[i] = v[i];       
 }
-
 
 // TODO (Nivel 1): hacer dinamico el delta de crecimiento
 template <typename T>
@@ -103,12 +78,53 @@ void CVector<T>::resize(){
     m_pVect = pTmp;
 }
 
+template <typename T>
+void CVector<T>::Init(size_t n){
+    Destroy();
+    resize();
+}
+
+template <typename T>
+    CVector<T>::~CVector(){
+    Destroy();
+}
+
+template <typename T>
+void CVector<T>::Destroy(){
+    m_count = 0; 
+    m_max   = 0;
+    delete [] m_pVect;
+    m_pVect = nullptr;
+}
+
 // TODO (ya está hecha): la funcion insert debe permitir que el vector crezca si ha desbordado
 template <typename T>
 void CVector<T>::insert(T &elem){   //para que acepte lvalues y rvalues le tengo que agregar const a T& elem
     if(m_count == m_max)
         resize();
     m_pVect[m_count++] = elem;
+}
+
+template <typename T>
+T& CVector<T>::operator[](size_t index) {
+    if (index >= m_count) {
+        throw std::out_of_range("Index out of range");
+    }
+    return m_pVect[index];
+}
+
+
+template <typename T>
+std::ostream& operator<<(std::ostream& os, CVector<T>& v) {
+    size_t n = v.size();
+    os << "[";
+    for (size_t i = 0; i < n; ++i) {
+        os << v[i];
+        if (i + 1 < n) 
+            os << ", ";
+    }
+    os << "]";
+    return os;
 }
 
 #endif // __VECTOR_H__
