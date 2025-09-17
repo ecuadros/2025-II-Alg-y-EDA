@@ -13,29 +13,87 @@
 // TODO (Nivel 1): Agregar Documentacion para generar con doxygen
 
 // TODO  (Nivel 2): Agregar control de concurrencia en todo el vector
+
+/**
+    *   @file vector.h
+    *   @brief A simple implementation of a dynamic array (vector) in C++
+    *   @date 2025
+*/
 template <typename T>
 class CVector{
-   
+    /**
+    *   @brief Pointer to the dynamic array
+    */
     T      *m_pVect = nullptr;
+
+    /**
+    *   @brief Current number of elements in the vector
+    */
     size_t  m_count = 0; // How many elements we have now?
+
+    /**
+    *   @brief Max number of elements the vector can hold
+    */
     size_t  m_max   = 0; // Max capacity
 public:
     // TODO  (Nivel 1) Agregar un constructor por copia
+    /**
+    *   @brief Copy constructor
+    */
     CVector(CVector &v);
 
+    /**
+    *   @brief Constructor, initializes vector with given size
+    *   @param n initial size of the vector, n > 0
+    */
     CVector(size_t n);
-    CVector(CVector &v);
     // TODO  (Nivel 2): Agregar un move constructor
+
+    /**
+    *   @brief Move constructor
+    */
     CVector(CVector &&v);
 
     // TODO: (Nivel 1) implementar el destructor de forma segura
+
+    /**
+    *   @brief Destructor, frees allocated memory
+    */
     virtual ~CVector();
+
+    /**
+    *   @brief Insert a new element at the end of the vector
+    *   @param elem element to insert
+    */
     void insert(T &elem);
+
+    /**
+    *   @brief Overload operator [] to access elements in the vector
+    *   @param index position of the element to access
+    *   \return reference to the element at the given index
+    */
     T&   operator[](size_t index);
+
+    /**
+    *   @brief Get the current size of the vector
+    *   \return number of elements
+    */
     size_t size() const { return m_count; }
 private:
+    /**
+    *   @brief Resize the internal array to have more capacity
+    */
     void resize();
+
+    /**
+    *   @brief Initialize the CVector object, used in constructor and assignment
+    *   @param n initial size of the vector
+    */
     void Init(size_t n);
+
+    /**
+    *   @brief Destroy the CVector object, used in destructor and Init
+    */
     void Destroy();
 };
 
@@ -110,3 +168,15 @@ std::ostream& operator<<(std::ostream& os, CVector<T>& vec) {
 }
 
 #endif // __VECTOR_H__
+
+
+/**
+ * @mainpage CVector Implementation
+ *
+ * @section intro_sec Introduction
+ * Implementation of a simple dynamic array (vector) in C++ for the course Advanced Algorithms and Data Structures 2025-II.
+ * Check the defined methods in the [CVector header file](classCVector.html).
+ *
+ * @section install_sec Run
+ * To run the code, compile using GNU Make with the command `make all`.
+*/
