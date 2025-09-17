@@ -6,6 +6,10 @@
 //      3 problemas de nivel 1
 // Cada solucion enviarla como un Pull request
 
+// RESUMEN TODOs COMPLETADOS:
+// Nivel 1: (1) Crecimiento dinámico, (2) Destructor seguro, (3) Operador []
+// Nivel 2: (1) Move constructor, (2) Operador <<
+
 // TODO (Nivel 2): Agregar Traits
 
 // TODO (Nivel 2): Agregar Iterators (forward, backward)
@@ -31,6 +35,22 @@ public:
     void insert(T &elem);
     T&   operator[](size_t index);
     size_t size() const { return m_count; }
+    
+    // COMPLETADO: 2 TODOs implementados aquí:
+    // - (Nivel 1) Operador [] para acceso a elementos  
+    // - (Nivel 2) Operador << para imprimir con formato [1, 2, 3]
+    friend std::ostream& operator<<(std::ostream& os, const CVector& vec) {
+        os << "[";
+        for (size_t i = 0; i < vec.m_count; ++i) {
+            os << vec.m_pVect[i];
+            if (i < vec.m_count - 1) {
+                os << ", ";
+            }
+        }
+        os << "]";
+        return os;
+    }
+    
 private:
     void resize();
     void Init(size_t n);
@@ -115,15 +135,6 @@ T& CVector<T>::operator[](size_t index) {
         throw std::out_of_range("Index out of range");
     }
     return m_pVect[index];
-}
-
-template <typename T>
-std::ostream& operator<<(std::ostream& os, CVector<T>& vec) {
-    // os << "[";
-    for (size_t i = 0; i < vec.size(); ++i)
-        os << vec[i] << " ";
-    // os << "]";
-    return os;
 }
 
 #endif // __VECTOR_H__
