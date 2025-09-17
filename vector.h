@@ -26,7 +26,7 @@ public:
     // TODO  (Nivel 2): Agregar un move constructor
     CVector(CVector &&v);
 
-    // TODO: (Nivel 1) implementar el destructor de forma segura
+    // COMPLETADO (Nivel 1): Destructor implementado de forma segura
     virtual ~CVector();
     void insert(T &elem);
     T&   operator[](size_t index);
@@ -81,10 +81,12 @@ template <typename T>
 
 template <typename T>
 void CVector<T>::Destroy(){
+    if (m_pVect != nullptr) {
+        delete [] m_pVect;
+        m_pVect = nullptr;
+    }
     m_count = 0; 
     m_max   = 0;
-    delete [] m_pVect;
-    m_pVect = nullptr;
 }
 
 // TODO (ya está hecha): la funcion insert debe permitir que el vector crezca si ha desbordado
