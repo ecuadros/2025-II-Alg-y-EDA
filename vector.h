@@ -22,9 +22,7 @@ class CVector{
 public:
     // TODO  (Nivel 1) Agregar un constructor por copia
     CVector(CVector &v);
-
     CVector(size_t n);
-    CVector(CVector &v);
     // TODO  (Nivel 2): Agregar un move constructor
     CVector(CVector &&v);
 
@@ -54,21 +52,26 @@ CVector<T>::CVector(CVector &v)
         m_pVect[i] = v[i];       
 }
 
-// TODO (Nivel 1): hacer dinamico el delta de crecimiento
+// COMPLETADO (Nivel 1): Crecimiento dinámico duplicando la capacidad
 template <typename T>
 void CVector<T>::resize(){
-    T *pTmp = new T[m_max+10];
-    for(auto i=0; i < m_max ; ++i)
+    size_t new_max = (m_max == 0) ? 1 : m_max * 2;
+    T *pTmp = new T[new_max];
+    for(size_t i=0; i < m_max ; ++i)
         pTmp[i] = m_pVect[i];
     delete [] m_pVect;
-    m_max += 10;
+    m_max = new_max;
     m_pVect = pTmp;
 }
 
 template <typename T>
 void CVector<T>::Init(size_t n){
     Destroy();
-    resize();
+    if (n > 0) {
+        m_max = n;           // Usar el parámetro n
+        m_pVect = new T[m_max]; // Allocar la memoria
+        m_count = 0;         // Empezar con 0 elementos
+    }
 }
 
 template <typename T>
