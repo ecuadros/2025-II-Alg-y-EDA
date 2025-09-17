@@ -28,11 +28,14 @@ public:
     CVector(CVector &&v);
 
     // TODO: (Nivel 1) implementar el destructor de forma segura
-    vrtual CVector();
+    virtual ~CVector();
     void insert(T &elem);
     void resize();
 
+    size_t size() { return m_count;}
+
     T& operator[](size_t index);
+    //friend std::ostream& operator<< <>(std::ostream& os, CVector& v);
 };
 
 template <typename T>
@@ -59,13 +62,27 @@ void CVector<T>::insert(T &elem){
     m_pVect[m_count++] = elem;
 }
 
+// TODO  (Nivel 2) habilitar que el vector pueda ser escrito con cout <<
+// cout << vector << endl;
+template <typename T>
+std::ostream& operator<<(std::ostream& os, CVector<T>& v){
+    //os << "CVector: [ ";
+
+    for(size_t i = 0; i<v.size(); i++){
+        os << v[i]<< " ";
+    }
+    os << std::endl;
+
+    return os;
+}
+
 // TODO  (Nivel 1) habilitar el uso de []
 // vector[3] = 8;
 template <typename T>
 T& CVector<T>::operator[](size_t index){
     if(index >= m_max){
         std::cerr<<"Error de ìndice";
-        exit(0);
+        exit(1);
     }
     return m_pVect[index];
 }
