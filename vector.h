@@ -19,6 +19,7 @@ class CVector{
     T      *m_pVect = nullptr;
     size_t  m_count = 0; // How many elements we have now?
     size_t  m_max   = 0; // Max capacity
+    float   factor = 0.5;
 public:
     // TODO  (Nivel 1) Agregar un constructor por copia
     CVector(CVector &v);
@@ -58,11 +59,12 @@ CVector<T>::CVector(size_t n)
 // TODO (Nivel 1): hacer dinamico el delta de crecimiento
 template <typename T>
 void CVector<T>::resize(){
-    T *pTmp = new T[m_max+10];
+    size_t delta = m_max * factor;
+    T *pTmp = new T[m_max + delta];
     for(auto i=0; i < m_max ; ++i)
         pTmp[i] = m_pVect[i];
     delete [] m_pVect;
-    m_max += 10;
+    m_max += delta;
     m_pVect = pTmp;
 }
 
