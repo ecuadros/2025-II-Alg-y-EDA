@@ -5,6 +5,8 @@
 #include "vector.h"
 using namespace std;
 
+mutex cout_mutex;
+
 // Function to be run by the thread
 void func(int thread_id, CVector<int> &v) {
     cout << "Hello from the thread!" << endl;
@@ -30,10 +32,10 @@ void DemoThreads(){
     // Crear y lanzar los threads
     for (int i = 0; i < num_threads; ++i) {
         // Crear el objeto thread
-        thread t(func, i, vect);
+        // thread t(func, i, vect);
         
         // Mover el thread al vector (no se puede copiar, solo mover)
-        threads.push_back(move(t));
+        // threads.push_back(move(t));
     }
 
     // Esperar a que todos los threads terminen
