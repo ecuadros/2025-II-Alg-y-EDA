@@ -1,6 +1,8 @@
 #ifndef __VECTOR_H__
 #define __VECTOR_H__
 
+#include <cassert>
+
 // PC1: deben hacer:
 //      2 problemas de nivel 2
 //      3 problemas de nivel 1
@@ -24,7 +26,7 @@ public:
     CVector(CVector &v);
 
     CVector(size_t n);
-    CVector(CVector &v);
+    // CVector(CVector &v);
     // TODO  (Nivel 2): Agregar un move constructor
     CVector(CVector &&v);
 
@@ -32,6 +34,7 @@ public:
     virtual ~CVector();
     void insert(T &elem);
     T&   operator[](size_t index);
+    const T& operator[](size_t index) const;
     size_t size() const { return m_count; }
 private:
     void resize();
@@ -93,10 +96,14 @@ void CVector<T>::insert(T &elem){
 }
 
 template <typename T>
-T& CVector<T>::operator[](size_t index) {
-    if (index >= m_count) {
-        throw std::out_of_range("Index out of range");
-    }
+T& CVector<T>::operator[](size_t index){
+    assert(index < m_count && "Index out of range");
+    return m_pVect[index];
+}
+
+template <typename T>
+const T& CVector<T>::operator[](size_t index) const{
+    assert(index < m_count && "Index out of range");
     return m_pVect[index];
 }
 
