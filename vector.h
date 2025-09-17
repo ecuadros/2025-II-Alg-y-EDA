@@ -23,8 +23,8 @@ public:
     // TODO  (Nivel 1) Agregar un constructor por copia
     CVector(CVector &v);
     CVector(size_t n);
-    // TODO  (Nivel 2): Agregar un move constructor
-    CVector(CVector &&v);
+    // COMPLETADO (Nivel 2): Move constructor implementado
+    CVector(CVector &&v) noexcept;
 
     // COMPLETADO (Nivel 1): Destructor implementado de forma segura
     virtual ~CVector();
@@ -50,6 +50,18 @@ CVector<T>::CVector(CVector &v)
         m_pVect = new T[m_max];
     for (size_t i = 0; i < m_count; ++i)
         m_pVect[i] = v[i];       
+}
+
+// COMPLETADO (Nivel 2): Move constructor para optimizar transferencias
+template <typename T>
+CVector<T>::CVector(CVector &&v) noexcept 
+          : m_pVect(v.m_pVect), 
+            m_count(v.m_count),
+            m_max(v.m_max) {
+    // Resetear el objeto fuente para dejarlo en estado válido
+    v.m_pVect = nullptr;
+    v.m_max = 0;
+    v.m_count = 0;
 }
 
 // COMPLETADO (Nivel 1): Crecimiento dinámico duplicando la capacidad
