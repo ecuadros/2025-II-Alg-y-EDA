@@ -25,8 +25,10 @@ public:
     CVector(CVector &v);
 
     CVector(size_t n);
+    void Init(size_t n);
+    void Destroy();
     // TODO  (Nivel 2): Agregar un move constructor
-    CVector(CVector &&v);
+    CVector(CVector &&v) noexcept;
 
     // TODO: (Nivel 1) implementar el destructor de forma segura
     virtual ~CVector();
@@ -52,8 +54,42 @@ CVector<T>::CVector(CVector &v)
 }
 
 template <typename T>
+CVector<T>::~CVector(){
+    Destroy();
+}
+
+
+template <typename T>
 CVector<T>::CVector(size_t n)
 {
+    Init(n);
+}
+
+template <typename T>
+void CVector<T>::Init(size_t n){
+    Destroy();
+    resize();
+}
+
+template <typename T>
+void CVector<T>::Destroy(){
+    m_count = 0; 
+    m_max   = 0;
+    delete [] m_pVect;
+    m_pVect = nullptr;
+}
+
+// Move constructor - IMPLEMENTACIÓN (Nivel 2)
+template <typename T>
+CVector<T>::CVector(CVector &&v) noexcept 
+    : m_pVect(v.m_pVect),   // mover puntero del otro objeto
+      m_count(v.m_count),   // copiar contador de elementos
+      m_max(v.m_max) {      // copiar capacidad máxima   
+    
+    // Vaciar el objeto fuente manteniéndolo válido
+    v.m_pVect = nullptr;    // dejar fuente sin puntero
+    v.m_count = 0;         // dejar fuente sin elementos
+    v.m_max = 0;          // dejar fuente sin capacidad
 }
 
 // TODO (Nivel 1): hacer dinamico el delta de crecimiento
