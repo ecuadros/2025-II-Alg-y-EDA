@@ -31,6 +31,8 @@ public:
     vrtual CVector();
     void insert(T &elem);
     void resize();
+
+    T& operator[](size_t index);
 };
 
 template <typename T>
@@ -55,6 +57,17 @@ void CVector<T>::insert(T &elem){
     if(m_count == m_max)
         resize();
     m_pVect[m_count++] = elem;
+}
+
+// TODO  (Nivel 1) habilitar el uso de []
+// vector[3] = 8;
+template <typename T>
+T& CVector<T>::operator[](size_t index){
+    if(index >= m_max){
+        std::cerr<<"Error de ìndice";
+        exit(0);
+    }
+    return m_pVect[index];
 }
 
 #endif // __VECTOR_H__
