@@ -24,8 +24,7 @@ public:
     CVector(CVector &v);
 
     CVector(size_t n);
-    CVector(CVector &v);
-    // TODO  (Nivel 2): Agregar un move constructor
+    // CVector(CVector &v);
     CVector(CVector &&v);
 
     // TODO: (Nivel 1) implementar el destructor de forma segura
@@ -107,6 +106,16 @@ std::ostream& operator<<(std::ostream& os, CVector<T>& vec) {
         os << vec[i] << " ";
     // os << "]";
     return os;
+}
+
+template <typename T>
+CVector<T>::CVector(CVector &&v)
+            : m_pVect(v.m_pVect),
+              m_count(v.m_count),
+              m_max(v.m_max){
+ v.m_pVect = nullptr;
+ v.m_count = 0;
+ v.m_max = 0;
 }
 
 #endif // __VECTOR_H__
