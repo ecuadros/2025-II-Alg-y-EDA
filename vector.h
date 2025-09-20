@@ -28,7 +28,7 @@ public:
     CVector(CVector &&v);
 
     // TODO: (Nivel 1) implementar el destructor de forma segura
-    virtual ~CVector();
+    // virtual ~CVector();
     void insert(T const &elem);
     void resize();
 };
@@ -52,11 +52,11 @@ CVector<T>::CVector(size_t n)
 }
 
 
-template <typename T>
-CVector<T>::~CVector(){
-    // std::cout << "Destructor: " << m_pVect << std::endl;
-    delete[] m_pVect;
-}
+// template <typename T>
+// CVector<T>::~CVector(){
+//     // std::cout << "Destructor: " << m_pVect << std::endl;
+//     delete[] m_pVect;
+// }
 
 
 
