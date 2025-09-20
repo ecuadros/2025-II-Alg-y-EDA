@@ -1,9 +1,0 @@
-<map id="vector.h" name="vector.h">
-<area shape="rect" id="Node000001" title=" " alt="" coords="99,5,173,31"/>
-<area shape="rect" id="Node000002" title=" " alt="" coords="5,79,72,104"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="122,33,67,72,64,68,119,29"/>
-<area shape="rect" id="Node000003" title=" " alt="" coords="96,79,176,104"/>
-<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="139,31,139,65,133,65,133,31"/>
-<area shape="rect" id="Node000004" title=" " alt="" coords="201,79,263,104"/>
-<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="153,29,207,68,204,72,150,33"/>
-</map>
