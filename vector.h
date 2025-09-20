@@ -41,13 +41,18 @@ CVector<T>::CVector(size_t n){
 // TODO (Nivel 1): hacer dinamico el delta de crecimiento
 template <typename T>
 void CVector<T>::resize(){
-    T *pTmp = new T[m_max+10];
-    for(auto i=0; i < m_max ; ++i)
+    while(m_count >= 10 * m_delta){
+        m_delta *= 10;
+    }
+    T *pTmp = new T[m_max + m_delta]();
+    for(size_t i=0; i < m_max ; ++i)
         pTmp[i] = m_pVect[i];
     delete [] m_pVect;
-    m_max += 10;
+    m_max += m_delta;
+    //cout << "m_max : "<< m_max << " m_delta : " << m_delta << endl; 
     m_pVect = pTmp;
 }
+
 
 // TODO (ya está hecha): la funcion insert debe permitir que el vector crezca si ha desbordado
 template <typename T>
