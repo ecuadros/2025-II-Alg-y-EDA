@@ -30,7 +30,13 @@ public:
     // TODO: (Nivel 1) implementar el destructor de forma segura
     vrtual CVector();
     void insert(T &elem);
-    void resize();
+    void resize();    
+    
+    T& operator[](size_t index){
+        if(index >= m_max)
+            exit(1);
+        return m_pVect[index];
+    }
 };
 
 template <typename T>
