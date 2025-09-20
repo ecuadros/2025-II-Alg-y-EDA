@@ -27,6 +27,9 @@ int main(){
     CVector vector2 = CVector<int>(vector56);
 
     CVector vector3 = std::move(vector56);
+
+    cout << "Demo vector: " << endl;
+    DemoVector();
     return 0;
 }
 

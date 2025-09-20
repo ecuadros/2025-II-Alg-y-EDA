@@ -1,6 +1,7 @@
 #ifndef __VECTOR_H__
 #define __VECTOR_H__
-
+#include <cstring>
+#include <iostream>
 #include <cmath>
 // PC1: deben hacer:
 //      2 problemas de nivel 2
@@ -38,6 +39,17 @@ public:
     virtual ~CVector();
     void insert(T const &elem);
     void resize();
+    T& operator[](size_t);
+    friend std::ostream& operator<<(std::ostream &os, const CVector& v){
+        os << "[";
+        for (size_t i = 0; i < v.m_max; ++i){
+            os << v.m_pVect[i];
+            if (i < v.m_max - 1)
+                os << ",";
+        }
+        os << "]";
+        return os;
+    }
 };
 
 template <typename T>
@@ -96,5 +108,21 @@ void CVector<T>::insert(T const &elem){
         resize();
     m_pVect[m_count++] = elem;
 }
+
+template <typename T>
+T& CVector<T>::operator[](size_t index){
+    if(index >= m_max){
+        // std::cout << index << std::endl;
+        // std::cout << m_count << std::endl;
+        throw std::out_of_range("Out of range");
+        
+    }
+    return m_pVect[index];
+}
+
+// template <typename T>
+// std::ostream& CVector<T>::operator<<(std::ostream &os, const CVector &v) {
+    
+// };
 
 #endif // __VECTOR_H__
