@@ -1,6 +1,7 @@
 #ifndef __VECTOR_H__
 #define __VECTOR_H__
 
+#include <cmath>
 // PC1: deben hacer:
 //      2 problemas de nivel 2
 //      3 problemas de nivel 1
@@ -19,6 +20,12 @@ class CVector{
     T      *m_pVect = nullptr;
     size_t  m_count = 0; // How many elements we have now?
     size_t  m_max   = 0; // Max capacity
+
+    // delta
+    size_t  delta = 0;
+    float   k = 0.1;
+    size_t  min_delta = 32;
+
 public:
     // TODO  (Nivel 1) Agregar un constructor por copia
     CVector(CVector &v);
@@ -63,11 +70,12 @@ CVector<T>::~CVector(){
 // TODO (Nivel 1): hacer dinamico el delta de crecimiento
 template <typename T>
 void CVector<T>::resize(){
-    T *pTmp = new T[m_max+10];
+    delta = std::max((size_t) std::ceil((float)m_max * k), min_delta);
+    T *pTmp = new T[m_max+delta];
     for(size_t i=0; i < m_max ; ++i)
         pTmp[i] = m_pVect[i];
     delete [] m_pVect;
-    m_max += 10;
+    m_max += delta;
     m_pVect = pTmp;
 }
 
