@@ -14,11 +14,12 @@
 
 // TODO  (Nivel 2): Agregar control de concurrencia en todo el vector
 template <typename T>
-class CVector{
-   
-    T      *m_pVect = nullptr;
-    size_t  m_count = 0; // How many elements we have now?
-    size_t  m_max   = 0; // Max capacity
+class CVector
+{
+
+    T *m_pVect = nullptr;
+    size_t m_count = 0; // How many elements we have now?
+    size_t m_max = 0;   // Max capacity
 public:
     // TODO  (Nivel 1) Agregar un constructor por copia
     CVector(CVector &v);
@@ -31,28 +32,37 @@ public:
     vrtual CVector();
     void insert(T &elem);
     void resize();
+
+    friend ostream &operator<<(ostream &os, const CVector<T> &vec)
+    {
+        for (size_t i = 0; i < vec.m_count; ++i)
+            os << vec.m_pVect[i] << " ";
+        return os;
+    }
 };
 
 template <typename T>
-CVector<T>::CVector(size_t n){
-
+CVector<T>::CVector(size_t n)
+{
 }
 
 // TODO (Nivel 1): hacer dinamico el delta de crecimiento
 template <typename T>
-void CVector<T>::resize(){
-    T *pTmp = new T[m_max+10];
-    for(auto i=0; i < m_max ; ++i)
+void CVector<T>::resize()
+{
+    T *pTmp = new T[m_max + 10];
+    for (auto i = 0; i < m_max; ++i)
         pTmp[i] = m_pVect[i];
-    delete [] m_pVect;
+    delete[] m_pVect;
     m_max += 10;
     m_pVect = pTmp;
 }
 
 // TODO (ya está hecha): la funcion insert debe permitir que el vector crezca si ha desbordado
 template <typename T>
-void CVector<T>::insert(T &elem){
-    if(m_count == m_max)
+void CVector<T>::insert(T &elem)
+{
+    if (m_count == m_max)
         resize();
     m_pVect[m_count++] = elem;
 }
