@@ -25,6 +25,8 @@ int main(){
     vector56.insert(12);
     // vector56.m_count = 2;
     CVector vector2 = CVector<int>(vector56);
+
+    CVector vector3 = std::move(vector56);
     return 0;
 }
 

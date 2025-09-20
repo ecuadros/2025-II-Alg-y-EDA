@@ -58,6 +58,16 @@ CVector<T>::CVector(size_t n)
     // std::cout << "Iniciando con size_t" << std::endl;
 }
 
+template <typename T>
+CVector<T>::CVector(CVector &&v)
+    :CVector(v)
+{
+    // std::cout << "Move Constructor: " << &v << std::endl;
+    v.m_pVect = nullptr;
+    v.m_count = 0;
+    v.m_max = 0;
+
+}
 
 template <typename T>
 CVector<T>::~CVector(){
