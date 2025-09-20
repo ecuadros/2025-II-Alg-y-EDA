@@ -1,0 +1,139 @@
+\doxysection{vector.\+h}
+\hypertarget{vector_8h_source}{}\label{vector_8h_source}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001\ \textcolor{preprocessor}{\#ifndef\ \_\_VECTOR\_H\_\_}}
+\DoxyCodeLine{00002\ \textcolor{preprocessor}{\#define\ \_\_VECTOR\_H\_\_}}
+\DoxyCodeLine{00003\ \textcolor{preprocessor}{\#include\ <cstring>}}
+\DoxyCodeLine{00004\ \textcolor{preprocessor}{\#include\ <iostream>}}
+\DoxyCodeLine{00005\ \textcolor{preprocessor}{\#include\ <cmath>}}
+\DoxyCodeLine{00006\ \textcolor{comment}{//\ PC1:\ deben\ hacer:}}
+\DoxyCodeLine{00007\ \textcolor{comment}{//\ \ \ \ \ \ 2\ problemas\ de\ nivel\ 2}}
+\DoxyCodeLine{00008\ \textcolor{comment}{//\ \ \ \ \ \ 3\ problemas\ de\ nivel\ 1}}
+\DoxyCodeLine{00009\ \textcolor{comment}{//\ Cada\ solucion\ enviarla\ como\ un\ Pull\ request}}
+\DoxyCodeLine{00010\ }
+\DoxyCodeLine{00011\ \textcolor{comment}{//\ TODO\ (Nivel\ 2):\ Agregar\ Traits}}
+\DoxyCodeLine{00012\ }
+\DoxyCodeLine{00013\ \textcolor{comment}{//\ TODO\ (Nivel\ 2):\ Agregar\ Iterators\ (forward,\ backward)}}
+\DoxyCodeLine{00014\ }
+\DoxyCodeLine{00015\ \textcolor{comment}{//\ TODO\ (Nivel\ 1):\ Agregar\ Documentacion\ para\ generar\ con\ doxygen}}
+\DoxyCodeLine{00016\ }
+\DoxyCodeLine{00017\ \textcolor{comment}{//\ TODO\ \ (Nivel\ 2):\ Agregar\ control\ de\ concurrencia\ en\ todo\ el\ vector}}
+\DoxyCodeLine{00018\ }
+\DoxyCodeLine{00023\ \textcolor{keyword}{template}\ <\textcolor{keyword}{typename}\ T>}
+\DoxyCodeLine{00024\ \textcolor{keyword}{class\ }\mbox{\hyperlink{classCVector}{CVector}}\{}
+\DoxyCodeLine{00025\ }
+\DoxyCodeLine{00026\ \ \ \ \ T\ \ \ \ \ \ *m\_pVect\ =\ \textcolor{keyword}{nullptr};}
+\DoxyCodeLine{00027\ \ \ \ \ \textcolor{keywordtype}{size\_t}\ \ m\_count\ =\ 0;\ \textcolor{comment}{//\ How\ many\ elements\ we\ have\ now?}}
+\DoxyCodeLine{00028\ \ \ \ \ \textcolor{keywordtype}{size\_t}\ \ m\_max\ \ \ =\ 0;\ \textcolor{comment}{//\ Max\ capacity}}
+\DoxyCodeLine{00029\ \ \ \ \ }
+\DoxyCodeLine{00030\ \ \ \ \ \textcolor{comment}{//\ Delta}}
+\DoxyCodeLine{00031\ \ \ \ \ \textcolor{keywordtype}{size\_t}\ \ delta\ =\ 0;}
+\DoxyCodeLine{00032\ \ \ \ \ \textcolor{keywordtype}{float}\ \ \ k\ =\ 0.1;}
+\DoxyCodeLine{00033\ \ \ \ \ \textcolor{keywordtype}{size\_t}\ \ min\_delta\ =\ 32;}
+\DoxyCodeLine{00034\ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00035\ \ \ \ \ \textcolor{comment}{//\ TODO\ \ (Nivel\ 1)\ Agregar\ un\ constructor\ por\ copia}}
+\DoxyCodeLine{00039\ \ \ \ \ \mbox{\hyperlink{classCVector}{CVector}}(\mbox{\hyperlink{classCVector}{CVector}}\ \&v);}
+\DoxyCodeLine{00040\ }
+\DoxyCodeLine{00044\ \ \ \ \ \mbox{\hyperlink{classCVector}{CVector}}(\textcolor{keywordtype}{size\_t}\ n);}
+\DoxyCodeLine{00045\ \ \ \ \ \textcolor{comment}{//\ TODO\ \ (Nivel\ 2):\ Agregar\ un\ move\ constructor}}
+\DoxyCodeLine{00049\ \ \ \ \ \mbox{\hyperlink{classCVector}{CVector}}(\mbox{\hyperlink{classCVector}{CVector}}\ \&\&v);}
+\DoxyCodeLine{00050\ }
+\DoxyCodeLine{00051\ \ \ \ \ \textcolor{comment}{//\ TODO:\ (Nivel\ 1)\ implementar\ el\ destructor\ de\ forma\ segura}}
+\DoxyCodeLine{00052\ \ \ \ \ \textcolor{keyword}{virtual}\ \mbox{\hyperlink{classCVector}{\string~CVector}}();}
+\DoxyCodeLine{00053\ \ \ \ \ \textcolor{keywordtype}{void}\ insert(T\ \textcolor{keyword}{const}\ \&elem);}
+\DoxyCodeLine{00054\ \ \ \ \ \textcolor{keywordtype}{void}\ resize();}
+\DoxyCodeLine{00055\ }
+\DoxyCodeLine{00056\ \ \ \ \ T\&\ operator[](\textcolor{keywordtype}{size\_t});}
+\DoxyCodeLine{00057\ }
+\DoxyCodeLine{00058\ \ \ \ \ \textcolor{keyword}{friend}\ std::ostream\&\ operator<<(std::ostream\ \&os,\ \textcolor{keyword}{const}\ \mbox{\hyperlink{classCVector}{CVector}}\&\ v)\{}
+\DoxyCodeLine{00059\ \ \ \ \ \ \ \ \ os\ <<\ v.m\_count;}
+\DoxyCodeLine{00060\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ os;}
+\DoxyCodeLine{00061\ \ \ \ \ \}}
+\DoxyCodeLine{00062\ \};}
+\DoxyCodeLine{00063\ }
+\DoxyCodeLine{00064\ }
+\DoxyCodeLine{00065\ \textcolor{keyword}{template}\ <\textcolor{keyword}{typename}\ T>}
+\DoxyCodeLine{00066\ \mbox{\hyperlink{classCVector_ac11c3b95bb57f65dffd215fce482eb78}{CVector<T>::CVector}}(\mbox{\hyperlink{classCVector}{CVector}}\ \&v)}
+\DoxyCodeLine{00067\ \ \ \ \ :m\_count(v.m\_count),\ m\_max(v.m\_max)}
+\DoxyCodeLine{00068\ \{}
+\DoxyCodeLine{00069\ \ \ \ \ m\_pVect\ =\ \textcolor{keyword}{new}\ T[m\_max];}
+\DoxyCodeLine{00070\ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keywordtype}{size\_t}\ i\ =\ 0;\ i\ <\ m\_count;\ i++)}
+\DoxyCodeLine{00071\ \ \ \ \ \ \ \ \ m\_pVect[i]\ =\ v.m\_pVect[i];}
+\DoxyCodeLine{00072\ \ \ \ \ }
+\DoxyCodeLine{00073\ \ \ \ \ std::cout\ <<\ \textcolor{stringliteral}{"{}Iniciando\ constructor\ por\ copia"{}}\ <<\ std::endl;}
+\DoxyCodeLine{00074\ \}}
+\DoxyCodeLine{00075\ }
+\DoxyCodeLine{00076\ }
+\DoxyCodeLine{00077\ \textcolor{keyword}{template}\ <\textcolor{keyword}{typename}\ T>}
+\DoxyCodeLine{00078\ \mbox{\hyperlink{classCVector_ac11c3b95bb57f65dffd215fce482eb78}{CVector<T>::CVector}}(\textcolor{keywordtype}{size\_t}\ n)}
+\DoxyCodeLine{00079\ \ \ \ \ :m\_pVect(new\ T[n]),\ m\_count(0),\ m\_max(n)}
+\DoxyCodeLine{00080\ \{}
+\DoxyCodeLine{00081\ \ \ \ \ std::cout\ <<\ \textcolor{stringliteral}{"{}Iniciando\ con\ size\_t"{}}\ <<\ std::endl;}
+\DoxyCodeLine{00082\ \}}
+\DoxyCodeLine{00083\ }
+\DoxyCodeLine{00084\ }
+\DoxyCodeLine{00085\ \textcolor{comment}{//\ template\ <typename\ T>}}
+\DoxyCodeLine{00086\ \textcolor{comment}{//\ CVector<T>::CVector(size\_t\ n)\{}}
+\DoxyCodeLine{00087\ \textcolor{comment}{//\ \ \ \ \ m\_pVect\ =\ new\ T[n];}}
+\DoxyCodeLine{00088\ \textcolor{comment}{//\ \ \ \ \ m\_max\ =\ n;}}
+\DoxyCodeLine{00089\ \textcolor{comment}{//\ \}}}
+\DoxyCodeLine{00090\ }
+\DoxyCodeLine{00091\ }
+\DoxyCodeLine{00092\ \textcolor{keyword}{template}\ <\textcolor{keyword}{typename}\ T>}
+\DoxyCodeLine{00093\ \mbox{\hyperlink{classCVector_ac11c3b95bb57f65dffd215fce482eb78}{CVector<T>::CVector}}(\mbox{\hyperlink{classCVector}{CVector}}\ \&\&v)}
+\DoxyCodeLine{00094\ \ \ \ \ :\mbox{\hyperlink{classCVector}{CVector}}(v)}
+\DoxyCodeLine{00095\ \{}
+\DoxyCodeLine{00096\ \ \ \ \ std::cout\ <<\ \textcolor{stringliteral}{"{}Move\ Constructor:\ "{}}\ <<\ \&v\ <<\ std::endl;}
+\DoxyCodeLine{00097\ \ \ \ \ v.m\_pVect\ =\ \textcolor{keyword}{nullptr};}
+\DoxyCodeLine{00098\ \ \ \ \ m\_count\ =\ 0;}
+\DoxyCodeLine{00099\ \ \ \ \ m\_max\ =\ 0;}
+\DoxyCodeLine{00100\ }
+\DoxyCodeLine{00101\ \}}
+\DoxyCodeLine{00102\ }
+\DoxyCodeLine{00103\ }
+\DoxyCodeLine{00104\ \textcolor{keyword}{template}\ <\textcolor{keyword}{typename}\ T>}
+\DoxyCodeLine{00105\ \mbox{\hyperlink{classCVector}{CVector<T>::\string~CVector}}()\{}
+\DoxyCodeLine{00106\ \ \ \ \ std::cout\ <<\ \textcolor{stringliteral}{"{}Destructor:\ "{}}\ <<\ m\_pVect\ <<\ std::endl;}
+\DoxyCodeLine{00107\ \ \ \ \ \textcolor{keyword}{delete}[]\ m\_pVect;}
+\DoxyCodeLine{00108\ \}}
+\DoxyCodeLine{00109\ }
+\DoxyCodeLine{00110\ }
+\DoxyCodeLine{00111\ \textcolor{comment}{//\ TODO\ (Nivel\ 1):\ hacer\ dinamico\ el\ delta\ de\ crecimiento}}
+\DoxyCodeLine{00112\ \textcolor{keyword}{template}\ <\textcolor{keyword}{typename}\ T>}
+\DoxyCodeLine{00113\ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{classCVector}{CVector<T>::resize}}()\{}
+\DoxyCodeLine{00114\ \ \ \ \ delta\ =\ std::max((\textcolor{keywordtype}{size\_t})\ std::ceil((\textcolor{keywordtype}{float})m\_max\ *\ k),\ min\_delta);}
+\DoxyCodeLine{00115\ \ \ \ \ T\ *pTmp\ =\ \textcolor{keyword}{new}\ T[m\_max+delta];}
+\DoxyCodeLine{00116\ \ \ \ \ \textcolor{keywordflow}{for}(\textcolor{keywordtype}{size\_t}\ i=0;\ i\ <\ m\_max\ ;\ ++i)}
+\DoxyCodeLine{00117\ \ \ \ \ \ \ \ \ pTmp[i]\ =\ m\_pVect[i];}
+\DoxyCodeLine{00118\ \ \ \ \ \textcolor{keyword}{delete}\ []\ m\_pVect;}
+\DoxyCodeLine{00119\ \ \ \ \ m\_max\ +=\ delta;}
+\DoxyCodeLine{00120\ \ \ \ \ m\_pVect\ =\ pTmp;}
+\DoxyCodeLine{00121\ \}}
+\DoxyCodeLine{00122\ }
+\DoxyCodeLine{00123\ \textcolor{comment}{//\ TODO\ (ya\ está\ hecha):\ la\ funcion\ insert\ debe\ permitir\ que\ el\ vector\ crezca\ si\ ha\ desbordado}}
+\DoxyCodeLine{00124\ \textcolor{keyword}{template}\ <\textcolor{keyword}{typename}\ T>}
+\DoxyCodeLine{00125\ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{classCVector}{CVector<T>::insert}}(T\ \textcolor{keyword}{const}\ \&elem)\{}
+\DoxyCodeLine{00126\ \ \ \ \ \textcolor{keywordflow}{if}(m\_count\ ==\ m\_max)}
+\DoxyCodeLine{00127\ \ \ \ \ \ \ \ \ resize();}
+\DoxyCodeLine{00128\ \ \ \ \ m\_pVect[m\_count++]\ =\ elem;}
+\DoxyCodeLine{00129\ \}}
+\DoxyCodeLine{00130\ }
+\DoxyCodeLine{00131\ \textcolor{keyword}{template}\ <\textcolor{keyword}{typename}\ T>}
+\DoxyCodeLine{00132\ T\&\ \mbox{\hyperlink{classCVector}{CVector<T>::operator[]}}(\textcolor{keywordtype}{size\_t}\ index)\{}
+\DoxyCodeLine{00133\ \ \ \ \ \textcolor{keywordflow}{if}(index\ >=\ m\_max)\{}
+\DoxyCodeLine{00134\ \ \ \ \ \ \ \ \ std::cout\ <<\ index\ <<\ std::endl;}
+\DoxyCodeLine{00135\ \ \ \ \ \ \ \ \ std::cout\ <<\ m\_count\ <<\ std::endl;}
+\DoxyCodeLine{00136\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{throw}\ std::out\_of\_range\ <<\ \textcolor{stringliteral}{"{}Out\ of\ range"{}}\ <<\ std::endl;}
+\DoxyCodeLine{00137\ \ \ \ \ \ \ \ \ }
+\DoxyCodeLine{00138\ \ \ \ \ \}}
+\DoxyCodeLine{00139\ \ \ \ \ \textcolor{keywordflow}{return}\ m\_pVect[index];}
+\DoxyCodeLine{00140\ \}}
+\DoxyCodeLine{00141\ }
+\DoxyCodeLine{00142\ \textcolor{comment}{//\ template\ <typename\ T>}}
+\DoxyCodeLine{00143\ \textcolor{comment}{//\ std::ostream\&\ CVector<T>::operator<<(std::ostream\ \&os,\ const\ CVector\ \&v)\ \{}}
+\DoxyCodeLine{00144\ \ \ \ \ }
+\DoxyCodeLine{00145\ \textcolor{comment}{//\ \};}}
+\DoxyCodeLine{00146\ }
+\DoxyCodeLine{00147\ \textcolor{preprocessor}{\#endif\ }\textcolor{comment}{//\ \_\_VECTOR\_H\_\_}}
+
+\end{DoxyCode}

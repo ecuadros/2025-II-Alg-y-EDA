@@ -18,21 +18,8 @@ using namespace std;
 // make
 
 int main(){
-    // cout << "Hello Alg y EDA-UNI" << endl;
-    // DemoThreads();
-    // return 0;
-    size_t size = 3;
-    CVector vector56 = CVector<int>(size);
-    vector56.insert(12);
-    // vector56.m_count = 2;
-    CVector vector2 = CVector<int>(vector56);
-
-    CVector vector3 = std::move(vector56);
-    cout << vector3[0] << endl;
-
-
-    cout << "Demo vector: " << endl;
-    DemoVector();
+    cout << "Hello Alg y EDA-UNI" << endl;
+    DemoThreads();
     return 0;
 }
 

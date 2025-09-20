@@ -1,17 +1,13 @@
 #include <iostream>
 #include "DemoVector.h"
 #include "vector.h"
+using namespace std;
 
 void DemoVector(){
-    CVector<int> vector(6);
-    vector.insert(5);
+    // CVector vector(10);
+    // vector.insert(5);
     // TODO  (Nivel 1) habilitar el uso de []
-    vector[3] = 8;
-    std::cout << vector[0] << std::endl;
-    std::cout << vector[3] << std::endl;
-
-    
-    // return;
+    // vector[3] = 8;
     // TODO  (Nivel 2) habilitar que el vector pueda ser escrito con cout <<
-    std::cout << vector << std::endl;
+    // cout << vector << endl;
 }
