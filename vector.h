@@ -48,7 +48,11 @@ void CVector<T>::resize(){
     m_max += 10;
     m_pVect = pTmp;
 }
-
+template <typename T>
+CVector<T>::~CVector()
+{
+    delete [] m_pVect;
+}
 // TODO (ya está hecha): la funcion insert debe permitir que el vector crezca si ha desbordado
 template <typename T>
 void CVector<T>::insert(T &elem){
