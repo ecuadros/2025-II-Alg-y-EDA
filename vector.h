@@ -28,21 +28,43 @@ public:
     CVector(CVector &&v);
 
     // TODO: (Nivel 1) implementar el destructor de forma segura
-    vrtual CVector();
-    void insert(T &elem);
+    virtual ~CVector();
+    void insert(T const &elem);
     void resize();
 };
 
 template <typename T>
-CVector<T>::CVector(size_t n){
+CVector<T>::CVector(CVector &v)
+    :m_count(v.m_count), m_max(v.m_max)
+{
+    m_pVect = new T[m_max];
+    for (size_t i = 0; i < m_count; i++)
+        m_pVect[i] = v.m_pVect[i];
 
+    // std::cout << "Iniciando constructor por copia" << std::endl;
 }
+
+template <typename T>
+CVector<T>::CVector(size_t n)
+    :m_pVect(new T[n]), m_count(0), m_max(n)
+{
+    // std::cout << "Iniciando con size_t" << std::endl;
+}
+
+
+template <typename T>
+CVector<T>::~CVector(){
+    // std::cout << "Destructor: " << m_pVect << std::endl;
+    delete[] m_pVect;
+}
+
+
 
 // TODO (Nivel 1): hacer dinamico el delta de crecimiento
 template <typename T>
 void CVector<T>::resize(){
     T *pTmp = new T[m_max+10];
-    for(auto i=0; i < m_max ; ++i)
+    for(size_t i=0; i < m_max ; ++i)
         pTmp[i] = m_pVect[i];
     delete [] m_pVect;
     m_max += 10;
@@ -51,7 +73,7 @@ void CVector<T>::resize(){
 
 // TODO (ya está hecha): la funcion insert debe permitir que el vector crezca si ha desbordado
 template <typename T>
-void CVector<T>::insert(T &elem){
+void CVector<T>::insert(T const &elem){
     if(m_count == m_max)
         resize();
     m_pVect[m_count++] = elem;

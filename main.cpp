@@ -19,7 +19,12 @@ using namespace std;
 
 int main(){
     cout << "Hello Alg y EDA-UNI" << endl;
-    DemoThreads();
+    // DemoThreads();
+    size_t size = 3;
+    CVector vector56 = CVector<int>(size);
+    vector56.insert(12);
+    // vector56.m_count = 2;
+    CVector vector2 = CVector<int>(vector56);
     return 0;
 }
 
