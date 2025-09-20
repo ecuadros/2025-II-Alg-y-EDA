@@ -1,3 +1,5 @@
 main
 *.o
 main.dSYM
+
+generated-docs/
