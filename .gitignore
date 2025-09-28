@@ -2,3 +2,4 @@ main
 *.o
 main.dSYM
 .idea
+.DS_Store
