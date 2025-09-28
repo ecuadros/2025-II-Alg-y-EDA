@@ -12,7 +12,7 @@
 
 template <typename T>
 class CVector{
-   
+
     T      *m_pVect = nullptr;
     size_t  m_count = 0; // How many elements we have now?
     size_t  m_max   = 0; // Max capacity
@@ -20,6 +20,137 @@ class CVector{
     mutable std::mutex m_mutex;
 
 public:
+    class iterator {
+    private:
+        T* ptr;
+        const CVector<T>* container;
+        mutable std::mutex* mutex_ref;
+
+    public:
+        using iterator_category = std::forward_iterator_tag;
+        using value_type = T;
+        using difference_type = std::ptrdiff_t;
+        using pointer = T*;
+        using reference = T&;
+
+        iterator(T* p, const CVector<T>* c, std::mutex* m) : ptr(p), container(c), mutex_ref(m) {}
+
+        reference operator*() { return *ptr; }
+        pointer operator->() { return ptr; }
+
+        iterator& operator++() {
+            ++ptr;
+            return *this;
+        }
+
+        iterator operator++(int) {
+            iterator tmp = *this;
+            ++ptr;
+            return tmp;
+        }
+
+        bool operator==(const iterator& other) const { return ptr == other.ptr; }
+        bool operator!=(const iterator& other) const { return ptr != other.ptr; }
+    };
+
+    class const_iterator {
+    private:
+        const T* ptr;
+        const CVector<T>* container;
+        mutable std::mutex* mutex_ref;
+
+    public:
+        using iterator_category = std::forward_iterator_tag;
+        using value_type = T;
+        using difference_type = std::ptrdiff_t;
+        using pointer = const T*;
+        using reference = const T&;
+
+        const_iterator(const T* p, const CVector<T>* c, std::mutex* m) : ptr(p), container(c), mutex_ref(m) {}
+
+        reference operator*() const { return *ptr; }
+        pointer operator->() const { return ptr; }
+
+        const_iterator& operator++() {
+            ++ptr;
+            return *this;
+        }
+
+        const_iterator operator++(int) {
+            const_iterator tmp = *this;
+            ++ptr;
+            return tmp;
+        }
+
+        bool operator==(const const_iterator& other) const { return ptr == other.ptr; }
+        bool operator!=(const const_iterator& other) const { return ptr != other.ptr; }
+    };
+
+    class reverse_iterator {
+    private:
+        T* ptr;
+        const CVector<T>* container;
+        mutable std::mutex* mutex_ref;
+
+    public:
+        using iterator_category = std::forward_iterator_tag;
+        using value_type = T;
+        using difference_type = std::ptrdiff_t;
+        using pointer = T*;
+        using reference = T&;
+
+        reverse_iterator(T* p, const CVector<T>* c, std::mutex* m) : ptr(p), container(c), mutex_ref(m) {}
+
+        reference operator*() { return *ptr; }
+        pointer operator->() { return ptr; }
+
+        reverse_iterator& operator++() {
+            --ptr;
+            return *this;
+        }
+
+        reverse_iterator operator++(int) {
+            reverse_iterator tmp = *this;
+            --ptr;
+            return tmp;
+        }
+
+        bool operator==(const reverse_iterator& other) const { return ptr == other.ptr; }
+        bool operator!=(const reverse_iterator& other) const { return ptr != other.ptr; }
+    };
+
+    class const_reverse_iterator {
+    private:
+        const T* ptr;
+        const CVector<T>* container;
+        mutable std::mutex* mutex_ref;
+
+    public:
+        using iterator_category = std::forward_iterator_tag;
+        using value_type = T;
+        using difference_type = std::ptrdiff_t;
+        using pointer = const T*;
+        using reference = const T&;
+
+        const_reverse_iterator(const T* p, const CVector<T>* c, std::mutex* m) : ptr(p), container(c), mutex_ref(m) {}
+
+        reference operator*() const { return *ptr; }
+        pointer operator->() const { return ptr; }
+
+        const_reverse_iterator& operator++() {
+            --ptr;
+            return *this;
+        }
+
+        const_reverse_iterator operator++(int) {
+            const_reverse_iterator tmp = *this;
+            --ptr;
+            return tmp;
+        }
+
+        bool operator==(const const_reverse_iterator& other) const { return ptr == other.ptr; }
+        bool operator!=(const const_reverse_iterator& other) const { return ptr != other.ptr; }
+    };
     CVector(size_t n);
 
     // TODO  (Nivel 1) Agregar un constructor por copia
@@ -43,6 +174,19 @@ public:
     T at(size_t index) const;
 
     std::vector<T> to_vector() const;
+
+    iterator begin();
+    iterator end();
+    const_iterator begin() const;
+    const_iterator end() const;
+    const_iterator cbegin() const;
+    const_iterator cend() const;
+    reverse_iterator rbegin();
+    reverse_iterator rend();
+    const_reverse_iterator rbegin() const;
+    const_reverse_iterator rend() const;
+    const_reverse_iterator crbegin() const;
+    const_reverse_iterator crend() const;
 
     template<typename U>
     friend std::ostream& operator<<(std::ostream& os, const CVector<U>& vec);
@@ -226,6 +370,66 @@ std::vector<T> CVector<T>::to_vector() const {
     }
 
     return result;
+}
+
+template <typename T>
+typename CVector<T>::iterator CVector<T>::begin() {
+    return iterator(m_pVect, this, &m_mutex);
+}
+
+template <typename T>
+typename CVector<T>::iterator CVector<T>::end() {
+    return iterator(m_pVect + m_count, this, &m_mutex);
+}
+
+template <typename T>
+typename CVector<T>::const_iterator CVector<T>::begin() const {
+    return const_iterator(m_pVect, this, &m_mutex);
+}
+
+template <typename T>
+typename CVector<T>::const_iterator CVector<T>::end() const {
+    return const_iterator(m_pVect + m_count, this, &m_mutex);
+}
+
+template <typename T>
+typename CVector<T>::const_iterator CVector<T>::cbegin() const {
+    return const_iterator(m_pVect, this, &m_mutex);
+}
+
+template <typename T>
+typename CVector<T>::const_iterator CVector<T>::cend() const {
+    return const_iterator(m_pVect + m_count, this, &m_mutex);
+}
+
+template <typename T>
+typename CVector<T>::reverse_iterator CVector<T>::rbegin() {
+    return reverse_iterator(m_pVect + m_count - 1, this, &m_mutex);
+}
+
+template <typename T>
+typename CVector<T>::reverse_iterator CVector<T>::rend() {
+    return reverse_iterator(m_pVect - 1, this, &m_mutex);
+}
+
+template <typename T>
+typename CVector<T>::const_reverse_iterator CVector<T>::rbegin() const {
+    return const_reverse_iterator(m_pVect + m_count - 1, this, &m_mutex);
+}
+
+template <typename T>
+typename CVector<T>::const_reverse_iterator CVector<T>::rend() const {
+    return const_reverse_iterator(m_pVect - 1, this, &m_mutex);
+}
+
+template <typename T>
+typename CVector<T>::const_reverse_iterator CVector<T>::crbegin() const {
+    return const_reverse_iterator(m_pVect + m_count - 1, this, &m_mutex);
+}
+
+template <typename T>
+typename CVector<T>::const_reverse_iterator CVector<T>::crend() const {
+    return const_reverse_iterator(m_pVect - 1, this, &m_mutex);
 }
 
 template<typename T>
