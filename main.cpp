@@ -2,6 +2,7 @@
 #include "vector.h"
 #include "DemoVector.h"
 #include "hilos.h"
+#include "linkedlist.h"
 using namespace std;
 
 /* Revisado por:
@@ -21,7 +22,8 @@ int main(){
     cout << "Hello Alg y EDA-UNI" << endl;
     // DemoThreads();
     [[maybe_unused]] int x = 5;
-    DemoVector();
+    // DemoVector();
+    DemoLinkedList();
     return 0;
 }
 
