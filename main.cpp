@@ -20,6 +20,7 @@ using namespace std;
 int main(){
     cout << "Hello Alg y EDA-UNI" << endl;
     // DemoThreads();
+    [[maybe_unused]] int x = 5;
     DemoVector();
     return 0;
 }

@@ -3,8 +3,14 @@
 #include "vector.h"
 using namespace std;
 
+template <typename _T>
+struct GeneralTraits{
+    using value_type = _T;
+    
+};
+
 void DemoVector(){
-    CVector<int> vector(10);
+    CVector< GeneralTraits<int> > vector(10);
     // vector.insert(5);
     // TODO  (Nivel 1) habilitar el uso de []
     vector[3] = 8;

@@ -19,12 +19,16 @@
     *   @brief A simple implementation of a dynamic array (vector) in C++
     *   @date 2025
 */
-template <typename T>
+template <typename Traits>
 class CVector{
+public:
+    using value_type = typename Traits::value_type;
+
+private:
     /**
     *   @brief Pointer to the dynamic array
     */
-    T      *m_pVect = nullptr;
+    value_type      *m_pVect = nullptr;
 
     /**
     *   @brief Current number of elements in the vector
@@ -50,8 +54,10 @@ public:
     // TODO  (Nivel 2): Agregar un move constructor
 
     /**
-    *   @brief Move constructor
-    */
+     * @brief Constructor por movimiento.
+     * @param v Vector origen; tras el movimiento queda vacío/seguro.
+     * @post @c v.size()==0
+     */
     CVector(CVector &&v);
 
     // TODO: (Nivel 1) implementar el destructor de forma segura
@@ -65,14 +71,14 @@ public:
     *   @brief Insert a new element at the end of the vector
     *   @param elem element to insert
     */
-    void insert(T &elem);
+    void insert(value_type &elem);
 
     /**
     *   @brief Overload operator [] to access elements in the vector
     *   @param index position of the element to access
     *   \return reference to the element at the given index
     */
-    T&   operator[](size_t index);
+    value_type&   operator[](size_t index);
 
     /**
     *   @brief Get the current size of the vector
@@ -97,25 +103,25 @@ private:
     void Destroy();
 };
 
-template <typename T>
-CVector<T>::CVector(size_t n){
+template <typename Traits>
+CVector<Traits>::CVector(size_t n){
     Init(n);
 }
 
-template <typename T>
-CVector<T>::CVector(CVector &v) 
+template <typename Traits>
+CVector<Traits>::CVector(CVector &v) 
           : m_max(v.m_max), 
             m_count(v.m_count) {
     if (m_max > 0)
-        m_pVect = new T[m_max];
+        m_pVect = new value_type[m_max];
     for (size_t i = 0; i < m_count; ++i)
         m_pVect[i] = v[i];       
 }
 
 // TODO (Nivel 1): hacer dinamico el delta de crecimiento
-template <typename T>
-void CVector<T>::resize(){
-    T *pTmp = new T[m_max+10];
+template <typename Traits>
+void CVector<Traits>::resize(){
+    value_type *pTmp = new value_type[m_max+10];
     for(auto i=0; i < m_max ; ++i)
         pTmp[i] = m_pVect[i];
     delete [] m_pVect;
@@ -123,19 +129,19 @@ void CVector<T>::resize(){
     m_pVect = pTmp;
 }
 
-template <typename T>
-void CVector<T>::Init(size_t n){
+template <typename Traits>
+void CVector<Traits>::Init(size_t n){
     Destroy();
     resize();
 }
 
-template <typename T>
-    CVector<T>::~CVector(){
+template <typename Traits>
+CVector<Traits>::~CVector(){
     Destroy();
 }
 
-template <typename T>
-void CVector<T>::Destroy(){
+template <typename Traits>
+void CVector<Traits>::Destroy(){
     m_count = 0; 
     m_max   = 0;
     delete [] m_pVect;
@@ -143,23 +149,23 @@ void CVector<T>::Destroy(){
 }
 
 // TODO (ya está hecha): la funcion insert debe permitir que el vector crezca si ha desbordado
-template <typename T>
-void CVector<T>::insert(T &elem){
+template <typename Traits>
+void CVector<Traits>::insert(value_type &elem){
     if(m_count == m_max)
         resize();
     m_pVect[m_count++] = elem;
 }
 
-template <typename T>
-T& CVector<T>::operator[](size_t index) {
+template <typename Traits>
+typename CVector<Traits>::value_type& CVector<Traits>::operator[](size_t index) {
     if (index >= m_count) {
         throw std::out_of_range("Index out of range");
     }
     return m_pVect[index];
 }
 
-template <typename T>
-std::ostream& operator<<(std::ostream& os, CVector<T>& vec) {
+template <typename Traits>
+std::ostream& operator<<(std::ostream& os, CVector<Traits>& vec) {
     // os << "[";
     for (size_t i = 0; i < vec.size(); ++i)
         os << vec[i] << " ";
@@ -168,7 +174,6 @@ std::ostream& operator<<(std::ostream& os, CVector<T>& vec) {
 }
 
 #endif // __VECTOR_H__
-
 
 /**
  * @mainpage CVector Implementation
