@@ -9,10 +9,11 @@ class LLNode{
 private:
     using    value_type = typename Traits::value_type;
     using    Node       = LLNode<Traits>;
-    using    MySelf     = LLNode<Traits>;
+
+    // Fields go here
     value_type          m_data;
-    Ref      m_ref;
-    Node    *m_pNext = nullptr;
+    Ref                 m_ref;
+    Node               *m_pNext = nullptr;
 
 public:
     LLNode(value_type &elem, Ref ref, Node *pNext = nullptr)
@@ -60,10 +61,10 @@ class forward_linkedlist_iterator{
 template <typename Traits>
 class CLinkedList{
 public:
-    using value_type = typename Traits::value_type; 
-    using Func       = typename Traits::Func;
-    using Node       = LLNode<Traits>; 
-    using Container  = CLinkedList<Traits>;
+    using value_type         = typename Traits::value_type; 
+    using Func               = typename Traits::Func;
+    using Node               = LLNode<Traits>; 
+    using Container          = CLinkedList<Traits>;
     using forward_iterator   = forward_linkedlist_iterator<Container>;
 
 private:
@@ -147,13 +148,13 @@ CLinkedList<Traits>::~CLinkedList()
 }
 
 // TODO: Este operador debe quedar fuera de la clase
-template <typename Traits>
-std::ostream &operator<<(std::ostream &os, CLinkedList<Traits> &obj){
-    auto pRoot = obj.GetRoot();
-    while( pRoot )
-        os << pRoot->GetData() << " ";
-    return os;
-}
+// template <typename Traits>
+// std::ostream &operator<<(std::ostream &os, CLinkedList<Traits> &obj){
+//     auto pRoot = obj.GetRoot();
+//     while( pRoot )
+//         os << pRoot->GetData() << " ";
+//     return os;
+// }
 
 void DemoLinkedList();
 

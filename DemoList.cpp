@@ -3,7 +3,7 @@
 #include <vector>
 #include <utility> // para std::pair
 #include "linkedlist.h"
-// #include "doublelinkedlist.h"
+#include "doublelinkedlist.h"
 #include "foreach.h"
 #include "types.h"
 #include "util.h"
@@ -61,6 +61,8 @@ void DemoDoubleLinkedList(){
         l1.Insert(par.first, par.second);
     std::cout << l1 << std::endl;
 
+    std::cout << " Imprimiendo DoubleLinkedList ..." << std::endl;
     foreach(l1. begin(), l1. end(), ::Print<T1>);
+
     foreach(l1.rbegin(), l1.rend(), ::Print<T1>);
 }

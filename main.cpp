@@ -3,6 +3,8 @@
 #include "DemoVector.h"
 #include "hilos.h"
 #include "linkedlist.h"
+#include "doublelinkedlist.h"
+
 using namespace std;
 
 /* Revisado por:
@@ -24,6 +26,7 @@ int main(){
     [[maybe_unused]] int x = 5;
     // DemoVector();
     DemoLinkedList();
+    DemoDoubleLinkedList();
     return 0;
 }
 

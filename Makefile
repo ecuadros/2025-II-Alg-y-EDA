@@ -6,7 +6,8 @@ TARGET = main
 SRCS = main.cpp \
        hilos.cpp \
 	   DemoVector.cpp \
-	   linkedlist.cpp 
+	   DemoList.cpp
+
 OBJS = $(SRCS:.cpp=.o)
 
 all: $(TARGET)
