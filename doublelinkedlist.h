@@ -163,14 +163,22 @@ void CDoubleLinkedList<Traits>::InternalInsert(Node *&rParent, value_type &elem,
     if( !rParent || m_fCompare(elem, rParent->GetDataRef()) ){
 
         Node *pNew = rParent = new Node(elem, ref, rParent);
-        if( !pNew->GetNext() ) // Final de la lista
-            pTail = pNew;
+        // if( !pNew->GetNext() ) // Final de la lista
+        //     m_pTail = pNew;
 
         // Puente hacia atras
         Node *pNext = pNew->GetNext();
         if( pNext ){ // Hay algo a continuacion
-            pNew ->SetPrev( pNext()->GetPrev() );
+            pNew ->SetPrev( pNext->GetPrev() );
             pNext->SetPrev( pNew ); 
+        }
+
+        if ( !pNew->GetNext() ) {
+            if ( m_pTail != nullptr && m_pTail != pNew ) {
+                pNew->SetPrev(m_pTail);
+            }
+
+            m_pTail = pNew;
         }
         m_nElem++;
         return;

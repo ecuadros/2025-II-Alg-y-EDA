@@ -46,6 +46,8 @@ void DemoLinkedList(){
     std::cout << "Imprimiendo l1 con Write ..." << std::endl;
     l1.Write(cout);
     cout <<endl;
+    cout <<endl;
+    
 
     std::ofstream of("LL.txt");
     l1.Write(of);
@@ -62,7 +64,12 @@ void DemoDoubleLinkedList(){
     std::cout << l1 << std::endl;
 
     std::cout << " Imprimiendo DoubleLinkedList ..." << std::endl;
-    foreach(l1. begin(), l1. end(), ::Print<T1>);
+    std::cout << "Imprimiendo con forward iterator ..." << std::endl;
+    foreach(l1.begin(), l1.end(), ::Print<T1>);
+    cout <<endl;
 
+    std::cout << "Imprimiendo con backward iterator ..." << std::endl;
     foreach(l1.rbegin(), l1.rend(), ::Print<T1>);
+    cout <<endl;
+
 }
