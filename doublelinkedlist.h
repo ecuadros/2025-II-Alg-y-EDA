@@ -173,10 +173,15 @@ void CDoubleLinkedList<Traits>::InternalInsert(Node *&rParent, Node *pPrev, valu
 template <typename Traits>
 CDoubleLinkedList<Traits>::CDoubleLinkedList(){}
 
-// TODO Constructor por copia
-//      Hacer loop copiando cada elemento
 template <typename Traits>
 CDoubleLinkedList<Traits>::CDoubleLinkedList(CDoubleLinkedList &other){
+    Node *pCurrent = other.m_pRoot;
+    while(pCurrent){
+        value_type data = pCurrent->GetData();
+        Ref ref = pCurrent->GetRef();
+        Insert(data, ref);
+        pCurrent = pCurrent->GetNext();
+    }
 }
 
 // Move Constructor
