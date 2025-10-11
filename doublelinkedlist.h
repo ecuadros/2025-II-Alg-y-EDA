@@ -200,15 +200,6 @@ CDoubleLinkedList<Traits>::~CDoubleLinkedList()
 {
 }
 
-// TODO: Este operador debe quedar fuera de la clase
-// template <typename Traits>
-// std::ostream &operator<<(std::ostream &os, CDoubleLinkedList<Traits> &obj){
-//     auto pRoot = obj.GetRoot();
-//     while( pRoot )
-//         os << pRoot->GetData() << " ";
-//     return os;
-// }
-
 void DemoDoubleLinkedList();
 
 #endif // __DOUBLE_LINKEDLIST_H__
