@@ -1,6 +1,7 @@
 #ifndef __LINKEDLIST_H__
 #define __LINKEDLIST_H__
 #include <iostream>
+#include <mutex>
 #include "types.h"
 #include "traits.h"
 
@@ -53,15 +54,13 @@ class forward_linkedlist_iterator{
      value_type &operator*(){    return m_pNode->GetDataRef();   }
 };
 
-// TODO Agregar control de concurrencia
-
 // TODO Agregar que sea ascendente o descendente con el mismo codigo
 template <typename Traits>
 class CLinkedList{
 public:
-    using value_type         = typename Traits::value_type; 
+    using value_type         = typename Traits::value_type;
     using Func               = typename Traits::Func;
-    using Node               = LLNode<Traits>; 
+    using Node               = LLNode<Traits>;
     using Container          = CLinkedList<Traits>;
     using forward_iterator   = forward_linkedlist_iterator<Container>;
 
@@ -69,6 +68,7 @@ private:
     Node   *m_pRoot = nullptr;
     size_t m_nElem = 0;
     Func   m_fCompare;
+    mutable std::mutex m_mutex;
 
 public:
     // Constructor
@@ -97,12 +97,16 @@ public:
         return os;
     }
 public:
-    std::ostream &Write(std::ostream &os) { return os << *this; }
+    std::ostream &Write(std::ostream &os) {
+        std::lock_guard<std::mutex> lock(m_mutex);
+        return os << *this;
+    }
     std::istream &Read (std::istream &is);
 };
 
 template <typename Traits>
 void CLinkedList<Traits>::Insert(value_type &elem, Ref ref){
+    std::lock_guard<std::mutex> lock(m_mutex);
     InternalInsert(m_pRoot, elem, ref);
 }
 
@@ -122,6 +126,7 @@ CLinkedList<Traits>::CLinkedList(){}
 
 template <typename Traits>
 CLinkedList<Traits>::CLinkedList(CLinkedList &other){
+    std::lock_guard<std::mutex> lock(other.m_mutex);
     Node *pCurrent = other.m_pRoot;
     while(pCurrent){
         value_type data = pCurrent->GetData();
@@ -131,9 +136,9 @@ CLinkedList<Traits>::CLinkedList(CLinkedList &other){
     }
 }
 
-// Move Constructor
 template <typename Traits>
 CLinkedList<Traits>::CLinkedList(CLinkedList &&other){
+    std::lock_guard<std::mutex> lock(other.m_mutex);
     m_pRoot    = std::move(other.m_pRoot);
     m_nElem    = std::move(other.m_nElem);
     m_fCompare = std::move(other.m_fCompare);
@@ -142,6 +147,7 @@ CLinkedList<Traits>::CLinkedList(CLinkedList &&other){
 template <typename Traits>
 CLinkedList<Traits>::~CLinkedList()
 {
+    std::lock_guard<std::mutex> lock(m_mutex);
     Node *pCurrent = m_pRoot;
     while(pCurrent){
         Node *pNext = pCurrent->GetNext();
@@ -152,13 +158,14 @@ CLinkedList<Traits>::~CLinkedList()
 
 template <typename Traits>
 std::istream &CLinkedList<Traits>::Read(std::istream &is){
+    std::lock_guard<std::mutex> lock(m_mutex);
     value_type data;
     Ref ref;
     char open, close;
 
     while(is >> data >> open >> ref >> close){
         if(open == '(' && close == ')'){
-            Insert(data, ref);
+            InternalInsert(m_pRoot, data, ref);
         }
     }
 
