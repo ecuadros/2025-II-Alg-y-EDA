@@ -121,7 +121,7 @@ public:
 
     void Insert(value_type &elem, Ref ref);
 private:
-    void InternalInsert(Node *&rParent, value_type &elem, Ref ref);
+    void InternalInsert(Node *&rParent, Node *pPrev, value_type &elem, Ref ref);
     Node *GetRoot()    {    return m_pRoot;     };
 
 public:
@@ -150,29 +150,24 @@ public:
 
 template <typename Traits>
 void CDoubleLinkedList<Traits>::Insert(value_type &elem, Ref ref){
-    InternalInsert(m_pRoot, elem, ref);
+    InternalInsert(m_pRoot, nullptr, elem, ref);
 }
 
-// TODO: Agregar el enlace para el Prev()
 template <typename Traits>
-void CDoubleLinkedList<Traits>::InternalInsert(Node *&rParent, value_type &elem, Ref ref){
+void CDoubleLinkedList<Traits>::InternalInsert(Node *&rParent, Node *pPrev, value_type &elem, Ref ref){
     if( !rParent || m_fCompare(elem, rParent->GetDataRef()) ){
-
-        Node *pNew = rParent = new Node(elem, ref, rParent);
-        if( !pNew->GetNext() ) // Final de la lista
-            pTail = pNew;
-
-        // Puente hacia atras
-        Node *pNext = pNew->GetNext();
-        if( pNext ){ // Hay algo a continuacion
-            pNew ->SetPrev( pNext()->GetPrev() );
-            pNext->SetPrev( pNew ); 
+        Node *pNew = new Node(elem, ref, rParent);
+        pNew->SetPrev(pPrev);
+        if(rParent){
+            rParent->SetPrev(pNew);
+        } else {
+            m_pTail = pNew;
         }
+        rParent = pNew;
         m_nElem++;
         return;
     }
-    // Tail recursion
-    InternalInsert(rParent->GetNextRef(), elem, ref);
+    InternalInsert(rParent->GetNextRef(), rParent, elem, ref);
 }
 
 template <typename Traits>
