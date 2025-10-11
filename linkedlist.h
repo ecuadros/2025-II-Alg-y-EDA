@@ -4,6 +4,9 @@
 #include "types.h"
 #include "traits.h"
 
+template <typename Traits> class CLinkedList;
+template <typename Traits> std::ostream& operator<<(std::ostream& os, CLinkedList<Traits>& obj);
+
 template <typename Traits>
 class LLNode{
 private:
@@ -92,14 +95,15 @@ public:
     forward_iterator begin(){ return forward_iterator(this, m_pRoot); };
     forward_iterator end()  { return forward_iterator(this, nullptr); } 
 
-    friend std::ostream& operator<<(std::ostream &os, CLinkedList<Traits> &obj){
-        auto pRoot = obj.GetRoot();
-        while( pRoot ){
-            os << pRoot->GetData() << "(" << pRoot->GetRef() << ") ";
-            pRoot = pRoot->GetNext();
-        }
-        return os;
-    }
+    // friend std::ostream& operator<<(std::ostream &os, CLinkedList<Traits> &obj){
+    //     auto pRoot = obj.GetRoot();
+    //     while( pRoot ){
+    //         os << pRoot->GetData() << "(" << pRoot->GetRef() << ") ";
+    //         pRoot = pRoot->GetNext();
+    //     }
+    //     return os;
+    // }
+    friend std::ostream &operator<< <>(std::ostream &os, CLinkedList<Traits> &obj);
 public:
     // Persistence
     std::ostream &Write(std::ostream &os) { return os << *this; }
@@ -171,13 +175,16 @@ CLinkedList<Traits>::~CLinkedList()
 }
 
 // TODO: Este operador debe quedar fuera de la clase
-// template <typename Traits>
-// std::ostream &operator<<(std::ostream &os, CLinkedList<Traits> &obj){
-//     auto pRoot = obj.GetRoot();
-//     while( pRoot )
-//         os << pRoot->GetData() << " ";
-//     return os;
-// }
+template <typename Traits>
+std::ostream &operator<<(std::ostream &os, CLinkedList<Traits> &obj){
+    auto pRoot = obj.GetRoot();
+    while( pRoot ){
+        os << pRoot->GetData() << "(" << pRoot->GetRef() << ") ";
+        pRoot = pRoot->GetNext();
+    }
+    return os;
+}
+
 
 void DemoLinkedList();
 
