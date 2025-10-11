@@ -1,6 +1,7 @@
 #ifndef __LINKEDLIST_H__
 #define __LINKEDLIST_H__
 #include <iostream>
+#include <mutex>
 #include "types.h"
 #include "traits.h"
 
@@ -74,6 +75,7 @@ private:
     Node   *m_pRoot = nullptr;
     size_t m_nElem = 0;
     Func   m_fCompare;
+    std::mutex m_mutex;
 
 public:
     // Constructor
@@ -106,7 +108,7 @@ public:
     friend std::ostream &operator<< <>(std::ostream &os, CLinkedList<Traits> &obj);
 public:
     // Persistence
-    std::ostream &Write(std::ostream &os) { return os << *this; }
+    std::ostream &Write(std::ostream &os) { std::lock_guard<std::mutex> lock(m_mutex); return os << *this; }
     
     // TODO: Read (istream &is)
     std::istream &Read (std::istream &is);
@@ -114,6 +116,7 @@ public:
 
 template <typename Traits>
 void CLinkedList<Traits>::Insert(value_type &elem, Ref ref){
+    std::lock_guard<std::mutex> lock(m_mutex);
     InternalInsert(m_pRoot, elem, ref);
 }
 
@@ -131,6 +134,7 @@ void CLinkedList<Traits>::InternalInsert(Node *&rParent, value_type &elem, Ref r
 
 template <typename Traits>
 void CLinkedList<Traits>::Destroy(){
+    std::lock_guard<std::mutex> lock(m_mutex);
     Node *pTmp = m_pRoot;
     while(pTmp){
         Node *pNext = pTmp->GetNext();
@@ -153,6 +157,7 @@ CLinkedList<Traits>::CLinkedList(CLinkedList &other)
       m_nElem(0),
       m_fCompare(other.m_fCompare)
 {
+    std::lock_guard<std::mutex> lock(m_mutex);
     if (!other.m_pRoot) return;
 
     Node *posOther = other.m_pRoot;
@@ -177,6 +182,7 @@ CLinkedList<Traits>::CLinkedList(CLinkedList &other)
 // Move Constructor
 template <typename Traits>
 CLinkedList<Traits>::CLinkedList(CLinkedList &&other){
+    std::lock_guard<std::mutex> lock(m_mutex);
     m_pRoot    = std::move(other.m_pRoot);
     m_nElem    = std::move(other.m_nElem);
     m_fCompare = std::move(other.m_fCompare);
@@ -191,6 +197,7 @@ CLinkedList<Traits>::~CLinkedList(){
 // TODO: Este operador debe quedar fuera de la clase
 template <typename Traits>
 std::ostream &operator<<(std::ostream &os, CLinkedList<Traits> &obj){
+    std::lock_guard<std::mutex> lock(obj.m_mutex);
     auto pRoot = obj.GetRoot();
     while( pRoot ){
         os << pRoot->GetData() << "(" << pRoot->GetRef() << ") ";
