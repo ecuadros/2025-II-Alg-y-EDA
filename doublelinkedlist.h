@@ -134,6 +134,20 @@ public:
 private:
     void InternalInsert(Node *&rParent, value_type &elem, Ref ref);
     Node *GetRoot()    {    return m_pRoot;     };
+    
+    void Destroy() {
+        Destroy(m_pRoot);
+        m_pRoot = nullptr;
+        m_pTail = nullptr;
+        m_nElem = 0;
+    }
+
+    void Destroy(Node* node) {
+        if (node) {
+            Destroy(node->GetNext());
+            delete node;
+        }
+    }
 
 public:
     forward_iterator begin(){ return forward_iterator(this, m_pRoot); };
@@ -161,25 +175,12 @@ public:
     // TODO: crear foreach generico aplicando una funcion a cada elemento
     template <typename Function, typename... Args>
     void foreach(Function func, Args const&... args){
-        ::foreach(begin(), end(), func, args...);
+        //::foreach(begin(), end(), func, args...);
         // auto iter = begin();
         // for(; iter != end() ; ++iter )
         //     std::invoke(func, *iter, args...);
     }
 };
-
-template <typename Traits>
-CDoubleLinkedList<Traits>::~CDoubleLinkedList() {
-    Node *current = m_pRoot;
-    while (current) {
-        Node *next = current->GetNext(); 
-        delete current;                  
-        current = next;                  
-    }
-    m_pRoot = nullptr; 
-    m_pTail = nullptr; 
-    m_nElem = 0;       
-}
 
 template <typename Traits>
 void CDoubleLinkedList<Traits>::Insert(value_type &elem, Ref ref){
@@ -228,6 +229,7 @@ CDoubleLinkedList<Traits>::CDoubleLinkedList(CDoubleLinkedList &&other){
 template <typename Traits>
 CDoubleLinkedList<Traits>::~CDoubleLinkedList()
 {
+    Destroy();
 }
 
 // TODO: Este operador debe quedar fuera de la clase
