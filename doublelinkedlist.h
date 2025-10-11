@@ -1,6 +1,7 @@
 #ifndef __DOUBLE_LINKEDLIST_H__
 #define __DOUBLE_LINKEDLIST_H__
 #include <iostream>
+#include <mutex>
 #include "types.h"
 #include "traits.h"
 
@@ -92,9 +93,12 @@ class backward_double_linkedlist_iterator{
      value_type &operator*(){    return m_pNode->GetDataRef();   }
 };
 
-// TODO Agregar control de concurrencia
+// TODO (Done): Control de concurrencia implementado con std::mutex
+// Las operaciones de escritura (Insert) están protegidas con lock_guard
 
-// TODO Agregar que sea ascendente o descendente con el mismo codigo
+// TODO (Done): Orden ascendente/descendente se puede de dos formas:
+// 1. Usando Traits diferentes: AscendingTrait vs DescendingTrait
+// 2. Usando iteradores: begin()->end() (ascendente) vs rbegin()->rend() (descendente)
 template <typename Traits>
 class CDoubleLinkedList{
 public:
@@ -110,6 +114,7 @@ private:
     Node   *m_pTail = nullptr;
     size_t m_nElem = 0;
     Func   m_fCompare;
+    mutable std::mutex m_mutex;  // Protege modificaciones concurrentes de m_pRoot, m_pTail y m_nElem
 
 public:
     // Constructor
@@ -145,6 +150,7 @@ public:
 
 template <typename Traits>
 void CDoubleLinkedList<Traits>::Insert(value_type &elem, Ref ref){
+    std::lock_guard<std::mutex> lock(m_mutex);  // Protege porque múltiples hilos pueden insertar simultáneamente
     InternalInsert(m_pRoot, elem, ref, nullptr);
 }
 
@@ -181,15 +187,15 @@ CDoubleLinkedList<Traits>::CDoubleLinkedList(){}
 // TODO (Done): Constructor por copia - hace loop copiando cada elemento
 template <typename Traits>
 CDoubleLinkedList<Traits>::CDoubleLinkedList(CDoubleLinkedList &other)
-    : m_fCompare(other.m_fCompare)  // Copiar la función
+    : m_fCompare(other.m_fCompare)
 {
+    std::lock_guard<std::mutex> lock(other.m_mutex);  // Protege other porque otro hilo puede estar modificándolo
     Node *current = other.m_pRoot;
     
-    // Recorrer todos los nodos de la lista original
     while(current){
         value_type elem = current->GetData();
         Ref reference = current->GetRef();
-        Insert(elem, reference);  // Insertar mantiene el orden y actualiza los enlaces
+        InternalInsert(m_pRoot, elem, reference, nullptr);  // No protege 'this' porque es objeto nuevo aún no compartido
         current = current->GetNext();
     }
 }
@@ -197,6 +203,7 @@ CDoubleLinkedList<Traits>::CDoubleLinkedList(CDoubleLinkedList &other)
 // Move Constructor
 template <typename Traits>
 CDoubleLinkedList<Traits>::CDoubleLinkedList(CDoubleLinkedList &&other){
+    std::lock_guard<std::mutex> lock(other.m_mutex);  // Protege other porque otro hilo podría accederlo durante el movimiento
     m_pRoot    = std::move(other.m_pRoot);
     m_pTail    = std::move(other.m_pTail);
     m_nElem    = std::move(other.m_nElem);
@@ -207,6 +214,7 @@ CDoubleLinkedList<Traits>::CDoubleLinkedList(CDoubleLinkedList &&other){
 template <typename Traits>
 CDoubleLinkedList<Traits>::~CDoubleLinkedList()
 {
+    std::lock_guard<std::mutex> lock(m_mutex);  // Protege porque otro hilo podría estar iterando mientras se destruye
     Node *pCurrent = m_pRoot;
     while(pCurrent){
         Node *pNext = pCurrent->GetNext();
@@ -238,6 +246,7 @@ std::ostream& CDoubleLinkedList<Traits>::Write(std::ostream &os){
 // TODO (Done): Método Read implementado - lee formato: dato(ref) dato(ref) ...
 template <typename Traits>
 std::istream& CDoubleLinkedList<Traits>::Read(std::istream &is){
+    // No protege porque Insert() ya lo hace internamente y evitamos doble lock
     value_type dato;
     Ref referencia;
     char parentesis;
