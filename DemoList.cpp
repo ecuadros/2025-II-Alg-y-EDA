@@ -85,4 +85,9 @@ void DemoDoubleLinkedList(){
     foreach(l1. begin(), l1. end(), ::Print<T1>);
 
     foreach(l1.rbegin(), l1.rend(), ::Print<T1>);
+    std::cout << std::endl;
+    
+    std::cout << "Imprimiendo l1 con Write ..." << std::endl;
+    l1.Write(cout);
+    std::cout << std::endl;
 }
