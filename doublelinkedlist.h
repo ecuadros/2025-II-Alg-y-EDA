@@ -231,6 +231,14 @@ CDoubleLinkedList<Traits>::CDoubleLinkedList(CDoubleLinkedList &&other)
 template <typename Traits>
 CDoubleLinkedList<Traits>::~CDoubleLinkedList()
 {
+    Node *pcurrent = m_pRoot;
+    while(current){
+        Node *next = current->GetNext();
+        delete current;
+        current = next;
+    }
+    m_pRoot = m_pTail = nullptr;
+    m_nElem = 0;
 }
 
 // TODO: Este operador debe quedar fuera de la clase
