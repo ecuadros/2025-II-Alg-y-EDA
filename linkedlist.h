@@ -145,15 +145,6 @@ CLinkedList<Traits>::~CLinkedList()
 {
 }
 
-// TODO: Este operador debe quedar fuera de la clase
-// template <typename Traits>
-// std::ostream &operator<<(std::ostream &os, CLinkedList<Traits> &obj){
-//     auto pRoot = obj.GetRoot();
-//     while( pRoot )
-//         os << pRoot->GetData() << " ";
-//     return os;
-// }
-
 void DemoLinkedList();
 
 #endif // __LINKEDLIST_H__
