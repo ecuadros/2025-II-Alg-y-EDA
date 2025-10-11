@@ -152,7 +152,7 @@ public:
 
     // TODO: crear foreach generico aplicando una funcion a cada elemento
     template <typename Function, typename... Args>
-    void foreach(Function func, Args const&... args){
+    void foreach(Function func, Args&... args){
         ::foreach(begin(), end(), func, args...);
         // auto iter = begin();
         // for(; iter != end() ; ++iter )
