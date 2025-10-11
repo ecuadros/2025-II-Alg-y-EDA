@@ -1,6 +1,6 @@
 #ifndef __BINARY_TREE_H__  
 #define __BINARY_TREE_H__ 
-//#include <utility>
+#include <utility>
 //#include <algorithm>
 #include <cassert>
 #include <fstream>
@@ -12,7 +12,7 @@ template <typename Traits>
 class CBinaryTreeNode{
 public:
   using value_type = typename Traits::T;
-  using Node       = CBinaryTreeNode<T>;
+  using Node       = CBinaryTreeNode<Traits>;
 
 protected:
     value_type     m_data;
@@ -131,10 +131,10 @@ public:
     CBinaryTree(){} // Empty tree
     
     // TODO: Copy Constructor. We have duplicate each node
-    CBinaryTree(Binary &other);
+    CBinaryTree(CBinaryTree  &other);
     
     // TODO: Done: Move Constructor
-    CBinaryTree(Binary &&other)
+    CBinaryTree(CBinaryTree  &&other)
         : m_pRoot(std::exchange(other.m_pRoot, nullptr)), 
           m_size (std::exchange(other.m_size, 0)), 
           Compfn (std::exchange(other.Compfn, nullptr))
@@ -221,7 +221,10 @@ public:
         if( pNode ){
             Node *pParent = pNode->getParent();
             print(pNode->getChild(1), level+1, os);
-            os << string(" | ") * level << pNode->getDataRef() << "(" << (pParent?to_string(pParent->getData()):"Root") << ")" <<endl;
+            for (size_t i = 0; i < level; ++i) {
+                os << " | ";
+            }
+            os << pNode->getDataRef() << "(" << (pParent?to_string(pParent->getData()):"Root") << ")" <<endl;
             print(pNode->getChild(0), level+1, os);
         }
     }
