@@ -2,6 +2,7 @@
 #define __FOREACH_H__
 #include <iostream>
 #include <functional> // std::invoke
+#include <utility>    // std::forward
 
 template <typename Iterator, typename Function >
 void foreach(Iterator begin, Iterator end, Function func){
@@ -28,9 +29,9 @@ void foreach(Container &container, Function func){
 // Variadic templates
 template<typename Iterator, typename Function, typename... Args>
 void foreach (Iterator begin, Iterator end,
-              Function func, Args const&... args){   
-    for (auto iter = begin; begin != end; ++iter)
-        std::invoke(func, *iter, args...);
+              Function func, Args&&... args){   
+    for (auto iter = begin; iter != end; ++iter)
+        std::invoke(func, *iter, std::forward<Args>(args)...);
 }
 
 // template<typename Callable, typename... Args>

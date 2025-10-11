@@ -4,7 +4,7 @@
 #include <utility> // para std::pair
 
 #include "linkedlist.h"
-// #include "doublelinkedlist.h"
+#include "doublelinkedlist.h"
 // #include "binarytree.h"
 #include "foreach.h"
 #include "types.h"
@@ -84,7 +84,6 @@ void DemoLinkedList(){
     std::cout << listaLeida << std::endl;
 }
 
-/*
 void DemoDoubleLinkedList(){
     std::vector< std::pair<T1, Ref> > v1 = {
         {4, 8}, {2, 5}, {7, 3}, {1, 9}, {5, 2}
@@ -106,18 +105,24 @@ void DemoDoubleLinkedList(){
     std::cout << std::endl;
 
     l1.foreach(::PrintX<T1>,       std::cout);
+    std::cout << "\n\n";
+    
     l1.foreach(::PrintY<T1>, 1, 3, std::cout);
+    std::cout << "\n\n";
+    
     l1.foreach([](T1 &val, ostream &os){
         os << val << " "; 
     }, std::cout);
+    std::cout << "\n\n";
     
     std::ofstream of("DLL.txt");
     l1.foreach(::PrintY<T1>, 1, 3, of);
+    
     of.close();
 
     std::cout << std::endl;
 }
-
+/*
 void DemoBinaryTree(){
     std::vector< std::pair<T1, Ref> > v1 = {
         {4, 8}, {2, 5}, {7, 3}, {1, 9}, {5, 2}
