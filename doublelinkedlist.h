@@ -146,7 +146,16 @@ public:
     }
 public:
     // Persistence
-    std::ostream &Write(std::ostream &os) { return os << *this; }
+    std::ostream &Write(std::ostream &os) { 
+        os << m_nElem << std::endl;
+
+        auto pRoot = GetRoot();
+        while( pRoot ){
+            os << pRoot->GetData() << " " << pRoot->GetRef() << std::endl;
+            pRoot = pRoot->GetNext();
+        }
+        
+        return os << *this; }
     
     // TODO: Read (istream &is)
     std::istream &Read (std::istream &is);
@@ -171,12 +180,13 @@ void CDoubleLinkedList<Traits>::InternalInsert(Node *&rParent, value_type &elem,
 
         Node *pNew = rParent = new Node(elem, ref, rParent);
         if( !pNew->GetNext() ) // Final de la lista
-            pTail = pNew;
+            m_pTail = pNew;
 
         // Puente hacia atras
         Node *pNext = pNew->GetNext();
         if( pNext ){ // Hay algo a continuacion
-            pNew ->SetPrev( pNext()->GetPrev() );
+            
+            pNew ->SetPrev( pNext->GetPrev() );
             pNext->SetPrev( pNew ); 
         }
         m_nElem++;
@@ -208,6 +218,9 @@ CDoubleLinkedList<Traits>::CDoubleLinkedList(CDoubleLinkedList &&other){
     m_pRoot    = std::move(other.m_pRoot);
     m_nElem    = std::move(other.m_nElem);
     m_fCompare = std::move(other.m_fCompare);
+    other.m_pRoot = nullptr;
+    other.m_pTail = nullptr;
+    other.m_nElem = 0;
 }
 
 // TODO: Implementar y liberar la memoria de cada Node
@@ -228,6 +241,29 @@ CDoubleLinkedList<Traits>::~CDoubleLinkedList()
 //         os << pRoot->GetData() << " ";
 //     return os;
 // }
+
+// TODO: Implementar Read
+template <typename Traits>
+std::istream &CDoubleLinkedList<Traits>::Read(std::istream &is)
+{
+    DestroyNode(m_pRoot);
+    m_pRoot = nullptr;
+    m_pTail = nullptr;
+    m_nElem = 0;
+
+    size_t count;
+    is >> count;
+    if(!is) return is;
+
+    for(size_t i = 0 ; i < count; ++i){
+        value_type data;
+        Ref ref;
+        is >> data >> ref;
+        if(!is) break;
+        Insert(data, ref);
+    }
+    return is;
+}
 
 void DemoDoubleLinkedList();
 
