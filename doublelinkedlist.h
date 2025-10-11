@@ -35,8 +35,6 @@ public:
     void   SetPrev(Node *pPrev){    m_pPrev = pPrev; }
 };
 
-// 
-// TODO Activar el forward_iterator
 template <typename Container>
 class forward_double_linkedlist_iterator{
  private:
