@@ -142,10 +142,15 @@ CLinkedList<Traits>::CLinkedList(CLinkedList &&other){
     m_fCompare = std::move(other.m_fCompare);
 }
 
-// TODO: Implementar y liberar la memoria de cada Node
 template <typename Traits>
 CLinkedList<Traits>::~CLinkedList()
 {
+    Node *pCurrent = m_pRoot;
+    while(pCurrent){
+        Node *pNext = pCurrent->GetNext();
+        delete pCurrent;
+        pCurrent = pNext;
+    }
 }
 
 void DemoLinkedList();
