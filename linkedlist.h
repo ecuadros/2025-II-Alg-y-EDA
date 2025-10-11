@@ -4,6 +4,7 @@
 #include "types.h"
 #include "traits.h"
 
+// Nodo base de la Lista Enlazada
 template <typename Traits>
 class LLNode{
 private:
@@ -98,12 +99,24 @@ private:
     size_t m_nElem = 0;
     Func   m_fCompare;
 
+private:
+    void clear(){
+        Node *pCurrent = m_pRoot;
+        while( pCurrent ){
+            Node *pNext = pCurrent->GetNext();
+            delete pCurrent;
+            pCurrent = pNext;
+        }
+        m_pRoot = nullptr;
+        m_nElem = 0;
+    }
+
 public:
     // Constructor
     CLinkedList();
     CLinkedList(CLinkedList &other);
 
-    // TODO: Done
+    // (DONE) Implementar el Move Constructor
     CLinkedList(CLinkedList &&other);
 
     // Destructor seguro
@@ -119,20 +132,30 @@ public:
     forward_iterator begin(){ return forward_iterator(this, m_pRoot); };
     forward_iterator end()  { return forward_iterator(this, nullptr); } 
 
-    friend std::ostream& operator<<(std::ostream &os, CLinkedList<Traits> &obj){
-        auto pRoot = obj.GetRoot();
-        while( pRoot ){
-            os << pRoot->GetData() << "(" << pRoot->GetRef() << ") ";
-            pRoot = pRoot->GetNext();
+
+public:
+    // Modificamos Write para que su uso no dependa de << 
+    // Y sea facilmente legible para Read
+    std::ostream &Write(std::ostream &os) {
+        Node *pCurrent = m_pRoot;
+        while (pCurrent != nullptr) {
+            os << pCurrent->GetData() << " " << pCurrent->GetRef() << "\n";
+            pCurrent = pCurrent->GetNext();
         }
         return os;
     }
-public:
-    // Persistence
-    std::ostream &Write(std::ostream &os) { return os << *this; }
     
-    // TODO: Read (istream &is)
-    std::istream &Read (std::istream &is);
+    // (DONE): Read (istream &is)
+    std::istream &Read (std::istream &is){
+        this->clear();
+        value_type elem;
+        Ref ref;
+
+        while (is >> elem >> ref) {
+            this->Insert(elem, ref);
+        }
+        return is;
+    }
 };
 
 template <typename Traits>
@@ -154,12 +177,14 @@ void CLinkedList<Traits>::InternalInsert(Node *&rParent, value_type &elem, Ref r
     InternalInsert(rParent->GetNextRef(), elem, ref);
 }
 
-
-
-// TODO Constructor por copia
-//      Hacer loop copiando cada elemento
+// (DONE) Constructor por copia
 template <typename Traits>
-CLinkedList<Traits>::CLinkedList(CLinkedList &other){
+CLinkedList<Traits>::CLinkedList(CLinkedList<Traits> &other)
+    : m_pRoot(nullptr), m_nElem(0), m_fCompare(other.m_fCompare)
+{
+    for (Node *pOther = other.m_pRoot; pOther != nullptr; pOther = pOther->GetNext()){
+        Insert( pOther->GetDataRef(), pOther->GetRef() );
+    }
 }
 
 // Move Constructor
@@ -170,20 +195,22 @@ CLinkedList<Traits>::CLinkedList(CLinkedList &&other){
     m_fCompare = std::move(other.m_fCompare);
 }
 
-// TODO: Implementar y liberar la memoria de cada Node
+// (DONE) Implementar y liberar la memoria de cada Node
 template <typename Traits>
 CLinkedList<Traits>::~CLinkedList()
 {
+    this->clear();
 }
 
-// TODO: Este operador debe quedar fuera de la clase
-// template <typename Traits>
-// std::ostream &operator<<(std::ostream &os, CLinkedList<Traits> &obj){
-//     auto pRoot = obj.GetRoot();
-//     while( pRoot )
-//         os << pRoot->GetData() << " ";
-//     return os;
-// }
+// (DONE) Este operador debe quedar fuera de la clase
+template <typename Traits>
+std::ostream &operator<<(std::ostream &os, CLinkedList<Traits> &obj){
+    for(auto& elem : obj){
+        os << elem << " "; // Asumiendo que elem (value_type) tiene operador << 
+    }
+    return os;
+}
+
 
 void DemoLinkedList();
 

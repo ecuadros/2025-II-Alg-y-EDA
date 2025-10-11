@@ -63,9 +63,25 @@ void DemoLinkedList(){
     listAscendente.Write(cout);
     cout <<endl;
 
+    std::cout << "\nProbando que operator<< funciona" << std::endl;
+    std::cout << "Salida de la lista: " << listDescendente << std::endl;
+    
+    std::cout << "\nGuardando listAscendente en LL.txt usando Write()" << std::endl;
     std::ofstream of("LL.txt");
     listAscendente.Write(of);
     of.close();
+
+    std::cout << "\nProbando leer la lista Ascendente desde un archivo con Read()" << std::endl;
+    std::ifstream inFile("LL.txt");
+    if (!inFile) {
+        std::cerr << "Error: No se pudo abrir LL.txt para leer." << std::endl;
+        return;
+    }
+    CLinkedList<AscendingTrait<T1>> listaLeida;
+    listaLeida.Read(inFile);
+    inFile.close();
+    std::cout << "Contenido de la lista leida del archivo:" << std::endl;
+    std::cout << listaLeida << std::endl;
 }
 
 /*
