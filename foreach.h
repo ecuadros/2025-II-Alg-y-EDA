@@ -28,9 +28,9 @@ void foreach(Container &container, Function func){
 template<typename Iterator, typename Function, typename... Args>
 void foreach (Iterator begin, Iterator end,
               Function func, Args const&... args)
-{   auto iter = begin;
-    for (; begin != end; ++iter)
-        std::invoke(func, args..., *iter);
+{   
+    for (; begin != end; ++begin)  // Usar 'begin' en ambos lados
+        std::invoke(func, args..., *begin);
 }
 
 // template<typename Callable, typename... Args>

@@ -2,11 +2,11 @@
 #include "vector.h"
 #include "DemoVector.h"
 #include "hilos.h"
-#include "linkedlist.h"
-#include "doublelinkedlist.h"
 
 using namespace std;
-
+void DemoLinkedList();
+void DemoDoubleLinkedList();
+void DemoBinaryTree();
 /* Revisado por:
    1. Ernesto Cuadros-Vargas
    4. Héctor Bobbio Hermoza 
@@ -15,28 +15,28 @@ using namespace std;
    22. Chandler Steven Perez Cueva
 */
 
-// Forma 1 de Compilar: 
-// g++ -std=c++17 -Wall -g -pthread -o main main.cpp
-// Forma #2 de Compilar (requiere el archivo Makefile)
-// make
-
 int main(){
     cout << "Hello Alg y EDA-UNI" << endl;
-    // DemoThreads();
-    [[maybe_unused]] int x = 5;
-    // DemoVector();
+    cout.flush();
+
+    // Prueba DemoVector
+    //DemoVector();
+
+    // Prueba threads
+    //DemoThreads();
+
+    // Pausa para ver la salida en Windows
+    //cout << "Presiona Enter para salir..." << endl;
+    //cin.get();
+
+
+    cout << "===== DEMO LINKED LIST =====" << endl;
     DemoLinkedList();
+
+    cout << "\n===== DEMO DOUBLE LINKED LIST =====" << endl;
     DemoDoubleLinkedList();
+
+    cout << "\n===== DEMO BINARY TREE =====" << endl;
+    DemoBinaryTree();
     return 0;
 }
-
-// int main(int nArgs, char *pArgs[]){
-//     cout << "Hello Alg y EDA-UNI (forma #2)" << endl;
-//     int i;
-//     for(i = 0 ; i < nArgs ; ++i){
-//         cout << pArgs[i] << endl;
-//     }
-// }
-
-
-

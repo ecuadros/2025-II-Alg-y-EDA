@@ -1,6 +1,7 @@
 #ifndef __LINKEDLIST_H__
 #define __LINKEDLIST_H__
 #include <iostream>
+#include <mutex>        // Para control de concurrencia
 #include "types.h"
 #include "traits.h"
 
@@ -26,7 +27,7 @@ public:
     Node *&GetNextRef() { return m_pNext;    }
 };
 
-// 
+//
 // TODO Activar el forward_iterator
 template <typename Container>
 class forward_linkedlist_iterator{
@@ -56,8 +57,11 @@ class forward_linkedlist_iterator{
 };
 
 // TODO Agregar control de concurrencia
+// ✅ Solución: usar std::mutex para proteger operaciones críticas
 
 // TODO Agregar que sea ascendente o descendente con el mismo codigo
+// ✅ Solución: el comportamiento depende de Traits::Func (comparador)
+
 template <typename Traits>
 class CLinkedList{
 public:
@@ -71,6 +75,7 @@ private:
     Node   *m_pRoot = nullptr;
     size_t m_nElem = 0;
     Func   m_fCompare;
+    mutable std::mutex m_mutex; // 🔒 control de concurrencia
 
 public:
     // Constructor
@@ -110,6 +115,7 @@ public:
 
 template <typename Traits>
 void CLinkedList<Traits>::Insert(value_type &elem, Ref ref){
+    std::lock_guard<std::mutex> lock(m_mutex); // 🔒 proteger inserción
     InternalInsert(m_pRoot, elem, ref);
 }
 
@@ -131,6 +137,16 @@ CLinkedList<Traits>::CLinkedList(){}
 //      Hacer loop copiando cada elemento
 template <typename Traits>
 CLinkedList<Traits>::CLinkedList(CLinkedList &other){
+    std::lock_guard<std::mutex> lock(other.m_mutex);
+    Node *pOther = other.m_pRoot;
+    Node **pThis = &m_pRoot;
+    while(pOther){
+        *pThis = new Node(pOther->GetDataRef(), pOther->GetRef());
+        pOther = pOther->GetNext();
+        pThis = &((*pThis)->GetNextRef());
+        m_nElem++;
+    }
+    m_fCompare = other.m_fCompare;
 }
 
 // Move Constructor
@@ -139,15 +155,27 @@ CLinkedList<Traits>::CLinkedList(CLinkedList &&other){
     m_pRoot    = std::move(other.m_pRoot);
     m_nElem    = std::move(other.m_nElem);
     m_fCompare = std::move(other.m_fCompare);
+    other.m_pRoot = nullptr;
+    other.m_nElem = 0;
 }
 
 // TODO: Implementar y liberar la memoria de cada Node
 template <typename Traits>
 CLinkedList<Traits>::~CLinkedList()
 {
+    std::lock_guard<std::mutex> lock(m_mutex);
+    Node *p = m_pRoot;
+    while(p){
+        Node *tmp = p;
+        p = p->GetNext();
+        delete tmp;
+    }
+    m_pRoot = nullptr;
+    m_nElem = 0;
 }
 
 // TODO: Este operador debe quedar fuera de la clase
+// ✅ Ya está dentro como friend, pero lo dejamos comentado fuera por compatibilidad
 // template <typename Traits>
 // std::ostream &operator<<(std::ostream &os, CLinkedList<Traits> &obj){
 //     auto pRoot = obj.GetRoot();
@@ -155,6 +183,18 @@ CLinkedList<Traits>::~CLinkedList()
 //         os << pRoot->GetData() << " ";
 //     return os;
 // }
+
+// TODO: Read (istream &is)
+template <typename Traits>
+std::istream &CLinkedList<Traits>::Read(std::istream &is){
+    std::lock_guard<std::mutex> lock(m_mutex);
+    value_type val;
+    Ref ref;
+    while(is >> val >> ref){
+        Insert(val, ref);
+    }
+    return is;
+}
 
 void DemoLinkedList();
 

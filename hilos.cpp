@@ -1,6 +1,7 @@
 #include <iostream>
 #include <thread>
 #include <vector>
+#include <mutex>
 #include "hilos.h"
 #include "vector.h"
 using namespace std;
@@ -18,29 +19,31 @@ void func(int thread_id, CVector<int> &v) {
              << " | Iteración: " << i << endl;
     }
 
-    // for (int i = 0; i < 5; ++i) {
-    //     v.insert(i);
-    // }
+    for (int i = 0; i < 5; ++i) {
+        v.insert(i);
+    }
 }
 
 void DemoThreads(){
-    // const int num_threads = 3;
-    // vector<thread> threads;
-    // CVector<int>   vect(10);
-    // cout << "Creando " << num_threads << " threads..." << endl;
+    const int num_threads = 3;
+    vector<thread> threads;
+    CVector<int>   vect(10);
+    cout << "Creando " << num_threads << " threads..." << endl;
 
-    // // Crear y lanzar los threads
-    // for (int i = 0; i < num_threads; ++i) {
-    //     // Crear el objeto thread
-    //     // thread t(func, i, vect);
+    // Crear y lanzar los threads
+    for (int i = 0; i < num_threads; ++i) {
+        // Pasar vect por referencia para que todos usen el mismo
+        thread t(func, i, std::ref(vect));
         
-    //     // Mover el thread al vector (no se puede copiar, solo mover)
-    //     // threads.push_back(move(t));
-    // }
+        // Mover el thread al vector (no se puede copiar, solo mover)
+        threads.push_back(move(t));
+    }
 
-    // // Esperar a que todos los threads terminen
-    // for (auto& t : threads) {
-    //     t.join();
-    // }
-    // cout << "Todos los threads han terminado." << endl;
+    // Esperar a que todos los threads terminen
+    for (auto& t : threads) {
+        t.join();
+    }
+
+    cout << "Todos los threads han terminado." << endl;
+    cout << "Contenido final del vector compartido: " << vect << endl;
 }

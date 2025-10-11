@@ -13,175 +13,96 @@
 // TODO (Nivel 1): Agregar Documentacion para generar con doxygen
 
 // TODO  (Nivel 2): Agregar control de concurrencia en todo el vector
-
-/**
-    *   @file vector.h
-    *   @brief A simple implementation of a dynamic array (vector) in C++
-    *   @date 2025
-*/
-template <typename Traits>
+template <typename T>
 class CVector{
-public:
-    using value_type = typename Traits::value_type;
-
-private:
-    /**
-    *   @brief Pointer to the dynamic array
-    */
-    value_type      *m_pVect = nullptr;
-
-    /**
-    *   @brief Current number of elements in the vector
-    */
+   
+    T      *m_pVect = nullptr;
     size_t  m_count = 0; // How many elements we have now?
-
-    /**
-    *   @brief Max number of elements the vector can hold
-    */
     size_t  m_max   = 0; // Max capacity
 public:
-    // TODO  (Nivel 1) Agregar un constructor por copia
-    /**
-    *   @brief Copy constructor
-    */
-    CVector(CVector &v);
+    // ======== TODO  (Nivel 1) Agregar un constructor por copia ========
+    CVector(const CVector &v) {
+        m_count = v.m_count;
+        m_max   = v.m_max;
+        m_pVect = new T[m_max];
+        for (size_t i = 0; i < m_count; ++i)
+            m_pVect[i] = v.m_pVect[i];
+    }
 
-    /**
-    *   @brief Constructor, initializes vector with given size
-    *   @param n initial size of the vector, n > 0
-    */
-    CVector(size_t n);
-    // TODO  (Nivel 2): Agregar un move constructor
+    // Constructor normal con tamaño inicial
+    CVector(size_t n = 0) {
+        m_count = n;
+        m_max   = n > 0 ? n : 10;
+        m_pVect = new T[m_max];
+        // inicializar
+        for (size_t i = 0; i < m_count; ++i)
+            m_pVect[i] = T{};
+    }
 
-    /**
-     * @brief Constructor por movimiento.
-     * @param v Vector origen; tras el movimiento queda vacío/seguro.
-     * @post @c v.size()==0
-     */
-    CVector(CVector &&v);
+    // ======== TODO  (Nivel 2): Agregar un move constructor ========
+    CVector(CVector &&v) noexcept {
+        m_pVect = v.m_pVect;
+        m_count = v.m_count;
+        m_max   = v.m_max;
+        // dejar v en estado seguro
+        v.m_pVect = nullptr;
+        v.m_count = 0;
+        v.m_max   = 0;
+    }
 
-    // TODO: (Nivel 1) implementar el destructor de forma segura
+    // ======== TODO: (Nivel 1) implementar el destructor de forma segura ========
+    virtual ~CVector() {
+        delete[] m_pVect;
+        m_pVect = nullptr;
+        m_count = 0;
+        m_max   = 0;
+    }
 
-    /**
-    *   @brief Destructor, frees allocated memory
-    */
-    virtual ~CVector();
-
-    /**
-    *   @brief Insert a new element at the end of the vector
-    *   @param elem element to insert
-    */
-    void insert(value_type &elem);
-
-    /**
-    *   @brief Overload operator [] to access elements in the vector
-    *   @param index position of the element to access
-    *   \return reference to the element at the given index
-    */
-    value_type&   operator[](size_t index);
-
-    /**
-    *   @brief Get the current size of the vector
-    *   \return number of elements
-    */
-    size_t size() const { return m_count; }
-private:
-    /**
-    *   @brief Resize the internal array to have more capacity
-    */
+    void insert(const T &elem);
     void resize();
 
-    /**
-    *   @brief Initialize the CVector object, used in constructor and assignment
-    *   @param n initial size of the vector
-    */
-    void Init(size_t n);
+    // ======== Nivel 1: operador [] ========
+    T& operator[](std::size_t index) {
+        return m_pVect[index];
+    }
+    const T& operator[](std::size_t index) const {
+        return m_pVect[index];
+    }
 
-    /**
-    *   @brief Destroy the CVector object, used in destructor and Init
-    */
-    void Destroy();
+    // ======== Nivel 2: operador << ========
+    template <typename U>
+    friend std::ostream& operator<<(std::ostream& os, const CVector<U>& v);
 };
 
-template <typename Traits>
-CVector<Traits>::CVector(size_t n){
-    Init(n);
-}
-
-template <typename Traits>
-CVector<Traits>::CVector(CVector &v) 
-          : m_max(v.m_max), 
-            m_count(v.m_count) {
-    if (m_max > 0)
-        m_pVect = new value_type[m_max];
-    for (size_t i = 0; i < m_count; ++i)
-        m_pVect[i] = v[i];       
-}
-
-// TODO (Nivel 1): hacer dinamico el delta de crecimiento
-template <typename Traits>
-void CVector<Traits>::resize(){
-    value_type *pTmp = new value_type[m_max+10];
-    for(auto i=0; i < m_max ; ++i)
+// Implementación resize
+// TODO (Nivel 1): hacer dinámico el delta de crecimiento
+template <typename T>
+void CVector<T>::resize(){
+    size_t delta = 10; // podrías parametrizarlo si quieres
+    T *pTmp = new T[m_max + delta];
+    for (size_t i = 0; i < m_max ; ++i)
         pTmp[i] = m_pVect[i];
     delete [] m_pVect;
-    m_max += 10;
+    m_max += delta;
     m_pVect = pTmp;
 }
 
-template <typename Traits>
-void CVector<Traits>::Init(size_t n){
-    Destroy();
-    resize();
-}
-
-template <typename Traits>
-CVector<Traits>::~CVector(){
-    Destroy();
-}
-
-template <typename Traits>
-void CVector<Traits>::Destroy(){
-    m_count = 0; 
-    m_max   = 0;
-    delete [] m_pVect;
-    m_pVect = nullptr;
-}
-
 // TODO (ya está hecha): la funcion insert debe permitir que el vector crezca si ha desbordado
-template <typename Traits>
-void CVector<Traits>::insert(value_type &elem){
-    if(m_count == m_max)
+template <typename T>
+void CVector<T>::insert(const T &elem){
+    if (m_count == m_max)
         resize();
     m_pVect[m_count++] = elem;
 }
 
-template <typename Traits>
-typename CVector<Traits>::value_type& CVector<Traits>::operator[](size_t index) {
-    if (index >= m_count) {
-        throw std::out_of_range("Index out of range");
-    }
-    return m_pVect[index];
-}
-
-template <typename Traits>
-std::ostream& operator<<(std::ostream& os, CVector<Traits>& vec) {
-    // os << "[";
-    for (size_t i = 0; i < vec.size(); ++i)
-        os << vec[i] << " ";
-    // os << "]";
+// Operador << para imprimir el vector
+template <typename T>
+std::ostream& operator<<(std::ostream& os, const CVector<T>& v) {
+    os << "[ ";
+    for (size_t i = 0; i < v.m_count; ++i)
+        os << v.m_pVect[i] << " ";
+    os << "]";
     return os;
 }
 
 #endif // __VECTOR_H__
-
-/**
- * @mainpage CVector Implementation
- *
- * @section intro_sec Introduction
- * Implementation of a simple dynamic array (vector) in C++ for the course Advanced Algorithms and Data Structures 2025-II.
- * Check the defined methods in the [CVector header file](classCVector.html).
- *
- * @section install_sec Run
- * To run the code, compile using GNU Make with the command `make all`.
-*/
