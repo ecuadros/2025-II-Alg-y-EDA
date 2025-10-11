@@ -82,7 +82,7 @@ public:
 
     // TODO: Done
     CLinkedList(CLinkedList &&other);
-
+    void Destroy();
     // Destructor seguro
     virtual ~CLinkedList();
 
@@ -128,6 +128,20 @@ void CLinkedList<Traits>::InternalInsert(Node *&rParent, value_type &elem, Ref r
     InternalInsert(rParent->GetNextRef(), elem, ref);
 }
 
+
+template <typename Traits>
+void CLinkedList<Traits>::Destroy(){
+    Node *pTmp = m_pRoot;
+    while(pTmp){
+        Node *pNext = pTmp->GetNext();
+        delete pTmp;
+        pTmp = pNext;
+    }
+    m_pRoot = nullptr;
+    m_nElem = 0;
+}
+
+
 template <typename Traits>
 CLinkedList<Traits>::CLinkedList(){}
 
@@ -170,8 +184,8 @@ CLinkedList<Traits>::CLinkedList(CLinkedList &&other){
 
 // TODO: Implementar y liberar la memoria de cada Node
 template <typename Traits>
-CLinkedList<Traits>::~CLinkedList()
-{
+CLinkedList<Traits>::~CLinkedList(){
+    Destroy();
 }
 
 // TODO: Este operador debe quedar fuera de la clase
