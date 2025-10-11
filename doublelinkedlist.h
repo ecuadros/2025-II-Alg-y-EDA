@@ -145,7 +145,17 @@ public:
     backward_iterator rend()  { 
         std::lock_guard<std::mutex> lock(m_mutex); 
         return backward_iterator(this, nullptr); } 
-
+    
+    std::ostream& PrintTo(std::ostream &os) {
+        std::lock_guard<std::mutex> lock(m_mutex);
+        auto pRoot = GetRoot();
+        while( pRoot ){
+            os << pRoot->GetData() << "(" << pRoot->GetRef() << ") ";
+            pRoot = pRoot->GetNext();
+        }
+        return os;
+    }
+    /*
     friend std::ostream& operator<<(std::ostream &os, CDoubleLinkedList<Traits> &obj){
         auto pRoot = obj.GetRoot();
         while( pRoot ){
@@ -154,6 +164,7 @@ public:
         }
         return os;
     }
+    */
 public:
     // Persistence
     std::ostream &Write(std::ostream &os) { 
@@ -263,6 +274,12 @@ CDoubleLinkedList<Traits>::~CDoubleLinkedList()
 //         os << pRoot->GetData() << " ";
 //     return os;
 // }
+
+template <typename Traits>
+std::ostream &operator<<(std::ostream &os, CDoubleLinkedList<Traits> &obj){
+    return obj.PrintTo(os);
+}
+
 
 // TODO: Implementar Read
 template <typename Traits>
