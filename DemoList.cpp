@@ -50,6 +50,26 @@ void DemoLinkedList(){
     std::ofstream of("LL.txt");
     l1.Write(of);
     of.close();
+
+    CLinkedList< AscendingTrait<T1> > copy_l1(l1);
+
+    std::cout << "Lista 1:\n";
+    foreach(l1.begin(), l1.end(), ::Print<T1>);
+    std::cout << std::endl;
+
+    std::cout << "Copy 1:\n";
+    foreach(copy_l1.begin(), copy_l1.end(), ::Print<T1>);
+    std::cout << std::endl;
+
+    foreach(copy_l1, [](T1 &n){ n += 10; });
+
+        std::cout << "Lista 1:\n";
+    foreach(l1.begin(), l1.end(), ::Print<T1>);
+    std::cout << std::endl;
+
+    std::cout << "Copy 1:\n";
+    foreach(copy_l1.begin(), copy_l1.end(), ::Print<T1>);
+    std::cout << std::endl;
 }
 
 void DemoDoubleLinkedList(){
