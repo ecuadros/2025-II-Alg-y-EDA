@@ -220,7 +220,11 @@ CDoubleLinkedList<Traits>::CDoubleLinkedList(CDoubleLinkedList &&other)
 {
     m_pRoot = std::move(other.m_pRoot);
     m_nElem = std::move(other.m_nElem);
+    m_pTail = sdt::move(other.m_pTail);
     m_fCompare = std::move(other.m_fCompare);
+
+    other.m_pRoot = other.m_pTail = nullptr;
+    other.m_nElem = 0;
 }
 
 // TODO: Implementar y liberar la memoria de cada Node
