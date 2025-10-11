@@ -123,9 +123,10 @@ public:
     virtual ~CDoubleLinkedList();
 
     void Insert(value_type &elem, Ref ref);
+    Node *GetRoot()    {    return m_pRoot;     };
+
 private:
     void InternalInsert(Node *&rParent, value_type &elem, Ref ref, Node *pPrev);
-    Node *GetRoot()    {    return m_pRoot;     };
 
 public:
     forward_iterator begin(){ return forward_iterator(this, m_pRoot); };
@@ -135,17 +136,8 @@ public:
     backward_iterator rbegin(){ return backward_iterator(this, m_pTail); };
     backward_iterator rend()  { return backward_iterator(this, nullptr); } 
 
-    friend std::ostream& operator<<(std::ostream &os, CDoubleLinkedList<Traits> &obj){
-        auto pRoot = obj.GetRoot();
-        while( pRoot ){
-            os << pRoot->GetData() << "(" << pRoot->GetRef() << ") ";
-            pRoot = pRoot->GetNext();
-        }
-        return os;
-    }
-public:
     // Persistence
-    std::ostream &Write(std::ostream &os) { return os << *this; }
+    std::ostream &Write(std::ostream &os);
     
     // TODO: Read (istream &is)
     std::istream &Read (std::istream &is);
@@ -216,14 +208,22 @@ CDoubleLinkedList<Traits>::~CDoubleLinkedList()
     m_nElem = 0;
 }
 
-// TODO: Este operador debe quedar fuera de la clase
-// template <typename Traits>
-// std::ostream &operator<<(std::ostream &os, CDoubleLinkedList<Traits> &obj){
-//     auto pRoot = obj.GetRoot();
-//     while( pRoot )
-//         os << pRoot->GetData() << " ";
-//     return os;
-// }
+// TODO (Done): operator<< movido fuera de la clase
+template <typename Traits>
+std::ostream& operator<<(std::ostream &os, CDoubleLinkedList<Traits> &obj){
+    auto pRoot = obj.GetRoot();
+    while( pRoot ){
+        os << pRoot->GetData() << "(" << pRoot->GetRef() << ") ";
+        pRoot = pRoot->GetNext();
+    }
+    return os;
+}
+
+// Implementación del método Write
+template <typename Traits>
+std::ostream& CDoubleLinkedList<Traits>::Write(std::ostream &os){
+    return os << *this;
+}
 
 void DemoDoubleLinkedList();
 
