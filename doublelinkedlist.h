@@ -124,7 +124,7 @@ public:
 
     // Destructor seguro
     virtual ~CDoubleLinkedList();
-
+    void Destroy();
     void Insert(value_type &elem, Ref ref);
 private:
     void InternalInsert(Node *&rParent, value_type &elem, Ref ref);
@@ -213,10 +213,24 @@ CDoubleLinkedList<Traits>::CDoubleLinkedList(CDoubleLinkedList &&other){
     m_fCompare = std::move(other.m_fCompare);
 }
 
+template <typename Traits>
+void CDoubleLinkedList<Traits>::Destroy(){
+    Node *pTmp = m_pRoot;
+    while(pTmp){
+        Node *pNext = pTmp->GetNext();
+        delete pTmp;
+        pTmp = pNext;
+    }
+    m_pRoot = nullptr;
+    m_pTail = nullptr;
+    m_nElem = 0;
+}
+
 // TODO: Implementar y liberar la memoria de cada Node
 template <typename Traits>
 CDoubleLinkedList<Traits>::~CDoubleLinkedList()
 {
+    Destroy();
 }
 
 
