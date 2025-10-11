@@ -1,6 +1,7 @@
 #ifndef __FOREACH_H__
 #define __FOREACH_H__
 #include <iostream>
+#include <functional>
 
 template <typename Iterator, typename Function >
 void foreach(Iterator begin, Iterator end, Function func){
@@ -27,8 +28,8 @@ void foreach(Container &container, Function func){
 // Variadic templates
 template<typename Iterator, typename Function, typename... Args>
 void foreach (Iterator begin, Iterator end,
-              Function func, Args const&... args){   
-    for (auto iter = begin; begin != end; ++iter)
+              Function func, Args&... args){  
+    for (auto iter = begin; iter != end; ++iter)
         std::invoke(func, *iter, args...);
 }
 
