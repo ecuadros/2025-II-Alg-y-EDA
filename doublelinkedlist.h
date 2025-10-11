@@ -1,6 +1,7 @@
 #ifndef __DOUBLE_LINKEDLIST_H__
 #define __DOUBLE_LINKEDLIST_H__
 #include <iostream>
+#include <mutex>
 #include "types.h"
 #include "traits.h"
 
@@ -113,6 +114,7 @@ private:
     Node   *m_pTail = nullptr;
     size_t m_nElem = 0;
     Func   m_fCompare;
+    std::mutex m_mutex;
 
 public:
     // Constructor
@@ -149,6 +151,7 @@ public:
 
 template <typename Traits>
 void CDoubleLinkedList<Traits>::Insert(value_type &elem, Ref ref){
+    std::lock_guard<std::mutex> lock(m_mutex);
     InternalInsert(m_pRoot, elem, ref);
 }
 
@@ -185,6 +188,7 @@ CDoubleLinkedList<Traits>::CDoubleLinkedList(CDoubleLinkedList &other)
       m_nElem(0),
       m_fCompare(other.m_fCompare)
 {
+    std::lock_guard<std::mutex> lock(m_mutex);
     if (!other.m_pRoot) return;
 
     Node *posOther = other.m_pRoot;
@@ -208,13 +212,16 @@ CDoubleLinkedList<Traits>::CDoubleLinkedList(CDoubleLinkedList &other)
 // Move Constructor
 template <typename Traits>
 CDoubleLinkedList<Traits>::CDoubleLinkedList(CDoubleLinkedList &&other){
+    std::lock_guard<std::mutex> lock(m_mutex);
     m_pRoot    = std::move(other.m_pRoot);
     m_nElem    = std::move(other.m_nElem);
     m_fCompare = std::move(other.m_fCompare);
+    m_pTail    = std::move(other.m_pTail);
 }
 
 template <typename Traits>
 void CDoubleLinkedList<Traits>::Destroy(){
+    std::lock_guard<std::mutex> lock(m_mutex);
     Node *pTmp = m_pRoot;
     while(pTmp){
         Node *pNext = pTmp->GetNext();
@@ -236,6 +243,7 @@ CDoubleLinkedList<Traits>::~CDoubleLinkedList()
 
 template <typename Traits>
 std::ostream& operator<<(std::ostream &os, CDoubleLinkedList<Traits> &obj){
+    std::lock_guard<std::mutex> lock(obj.m_mutex);
     auto pRoot = obj.GetRoot();
     while( pRoot ){
         os << pRoot->GetData() << "(" << pRoot->GetRef() << ") ";
