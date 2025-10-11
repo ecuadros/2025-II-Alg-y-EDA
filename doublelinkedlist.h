@@ -3,6 +3,7 @@
 #include <iostream>
 #include "types.h"
 #include "traits.h"
+#include <mutex>
 
 template <typename Traits>
 class DLLNode{
@@ -111,6 +112,7 @@ private:
     Node   *m_pTail = nullptr;
     size_t m_nElem = 0;
     Func   m_fCompare;
+    mutable std::mutex m_mutex; 
 
 public:
     // Constructor
@@ -129,12 +131,20 @@ private:
     Node *GetRoot()    {    return m_pRoot;     };
 
 public:
-    forward_iterator begin(){ return forward_iterator(this, m_pRoot); };
-    forward_iterator end()  { return forward_iterator(this, nullptr); } 
+    forward_iterator begin(){ 
+        std::lock_guard<std::mutex> lock(m_mutex); 
+        return forward_iterator(this, m_pRoot); };
+    forward_iterator end()  { 
+        std::lock_guard<std::mutex> lock(m_mutex); 
+        return forward_iterator(this, nullptr); } 
 
-    // TODO: verifricar donde debe comenzar apuntando el iterator reverso
-    backward_iterator rbegin(){ return backward_iterator(this, m_pTail); };
-    backward_iterator rend()  { return backward_iterator(this, nullptr); } 
+    // TODO: verificar donde debe comenzar apuntando el iterator reverso
+    backward_iterator rbegin(){ 
+        std::lock_guard<std::mutex> lock(m_mutex); 
+        return backward_iterator(this, m_pTail); };
+    backward_iterator rend()  { 
+        std::lock_guard<std::mutex> lock(m_mutex); 
+        return backward_iterator(this, nullptr); } 
 
     friend std::ostream& operator<<(std::ostream &os, CDoubleLinkedList<Traits> &obj){
         auto pRoot = obj.GetRoot();
@@ -170,6 +180,7 @@ private:
 
 template <typename Traits>
 void CDoubleLinkedList<Traits>::Insert(value_type &elem, Ref ref){
+    std::lock_guard<std::mutex> lock(m_mutex); // Lock the mutex for thread safety
     InternalInsert(m_pRoot, elem, ref);
 }
 
