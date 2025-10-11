@@ -5,13 +5,14 @@
 #include <cassert>
 #include <fstream>
 #include "types.h"
+#include "general_iterator.h"
 //#include "util.h"
 using namespace std;
 
 template <typename Traits>
 class CBinaryTreeNode{
 public:
-  using value_type = typename Traits::T;
+  using value_type = typename Traits::value_type;
   using Node       = CBinaryTreeNode<Traits>;
 
 protected:
@@ -35,7 +36,7 @@ public:
     value_type  getData()                {   return m_data;    }
     value_type &getDataRef()             {   return m_data;    }
  
-protected: // TODO: Add this class as friend of the BinaryTree
+// protected: // TODO: Add this class as friend of the BinaryTree
         // and make these methods private
     void      setpChild(const Node *pChild, size_t pos)  {   m_pChild[pos] = pChild;  }
     Node    * getChild(size_t branch){ return m_pChild[branch];  }
@@ -43,13 +44,13 @@ protected: // TODO: Add this class as friend of the BinaryTree
     Node    * getParent() { return m_pParent;   }
 };
 
-template <typename Container>
-class binary_tree_iterator : public general_iterator<Container,  class binary_tree_iterator<Container> > // 
+template <typename TContainer>
+class binary_tree_iterator : public general_iterator<TContainer, binary_tree_iterator<TContainer> >
 {  
 public:
-    using Parent    = class general_iterator<Container, binary_tree_iterator<Container> >;     \
-    using Node      = typename Container::Node;
-    using Container = binary_tree_iterator<Container>;
+    using Parent    = general_iterator<TContainer, binary_tree_iterator<TContainer> >;
+    using Node      = typename TContainer::Node;
+    using Container = TContainer;
 
   public:
     binary_tree_iterator(Container *pContainer, Node *pNode) : Parent (pContainer,pNode) {}
@@ -66,24 +67,24 @@ public:
 
 template <typename _T>
 struct BinaryTreeAscTraits{
-    using  T         = _T;
-    using  Node      = CBinaryTreeNode<T>;
-    using  CompareFn = less<T>;
+    using  value_type   = _T;
+    using  Node         = CBinaryTreeNode<value_type>;
+    using  CompareFn    = less<value_type>;
 };
 
 template <typename _T>
 struct BinaryTreeDescTraits
 {
-    using  T         = _T;
-    using  Node      = CBinaryTreeNode<T>;
-    using  CompareFn = greater<T>;
+    using  value_type   = _T;
+    using  Node         = CBinaryTreeNode<value_type>;
+    using  CompareFn    = greater<value_type>;
 };
 
 template <typename Traits>
 class CBinaryTree{
 public:
-    using value_type    = typename Traits::T;
-    using Node          = typename Traits::Node;
+    using value_type    = typename Traits::value_type;
+    using Node          = CBinaryTreeNode<Traits>;
     
     using CompareFn     = typename Traits::CompareFn;
     using Container     = CBinaryTree<Traits>;
@@ -98,7 +99,7 @@ public:
     bool    empty() const       { return size() == 0;  }
 
     void insert(value_type elem, Ref ref) {
-        m_pRoot = internal_insert(elem, ref, nullptr, nullptr, m_pRoot);
+        m_pRoot = internal_insert(elem, ref, nullptr, m_pRoot);
     }
 
      Node* getExtremeNode(Node* startNode, int direction) const {
@@ -124,7 +125,7 @@ protected:
         }
 
         size_t branch = Compfn(elem, rpOrigin->getDataRef()) ? 0 : 1;
-        Node *pNode = internal_insert(elem, ref, nullptr, rpOrigin, rpOrigin->getChildRef(branch));
+        Node *pNode = internal_insert(elem, ref, rpOrigin, rpOrigin->getChildRef(branch));
         return pNode;
     }
 public:
