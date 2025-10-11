@@ -90,4 +90,27 @@ void DemoDoubleLinkedList(){
     std::cout << "Imprimiendo l1 con Write ..." << std::endl;
     l1.Write(cout);
     std::cout << std::endl;
+
+
+
+    CDoubleLinkedList< AscendingTrait<T1> > copy_l1(l1);
+
+    std::cout << "CDoubleLinkedList 1:\n";
+    foreach(l1.begin(), l1.end(), ::Print<T1>);
+    std::cout << std::endl;
+
+    std::cout << "Copy 1:\n";
+    foreach(copy_l1.begin(), copy_l1.end(), ::Print<T1>);
+    std::cout << std::endl;
+
+    foreach(copy_l1, [](T1 &n){ n += 10; });
+
+        std::cout << "CDoubleLinkedList 1:\n";
+    foreach(l1.begin(), l1.end(), ::Print<T1>);
+    std::cout << std::endl;
+
+    std::cout << "Copy 1:\n";
+    foreach(copy_l1.begin(), copy_l1.end(), ::Print<T1>);
+    std::cout << std::endl;
+
 }

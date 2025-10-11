@@ -179,7 +179,30 @@ CDoubleLinkedList<Traits>::CDoubleLinkedList(){}
 // TODO Constructor por copia
 //      Hacer loop copiando cada elemento
 template <typename Traits>
-CDoubleLinkedList<Traits>::CDoubleLinkedList(CDoubleLinkedList &other){
+CDoubleLinkedList<Traits>::CDoubleLinkedList(CDoubleLinkedList &other)
+    : m_pRoot(nullptr),
+      m_pTail(nullptr),
+      m_nElem(0),
+      m_fCompare(other.m_fCompare)
+{
+    if (!other.m_pRoot) return;
+
+    Node *posOther = other.m_pRoot;
+    Node *prev = nullptr;
+
+    while (posOther) {
+        Node *data = new Node(posOther->GetDataRef(), posOther->GetRef());
+        if (!m_pRoot){
+            m_pRoot = data;
+        }
+        else{
+            prev->GetNextRef() = data;
+        }
+
+        prev = data;
+        posOther = posOther->GetNext();
+        ++m_nElem;
+    }
 }
 
 // Move Constructor
@@ -196,14 +219,6 @@ CDoubleLinkedList<Traits>::~CDoubleLinkedList()
 {
 }
 
-// TODO: Este operador debe quedar fuera de la clase
-// template <typename Traits>
-// std::ostream &operator<<(std::ostream &os, CDoubleLinkedList<Traits> &obj){
-//     auto pRoot = obj.GetRoot();
-//     while( pRoot )
-//         os << pRoot->GetData() << " ";
-//     return os;
-// }
 
 template <typename Traits>
 std::ostream& operator<<(std::ostream &os, CDoubleLinkedList<Traits> &obj){
