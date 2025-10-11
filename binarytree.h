@@ -94,6 +94,14 @@ protected:
     Node    *m_pRoot = nullptr;
     size_t   m_size  = 0;
     CompareFn Compfn;
+
+    template <typename Visitor>
+    void inorder_helper(Node* pNode, size_t level, const Visitor& visitor) {
+        if (!pNode) return;
+        inorder_helper(pNode->getChild(0), level + 1, visitor);
+        visitor(pNode, level);
+        inorder_helper(pNode->getChild(1), level + 1, visitor);
+    }
 public: 
     size_t  size()  const       { return m_size;       }
     bool    empty() const       { return size() == 0;  }
@@ -158,27 +166,19 @@ public:
     //  }
     // riterator rend()  { return iterator(this, nullptr); }
 
-    // TODO: Generalizar estos recorridos para recibir cualquier funcion
-    // con una cantidad flexible de parametros con variadic templates
     // Google: C++ parameter packs cplusplus
-        void inorder  (ostream &os)    {   inorder  (m_pRoot, 0, os);  }
-    // TODO: 
-    void inorder(Node  *pNode, size_t level, ostream &os){
-        if( pNode ){
-            //Node *pParent = pNode->getParent();
-            inorder(pNode->getChild(0), level+1, os);
+    void inorder(ostream &os) {
+        inorder_helper(m_pRoot, 0, [&os](Node* pNode, size_t) {
             os << " --> " << pNode->getDataRef();
-            inorder(pNode->getChild(1), level+1, os);
-        }
+        });
     }
 
-    // TODO: Generalize this function by using iterators and apply any function
-    void inorder(Node  *pNode, void (*visit) (value_type& item)){
-        if( pNode ){   
-            inorder(pNode->getChild(0), *visit);
-            (*visit)(pNode->getDataRef());
-            inorder(pNode->getChild(1), *visit);
-        }
+    // variadic templates
+    template <typename Function, typename... Args>
+    void inorder(Function func, Args&&... args) {
+        inorder_helper(m_pRoot, 0, [&](Node* pNode, size_t) {
+            func(pNode->getDataRef(), std::forward<Args>(args)...);
+        });
     }
 
     // Variadic templates (See foreach.h)
