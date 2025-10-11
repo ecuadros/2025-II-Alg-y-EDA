@@ -150,6 +150,13 @@ public:
     
     // TODO: Read (istream &is)
     std::istream &Read (std::istream &is);
+private:
+    void DestroyNode(Node *pNode){
+        if( pNode ){ // Recursion until the final node
+            DestroyNode(pNode->GetNext()); 
+            delete pNode;
+        }
+    }
 };
 
 template <typename Traits>
@@ -200,6 +207,10 @@ CDoubleLinkedList<Traits>::CDoubleLinkedList(CDoubleLinkedList &&other){
 template <typename Traits>
 CDoubleLinkedList<Traits>::~CDoubleLinkedList()
 {
+    DestroyNode(m_pRoot);
+    m_pRoot = nullptr;
+    m_pTail = nullptr;
+    m_nElem = 0;
 }
 
 // TODO: Este operador debe quedar fuera de la clase
