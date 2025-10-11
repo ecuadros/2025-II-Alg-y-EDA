@@ -97,10 +97,7 @@ public:
         return os;
     }
 public:
-    // Persistence
     std::ostream &Write(std::ostream &os) { return os << *this; }
-    
-    // TODO: Read (istream &is)
     std::istream &Read (std::istream &is);
 };
 
@@ -151,6 +148,21 @@ CLinkedList<Traits>::~CLinkedList()
         delete pCurrent;
         pCurrent = pNext;
     }
+}
+
+template <typename Traits>
+std::istream &CLinkedList<Traits>::Read(std::istream &is){
+    value_type data;
+    Ref ref;
+    char open, close;
+
+    while(is >> data >> open >> ref >> close){
+        if(open == '(' && close == ')'){
+            Insert(data, ref);
+        }
+    }
+
+    return is;
 }
 
 void DemoLinkedList();
