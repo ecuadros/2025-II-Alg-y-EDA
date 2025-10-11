@@ -125,8 +125,8 @@ protected:
         }
 
         size_t branch = Compfn(elem, rpOrigin->getDataRef()) ? 0 : 1;
-        Node *pNode = internal_insert(elem, ref, rpOrigin, rpOrigin->getChildRef(branch));
-        return pNode;
+        rpOrigin->getChildRef(branch) = internal_insert(elem, ref, rpOrigin, rpOrigin->getChildRef(branch));
+        return rpOrigin;
     }
 public:
     CBinaryTree(){} // Empty tree
