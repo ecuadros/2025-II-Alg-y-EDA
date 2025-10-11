@@ -122,7 +122,16 @@ public:
     CBinaryTree(){} // Empty tree
     
     // TODO: Copy Constructor. We have duplicate each node
-    CBinaryTree(Binary &other);
+    CBinaryTree(Binary &other){
+        m_pRoot = nullptr; 
+        m_size  = 0; 
+        Compfn  = other.Compfn;
+
+        if(other.m_pRoot){
+            m_pRoot = copyNode(other.m_pRoot, nullptr);
+            m_size = other.m_size;
+        }
+    };
     
     // Move Constructor
     CBinaryTree(Binary &&other)
@@ -208,7 +217,18 @@ public:
 
     // TODO: Leer en el arbol desde un stream asumiendo que esta en preorden
     void Read(istream &is)  { /* TODO */  }
+
+    private:
+        Node* copyNode(Node* sourceNode, Node* parentNode){
+            if(!sourceNode) return nullptr;
+            Node* newNode = CreateNode(parentNode, sourceNode->getDataRef(), sourceNode->m_ref);
+            newNode->getChildRef(0) = copyNode(sourceNode->getChild(0), newNode);
+            newNode->getChildRef(1) = copyNode(sourceNode->getChild(1), newNode);
+            return newNode;
+        }
 };
+
+
 
 // TODO: este operator << debe seguir estando fuera de la clase
 template <typename Traits>
