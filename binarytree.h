@@ -141,7 +141,9 @@ public:
     { }
 
     // TODO: Recursivo y seguro. Destruir Nodes recursivamente
-    virtual ~CBinaryTree(){  } 
+    virtual ~CBinaryTree(){
+        clear();
+    } 
     
     // TODO: Generalizar estos recorridos para recibir cualquier funcion
     // con una cantidad flexible de parametros con variadic templates
@@ -225,6 +227,12 @@ public:
             newNode->getChildRef(0) = copyNode(sourceNode->getChild(0), newNode);
             newNode->getChildRef(1) = copyNode(sourceNode->getChild(1), newNode);
             return newNode;
+        }
+    private:
+        void clear(){
+            delete m_pRoot; // El destructor ~CBinaryTreeNode maneja  la recursión
+            m_pRoot = nullptr;
+            m_size = 0;
         }
 };
 
