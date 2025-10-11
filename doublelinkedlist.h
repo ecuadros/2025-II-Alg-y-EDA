@@ -209,6 +209,23 @@ void CDoubleLinkedList<Traits>::InternalInsert(Node *&rParent, value_type &elem,
 }
 
 template <typename Traits>
+std::istream &CDoubleLinkedList<Traits>::Read(std::istream &is)
+{
+    Destroy();
+    value_type val;
+    Ref       ref;
+    while( is >> val >> ref )
+        Insert(val, ref);
+    return is;
+}
+
+template <typename Traits>
+std::istream &operator>>(std::istream &is, CDoubleLinkedList<Traits> &list) {
+    list.Read(is); 
+    return is;
+}
+
+template <typename Traits>
 CDoubleLinkedList<Traits>::CDoubleLinkedList(){}
 
 // TODO Constructor por copia

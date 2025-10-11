@@ -25,7 +25,7 @@ int main(){
     // DemoThreads();
     [[maybe_unused]] int x = 5;
     // DemoVector();
-    DemoLinkedList();
+    //DemoLinkedList();
     DemoDoubleLinkedList();
     return 0;
 }
