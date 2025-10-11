@@ -26,8 +26,6 @@ public:
     Node *&GetNextRef() { return m_pNext;    }
 };
 
-// 
-// TODO Activar el forward_iterator
 template <typename Container>
 class forward_linkedlist_iterator{
  private:
