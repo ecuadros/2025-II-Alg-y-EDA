@@ -1,6 +1,7 @@
 #ifndef __DOUBLE_LINKEDLIST_H__
 #define __DOUBLE_LINKEDLIST_H__
 #include <iostream>
+#include <mutex>
 #include "types.h"
 #include "traits.h"
 
@@ -111,6 +112,9 @@ private:
     Node   *m_pTail = nullptr;
     size_t m_nElem = 0;
     Func   m_fCompare;
+    
+    // Control de concurrencia
+    mutable std::mutex m_mutex;
 
 public:
     // Constructor
@@ -129,14 +133,27 @@ private:
     Node *GetRoot()    {    return m_pRoot;     };
 
 public:
-    forward_iterator begin(){ return forward_iterator(this, m_pRoot); };
-    forward_iterator end()  { return forward_iterator(this, nullptr); } 
+    forward_iterator begin(){ 
+        std::lock_guard<std::mutex> lock(m_mutex);
+        return forward_iterator(this, m_pRoot); 
+    };
+    forward_iterator end()  { 
+        std::lock_guard<std::mutex> lock(m_mutex);
+        return forward_iterator(this, nullptr); 
+    } 
 
     // TODO: verifricar donde debe comenzar apuntando el iterator reverso
-    backward_iterator rbegin(){ return backward_iterator(this, m_pTail); };
-    backward_iterator rend()  { return backward_iterator(this, nullptr); } 
+    backward_iterator rbegin(){ 
+        std::lock_guard<std::mutex> lock(m_mutex);
+        return backward_iterator(this, m_pTail); 
+    };
+    backward_iterator rend()  { 
+        std::lock_guard<std::mutex> lock(m_mutex);
+        return backward_iterator(this, nullptr); 
+    } 
 
     friend std::ostream& operator<<(std::ostream &os, CDoubleLinkedList<Traits> &obj){
+        std::lock_guard<std::mutex> lock(obj.m_mutex);  // Protege lectura de la lista
         auto pRoot = obj.GetRoot();
         while( pRoot ){
             os << pRoot->GetData() << "(" << pRoot->GetRef() << ") ";
@@ -146,7 +163,10 @@ public:
     }
 public:
     // Persistence
-    std::ostream &Write(std::ostream &os) { return os << *this; }
+    std::ostream &Write(std::ostream &os) { 
+        std::lock_guard<std::mutex> lock(m_mutex);  // Protege escritura a stream
+        return os << *this; 
+    }
     
     // TODO: Read (istream &is)
     std::istream &Read (std::istream &is);
@@ -154,6 +174,7 @@ public:
 
 template <typename Traits>
 void CDoubleLinkedList<Traits>::Insert(value_type &elem, Ref ref){
+    std::lock_guard<std::mutex> lock(m_mutex);  // Protege inserción
     InternalInsert(m_pRoot, elem, ref);
 }
 
@@ -186,20 +207,28 @@ CDoubleLinkedList<Traits>::CDoubleLinkedList(){}
 //      Hacer loop copiando cada elemento
 template <typename Traits>
 CDoubleLinkedList<Traits>::CDoubleLinkedList(CDoubleLinkedList &other){
+    std::lock_guard<std::mutex> lock(other.m_mutex);  // Protege lectura del objeto origen
 }
 
 // Move Constructor
 template <typename Traits>
 CDoubleLinkedList<Traits>::CDoubleLinkedList(CDoubleLinkedList &&other){
+    std::lock_guard<std::mutex> lock(other.m_mutex);  // Protege movimiento de recursos
     m_pRoot    = std::move(other.m_pRoot);
+    m_pTail    = std::move(other.m_pTail);
     m_nElem    = std::move(other.m_nElem);
     m_fCompare = std::move(other.m_fCompare);
+    
+    other.m_pRoot = nullptr;
+    other.m_pTail = nullptr;
+    other.m_nElem = 0;
 }
 
 // TODO: Implementar y liberar la memoria de cada Node
 template <typename Traits>
 CDoubleLinkedList<Traits>::~CDoubleLinkedList()
 {
+    std::lock_guard<std::mutex> lock(m_mutex);  // Protege destrucción
 }
 
 // TODO: Este operador debe quedar fuera de la clase
