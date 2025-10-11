@@ -193,6 +193,13 @@ CDoubleLinkedList<Traits>::CDoubleLinkedList(){}
 //      Hacer loop copiando cada elemento
 template <typename Traits>
 CDoubleLinkedList<Traits>::CDoubleLinkedList(CDoubleLinkedList &other){
+    Node *pNode = other.m_pRoot; 
+    while(pNode){
+        value_type data = pNode->GetData();
+        Ref ref = pNode->GetRef();
+        Insert(data, ref);
+        pNode = pNode->GetNext();
+    }
 }
 
 // Move Constructor
