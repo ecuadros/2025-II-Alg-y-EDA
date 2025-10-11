@@ -152,6 +152,34 @@ public:
     std::istream &Read (std::istream &is);
 };
 
+// Implementación del método Read
+template <typename Traits>
+std::istream &CDoubleLinkedList<Traits>::Read(std::istream &is){
+    value_type data;
+    Ref ref;
+    char parenthesis, space;
+    
+    // Leer elementos en el formato: data(ref) data(ref) ...
+    while(is >> data){
+        // Leer el paréntesis '('
+        if(!(is >> parenthesis) || parenthesis != '('){
+            break;
+        }
+        // Leer la referencia
+        if(!(is >> ref)){
+            break;
+        }
+        // Leer el paréntesis ')'
+        if(!(is >> parenthesis) || parenthesis != ')'){
+            break;
+        }
+        // Insertar el elemento en la lista
+        Insert(data, ref);
+    }
+    
+    return is;
+}
+
 template <typename Traits>
 void CDoubleLinkedList<Traits>::Insert(value_type &elem, Ref ref){
     InternalInsert(m_pRoot, elem, ref);
