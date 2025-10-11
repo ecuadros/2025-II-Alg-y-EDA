@@ -128,12 +128,26 @@ public:
     { }
 
     // TODO: Recursivo y seguro. Destruir Nodes recursivamente
-    virtual ~CBinaryTree(){  } 
+    virtual ~CBinaryTree() {
+        destroy(m_pRoot);
+        m_pRoot = nullptr;
+        m_size = 0;
+    }
+    private:
+    void destroy(Node* pNode) {
+        if (!pNode) return;
+        destroy(pNode->getChild(0));
+        destroy(pNode->getChild(1));
+        delete pNode;
+    }
     
     // TODO: Generalizar estos recorridos para recibir cualquier funcion
     // con una cantidad flexible de parametros con variadic templates
     // Google: C++ parameter packs cplusplus
-        void inorder  (ostream &os)    {   inorder  (m_pRoot, 0, os);  }
+    void inorder  (ostream &os)    {   
+        inorder  (m_pRoot, 0, os);  
+    }
+
     // TODO: 
     void inorder(Node  *pNode, size_t level, ostream &os){
         if( pNode ){
