@@ -92,7 +92,6 @@ class backward_double_linkedlist_iterator{
      value_type &operator*(){    return m_pNode->GetDataRef();   }
 };
 
-// TODO Agregar que sea ascendente o descendente con el mismo codigo
 template <typename Traits>
 class CDoubleLinkedList{
 public:
