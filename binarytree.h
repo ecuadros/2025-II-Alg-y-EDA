@@ -177,10 +177,33 @@ public:
     }
 
     // TODO: Generalize this function to apply any function
+    template <typename Function, typename... Args>
+    void preorder(Function func, Args const&... args) {
+        preorder(m_pRoot, 0, func, args...);
+    }
+
+    template <typename Function, typename... Args>
+    void preorder(Node* pNode, size_t level, Function func, Args const&... args) {
+        if (pNode) {
+            func(pNode, level, args...);
+            preorder(pNode->getChild(0), level + 1, func, args...);
+            preorder(pNode->getChild(1), level + 1, func, args...);
+        }
+    }
+
+    // Compatibility: legacy function that receives value_type&
+    void preorder(Node* pNode, void (*visit)(value_type& item)) {
+        if (pNode) {
+            (*visit)(pNode->getDataRef());
+            preorder(pNode->getChild(0), visit);
+            preorder(pNode->getChild(1), visit);
+        }
+    }
+
+    // Existing ostream-based preorder (kept for compatibility)
     void preorder (ostream &os)    {   preorder (m_pRoot, 0, os);  }
-    // TODO: Generalize this function to apply any function
     void preorder(Node  *pNode, size_t level, ostream &os){
-        if( pNode ){   
+        if( pNode ){
             os << " --> " << pNode->getDataRef();
             preorder(pNode->getChild(0), level+1, os);
             preorder(pNode->getChild(1), level+1, os);            
