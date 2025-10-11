@@ -160,9 +160,11 @@ public:
 public:
     // Persistence
     std::ostream &Write(std::ostream &os) {
-        auto pRoot = obj.GetRoot();
-        while( pRoot )
-            os << pRoot->GetData() << " ";
+        auto pRoot = this->GetRoot();
+        while( pRoot ){
+            os << pRoot->GetData() << "(" << pRoot->GetRef() << ")  ";
+            pRoot = pRoot->GetNext();
+        }
         return os;
     }
     
@@ -247,7 +249,7 @@ CDoubleLinkedList<Traits>::~CDoubleLinkedList()
 }
 
 template <typename Traits>
-std::ostream &operator<<(std::ostream &os, const CDoubleLinkedList<Traits> &list) {
+std::ostream &operator<<(std::ostream &os, CDoubleLinkedList<Traits> &list) {
     return list.Write(os); 
 }
 
