@@ -33,6 +33,14 @@ public:
     Node *&GetPrevRef() { return m_pPrev;    }
     // Diff
     void   SetPrev(Node *pPrev){    m_pPrev = pPrev; }
+
+    void Destroy() {
+        if (m_pNext) {
+            m_pNext->Destroy();
+            delete m_pNext;     
+            m_pNext = nullptr; 
+        }
+    }
 };
 
 // 
@@ -159,6 +167,19 @@ public:
         //     std::invoke(func, *iter, args...);
     }
 };
+
+template <typename Traits>
+CDoubleLinkedList<Traits>::~CDoubleLinkedList() {
+    Node *current = m_pRoot;
+    while (current) {
+        Node *next = current->GetNext(); 
+        delete current;                  
+        current = next;                  
+    }
+    m_pRoot = nullptr; 
+    m_pTail = nullptr; 
+    m_nElem = 0;       
+}
 
 template <typename Traits>
 void CDoubleLinkedList<Traits>::Insert(value_type &elem, Ref ref){
