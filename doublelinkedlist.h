@@ -170,14 +170,13 @@ template <typename Traits>
 void CDoubleLinkedList<Traits>::InternalInsert(Node *&rParent, value_type &elem, Ref ref){
     if( !rParent || m_fCompare(elem, rParent->GetDataRef()) ){
         Node *pNew = rParent = new Node(elem, ref, rParent);
-        if( !pNew->GetNext() ) // Final de la lista
-            m_pTail = pNew;
-
         // Puente hacia atras
         Node *pNext = pNew->GetNext();
+        pNew->SetPrev(pNext ? pNext->GetPrev() : m_pTail);
         if( pNext ){ // Hay algo a continuacion
-            pNew ->SetPrev( pNext->GetPrev() );
             pNext->SetPrev( pNew ); 
+        } else {
+            m_pTail = pNew;
         }
         m_nElem++;
         return;
