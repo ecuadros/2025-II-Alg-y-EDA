@@ -126,9 +126,8 @@ private:
 
 public:
     forward_iterator begin(){ return forward_iterator(this, m_pRoot); };
-    forward_iterator end()  { return forward_iterator(this, nullptr); } 
+    forward_iterator end()  { return forward_iterator(this, nullptr); }
 
-    // TODO: verifricar donde debe comenzar apuntando el iterator reverso
     backward_iterator rbegin(){ return backward_iterator(this, m_pTail); };
     backward_iterator rend()  { return backward_iterator(this, nullptr); } 
 
