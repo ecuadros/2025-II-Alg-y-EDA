@@ -50,18 +50,37 @@ class forward_double_linkedlist_iterator{
  public:
      forward_double_linkedlist_iterator(Container *pList, Node *pNode)
              : m_pList(pList), m_pNode(pNode){}
-     forward_double_linkedlist_iterator(iterator &other)
+     forward_double_linkedlist_iterator(const iterator &other)
              : m_pList(other.m_pList), m_pNode(other.m_pNode){}   
-     bool operator==(iterator other){ return m_pList == other.m_pList && m_pNode == other.m_pNode; }
-     bool operator!=(iterator other){ return !(*this == other);    }
+     bool operator==(const iterator &other) const { 
+         return m_pList == other.m_pList && m_pNode == other.m_pNode; 
+     }
+     bool operator!=(const iterator &other) const { 
+         return !(*this == other); 
+     }
 
-     // Diff
-     iterator operator++(){ 
+     // Pre-increment
+     iterator &operator++(){ 
          if(m_pNode)
              m_pNode = m_pNode->GetNext();
          return *this;
      }
-     value_type &operator*(){    return m_pNode->GetDataRef();   }
+     
+     // Post-increment
+     iterator operator++(int){ 
+         iterator temp(*this);
+         ++(*this);
+         return temp;
+     }
+     
+     value_type &operator*(){ 
+         return m_pNode->GetDataRef(); 
+     }
+     
+     // Arrow operator para acceso a miembros
+     value_type *operator->(){ 
+         return &(m_pNode->GetDataRef()); 
+     }
 };
 
 template <typename Container>
@@ -77,20 +96,37 @@ class backward_double_linkedlist_iterator{
  public:
      backward_double_linkedlist_iterator(Container *pList, Node *pNode)
              : m_pList(pList), m_pNode(pNode){}
-     backward_double_linkedlist_iterator(iterator &other)
+     backward_double_linkedlist_iterator(const iterator &other)
              : m_pList(other.m_pList), m_pNode(other.m_pNode){}   
-     bool operator==(iterator other){ return m_pList == other.m_pList && 
-                                             m_pNode == other.m_pNode;
-                                    }
-     bool operator!=(iterator other){ return !(*this == other);    }
+     bool operator==(const iterator &other) const { 
+         return m_pList == other.m_pList && m_pNode == other.m_pNode;
+     }
+     bool operator!=(const iterator &other) const { 
+         return !(*this == other); 
+     }
 
-     // Diff
-     iterator operator++(){ 
+     // Pre-increment (hacia atrás)
+     iterator &operator++(){ 
          if(m_pNode)
              m_pNode = m_pNode->GetPrev();
          return *this;
      }
-     value_type &operator*(){    return m_pNode->GetDataRef();   }
+     
+     // Post-increment (hacia atrás)
+     iterator operator++(int){ 
+         iterator temp(*this);
+         ++(*this);
+         return temp;
+     }
+     
+     value_type &operator*(){ 
+         return m_pNode->GetDataRef(); 
+     }
+     
+     // Arrow operator para acceso a miembros
+     value_type *operator->(){ 
+         return &(m_pNode->GetDataRef()); 
+     }
 };
 
 // TODO Agregar control de concurrencia
