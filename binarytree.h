@@ -148,14 +148,18 @@ public:
     // TODO: Generalizar estos recorridos para recibir cualquier funcion
     // con una cantidad flexible de parametros con variadic templates
     // Google: C++ parameter packs cplusplus
-        void inorder  (ostream &os)    {   inorder  (m_pRoot, 0, os);  }
+        void inorder  (ostream &os)    {   inorder  (m_pRoot, 0, os);  } 
     // TODO: 
-    void inorder(Node  *pNode, size_t level, ostream &os){
+    template <typename Function, typename... Args> 
+    void inorder(Function func, Args const&... args){ 
+        inorder(m_pRoot,0,func,args...);
+    }
+    template <typename Function, typename... Args>
+    void inorder(Node  *pNode, size_t level, Function func, Args const&... args){
         if( pNode ){
-            //Node *pParent = pNode->getParent();
-            inorder(pNode->getChild(0), level+1, os);
-            os << " --> " << pNode->getDataRef();
-            inorder(pNode->getChild(1), level+1, os);
+            inorder(pNode->getChild(0), level+1, func, args...);
+            func(pNode->getDataRef(), level, args...);
+            inorder(pNode->getChild(1), level+1, func, args...);
         }
     }
 
