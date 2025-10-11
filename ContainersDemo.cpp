@@ -4,8 +4,8 @@
 #include <utility> // para std::pair
 
 #include "linkedlist.h"
-#include "doublelinkedlist.h"
-#include "binarytree.h"
+// #include "doublelinkedlist.h"
+// #include "binarytree.h"
 #include "foreach.h"
 #include "types.h"
 #include "util.h"
@@ -13,7 +13,7 @@
 void opex(int &n){ n++; }
 
 template <typename T>
-void PrintX(T &val, ostream &os){ os << n << " "; }
+void PrintX(T &val, ostream &os){ os << val << " "; }
 
 template <typename T>
 void PrintY(T &val, T value1, T value2, ostream &os){ 
@@ -25,44 +25,50 @@ void DemoLinkedList(){
     std::vector< std::pair<T1, Ref> > v1 = {
         {4, 8}, {2, 5}, {7, 3}, {1, 9}, {5, 2}
     };
-    CLinkedList< AscendingTrait<T1> > l1;
+
+    CLinkedList< AscendingTrait<T1> > listAscendente;
     for (auto &par : v1)
-        l1.Insert(par.first, par.second);
-    std::cout << l1 << std::endl;
+        listAscendente.Insert(par.first, par.second);
+    
+    std::cout << "\nDemo Linked List Ascendente" << std::endl;    
+    std::cout << listAscendente << std::endl;
 
     std::vector< std::pair<T2, Ref> > v2 = {
         {4.5, 8}, {2.3, 5}, {7.8, 3}, {1.1, 9}, {5.7, 2}
     };
-    CLinkedList< DescendingTrait<T2> > l2;
-    // Insertar desde el vector
+    
+    CLinkedList< DescendingTrait<T2> > listDescendente;
     for (auto &par : v2) {
-        l2.Insert(par.first, par.second);
+        listDescendente.Insert(par.first, par.second);
     }
-    std::cout << l2 << std::endl;
+    
+    std::cout << "\nDemo Linked List Descendente" << std::endl;
+    std::cout << listDescendente << std::endl;
 
-    std::cout << "Ahora utilizando foreach #1..." << std::endl;
-    foreach(l1, ::opex);
-    std::cout << "Imprimiendo: l1 (debe haber aumentado en 1) ..." << std::endl;
-    foreach(l1, ::Print<T1>);
+    std::cout << "\nAhora utilizando foreach #1..." << std::endl;
+    foreach(listAscendente, ::opex);
+    std::cout << "\nImprimiendo: listAscendente (debe haber aumentado en 1) ..." << std::endl;
+    foreach(listAscendente, ::Print<T1>);
     cout <<endl;
-    std::cout << "l1 aplicando funcion lambda +2 ..." << std::endl;
-    foreach(l1, [](T1 &n){ n += 2;  } );
-    std::cout << "Imprimiendo: l1 (debe haber aumentado en 1) ..." << std::endl;
-    foreach(l1, ::Print<T1>);
+    std::cout << "\nlistAscendente aplicando funcion lambda +2 ..." << std::endl;
+    foreach(listAscendente, [](T1 &n){ n += 2;  } );
+    std::cout << "\nImprimiendo: listAscendente (debe haber aumentado en 2) ..." << std::endl;
+    foreach(listAscendente, ::Print<T1>);
 
-    std::cout << "Imprimiendo: l1 a través de begin() y end() ..." << std::endl;
-    foreach(l1.begin(), l1.end(), ::Print<T1>);
+    std::cout << "\n\nImprimiendo: listAscendente a traves de begin() y end() ..." << std::endl;
+    foreach(listAscendente.begin(), listAscendente.end(), ::Print<T1>);
     cout <<endl;
 
-    std::cout << "Imprimiendo l1 con Write ..." << std::endl;
-    l1.Write(cout);
+    std::cout << "\nImprimiendo listAscendente con Write ..." << std::endl;
+    listAscendente.Write(cout);
     cout <<endl;
 
     std::ofstream of("LL.txt");
-    l1.Write(of);
+    listAscendente.Write(of);
     of.close();
 }
 
+/*
 void DemoDoubleLinkedList(){
     std::vector< std::pair<T1, Ref> > v1 = {
         {4, 8}, {2, 5}, {7, 3}, {1, 9}, {5, 2}
@@ -135,3 +141,5 @@ void DemoBinaryTree(){
 
     // Next classes: AVL, BTree
 }
+
+*/

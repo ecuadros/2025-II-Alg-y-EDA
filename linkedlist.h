@@ -26,38 +26,64 @@ public:
     Node *&GetNextRef() { return m_pNext;    }
 };
 
-// 
-// TODO Activar el forward_iterator
+
+// (DONE) Activar el forward_iterator
 template <typename Container>
 class forward_linkedlist_iterator{
- private:
-     using value_type = typename Container::value_type;
-     using Node       = typename Container::Node;
-     using forward_iterator   = forward_linkedlist_iterator<Container>;
+private:
+    using Node       = typename Container::Node;
+    using forward_iterator   = forward_linkedlist_iterator<Container>;
 
-     Container *m_pList = nullptr;
-     Node      *m_pNode = nullptr;
- public:
-     forward_linkedlist_iterator(Container *pList, Node *pNode)
-             : m_pList(pList), m_pNode(pNode){}
-     forward_linkedlist_iterator(forward_iterator &other)
-             : m_pList(other.m_pList), m_pNode(other.m_pNode){}   
-     bool operator==(forward_iterator other){ return m_pList == other.m_pList && 
-                                                     m_pNode == other.m_pNode;
-                                            }
-     bool operator!=(forward_iterator other){ return !(*this == other);    }
+    Container *m_pList = nullptr;
+    Node      *m_pNode = nullptr;
 
-     forward_iterator operator++(){ 
+public:
+    // Iterator traits
+    using iterator_category = std::forward_iterator_tag;
+    using value_type = typename Container::value_type;
+    using difference_type = std::ptrdiff_t;
+    using pointer = value_type*;
+    using reference = value_type&;
+
+    // CONSTRUCTORES
+    forward_linkedlist_iterator(Container *pList, Node *pNode) 
+        : m_pList(pList), m_pNode(pNode){}
+     
+    forward_linkedlist_iterator(forward_iterator &other)
+        : m_pList(other.m_pList), m_pNode(other.m_pNode){}   
+    
+    // ACCESORES
+    pointer operator->(){ return &(m_pNode->GetDataRef()); }
+
+    reference operator*(){ return m_pNode->GetDataRef(); }
+    
+    // COMPARACIONES
+    // Igual
+    bool operator==(forward_iterator other){ 
+        return m_pList == other.m_pList && m_pNode == other.m_pNode;
+    }
+    // Distinto
+    bool operator!=(forward_iterator other){ return !(*this == other);    }
+
+    // INCREMENTOS
+    // Pre-Incremento 
+    forward_iterator operator++(){ 
          if(m_pNode)
              m_pNode = m_pNode->GetNext();
          return *this;
-     }
-     value_type &operator*(){    return m_pNode->GetDataRef();   }
+    }
+    // Post-Incremento
+    forward_iterator operator++(int){ 
+         forward_iterator temp = *this;
+         ++(*this);
+         return temp;
+    }
+
 };
 
 // TODO Agregar control de concurrencia
 
-// TODO Agregar que sea ascendente o descendente con el mismo codigo
+// (DONE) Agregar que sea ascendente o descendente con el mismo codigo
 template <typename Traits>
 class CLinkedList{
 public:
@@ -84,7 +110,8 @@ public:
     virtual ~CLinkedList();
 
     void Insert(value_type &elem, Ref ref);
-private:
+
+    private:
     void InternalInsert(Node *&rParent, value_type &elem, Ref ref);
     Node *GetRoot()    {    return m_pRoot;     };
 
@@ -109,6 +136,9 @@ public:
 };
 
 template <typename Traits>
+CLinkedList<Traits>::CLinkedList() {}
+
+template <typename Traits>
 void CLinkedList<Traits>::Insert(value_type &elem, Ref ref){
     InternalInsert(m_pRoot, elem, ref);
 }
@@ -124,8 +154,7 @@ void CLinkedList<Traits>::InternalInsert(Node *&rParent, value_type &elem, Ref r
     InternalInsert(rParent->GetNextRef(), elem, ref);
 }
 
-template <typename Traits>
-CLinkedList<Traits>::CLinkedList(){}
+
 
 // TODO Constructor por copia
 //      Hacer loop copiando cada elemento
