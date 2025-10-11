@@ -235,6 +235,24 @@ std::ostream& CDoubleLinkedList<Traits>::Write(std::ostream &os){
     return os << *this;
 }
 
+// TODO (Done): Método Read implementado - lee formato: dato(ref) dato(ref) ...
+template <typename Traits>
+std::istream& CDoubleLinkedList<Traits>::Read(std::istream &is){
+    value_type dato;
+    Ref referencia;
+    char parentesis;
+    
+    // Leer elementos en formato: dato(ref)
+    while(is >> dato >> parentesis && parentesis == '('){
+        is >> referencia >> parentesis;  // Leer ref y ')'
+        if(parentesis == ')'){
+            Insert(dato, referencia);
+        }
+    }
+    
+    return is;
+}
+
 void DemoDoubleLinkedList();
 
 #endif // __DOUBLE_LINKEDLIST_H__
