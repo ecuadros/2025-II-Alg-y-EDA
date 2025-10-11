@@ -11,9 +11,10 @@ struct GeneralTraits{
 
 void DemoVector(){
     CVector< GeneralTraits<int> > vector(10);
-    // vector.insert(5);
-    // TODO  (Nivel 1) habilitar el uso de []
+    for(int i = 0; i < 5; i++) {
+        int val = i * 10;
+        vector.insert(val);
+    }
     vector[3] = 8;
-    // TODO  (Nivel 2) habilitar que el vector pueda ser escrito con cout <<
     cout << vector << endl;
 }

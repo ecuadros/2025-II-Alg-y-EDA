@@ -93,7 +93,7 @@ class backward_double_linkedlist_iterator{
      value_type &operator*(){    return m_pNode->GetDataRef();   }
 };
 
-// TODO Agregar control de concurrencia
+#include <mutex>
 
 template <typename Traits>
 class CDoubleLinkedList{
@@ -110,6 +110,7 @@ private:
     Node   *m_pTail = nullptr;
     size_t m_nElem = 0;
     Func   m_fCompare;
+    std::mutex m_mutex;
 
 public:
     // Constructor
@@ -146,13 +147,12 @@ public:
 public:
     // Persistence
     std::ostream &Write(std::ostream &os) { return os << *this; }
-    
-    // TODO: Read (istream &is)
     std::istream &Read (std::istream &is);
 };
 
 template <typename Traits>
 void CDoubleLinkedList<Traits>::Insert(value_type &elem, Ref ref){
+    std::lock_guard<std::mutex> lock(m_mutex);
     InternalInsert(m_pRoot, elem, ref);
 }
 
@@ -180,25 +180,49 @@ void CDoubleLinkedList<Traits>::InternalInsert(Node *&rParent, value_type &elem,
 template <typename Traits>
 CDoubleLinkedList<Traits>::CDoubleLinkedList(){}
 
-// TODO Constructor por copia
-//      Hacer loop copiando cada elemento
 template <typename Traits>
-CDoubleLinkedList<Traits>::CDoubleLinkedList(CDoubleLinkedList &other){
+CDoubleLinkedList<Traits>::CDoubleLinkedList(CDoubleLinkedList &other)
+{
+    std::lock_guard<std::mutex> lock(other.m_mutex);
+    for (auto &elem : other) {
+        Insert(elem, 0);
+    }
 }
 
 // Move Constructor
 template <typename Traits>
 CDoubleLinkedList<Traits>::CDoubleLinkedList(CDoubleLinkedList &&other){
+    std::lock_guard<std::mutex> lock(other.m_mutex);
     m_pRoot    = std::move(other.m_pRoot);
     m_nElem    = std::move(other.m_nElem);
     m_fCompare = std::move(other.m_fCompare);
+    other.m_pRoot = nullptr;
+    other.m_nElem = 0;
 }
 
-// TODO: Implementar y liberar la memoria de cada Node
 template <typename Traits>
 CDoubleLinkedList<Traits>::~CDoubleLinkedList()
 {
+    std::lock_guard<std::mutex> lock(m_mutex);
+    Node *pNode = m_pRoot;
+    while (pNode) {
+        Node *pNext = pNode->GetNext();
+        delete pNode;
+        pNode = pNext;
+    }
 }
+
+template <typename Traits>
+std::istream &CDoubleLinkedList<Traits>::Read (std::istream &is){
+    std::lock_guard<std::mutex> lock(m_mutex);
+    value_type data;
+    Ref ref;
+    while(is >> data >> ref){
+        Insert(data, ref);
+    }
+    return is;
+}
+
 
 // TODO: Este operador debe quedar fuera de la clase
 // template <typename Traits>
