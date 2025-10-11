@@ -108,7 +108,7 @@ public:
     friend std::ostream &operator<< <>(std::ostream &os, CLinkedList<Traits> &obj);
 public:
     // Persistence
-    std::ostream &Write(std::ostream &os) { std::lock_guard<std::mutex> lock(m_mutex); return os << *this; }
+    std::ostream &Write(std::ostream &os) { return os << *this; }
     
     // TODO: Read (istream &is)
     std::istream &Read (std::istream &is);
