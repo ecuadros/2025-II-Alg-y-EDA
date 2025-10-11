@@ -123,10 +123,15 @@ void CLinkedList<Traits>::InternalInsert(Node *&rParent, value_type &elem, Ref r
 template <typename Traits>
 CLinkedList<Traits>::CLinkedList(){}
 
-// TODO Constructor por copia
-//      Hacer loop copiando cada elemento
 template <typename Traits>
 CLinkedList<Traits>::CLinkedList(CLinkedList &other){
+    Node *pCurrent = other.m_pRoot;
+    while(pCurrent){
+        value_type data = pCurrent->GetData();
+        Ref ref = pCurrent->GetRef();
+        Insert(data, ref);
+        pCurrent = pCurrent->GetNext();
+    }
 }
 
 // Move Constructor
