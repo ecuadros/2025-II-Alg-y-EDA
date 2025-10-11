@@ -196,10 +196,24 @@ CDoubleLinkedList<Traits>::CDoubleLinkedList(CDoubleLinkedList &&other){
     m_fCompare = std::move(other.m_fCompare);
 }
 
-// TODO: Implementar y liberar la memoria de cada Node
+// TODO: Implementar y liberar la memoria de cada Node (Completado)
 template <typename Traits>
 CDoubleLinkedList<Traits>::~CDoubleLinkedList()
 {
+    Node *pCurrent = m_pRoot;
+    Node *pNext = nullptr;
+    
+    // Recorrer toda la lista y eliminar cada nodo
+    while(pCurrent){
+        pNext = pCurrent->GetNext();  // Guardar la referencia al siguiente nodo
+        delete pCurrent;               // Liberar el nodo actual
+        pCurrent = pNext;              // Avanzar al siguiente nodo
+    }
+    
+    // Asegurar que los punteros queden en nullptr
+    m_pRoot = nullptr;
+    m_pTail = nullptr;
+    m_nElem = 0;
 }
 
 // TODO: Este operador debe quedar fuera de la clase
