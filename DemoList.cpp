@@ -59,10 +59,65 @@ void DemoDoubleLinkedList(){
     CDoubleLinkedList< AscendingTrait<T1> > l1;
     for (auto &par : v1)
         l1.Insert(par.first, par.second);
+    std::cout << "Lista ascendente ..." << std::endl;
     std::cout << l1 << std::endl;
 
-    std::cout << " Imprimiendo DoubleLinkedList ..." << std::endl;
-    foreach(l1. begin(), l1. end(), ::Print<T1>);
+    CDoubleLinkedList< DescendingTrait<T1> > l2;
+    for (auto &par : v1)
+        l2.Insert(par.first, par.second);
+    std::cout << "Lista descendente ..." << std::endl;
+    std::cout << l2 << std::endl;
+    // std::cout << " Imprimiendo DoubleLinkedList ..." << std::endl;
+    // foreach(l1. begin(), l1. end(), ::Print<T1>);
 
-    foreach(l1.rbegin(), l1.rend(), ::Print<T1>);
+    // foreach(l1.rbegin(), l1.rend(), ::Print<T1>);
+
+    std::ofstream of("DLL.txt");
+    l1.Write(of);
+    of.close();
+
+    CDoubleLinkedList< AscendingTrait<T1> > list2;
+    std::ifstream inFile("DLL.txt");
+    list2.Read(inFile);
+    inFile.close();
+    std::cout << " Leyendo DoubleLinkedList desde archivo ..." << std::endl;
+    std::cout << "Imprimiendo list2 ..." << std::endl;
+    std::cout << list2 << std::endl;
+    cout << endl;
+
+    std::cout << "Probando move constructor ..." << std::endl;
+    CDoubleLinkedList< AscendingTrait<T1> > list3 = std::move(list2);
+    std::cout << "Imprimiendo list3 (debe tener los elementos) " << std::endl;
+    std::cout << list3 << std::endl;
+    std::cout << "Imprimiendo list2 (debe estar vacia) " << std::endl;
+    std::cout << list2 << std::endl;
+
+    std::cout<< "Probando copy constructor ..." << std::endl;
+    CDoubleLinkedList< AscendingTrait<T1> > list4 = list3;
+    std::cout << "Imprimiendo list4 (debe tener los elementos) " << std::endl;
+    std::cout << list4 << std::endl;
+    std::cout << "Imprimiendo list3 (debe tener los elementos) " << std::endl;
+    std::cout << list3 << std::endl;
+    
+    std::cout << "Probando iterators ... "   << std::endl;
+    CDoubleLinkedList<AscendingTrait<int>> list;
+    
+    // Insertar elementos
+    int val1 = 1, val2 = 2, val3 = 3;
+    list.Insert(val1, 1);
+    list.Insert(val2, 2);
+    list.Insert(val3, 3);
+    
+    std::cout << "Forward: ";
+    for(auto it = list.begin(); it != list.end(); ++it)
+        std::cout << *it << " ";  // Esperado: 1 2 3
+    std::cout << std::endl;
+    
+    std::cout << "Backward: ";
+    for(auto it = list.rbegin(); it != list.rend(); ++it)
+        std::cout << *it << " ";  // Esperado: 3 2 1
+    std::cout << std::endl;
+
+
 }
+

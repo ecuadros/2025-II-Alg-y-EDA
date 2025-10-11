@@ -25,7 +25,8 @@ int main(){
     // DemoThreads();
     [[maybe_unused]] int x = 5;
     // DemoVector();
-    DemoLinkedList();
+    // DemoLinkedList();
+    std::cout << " Probando DoubleLinkedList ..." << std::endl;
     DemoDoubleLinkedList();
     return 0;
 }
@@ -37,6 +38,5 @@ int main(){
 //         cout << pArgs[i] << endl;
 //     }
 // }
-
 
 
