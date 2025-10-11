@@ -189,17 +189,28 @@ template <typename Traits>
 void CDoubleLinkedList<Traits>::InternalInsert(Node *&rParent, value_type &elem, Ref ref){
     if( !rParent || m_fCompare(elem, rParent->GetDataRef()) ){
 
-        Node *pNew = rParent = new Node(elem, ref, rParent);
-        if( !pNew->GetNext() ) // Final de la lista
-            m_pTail = pNew;
+        Node *pNew = new Node(elem, ref, rParent);
+        
+        if( rParent){ 
+            pNew->SetPrev( rParent->GetPrev() ); // Nuevo hereda el anterior del parent
+            rParent->SetPrev( pNew );            // Parent apunta al nuevo como anterior
 
-        // Puente hacia atras
-        Node *pNext = pNew->GetNext();
-        if( pNext ){ // Hay algo a continuacion
-            
-            pNew ->SetPrev( pNext->GetPrev() );
-            pNext->SetPrev( pNew ); 
+            if ( pNew->GetPrev() ){ 
+                pNew->GetPrev()->SetNext( pNew ); // El anterior apunta al nuevo
+            } else {
+                m_pRoot = pNew; // Si no hay anterior, nuevo es la raíz
+            }
+        } else {
+            pNew->SetPrev( m_pTail ); // Nuevo apunta al tail actual
+            if (m_pTail) {
+                m_pTail->SetNext(pNew); // Tail actual apunta al nuevo
+            } else {
+                m_pRoot = pNew; // Lista vacía - nuevo es raíz
+            }
+            m_pTail = pNew; // Nuevo se convierte en tail
+
         }
+        rParent = pNew;
         m_nElem++;
         return;
     }
