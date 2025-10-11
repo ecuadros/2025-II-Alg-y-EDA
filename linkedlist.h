@@ -76,8 +76,6 @@ public:
     // Constructor
     CLinkedList();
     CLinkedList(CLinkedList &other);
-
-    // TODO: Done
     CLinkedList(CLinkedList &&other);
 
     // Destructor seguro
