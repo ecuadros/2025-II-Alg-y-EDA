@@ -116,8 +116,6 @@ public:
     // Constructor
     CDoubleLinkedList();
     CDoubleLinkedList(CDoubleLinkedList &other);
-
-    // TODO: Done
     CDoubleLinkedList(CDoubleLinkedList &&other);
 
     // Destructor seguro
