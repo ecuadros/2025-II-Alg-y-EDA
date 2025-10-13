@@ -11,6 +11,7 @@
         "ostream": "cpp",
         "streambuf": "cpp",
         "vector": "cpp",
-        "utility": "cpp"
+        "utility": "cpp",
+        "iosfwd": "cpp"
     }
 }

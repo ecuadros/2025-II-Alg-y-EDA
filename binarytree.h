@@ -180,15 +180,26 @@ public:
         }
     }
 
-    // TODO: Generalize this function to apply any function
-    void preorder (ostream &os)    {   preorder (m_pRoot, 0, os);  }
-    // TODO: Generalize this function to apply any function
-    void preorder(Node  *pNode, size_t level, ostream &os){
-        if( pNode ){   
-            os << " --> " << pNode->getDataRef();
-            preorder(pNode->getChild(0), level+1, os);
-            preorder(pNode->getChild(1), level+1, os);            
+    // Preorder generalizado: recibe cualquier funcion y parametros extra
+    template <typename Function, typename... Args>
+    void preorder(Function func, Args const&... args)
+    {    preorder(m_pRoot, 0, func, args...);}
+
+    template <typename Function, typename... Args>
+    void preorder(Node* pNode, size_t level, 
+                  Function func, Args const&... args) {
+        if (pNode) {
+            func(pNode, level, args...);
+            preorder(pNode->getChild(0), level + 1, func, args...);
+            preorder(pNode->getChild(1), level + 1, func, args...);
         }
+    }
+    
+    // Versión para ostream (mantiene código anterior funcionando)
+    void preorder(ostream &os) { 
+        preorder([&os](Node* pNode, size_t level) {
+            os << " --> " << pNode->getDataRef();
+        });
     }
 
     void print    (ostream &os)    {   print    (m_pRoot, 0, os);  }
