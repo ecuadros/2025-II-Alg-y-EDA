@@ -157,7 +157,7 @@ public:
         }
     }
 
-    // Variadic templates (See foreach.h)
+    // Postorder generalizado: recibe cualquier funcion y parametros extra
     template <typename Function, typename... Args>
     void postorder(Function func, Args const&... args)
     {    postorder(m_pRoot, 0, func, args...);}
@@ -168,16 +168,15 @@ public:
         if (pNode) {
             postorder(pNode->getChild(0), level + 1, func, args...);
             postorder(pNode->getChild(1), level + 1, func, args...);
-            func(pNode, level); 
+            func(pNode, level, args...); 
         }
     }
-    // TODO: generalize this function to apply any function
-    void postorder(Node  *pNode, size_t level, ostream &os){
-        if( pNode ){   
-            postorder(pNode->getChild(0), level+1, os);
-            postorder(pNode->getChild(1), level+1, os);
+    
+    // Versión para ostream (mantiene código anterior funcionando)
+    void postorder(ostream &os) { 
+        postorder([&os](Node* pNode, size_t level) {
             os << " --> " << pNode->getDataRef();
-        }
+        });
     }
 
     // TODO: Generalize this function to apply any function
