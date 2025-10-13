@@ -35,8 +35,7 @@ public:
 	value_type  getData()                { return m_data; }
 	value_type &getDataRef()             { return m_data; }
 
-protected: // TODO: Add this class as friend of the BinaryTree
-		// and make these methods private
+private: 
 	void      setpChild(const Node *pChild, size_t pos)  {   m_pChild[pos] = pChild;  }
 	Node    * getChild(size_t branch){ return m_pChild[branch];  }
 	Node    *&getChildRef(size_t branch){ return m_pChild[branch];  }
@@ -89,6 +88,7 @@ public:
 	using Container     = CBinaryTree<Traits>;
 	using iterator      = binary_tree_iterator<Container>;
 
+	friend class CBinaryTreeNode;
 protected:
 	Node    *m_pRoot = nullptr;
 	size_t   m_size  = 0;
@@ -239,7 +239,7 @@ public:
 	void Write(ostream &os) { os << *this;  }
 
 	// TODO: Leer en el arbol desde un stream asumiendo que esta en preorden
-	void Read(istream &is)  { /* TODO */  }
+	void Read(istream &is)  { }
 };
 
 // TODO: este operator << debe seguir estando fuera de la clase
