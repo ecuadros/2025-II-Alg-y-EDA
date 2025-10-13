@@ -44,6 +44,7 @@ public: // TODO: Add this class as friend of the BinaryTree
     Node    * getParent() { return m_pParent;   }
 };
 
+/*
 template <typename Container>
 class binary_tree_iterator : public general_iterator<Container,  class binary_tree_iterator<Container> > // 
 {  
@@ -62,6 +63,64 @@ public:
     binary_tree_iterator operator++() {
         Parent::m_pNode = Parent::m_pNode ? (Node*)Parent::m_pNode->getpNext() : nullptr;
         return *this;
+    }
+};
+*/
+
+// Inorder iterator
+template <typename Container>
+class binary_tree_iterator {
+public:
+    using Node = typename Container::Node;
+    using value_type = typename Container::value_type;
+    
+protected:
+    Container* m_pContainer = nullptr;
+    Node* m_pNode = nullptr;
+    
+public:
+    binary_tree_iterator() : m_pContainer(nullptr), m_pNode(nullptr) {}
+
+    binary_tree_iterator(Container* pContainer, Node* pNode) 
+        : m_pContainer(pContainer), m_pNode(pNode) {}
+    
+    binary_tree_iterator(const binary_tree_iterator& other) 
+        : m_pContainer(other.m_pContainer), m_pNode(other.m_pNode) {}
+
+    binary_tree_iterator& operator=(const binary_tree_iterator& other) {
+        if (this != &other) {
+            m_pContainer = other.m_pContainer;
+            m_pNode = other.m_pNode;
+        }
+        return *this;
+    }
+
+    value_type& operator*() { return m_pNode->getDataRef(); }
+   
+    binary_tree_iterator& operator++() {
+        if (!m_pNode) return *this; // End iterator
+        
+        if (m_pNode->getChild(1)) { // Subtree derecho existe
+            m_pNode = m_pNode->getChild(1); // Hijo derecho
+            while (m_pNode->getChild(0)) {  // Ir al hijo más izquierdo
+                m_pNode = m_pNode->getChild(0);
+            }
+        } else { 
+            Node* parent = m_pNode->getParent();
+            // Subir hasta encontrar un nodo que sea hijo izquierdo de su padre
+            while (parent && m_pNode == parent->getChild(1)) {
+                m_pNode = parent;
+                parent = parent->getParent();
+            }
+            m_pNode = parent; // Si parent es nullptr, hemos terminado el recorrido
+        }
+        return *this;
+    }
+    bool operator==(const binary_tree_iterator& other) const {
+        return m_pNode == other.m_pNode;
+    }
+    bool operator!=(const binary_tree_iterator& other) const {
+        return m_pNode != other.m_pNode;
     }
 };
 
