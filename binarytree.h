@@ -12,7 +12,7 @@ template <typename Traits>
 class CBinaryTreeNode{
 public:
   using value_type = typename Traits::T;
-  using Node       = CBinaryTreeNode<T>;
+  using Node       = CBinaryTreeNode<Traits>;
 
 protected:
     T       m_data;
@@ -134,27 +134,26 @@ public:
     // TODO: Recursivo y seguro. Destruir Nodes recursivamente
     virtual ~CBinaryTree(){  } 
     
-    // TODO: Generalizar estos recorridos para recibir cualquier funcion
-    // con una cantidad flexible de parametros con variadic templates
-    // Google: C++ parameter packs cplusplus
-        void inorder  (ostream &os)    {   inorder  (m_pRoot, 0, os);  }
-    // TODO: 
-    void inorder(Node  *pNode, size_t level, ostream &os){
-        if( pNode ){
-            //Node *pParent = pNode->getParent();
-            inorder(pNode->getChild(0), level+1, os);
-            os << " --> " << pNode->getDataRef();
-            inorder(pNode->getChild(1), level+1, os);
+    // Inorder generalizado: recibe cualquier funcion y parametros extra
+    template <typename Function, typename... Args>
+    void inorder(Function func, Args const&... args)
+    {    inorder(m_pRoot, 0, func, args...);}
+
+    template <typename Function, typename... Args>
+    void inorder(Node* pNode, size_t level, 
+                 Function func, Args const&... args) {
+        if (pNode) {
+            inorder(pNode->getChild(0), level + 1, func, args...);
+            func(pNode, level, args...);
+            inorder(pNode->getChild(1), level + 1, func, args...);
         }
     }
-
-    // TODO: Generalize this function by using iterators and apply any function
-    void inorder(Node  *pNode, void (*visit) (value_type& item)){
-        if( pNode ){   
-            inorder(pNode->getChild(0), *visit);
-            (*visit)(pNode->getDataRef());
-            inorder(pNode->getChild(1), *visit);
-        }
+    
+    // Versión para ostream (mantiene código anterior funcionando)
+    void inorder(ostream &os) { 
+        inorder([&os](Node* pNode, size_t level) {
+            os << " --> " << pNode->getDataRef();
+        });
     }
 
     // Variadic templates (See foreach.h)
@@ -198,7 +197,7 @@ public:
         if( pNode ){
             Node *pParent = pNode->getParent();
             print(pNode->getChild(1), level+1, os);
-            os << string(" | ") * level << pNode->getDataRef() << "(" << (pParent?to_string(pParent->getData()):"Root") << ")" <<endl;
+            os << string(level, ' ') << " | " << pNode->getDataRef() << "(" << (pParent?to_string(pParent->getData()):"Root") << ")" <<endl;
             print(pNode->getChild(0), level+1, os);
         }
     }
