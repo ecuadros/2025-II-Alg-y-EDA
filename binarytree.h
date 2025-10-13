@@ -1,9 +1,13 @@
 #ifndef __BINARY_TREE_H__  
 #define __BINARY_TREE_H__ 
 //#include <utility>
-//#include <algorithm>
+#include <algorithm>
 #include <cassert>
 #include <fstream>
+#include <vector>
+#include <functional>
+#include <string>
+#include <iostream>
 #include "types.h"
 //#include "util.h"
 using namespace std;
@@ -12,10 +16,10 @@ template <typename Traits>
 class CBinaryTreeNode{
 public:
   using value_type = typename Traits::T;
-  using Node       = CBinaryTreeNode<T>;
+  using Node       = CBinaryTreeNode<Traits>;
 
 protected:
-    T       m_data;
+    value_type       m_data;
     Node *  m_pParent = nullptr;
     Ref     m_ref;
     vector<Node *> m_pChild = {nullptr, nullptr}; // 2 hijos inicializados en nullptr
@@ -24,8 +28,8 @@ public:
     CBinaryTreeNode(Node* pParent, value_type data, Ref ref, Node* p0 = nullptr, Node* p1 = nullptr)
         : m_pParent(pParent), m_data(data), m_ref(ref)
     {
-        m_pChild[0] = p0;
-        m_pChild[1] = p1;
+        m_pChild[0] = p0; // Left child
+        m_pChild[1] = p1; // Right child
     }
     ~CBinaryTreeNode(){
         delete m_pChild[0]; m_pChild[0] = nullptr;
@@ -33,17 +37,19 @@ public:
     }
 
     // TODO: Keynode 
-    T         getData()                {   return m_data;    }
-    T        &getDataRef()             {   return m_data;    }
+    value_type         getData()                {   return m_data;    }
+    value_type        &getDataRef()             {   return m_data;    }
+    Ref               getRef()                 {   return m_ref;     }
  
 public: // TODO: Add this class as friend of the BinaryTree
         // and make these methods private
-    void      setpChild(const Node *pChild, size_t pos)  {   m_pChild[pos] = pChild;  }
+    void      setpChild(Node *pChild, size_t pos)  {   m_pChild[pos] = pChild;  }
     Node    * getChild(size_t branch){ return m_pChild[branch];  }
     Node    *&getChildRef(size_t branch){ return m_pChild[branch];  }
     Node    * getParent() { return m_pParent;   }
 };
 
+/*
 template <typename Container>
 class binary_tree_iterator : public general_iterator<Container,  class binary_tree_iterator<Container> > // 
 {  
@@ -64,12 +70,52 @@ public:
         return *this;
     }
 };
+*/
+
+template <typename Container>
+class binary_tree_iterator{
+public: 
+    using Node = typename Container::Node;
+    using value_type = typename Container::value_type;
+protected:
+    Container* m_pContainer = nullptr;
+    Node*      m_pNode      = nullptr;
+public:
+    binary_tree_iterator(Container* pContainer, Node* pNode): m_pContainer(pContainer), m_pNode(pNode){}
+    value_type& operator*(){
+        return m_pNode->getDataRef();
+    }
+    // Forward iterator
+    binary_tree_iterator& operator++(){
+        if (!m_pNode) return *this; // End Node 
+        if (m_pNode->getChild(1)){ 
+            m_pNode = m_pNode->getChild(1);
+            while (m_pNode->getChild(0)){
+                m_pNode = m_pNode->getChild(0);
+            }
+        }else{
+            Node* pParent = m_pNode->getParent();
+            while (pParent && m_pNode == pParent->getChild(1)){
+                m_pNode = pParent;
+                pParent = pParent->getParent();
+            }
+            m_pNode = pParent;
+        }
+        return *this;
+    }
+    bool operator==(const binary_tree_iterator& other) const {
+        return m_pContainer == other.m_pContainer && m_pNode == other.m_pNode;
+    }
+    bool operator!=(const binary_tree_iterator& other) const {
+        return !(*this == other);
+    }
+};
 
 template <typename _T>
 struct BinaryTreeAscTraits{
     using  T         = _T;
-    using  Node      = CBinaryTreeNode<T>;
-    using  CompareFn = less<T>;
+    using  Node      = CBinaryTreeNode<BinaryTreeAscTraits<_T>>;
+    using  CompareFn = less<BinaryTreeAscTraits<_T>>;
 };
 
 template <typename _T>
@@ -99,7 +145,7 @@ public:
     bool    empty() const       { return size() == 0;  }
     // TODO: insert must receive two paramaters: elem and Ref value
     void insert(value_type elem, Ref ref) {
-        m_pRoot = internal_insert(elem, ref, nullptr, nullptr, m_pRoot);
+        m_pRoot = internal_insert(elem, ref, nullptr, m_pRoot);
     }
 
 protected:
@@ -115,14 +161,14 @@ protected:
         }
 
         size_t branch = Compfn(elem, rpOrigin->getDataRef()) ? 0 : 1;
-        Node *pNode = internal_insert(elem, ref, nullptr, rpOrigin, rpOrigin->getChildRef(branch));
+        Node *pNode = internal_insert(elem, ref, rpOrigin, rpOrigin->getChildRef(branch));
         return pNode;
     }
 public:
     CBinaryTree(){} // Empty tree
     
     // TODO: Copy Constructor. We have duplicate each node
-    CBinaryTree(Binary &other){
+    CBinaryTree(CBinaryTree &other){
         m_pRoot = nullptr; 
         m_size  = 0; 
         Compfn  = other.Compfn;
@@ -134,7 +180,7 @@ public:
     };
     
     // Move Constructor
-    CBinaryTree(Binary &&other)
+    CBinaryTree(CBinaryTree &&other)
         : m_pRoot(std::exchange(other.m_pRoot, nullptr)), 
           m_size (std::exchange(other.m_size, 0)), 
           Compfn (std::exchange(other.Compfn, nullptr))
@@ -189,7 +235,7 @@ public:
     // TODO: generalize this function to apply any function
     void postorder(Node  *pNode, size_t level, ostream &os){
         if( pNode ){   
-            postorder(pNode->getChild(0), level+1, os);
+            postorder(pNode->getChild(0), level+1, os); 
             postorder(pNode->getChild(1), level+1, os);
             os << " --> " << pNode->getDataRef();
         }
