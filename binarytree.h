@@ -1,9 +1,10 @@
 #ifndef __BINARY_TREE_H__  
 #define __BINARY_TREE_H__ 
-//#include <utility>
-//#include <algorithm>
+#include <utility>
+#include <algorithm>
 #include <cassert>
 #include <fstream>
+#include <vector>
 #include "types.h"
 //#include "util.h"
 using namespace std;
@@ -12,29 +13,26 @@ template <typename Traits>
 class CBinaryTreeNode{
 public:
   using value_type = typename Traits::T;
-  using Node       = CBinaryTreeNode<T>;
+  using Node       = CBinaryTreeNode<Traits>;
 
 protected:
-    T       m_data;
-    Node *  m_pParent = nullptr;
-    Ref     m_ref;
-    vector<Node *> m_pChild = {nullptr, nullptr}; // 2 hijos inicializados en nullptr
+    value_type  m_data;
+    Node *      m_pParent = nullptr;
+    Ref         m_ref;
+    vector<Node *> m_pChild = {nullptr, nullptr};
 
 public:
     CBinaryTreeNode(Node* pParent, value_type data, Ref ref, Node* p0 = nullptr, Node* p1 = nullptr)
-        : m_pParent(pParent), m_data(data), m_ref(ref)
+        : m_data(data), m_pParent(pParent), m_ref(ref)
     {
         m_pChild[0] = p0;
         m_pChild[1] = p1;
     }
-    ~CBinaryTreeNode(){
-        delete m_pChild[0]; m_pChild[0] = nullptr;
-        delete m_pChild[1]; m_pChild[1] = nullptr;
-    }
+    ~CBinaryTreeNode(){}
 
     // TODO: Keynode 
-    T         getData()                {   return m_data;    }
-    T        &getDataRef()             {   return m_data;    }
+    value_type    getData()                {   return m_data;    }
+    value_type   &getDataRef()             {   return m_data;    }
  
 public: // TODO: Add this class as friend of the BinaryTree
         // and make these methods private
@@ -55,7 +53,7 @@ public:
   public:
     binary_tree_iterator(Container *pContainer, Node *pNode) : Parent (pContainer,pNode) {}
     binary_tree_iterator(Container &other)  : Parent (other) {}
-    binary_tree_iterator(Container &&other) : Parent(other) {} // Move constructor C++11 en adelante
+    binary_tree_iterator(Container &&other) : Parent(other) {}
 
 public:
     // TODO: Revisar el avance de un iterator
@@ -68,7 +66,7 @@ public:
 template <typename _T>
 struct BinaryTreeAscTraits{
     using  T         = _T;
-    using  Node      = CBinaryTreeNode<T>;
+    using  Node      = CBinaryTreeNode<BinaryTreeAscTraits<_T>>;
     using  CompareFn = less<T>;
 };
 
@@ -76,7 +74,7 @@ template <typename _T>
 struct BinaryTreeDescTraits
 {
     using  T         = _T;
-    using  Node      = CBinaryTreeNode<T>;
+    using  Node      = CBinaryTreeNode<BinaryTreeDescTraits<_T>>;
     using  CompareFn = greater<T>;
 };
 
@@ -106,33 +104,46 @@ protected:
     Node* CreateNode(Node* pParent, value_type elem, Ref ref) {
         return new Node(pParent, elem, ref);
     }
+    
+    void destroyTree(Node* pNode) {
+        if (pNode) {
+            destroyTree(pNode->getChild(0));
+            destroyTree(pNode->getChild(1));
+            delete pNode;
+        }
+    }
+    
     virtual Node* internal_insert(value_type &elem, Ref ref,
-                                  Node* pParent, Node*& rpOrigin)
+                              Node* pParent, Node* pOrigin, Node*& rpChild)
     {
-        if (!rpOrigin) {
+        if (!rpChild) {
             ++m_size;
-            return (rpOrigin = CreateNode(pParent, elem, ref));
+            return (rpChild = CreateNode(pParent, elem, ref));
         }
 
-        size_t branch = Compfn(elem, rpOrigin->getDataRef()) ? 0 : 1;
-        Node *pNode = internal_insert(elem, ref, nullptr, rpOrigin, rpOrigin->getChildRef(branch));
-        return pNode;
+        size_t branch = Compfn(elem, rpChild->getDataRef()) ? 0 : 1;
+        rpChild->getChildRef(branch) = internal_insert(elem, ref, rpChild, rpChild, rpChild->getChildRef(branch));
+        return rpChild;
     }
 public:
-    CBinaryTree(){} // Empty tree
+    CBinaryTree(){}
     
     // TODO: Copy Constructor. We have duplicate each node
-    CBinaryTree(Binary &other);
+    CBinaryTree(CBinaryTree &other);
     
     // Move Constructor
-    CBinaryTree(Binary &&other)
+    CBinaryTree(CBinaryTree &&other)
         : m_pRoot(std::exchange(other.m_pRoot, nullptr)), 
           m_size (std::exchange(other.m_size, 0)), 
-          Compfn (std::exchange(other.Compfn, nullptr))
+          Compfn (std::exchange(other.Compfn, CompareFn()))
     { }
 
     // TODO: Recursivo y seguro. Destruir Nodes recursivamente
-    virtual ~CBinaryTree(){  } 
+    virtual ~CBinaryTree(){  
+        destroyTree(m_pRoot);
+        m_pRoot = nullptr;
+        m_size = 0;
+    } 
     
     // TODO: Generalizar estos recorridos para recibir cualquier funcion
     // con una cantidad flexible de parametros con variadic templates
@@ -198,7 +209,7 @@ public:
         if( pNode ){
             Node *pParent = pNode->getParent();
             print(pNode->getChild(1), level+1, os);
-            os << string(" | ") * level << pNode->getDataRef() << "(" << (pParent?to_string(pParent->getData()):"Root") << ")" <<endl;
+            os << string(level, ' ') << "| " << pNode->getDataRef() << "(" << (pParent?to_string(pParent->getData()):"Root") << ")" <<endl;
             print(pNode->getChild(0), level+1, os);
         }
     }
