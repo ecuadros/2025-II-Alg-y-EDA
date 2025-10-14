@@ -92,8 +92,10 @@ void DemoBinaryTree(){
     for (auto &par : v1)
         bt.insert(par.first, par.second);
     std::cout << bt << std::endl;
-/*
-    std::cout << "Inorder traversal:" << std::endl;
+
+    CBinaryTree< BinaryTreeAscTraits<T1> > bt2 = CBinaryTree< BinaryTreeAscTraits<T1> >(bt);
+    std::cout << "Binary Tree Copied:\n" << bt2 << std::endl;
+/*    std::cout << "Inorder traversal:" << std::endl;
     //bt.inorder();
     std::cout << std::endl;
 

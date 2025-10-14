@@ -158,6 +158,19 @@ protected:
     Node* CreateNode(Node* pParent, value_type elem, Ref ref) {
         return new Node(pParent, elem, ref);
     }
+
+    Node* copyNode(Node* src, Node* parent) {
+        if (!src) return nullptr;
+
+        // Crear nodo copia
+        Node* nodeCopy = CreateNode(parent, src->getData(), src->m_ref);
+
+        nodeCopy->getChildRef(0) = copyNode(src->getChild(0), nodeCopy);
+        nodeCopy->getChildRef(1) = copyNode(src->getChild(1), nodeCopy);
+
+        return nodeCopy;
+    }
+
     virtual Node* internal_insert(value_type &elem, Ref ref,
                                   Node* pParent, Node*& rpOrigin)
     {
@@ -174,7 +187,11 @@ public:
     CBinaryTree(){} // Empty tree
     
     // TODO: Copy Constructor. We have duplicate each node
-    CBinaryTree(Binary &other);
+    CBinaryTree(Binary &other){
+        m_pRoot = copyNode(other.m_pRoot, nullptr);
+        m_size  = other.m_size;
+        Compfn  = other.Compfn;
+    }
     
     // TODO: Done: Move Constructor
     CBinaryTree(Binary &&other)
