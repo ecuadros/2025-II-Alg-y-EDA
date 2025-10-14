@@ -276,8 +276,12 @@ public:
         }
     }
 
-    // TODO: Tip: recorrer el arbol en preorden
-    void Write(ostream &os) { os << *this;  }
+    void Write(ostream &os) {
+        os << m_size << " ";
+        preorder([&os](Node* pNode, size_t level) {
+            os << pNode->getDataRef() << " ";
+        });
+    }
 
     // TODO: Leer en el arbol desde un stream asumiendo que esta en preorden
     void Read(istream &is)  { /* TODO */  }
