@@ -8,11 +8,14 @@
 //#include "util.h"
 using namespace std;
 
+template <typename Traits> class CBinaryTree;
+template <typename Traits> class CBinaryTreeNode;
+
 template <typename Traits>
 class CBinaryTreeNode{
 public:
   using value_type = typename Traits::T;
-  using Node       = CBinaryTreeNode<T>;
+  using Node       = CBinaryTreeNode<Traits>;
 
 protected:
     T       m_data;
@@ -104,6 +107,14 @@ private:
         
     }
 
+    Node* copyTree(Node* original, Node* parent){
+        if(original == nullptr) return nullptr;
+        Node* newNode = CreateNode(parent, original->getData(), original->getDataRef());
+        newNode->setpChild(copyTree(original->getChild(0), newNode), 0);
+        newNode->setpChild(copyTree(original->getChild(1), newNode), 1);
+        return newNode;
+    }
+
 public: 
     size_t  size()  const       { return m_size;       }
     bool    empty() const       { return size() == 0;  }
@@ -129,10 +140,12 @@ protected:
         return pNode;
     }
 public:
-    CBinaryTree(){} // Empty tree
+    CBinaryTree() = default; // Empty tree
     
     // TODO: Copy Constructor. We have duplicate each node
-    CBinaryTree(Binary &other);
+    CBinaryTree(const CBinaryTree& other) : m_size(other.m_size), Compfn(other.Compfn) {
+        m_pRoot = copyTree(other.m_pRoot, nullptr);
+    }
     
     // Move Constructor
     CBinaryTree(Binary &&other)
