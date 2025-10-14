@@ -6,6 +6,7 @@
 #include "doublelinkedlist.h"
 
 void DemoBinaryTree();
+void DemoAVL();
 
 using namespace std;
 
@@ -30,6 +31,7 @@ int main(){
     // DemoLinkedList();
     // DemoDoubleLinkedList();
     DemoBinaryTree();
+    DemoAVL();
     return 0;
 }
 

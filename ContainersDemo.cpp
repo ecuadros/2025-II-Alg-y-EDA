@@ -6,6 +6,7 @@
 #include "linkedlist.h"
 #include "doublelinkedlist.h"
 #include "binarytree.h"
+#include "avl.h"
 #include "foreach.h"
 #include "types.h"
 #include "util.h"
@@ -141,4 +142,26 @@ void DemoBinaryTree(){
     std::ofstream of("BT.txt");
     bt.Write(of);
     of.close();
+}
+
+void DemoAVL(){
+    std::vector< std::pair<T1, Ref> > v = {
+        {30, 0}, {20, 0}, {40, 0}, {10, 0}, {25, 0}, {5, 0}, {35, 0}, {50, 0}
+    };
+
+    std::cout << "Demo AVL Tree" << std::endl;
+    CAVLTree<AVLAscTraits<T1>> at;
+    for (auto &p : v) at.insert(p.first, p.second);
+
+    std::cout << "AVL inorder traversal:" << std::endl;
+    at.inorder(std::cout);
+    std::cout << std::endl;
+
+    std::cout << "AVL tree structure:" << std::endl;
+    at.print(std::cout);
+    std::cout << std::endl;
+
+    std::cout << "Imprimiendo con forward iterator" << std::endl;
+    for (auto it = at.begin(); it != at.end(); ++it) std::cout << *it << " ";
+    std::cout << std::endl;
 }
