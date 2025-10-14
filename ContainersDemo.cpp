@@ -78,13 +78,13 @@ void DemoBinaryTree(){
     std::vector< std::pair<T1, Ref> > v1 = {
         {4, 8}, {2, 5}, {7, 3}, {1, 9}, {5, 2}
     };
-    CBinaryTree< AscendingTrait<T1> > bt;
+    CBinaryTree< BinaryTreeAscTraits<T1> > bt;
     for (auto &par : v1)
         bt.insert(par.first, par.second);
     std::cout << bt << std::endl;
 
     std::cout << "Inorder traversal:" << std::endl;
-    // bt.inorder();
+    bt.inorder(std::cout);
     std::cout << std::endl;
 
     std::cout << "Preorder traversal:" << std::endl;
@@ -103,9 +103,9 @@ void DemoBinaryTree(){
     // foreach(bt. begin(), bt. end(), ::Print<T1>);
     // std::cout << std::endl;
 
-    // std::cout << "Imprimiendo con backward iterator" << std::endl;
-    // foreach(bt.rbegin(), bt.rend(), ::Print<T1>);
-    // std::cout << std::endl;
+    std::cout << "Imprimiendo con backward iterator" << std::endl;
+    foreach(bt.rbegin(), bt.rend(), ::Print<T1>);
+    std::cout << std::endl;
     
     // std::ofstream of("BT.txt");
     // bt.Write(of);
