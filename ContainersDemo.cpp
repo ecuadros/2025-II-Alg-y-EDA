@@ -92,19 +92,19 @@ void DemoBinaryTree(){
     for (auto &par : v1)
         bt.insert(par.first, par.second);
     std::cout << bt << std::endl;
-/*
+
     std::cout << "Inorder traversal:" << std::endl;
-    //bt.inorder();
+    bt.inorder(cout);
     std::cout << std::endl;
 
     std::cout << "Preorder traversal:" << std::endl;
-    // bt.preorder();
+    bt.preorder(cout);
     std::cout << std::endl;
 
     std::cout << "Postorder traversal:" << std::endl;
-    // bt.postorder();
+    bt.postorder(cout);
     std::cout << std::endl;
-*/
+
     std::cout << "Tree structure:" << std::endl;
     bt.print(cout);
     std::cout << std::endl;

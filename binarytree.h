@@ -320,10 +320,12 @@ public:
         }
     }
     // TODO: generalize this function to apply any function
-    void postorder(Node  *pNode, size_t level, ostream &os){
+    void postorder (ostream &os)    {   postorder_print (m_pRoot, 0, os);  }
+
+    void postorder_print(Node  *pNode, size_t level, ostream &os){
         if( pNode ){   
-            postorder(pNode->getChild(0), level+1, os);
-            postorder(pNode->getChild(1), level+1, os);
+            postorder_print(pNode->getChild(0), level+1, os);
+            postorder_print(pNode->getChild(1), level+1, os);
             os << " --> " << pNode->getDataRef();
         }
     }
@@ -344,13 +346,13 @@ public:
         }
     }
 
-    void preorder (ostream &os)    {   preorder (m_pRoot, 0, os);  }
+    void preorder (ostream &os)    {   preorder_print (m_pRoot, 0, os);  }
     // TODO: Generalize this function to apply any function
-    void preorder(Node  *pNode, size_t level, ostream &os){
+    void preorder_print(Node  *pNode, size_t level, ostream &os){
         if( pNode ){   
             os << " --> " << pNode->getDataRef();
-            preorder(pNode->getChild(0), level+1, os);
-            preorder(pNode->getChild(1), level+1, os);            
+            preorder_print(pNode->getChild(0), level+1, os);
+            preorder_print(pNode->getChild(1), level+1, os);            
         }
     }
 
