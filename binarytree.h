@@ -20,6 +20,7 @@ public:
   using Node       = CBinaryTreeNode<Traits>;
 
   template <typename C> friend class binary_tree_iterator;
+  template <typename T> friend class CBinaryTree;
 
 protected:
     value_type     m_data;
@@ -39,7 +40,7 @@ public:
     value_type  getData()                {   return m_data;    }
     value_type &getDataRef()             {   return m_data;    }
  
-protected: // TODO: Add this class as friend of the BinaryTree
+private: // TODO(listo): Add this class as friend of the BinaryTree
         // and make these methods private
     void      setChild(const Node *pChild, size_t pos)  {   m_pChild[pos] = pChild;  }
     Node    * getChild(size_t branch){ return m_pChild[branch];  }
