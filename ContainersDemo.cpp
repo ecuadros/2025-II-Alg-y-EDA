@@ -124,6 +124,14 @@ void PrintWithLabel(CBinaryTreeNode<BinaryTreeAscTraits<int>>* node, std::ostrea
     os << label << ": " << node->getDataRef()  << "\n";
 }
 
+void PrintWithParent(CBinaryTreeNode<BinaryTreeAscTraits<int>>* node,
+                 size_t level, std::ostream &os, const std::string &label)
+{
+    for (size_t i = 0; i < level; ++i)
+        os << " | ";
+    os << label << " " << node->getDataRef() << " (" << node->getParentData() << ")" << std::endl;
+}
+
 void DemoBinaryTree(){
     std::cout << "Binary tree: " << std::endl;
     std::vector< std::pair<T1, Ref> > v1 = {
@@ -184,6 +192,9 @@ void DemoBinaryTree(){
     cout << "PREORDER variadic:" << endl;
     bt.preorder_variadic(PrintWithLabel, std::cout, std::string("[Nodo]"));
 
+    std::cout << "Tree structure:" << std::endl;
+    bt.print_variadic(PrintWithParent, std::cout, "Node");
+    std::cout << std::endl;
     // std::ofstream of("BT.txt");
     // bt.Write(of);
     // of.close();
