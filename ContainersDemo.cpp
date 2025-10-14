@@ -13,7 +13,7 @@
 void opex(int &n){ n++; }
 
 template <typename T>
-void PrintX(T &val, ostream &os){ os << n << " "; }
+void PrintX(T &val, ostream &os){ os << val << " "; }
 
 template <typename T>
 void PrintY(T &val, T value1, T value2, ostream &os){ 
@@ -97,41 +97,48 @@ void DemoDoubleLinkedList(){
 }
 
 void DemoBinaryTree(){
+    // Use 8 elements to match expected demo output (order chosen to get 4 as root)
     std::vector< std::pair<T1, Ref> > v1 = {
+        // {4, 8}, {2, 5}, {1, 2}, {3, 6}, {6, 4}, {5, 1}, {7, 3}, {8, 7}
         {4, 8}, {2, 5}, {7, 3}, {1, 9}, {5, 2}
     };
-    CBinaryTree< AscendingTrait<T1> > bt;
+    
+    CBinaryTree< BinaryTreeAscTraits<T1> > bt;
     for (auto &par : v1)
         bt.insert(par.first, par.second);
+    
+    std::cout << "Hello Alg y EDA-UNI" << std::endl;
     std::cout << bt << std::endl;
 
     std::cout << "Inorder traversal:" << std::endl;
-    // bt.inorder();
+    bt.inorder(std::cout);
     std::cout << std::endl;
 
     std::cout << "Preorder traversal:" << std::endl;
-    // bt.preorder();
+    bt.preorder(std::cout);
     std::cout << std::endl;
 
     std::cout << "Postorder traversal:" << std::endl;
-    // bt.postorder();
+    bt.postorder(std::cout);
     std::cout << std::endl;
 
     std::cout << "Tree structure:" << std::endl;
-    // bt.print();
+    bt.print(std::cout);
     std::cout << std::endl;
 
     std::cout << "Imprimiendo con forward iterator" << std::endl;
-    // foreach(bt. begin(), bt. end(), ::Print<T1>);
+    for (auto it = bt.begin(); it != bt.end(); ++it) {
+        std::cout << *it << " ";
+    }
     std::cout << std::endl;
 
     std::cout << "Imprimiendo con backward iterator" << std::endl;
-    // foreach(bt.rbegin(), bt.rend(), ::Print<T1>);
+    for (auto it = bt.rbegin(); it != bt.rend(); ++it) {
+        std::cout << *it << " ";
+    }
     std::cout << std::endl;
     
     std::ofstream of("BT.txt");
     bt.Write(of);
     of.close();
-
-    // Next classes: AVL, BTree
 }
