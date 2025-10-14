@@ -7,18 +7,19 @@
 // #include "vector.h"
 // #include "DemoVector.h"
 // #include "hilos.h"
-#include "linkedlist.h"
-#include "doublelinkedlist.h"
+// #include "linkedlist.h"
+// #include "doublelinkedlist.h"
 #include "ContainersDemo.h"
+#include "binarytree.h"
 
 
 using namespace std;
 
 int main(){
     
-    DemoLinkedList();
-    DemoDoubleLinkedList();
-    // DemoBinaryTree();
+    // DemoLinkedList();
+    // DemoDoubleLinkedList();
+    DemoBinaryTree();
     // DemoThreads();
     return 0;
 }

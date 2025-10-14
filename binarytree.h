@@ -1,6 +1,6 @@
 #ifndef __BINARY_TREE_H__  
 #define __BINARY_TREE_H__ 
-//#include <utility>
+#include <utility>
 //#include <algorithm>
 #include <cassert>
 #include <fstream>
@@ -8,22 +8,26 @@
 //#include "util.h"
 using namespace std;
 
-/* ----- Declaracion adelantada de BinaryTree ----- */
+/* ----- Declaracion adelantada de BinaryTree y su Iterador----- */
 template <typename Traits>
 class CBinaryTree;
+
+template <typename Container>
+class binary_tree_iterator;
 
 /* ----- Nodo del arbol binario ----- */
 template <typename Traits>
 class CBinaryTreeNode{
 public:
     friend class CBinaryTree<Traits>;
+    friend class binary_tree_iterator< CBinaryTree<Traits> >;
 
     using value_type = typename Traits::T;
     using Node       = CBinaryTreeNode<Traits>;
 
 private:
-    value_type     m_data;
     Node          *m_pParent = nullptr;
+    value_type     m_data;
     Ref            m_ref;
     vector<Node *> m_pChild  = {nullptr, nullptr}; // 2 hijos inicializados en nullptr
 
@@ -74,32 +78,32 @@ private:
   
 public:
     binary_tree_iterator(Container *pTree = nullptr, Node *pNode = nullptr) : m_pTree(pTree), m_pNode(pNode) {}
-    binary_tree_iterator(iterator &other)  : m_pTree(other.pTree),  m_pNode(other.m_pNode) {}
+    binary_tree_iterator(const iterator &other)  : m_pTree(other.m_pTree),  m_pNode(other.m_pNode) {}
 
 
 public:
     // Operadores de acceso
-    reference operator*() { return m_pNode->getDataRef(); }
-    pointer   operator->(){ return &(m_pNode->getDataRef()); }
+    reference operator*() const  { return m_pNode->getDataRef(); }
+    pointer   operator->() const { return &(m_pNode->getDataRef()); }
 
     // (DONE) Iteradores
     // Pre-Incremento (++it)
-    binary_tree_iterator operator++() {
+    iterator operator++() {
         if (!m_pNode) return *this; // Ya terminó
         
         Node* nodoIzquierdo;
         Node* nodoDerecho;
 
-        if (nodoDerecho = m_pNode->getChild(1)) {
+        if ((nodoDerecho = m_pNode->getChild(1))) {
             m_pNode = nodoDerecho;
-            while (nodoIzquierdo = m_pNode->getChild(0)) {
+            while ((nodoIzquierdo = m_pNode->getChild(0))) {
                 m_pNode = nodoIzquierdo;
             }
         } else {
             Node* nodoPadre = m_pNode->getParent();
-            while (nodoPadre && m_pNode == nodoPadre->getChild(1)) {
+            while ((nodoPadre && m_pNode == nodoPadre->getChild(1))) {
                 m_pNode = nodoPadre;
-                nodoPadre = padre->getParent();
+                nodoPadre = nodoPadre->getParent();
             }
             m_pNode = nodoPadre;
         }
@@ -107,29 +111,34 @@ public:
     }
 
     // Post-Incremento (it++)
-    binary_tree_iterator operator++(int) {
-        binary_tree_iterator temp = *this;
+    iterator operator++(int) {
+        iterator temp = *this;
         ++(*this);
         return temp;
     }
 
     // Pre-Decremento (--it)
-    binary_tree_iterator operator--() {
-        if (!m_pNode) return *this; 
+    iterator operator--() {
+        if (!m_pNode) {
+            if (m_pTree && !m_pTree->empty()) {
+                m_pNode = m_pTree->getExtremeNode(m_pTree->getRoot(), 1);
+            }
+            return *this;
+        } 
 
         Node* nodoIzquierdo;
         Node* nodoDerecho;
 
-        if (nodoIzquierdo = m_pNode->getChild(0)) {
+        if ((nodoIzquierdo = m_pNode->getChild(0))) {
             m_pNode = nodoIzquierdo;
-            while (nodoDerecho = m_pNode->getChild(1)) {
+            while ((nodoDerecho = m_pNode->getChild(1))) {
                 m_pNode = nodoDerecho;
             }
         } else {
             Node* nodoPadre = m_pNode->getParent();
-            while (nodoPadre && m_pNode == nodoPadre->getChild(0)) {
+            while ((nodoPadre && m_pNode == nodoPadre->getChild(0))) {
                 m_pNode = nodoPadre;
-                nodoPadre = padre->getParent();
+                nodoPadre = nodoPadre->getParent();
             }
             m_pNode = nodoPadre;
         }
@@ -137,18 +146,18 @@ public:
     }
 
     // Post-Decremento (it--)
-    binary_tree_iterator operator--(int) {
-        binary_tree_iterator temp = *this;
+    iterator operator--(int) {
+        iterator temp = *this;
         --(*this);
         return temp;
     }
 
     // Operadores de Comparación
-    bool operator==(binary_tree_iterator other){ 
+    bool operator==(const iterator other){ 
         return m_pNode == other.m_pNode;
     }
 
-    bool operator!=(binary_tree_iterator other){ 
+    bool operator!=(const iterator other){ 
         return !(*this == other);    
     }
 };
@@ -190,7 +199,8 @@ public:
     bool    empty() const       { return size() == 0;  }
 
     void insert(value_type elem, Ref ref) {
-        m_pRoot = internal_insert(elem, ref, nullptr, nullptr, m_pRoot);
+        // (elemento, referencia, nodo padre, nodo actual o a modificar)
+        internal_insert(elem, ref, nullptr, m_pRoot);
     }
 
      Node* getExtremeNode(Node* startNode, int direction) const {
@@ -201,6 +211,10 @@ public:
             pNode = pNode->getChild(direction);
         }
         return pNode;
+    }
+
+    Node* getRoot() const{
+        return m_pRoot;
     }
 
 protected:
@@ -216,7 +230,7 @@ protected:
         }
 
         size_t branch = Compfn(elem, rpOrigin->getDataRef()) ? 0 : 1;
-        Node *pNode = internal_insert(elem, ref, nullptr, rpOrigin, rpOrigin->getChildRef(branch));
+        Node *pNode = internal_insert(elem, ref, rpOrigin, rpOrigin->getChildRef(branch));
         return pNode;
     }
 private:
@@ -233,7 +247,7 @@ public:
     CBinaryTree(){} // Empty tree
     
     // (DONE) Copy Constructor
-    CBinaryTree(Binary &other){
+    CBinaryTree(Container &other){
         if (other.m_pRoot) {
             m_pRoot = copy_tree(other.m_pRoot, nullptr);
             m_size  = other.m_size;
@@ -242,7 +256,7 @@ public:
     }
     
     // (DONE) Move Constructor
-    CBinaryTree(Binary &&other)
+    CBinaryTree(Container &&other)
         : m_pRoot(std::exchange(other.m_pRoot, nullptr)), 
           m_size (std::exchange(other.m_size, 0)), 
           Compfn (std::exchange(other.Compfn, nullptr))
@@ -276,45 +290,45 @@ public:
     // (DONE) Generalización de recorridos para cualquier funcion usando variadic templates
     // (DONE) Inorder generalizado
     template <typename Function, typename... Args>
-    void inorder(Function func , Args&&... args){
-        inorder_recursivo(m_pRoot, func, std::forward<Args>(args)...);  
+    void inorder(Function func , Args&... args){
+        inorder_recursivo(m_pRoot, func, args...);  
     }
 
     template <typename Function, typename... Args> 
-    void inorder_recursivo(Node  *pNode, Function func, Args&&... args){
+    void inorder_recursivo(Node  *pNode, Function func, Args&... args){
         if( pNode ){
-            inorder_recursivo(pNode->getChild(0), func, std::forward<Args>(args)...);
-            func(pNode, std::forward<Args>(args)...);
-            inorder_recursivo(pNode->getChild(1), func, std::forward<Args>(args)...);
+            inorder_recursivo(pNode->getChild(0), func, args...);
+            func(pNode, args...);
+            inorder_recursivo(pNode->getChild(1), func, args...);
         }
     }
 
     // (DONE) Posorder generalizado
     template <typename Function, typename... Args>
-    void postorder(Function func, Args&&... args){
+    void postorder(Function func, Args&... args){
         postorder_recursivo(m_pRoot, func, args...);
     }
 
     template <typename Function, typename... Args>
-    void postorder_recursivo(Node* pNode, Function func, Args&&... args) {
+    void postorder_recursivo(Node* pNode, Function func, Args&... args) {
         if (pNode) {
-            postorder_recursivo(pNode->getChild(0), func, std::forward<Args>(args)...);
-            postorder_recursivo(pNode->getChild(1), func, std::forward<Args>(args)...);
-            func(pNode, std::forward<Args>(args)...); 
+            postorder_recursivo(pNode->getChild(0), func, args...);
+            postorder_recursivo(pNode->getChild(1), func, args...);
+            func(pNode, args...); 
         }
     }
 
     // (DONE) Preorden generalizado
     template <typename Function, typename... Args>
-    void preorder(Function func, Args&&... args){   
+    void preorder(Function func, Args&... args){   
         preorder_recursivo(m_pRoot, func, args...);  
     }
     template <typename Function, typename... Args>
-    void preorder_recursivo(Node  *pNode, Function func, Args&&... args){
+    void preorder_recursivo(Node  *pNode, Function func, Args&... args){
         if( pNode ){   
-            func(pNode, std::forward<Args>(args)...);
-            preorder_recursivo(pNode->getChild(0), func, std::forward<Args>(args)...);
-            preorder_recursivo(pNode->getChild(1), func, std::forward<Args>(args)...);            
+            func(pNode, args...);
+            preorder_recursivo(pNode->getChild(0), func, args...);
+            preorder_recursivo(pNode->getChild(1), func, args...);            
         }
     }
 
@@ -327,7 +341,7 @@ public:
 
     void print_recursivo(Node  *pNode, size_t level, ostream &os){
         if(!pNode) return;
-        pParent = pNode->getParent();
+        Node* pParent = pNode->getParent();
 
         print_recursivo(pNode->getChild(1), level+1, os);
         
@@ -390,6 +404,7 @@ template <typename Traits>
 ostream & operator<<(std::ostream &os, CBinaryTree<Traits> &obj){
     os << "CBinaryTree with " << obj.size() << " elements.";
     
+    os << "\nImpresion por default: inorder\n";
     // Pasamos a inorder una lambda que imprime el dato dentro del nodo
     obj.inorder([&os](typename CBinaryTree<Traits>::Node* pNode){
         os << pNode->getData() << " ";

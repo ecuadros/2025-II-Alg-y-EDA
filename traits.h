@@ -1,5 +1,6 @@
 #ifndef __TRAITS_H__
 #define __TRAITS_H__
+#include <functional>
 
 template <typename T, typename _Func>
 struct ListTrait{
