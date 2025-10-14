@@ -191,8 +191,8 @@ protected:
         }
 
         size_t branch = Compfn(elem, rpOrigin->getDataRef()) ? 0 : 1;
-        Node *pNode = internal_insert(elem, ref, rpOrigin, rpOrigin->getChildRef(branch));
-        return pNode;
+        internal_insert(elem, ref, rpOrigin, rpOrigin->getChildRef(branch));
+        return rpOrigin;
     }
 public:
     CBinaryTree(){} // Empty tree
@@ -239,7 +239,7 @@ public:
     }
     iterator end()   { return iterator(this, nullptr); }
 
-    // TODO: begin debe comenzar el el nodo mas a la derecha (1)
+    // TODO(listo): begin debe comenzar el el nodo mas a la derecha (1)
     riterator rbegin() {
       return riterator(end());  // Envuelve end()
     }
