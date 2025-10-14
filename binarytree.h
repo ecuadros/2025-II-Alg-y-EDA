@@ -83,6 +83,29 @@ public:
 
         return *this;
     }
+
+    binary_tree_iterator operator--() {
+        if (!Parent::m_pNode) return *this;
+
+        Node* current = Parent::m_pNode;
+
+        if (current->getChild(0)) {
+            current = current->getChild(0);
+            while (current->getChild(1)) {
+                current = current->getChild(1);
+            }
+            Parent::m_pNode = current;
+        } else {
+            Node* parent = current->getParent();
+            while (parent && current == parent->getChild(0)) {
+                current = parent;
+                parent = parent->getParent();
+            }
+            Parent::m_pNode = parent;
+        }
+
+        return *this;
+    }
 };
 
 template <typename _T>
@@ -109,6 +132,7 @@ public:
     using CompareFn     = typename Traits::CompareFn;
     using Container     = CBinaryTree<Traits>;
     using iterator      = binary_tree_iterator<Container>;
+    using riterator     = binary_tree_iterator<Container>;
 
 protected:
     Node    *m_pRoot = nullptr;
@@ -186,12 +210,11 @@ public:
     }
     iterator end()   { return iterator(this, nullptr); }
 
-    // TODO: begin debe comenzar el el nodo mas a la derecha (1)
-    // riterator rbegin(){ 
-    //     if (!m_pRoot) return rend();
-    //     return iterator(this, getExtremeNode(m_pRoot, 1));
-    //  }
-    // riterator rend()  { return iterator(this, nullptr); }
+    riterator rbegin(){
+        if (!m_pRoot) return rend();
+        return riterator(this, getExtremeNode(m_pRoot, 1));
+    }
+    riterator rend()  { return riterator(this, nullptr); }
 
     // TODO: Generalizar estos recorridos para recibir cualquier funcion
     // con una cantidad flexible de parametros con variadic templates
