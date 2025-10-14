@@ -1,9 +1,11 @@
 #include <iostream>
 #include "vector.h"
 #include "DemoVector.h"
+//#include "DemoLinkedList.h"
+//#include "DemoDoubleLinkedList.h"
+//#include "DemoBinaryTree.h"
+//#include "DemoAVL.h"
 #include "hilos.h"
-#include "linkedlist.h"
-#include "doublelinkedlist.h"
 
 using namespace std;
 
@@ -22,11 +24,11 @@ using namespace std;
 
 int main(){
     cout << "Hello Alg y EDA-UNI" << endl;
-    // DemoThreads();
     [[maybe_unused]] int x = 5;
-    // DemoVector();
-    DemoLinkedList();
-    DemoDoubleLinkedList();
+    //DemoLinkedList();
+    //DemoDoubleLinkedList();
+    //DemoBinaryTree();
+    //DemoAVL();
     return 0;
 }
 

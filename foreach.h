@@ -1,6 +1,7 @@
 #ifndef __FOREACH_H__
 #define __FOREACH_H__
 #include <iostream>
+#include <functional>
 
 template <typename Iterator, typename Function >
 void foreach(Iterator begin, Iterator end, Function func){
