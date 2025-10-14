@@ -19,7 +19,7 @@ using namespace std;
 int main(){
     cout << "Hello Alg y EDA-UNI" << endl;
     // DemoThreads();
-    [[maybe_unused]] int x = 5;
+    // [[maybe_unused]] int x = 5;
     BinaryTreeDemo();
     return 0;
 }

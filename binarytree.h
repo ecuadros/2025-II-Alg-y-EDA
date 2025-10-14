@@ -67,7 +67,6 @@ public:
 template <typename _T>
 struct BinaryTreeAscTraits{
 	using  T         = _T;
-	using  Node      = CBinaryTreeNode<T>;
 	using  CompareFn = less<T>;
 };
 
@@ -75,7 +74,6 @@ template <typename _T>
 struct BinaryTreeDescTraits
 {
 	using  T         = _T;
-	using  Node      = CBinaryTreeNode<T>;
 	using  CompareFn = greater<T>;
 };
 
@@ -83,7 +81,7 @@ template <typename Traits>
 class CBinaryTree{
 public:
 	using value_type    = typename Traits::T;
-	using Node          = typename Traits::Node;
+	using Node          = CBinaryTreeNode<Traits>;
 	
 	using CompareFn     = typename Traits::CompareFn;
 	using Container     = CBinaryTree<Traits>;
@@ -128,9 +126,9 @@ protected:
 			++m_size;
 			return (rpOrigin = CreateNode(pParent, elem, ref));
 		}
-			// size_t branch = Compfn(elem, rpOrigin->getDataRef()) ? 0 : 1;
-			// Node *pNode = internal_insert(elem, ref, rpOrigin->getChildRef(branch), rpOrigin);
-			// return pNode;
+		size_t branch = Compfn(elem, rpOrigin->getDataRef()) ? 0 : 1;
+		Node *pNode = internal_insert(elem, ref, rpOrigin->getChildRef(branch), rpOrigin);
+		return pNode;
 	}
 public:
 	CBinaryTree(){} // Empty tree
