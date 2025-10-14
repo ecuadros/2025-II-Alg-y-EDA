@@ -9,6 +9,7 @@
 #include <utility>
 #include <ostream>
 #include <type_traits>
+#include <vector>
 #include <utility> 
 #include "types.h"
 //#include "util.h"
@@ -54,9 +55,11 @@ protected: // TODO Hecho total : Add this class as friend of the BinaryTree
 
     void      setupChild( Node *pChild, size_t pos)  {   m_pChild[pos] = pChild;  }
     Node    * getChild(size_t branch){ return m_pChild[branch];  }
+    Node    * getChild(size_t branch) const{ return m_pChild[branch]; }
     Node    *&getChildRef(size_t branch){ return m_pChild[branch];  }
-    Ref      getRef()   const{   return m_ref;     }
+    Ref      getRef()  const{   return m_ref;     }
     Node    * getParent()    { return m_pParent;   }
+    Node    * getParent() const{ return m_pParent; }
     template <typename> friend class CBinaryTree;
 
 };
@@ -146,11 +149,73 @@ public:
         Node*        m_cur   = nullptr;
     };
 
+    class reverse_iterator {
+    public:
+        using iterator_category = std::forward_iterator_tag;
+        using value_type        = typename CBinaryTree::value_type;
+        using difference_type   = std::ptrdiff_t;
+        using pointer           = value_type*;
+        using reference         = value_type&;
+
+        reverse_iterator() = default;
+        reverse_iterator(CBinaryTree* owner, Node* cur) : m_owner(owner), m_cur(cur) {}
+
+        reference operator*()  const { return m_cur->getDataRef(); }
+        pointer   operator->() const { return &m_cur->getDataRef(); }
+
+        bool operator==(const reverse_iterator& rhs) const { return m_cur == rhs.m_cur; }
+        bool operator!=(const reverse_iterator& rhs) const { return !(*this == rhs); }
+
+        // Avanza hacia el predecesor en in-order
+        reverse_iterator& operator++() {        // pre-incremento
+            m_cur = m_owner->prev_inorder(m_cur);
+            return *this;
+        }
+        reverse_iterator operator++(int) {      // post-incremento
+            reverse_iterator tmp = *this;
+            ++(*this);
+            return tmp;
+        }
+
+    private:
+        CBinaryTree* m_owner = nullptr;
+        Node*        m_cur   = nullptr;
+    };
+
+    
+    reverse_iterator rbegin() { return reverse_iterator(this, rightmost(m_pRoot)); }
+    reverse_iterator rend()   { return reverse_iterator(this, nullptr); }
+
     iterator begin() { return iterator(this, leftmost(m_pRoot)); }
     iterator end()   { return iterator(this, nullptr); }
 
 
 protected:
+
+    // Nodo más a la derecha desde n
+    Node* rightmost(Node* n) const {
+        while (n && n->getChild(1)) n = n->getChild(1);
+        return n;
+    }
+
+    // Predecesor en inorden (para iteración descendente)
+    Node* prev_inorder(Node* n) const {
+        if (!n) return nullptr;
+
+        // Caso 1: hay hijo izquierdo -> ir al más a la derecha del izquierdo
+        if (n->getChild(0)) {
+            return rightmost(n->getChild(0));
+        }
+
+        // Caso 2: subir hasta que vengamos de la rama derecha
+        Node* p = n->getParent();
+        while (p && n == p->getChild(0)) {
+            n = p;
+            p = p->getParent();
+        }
+        return p; // puede ser nullptr si no hay predecesor
+    }
+
     // Devuelve el nodo más a la izquierda desde n
     Node* leftmost(Node* n) const {
         while (n && n->getChild(0)) n = n->getChild(0);
