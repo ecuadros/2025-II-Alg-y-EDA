@@ -133,7 +133,7 @@ public:
     void Insert(value_type &elem, Ref ref);
 private:
     void InternalInsert(Node *&rParent, value_type &elem, Ref ref);
-    void InternalInsertTail(Node *&rParent, value_type &elem, Ref ref);
+    void InternalInsertTail(value_type &elem, Ref ref);
     Node *GetRoot()    {    return m_pRoot;     };
     
     void Destroy() {
@@ -193,8 +193,11 @@ void CDoubleLinkedList<Traits>::InternalInsert(Node *&rParent, value_type &elem,
     if( !rParent || m_fCompare(elem, rParent->GetDataRef()) ){
         Node *pNew = rParent = new Node(elem, ref, rParent);
         if( !pNew->GetNext() ) // Final de la lista
-            m_pTail = pNew;
-
+        {
+            InternalInsertTail(elem, ref);
+            return;
+        }
+        
         // Puente hacia atras
         Node *pNext = pNew->GetNext();
         if( pNext ){ // Hay algo a continuacion
@@ -209,7 +212,7 @@ void CDoubleLinkedList<Traits>::InternalInsert(Node *&rParent, value_type &elem,
 }
 
 template <typename Traits>
-void CDoubleLinkedList<Traits>::InternalInsertTail(Node *&rParent, value_type &elem, Ref ref) {
+void CDoubleLinkedList<Traits>::InternalInsertTail(value_type &elem, Ref ref) {
     // Crear un nuevo nodo
     Node *pNew = new Node(elem, ref, nullptr); 
 
@@ -255,7 +258,7 @@ CDoubleLinkedList<Traits>::CDoubleLinkedList(CDoubleLinkedList &other){
     Node *node = other.m_pRoot;
 
     while( node ){
-        InternalInsertTail(m_pRoot, node->GetDataRef(), node->GetRef());
+        InternalInsertTail(node->GetDataRef(), node->GetRef());
         node = node->GetNext();
     }
 }
