@@ -150,6 +150,12 @@ public:
         m_pRoot = internal_insert(elem, ref, nullptr, m_pRoot);
     }
 
+    // inorder 
+    template <typename F, typename... Args>
+    void inorder(F&& f, Args&&... args) {
+        inorder_impl(m_pRoot, 0, std::forward<F>(f), std::forward<Args>(args)...);
+    }
+
     //Preorder 
     template <typename F, typename... Args>
     void preorder(F&& f, Args&&... args) {
@@ -162,6 +168,7 @@ public:
         postorder_impl(m_pRoot, 0, std::forward<F>(f), std::forward<Args>(args)...);
     }
 
+    void inorder_print(std::ostream& os)  { inorder([&](value_type& x){ os << " --> " << x; }); }
     void preorder_print(std::ostream& os) { preorder([&](value_type& x){ os << " --> " << x; }); }
     void postorder_print(std::ostream& os){ postorder([&](value_type& x){ os << " --> " << x; }); }
 
@@ -202,6 +209,15 @@ protected:
     }
 
 
+    // Inorden: IZ, Nodo, DR
+    template <typename F, typename... Args>
+    static void inorder_impl(Node* n, size_t level, F&& f, Args&&... args) {
+        if (!n) return;
+        inorder_impl(n->getChild(0), level + 1, std::forward<F>(f), std::forward<Args>(args)...);
+        call_visit(std::forward<F>(f), n, level, std::forward<Args>(args)...);
+        inorder_impl(n->getChild(1), level + 1, std::forward<F>(f), std::forward<Args>(args)...);
+    }
+
     // Preorden: Nodo, IZ, DR
     template <typename F, typename... Args>
     static void preorder_impl(Node* n, size_t level, F&& f, Args&&... args) {
@@ -224,13 +240,13 @@ protected:
 
 };
 
-// // TODO: este operator << debe seguir estando fuera de la clase
-// template <typename Traits>
-// ostream & operator<<(std::ostream &os, CBinaryTree<Traits> &obj){
-//     os << "CBinaryTree with " << obj.size() << " elements.";
-//     obj.inorder(os);
-//     return os;
-// }
+// TODO: este operator << debe seguir estando fuera de la clase
+template <typename Traits>
+ostream & operator<<(std::ostream &os, CBinaryTree<Traits> &obj){
+    os << "CBinaryTree with " << obj.size() << " elements.";
+    obj.inorder(os);
+    return os;
+}
 
 template <typename Traits>
 istream & operator>>(istream &is, CBinaryTree<Traits> &obj){
