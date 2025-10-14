@@ -34,8 +34,8 @@ public:
 		m_pChild[1] = p1;
 	}
 	~CBinaryTreeNode(){
-		delete m_pChild[0]; m_pChild[0] = nullptr;
-		delete m_pChild[1]; m_pChild[1] = nullptr;
+		m_pChild[0] = nullptr;
+		m_pChild[1] = nullptr;
 	}
 
 
@@ -139,7 +139,6 @@ protected:
 public:
 	CBinaryTree(){} // Empty tree
 	
-	// TODO: Copy Constructor. We have duplicate each node
 	CBinaryTree(CBinaryTree<Traits> &other)
 		:m_size(m_size), Compfn(other.Compfn) {
 		
@@ -161,8 +160,17 @@ public:
 		Compfn (std::exchange(other.Compfn, nullptr))
 	{ }
 
-	// TODO: Recursivo y seguro. Destruir Nodes recursivamente
-	virtual ~CBinaryTree(){  } 
+	void DestroySubtree(Node* pNode) {
+		if(!pNode) return;
+		Destroy(pNode->m_pChild[0]);
+		Destroy(pNode->m_pChild[1]);
+		delete pNode;
+	}
+	virtual ~CBinaryTree(){ 
+		Destroy(m_pRoot);
+		m_pRoot = nullptr;
+		m_size = 0;
+	} 
 	
 	// TODO: begin dede comenzar el el nodo mas a la izquierda (0)
 	iterator begin() { 
@@ -181,7 +189,8 @@ public:
 	// TODO: Generalizar estos recorridos para recibir cualquier funcion
 	// con una cantidad flexible de parametros con variadic templates
 	// Google: C++ parameter packs cplusplus
-		void inorder  (ostream &os)    {   inorder  (m_pRoot, 0, os);  }
+	void inorder  (ostream &os)    {   inorder  (m_pRoot, 0, os);  }
+	
 	// TODO: 
 	void inorder(Node  *pNode, size_t level, ostream &os){
 		if( pNode ){
@@ -219,6 +228,7 @@ public:
 			func(pNode, level); 
 		}
 	}
+	
 	// TODO: generalize this function to apply any function
 	void postorder(Node  *pNode, size_t level, ostream &os){
 		if( pNode ){   
@@ -230,6 +240,7 @@ public:
 
 	// TODO: Generalize this function to apply any function
 	void preorder (ostream &os)    {   preorder (m_pRoot, 0, os);  }
+	
 	// TODO: Generalize this function to apply any function
 	void preorder(Node  *pNode, size_t level, ostream &os){
 		if( pNode ){   
