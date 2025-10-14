@@ -141,8 +141,11 @@ public:
           Compfn (std::move(other.Compfn))
     { }
 
-    // TODO: Recursivo y seguro. Destruir Nodes recursivamente
-    virtual ~CBinaryTree(){  } 
+    // TODO (DONE): Safe recursive destructor - recursively destroy all nodes
+    virtual ~CBinaryTree() {
+        delete m_pRoot;  // This will recursively delete all nodes
+        m_pRoot = nullptr;
+    } 
     
     // TODO (DONE): Generalized inorder traversal - accepts any function/lambda
     // Overload for ostream (backward compatibility)
