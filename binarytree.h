@@ -237,20 +237,12 @@ public:
     {    postorder(m_pRoot, 0, func, args...);}
 
     template <typename Function,typename... Args>
-    void postorder(Node* pNode, size_t level, 
+    void postorder(Node* pNode, size_t level,
                    Function func, Args const&... args) {
         if (pNode) {
             postorder(pNode->getChild(0), level + 1, func, args...);
             postorder(pNode->getChild(1), level + 1, func, args...);
-            func(pNode, level); 
-        }
-    }
-    // TODO: generalize this function to apply any function
-    void postorder(Node  *pNode, size_t level, ostream &os){
-        if( pNode ){   
-            postorder(pNode->getChild(0), level+1, os);
-            postorder(pNode->getChild(1), level+1, os);
-            os << " --> " << pNode->getDataRef();
+            func(pNode, level);
         }
     }
 
