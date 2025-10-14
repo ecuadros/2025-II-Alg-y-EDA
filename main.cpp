@@ -26,7 +26,8 @@ int main(){
     [[maybe_unused]] int x = 5;
     // DemoVector();
     //DemoLinkedList();
-    DemoDoubleLinkedList();
+    //DemoDoubleLinkedList();
+    DemoBinaryTree();
     return 0;
 }
 

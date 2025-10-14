@@ -12,7 +12,7 @@ template <typename Traits>
 class CBinaryTreeNode{
 public:
   using value_type = typename Traits::T;
-  using Node       = CBinaryTreeNode<T>;
+  using Node       = CBinaryTreeNode<Traits>;
 
 protected:
     value_type     m_data;
@@ -141,7 +141,11 @@ public:
     { }
 
     // TODO: Recursivo y seguro. Destruir Nodes recursivamente
-    virtual ~CBinaryTree(){  } 
+    virtual ~CBinaryTree(){  
+        Destroy(m_pRoot);
+        m_pRoot = nullptr;
+        m_size  = 0;
+    } 
     
     // TODO: begin dede comenzar el el nodo mas a la izquierda (0)
     iterator begin() { 
@@ -231,6 +235,15 @@ public:
 
     // TODO: Leer en el arbol desde un stream asumiendo que esta en preorden
     void Read(istream &is)  { /* TODO */  }
+
+private:
+    void Destroy(Node* node) {
+        if (node) {
+            Destroy(node->getChild(0));
+            Destroy(node->getChild(1));
+            delete node;
+        }
+    }
 };
 
 // TODO: este operator << debe seguir estando fuera de la clase

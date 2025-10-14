@@ -6,7 +6,7 @@
 
 //#include "linkedlist.h"
 #include "doublelinkedlist.h"
-//#include "binarytree.h"
+#include "binarytree.h"
 #include "foreach.h"
 #include "types.h"
 #include "util.h"
@@ -83,7 +83,7 @@ void DemoDoubleLinkedList(){
 
     std::cout << std::endl;
 }
-/*
+
 void DemoBinaryTree(){
     std::vector< std::pair<T1, Ref> > v1 = {
         {4, 8}, {2, 5}, {7, 3}, {1, 9}, {5, 2}
@@ -92,7 +92,7 @@ void DemoBinaryTree(){
     for (auto &par : v1)
         bt.insert(par.first, par.second);
     std::cout << bt << std::endl;
-
+/*
     std::cout << "Inorder traversal:" << std::endl;
     // bt.inorder();
     std::cout << std::endl;
@@ -121,5 +121,5 @@ void DemoBinaryTree(){
     bt.Write(of);
     of.close();
 
-    // Next classes: AVL, BTree
-}*/
+    // Next classes: AVL, BTree*/
+}
