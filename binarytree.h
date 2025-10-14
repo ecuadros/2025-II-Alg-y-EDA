@@ -224,6 +224,21 @@ public:
     }
 
     // TODO: Generalize this function to apply any function
+    template <typename Function, typename... Args>
+    void preorder(Function func, Args const&... args)
+    {    
+        preorder(m_pRoot, 0, func, args...);
+    }  
+
+    template <typename Function,typename... Args>
+    void preorder(Node* pNode, size_t level, Function func, Args const&... args) {
+        if (pNode) {   
+            func(pNode, level);
+            preorder(pNode->getChild(0), level+1, func, args...);
+            preorder(pNode->getChild(1), level+1, func, args...);            
+        }
+    }
+
     void preorder (ostream &os)    {   preorder (m_pRoot, 0, os);  }
     // TODO: Generalize this function to apply any function
     void preorder(Node  *pNode, size_t level, ostream &os){
