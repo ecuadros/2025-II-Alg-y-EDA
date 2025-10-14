@@ -5,6 +5,7 @@
 #include <cassert>
 #include <fstream>
 #include "types.h"
+#include <vector>
 #include "general_iterator.h"
 //#include "util.h"
 using namespace std;
@@ -12,17 +13,17 @@ using namespace std;
 template <typename Traits>
 class CBinaryTreeNode{
 public:
-  using value_type = typename Traits::value_type;
+  using T = typename Traits::T;
   using Node       = CBinaryTreeNode<Traits>;
 
 protected:
-    value_type     m_data;
-    Node          *m_pParent = nullptr;
+    T     m_data;
+    Node  *m_pParent = nullptr;
     Ref            m_ref;
     vector<Node *> m_pChild  = {nullptr, nullptr}; // 2 hijos inicializados en nullptr
 
 public:
-    CBinaryTreeNode(Node* pParent, value_type data, Ref ref, Node* p0 = nullptr, Node* p1 = nullptr)
+    CBinaryTreeNode(Node* pParent, T data, Ref ref, Node* p0 = nullptr, Node* p1 = nullptr)
         : m_pParent(pParent), m_data(data), m_ref(ref)
     {
         m_pChild[0] = p0;
@@ -33,9 +34,13 @@ public:
         delete m_pChild[1]; m_pChild[1] = nullptr;
     }
 
-    value_type  getData()                {   return m_data;    }
-    value_type &getDataRef()             {   return m_data;    }
- 
+    T getData()                {   return m_data;    }
+    T &getDataRef()             {   return m_data;    }
+    auto        getRef()     const       {   return m_ref;     }
+    void        setRef(Ref ref)          {   m_ref = ref;      }
+    const Node * getpParent()     const  {   return m_pParent; }
+    const Node **getpChildren()   const  {   return m_pChild.data(); }
+
 // protected: // TODO: Add this class as friend of the BinaryTree
         // and make these methods private
     void      setpChild(const Node *pChild, size_t pos)  {   m_pChild[pos] = pChild;  }
@@ -67,24 +72,24 @@ public:
 
 template <typename _T>
 struct BinaryTreeAscTraits{
-    using  value_type   = _T;
-    using  Node         = CBinaryTreeNode<value_type>;
-    using  CompareFn    = less<value_type>;
+    using  T   = _T;
+    using  Node         = CBinaryTreeNode<BinaryTreeAscTraits<_T>>;
+    using  CompareFn    = less<T>;
 };
 
 template <typename _T>
 struct BinaryTreeDescTraits
 {
-    using  value_type   = _T;
-    using  Node         = CBinaryTreeNode<value_type>;
-    using  CompareFn    = greater<value_type>;
+    using  T   = _T;
+    using  Node         = CBinaryTreeNode<BinaryTreeDescTraits<_T>>;
+    using  CompareFn    = greater<T>;
 };
 
 template <typename Traits>
 class CBinaryTree{
 public:
-    using value_type    = typename Traits::value_type;
-    using Node          = CBinaryTreeNode<Traits>;
+    using T    = typename Traits::T;
+    using Node          = typename Traits::Node;
     
     using CompareFn     = typename Traits::CompareFn;
     using Container     = CBinaryTree<Traits>;
@@ -95,18 +100,12 @@ protected:
     size_t   m_size  = 0;
     CompareFn Compfn;
 
-    template <typename Visitor>
-    void inorder_helper(Node* pNode, size_t level, const Visitor& visitor) {
-        if (!pNode) return;
-        inorder_helper(pNode->getChild(0), level + 1, visitor);
-        visitor(pNode, level);
-        inorder_helper(pNode->getChild(1), level + 1, visitor);
-    }
 public: 
     size_t  size()  const       { return m_size;       }
     bool    empty() const       { return size() == 0;  }
+    Node*   getRoot() const     { return m_pRoot;      }
 
-    void insert(value_type elem, Ref ref) {
+    void insert(T elem, Ref ref) {
         m_pRoot = internal_insert(elem, ref, nullptr, m_pRoot);
     }
 
@@ -121,10 +120,10 @@ public:
     }
 
 protected:
-    Node* CreateNode(Node* pParent, value_type elem, Ref ref) {
+    Node* CreateNode(Node* pParent, T elem, Ref ref) {
         return new Node(pParent, elem, ref);
     }
-    virtual Node* internal_insert(value_type &elem, Ref ref,
+    virtual Node* internal_insert(T &elem, Ref ref,
                                   Node* pParent, Node*& rpOrigin)
     {
         if (!rpOrigin) {
@@ -135,6 +134,14 @@ protected:
         size_t branch = Compfn(elem, rpOrigin->getDataRef()) ? 0 : 1;
         rpOrigin->getChildRef(branch) = internal_insert(elem, ref, rpOrigin, rpOrigin->getChildRef(branch));
         return rpOrigin;
+    }
+    template <typename Function, typename... Args>
+    void internal_inorder(Node* pNode, Function func, Args&&... args) {
+        if (pNode) {
+            internal_inorder(pNode->getChild(0), func, std::forward<Args>(args)...);
+            func(pNode, std::forward<Args>(args)...);
+            internal_inorder(pNode->getChild(1), func, std::forward<Args>(args)...);
+        }
     }
 public:
     CBinaryTree(){} // Empty tree
@@ -167,18 +174,16 @@ public:
     // riterator rend()  { return iterator(this, nullptr); }
 
     // Google: C++ parameter packs cplusplus
-    void inorder(ostream &os) {
-        inorder_helper(m_pRoot, 0, [&os](Node* pNode, size_t) {
-            os << " --> " << pNode->getDataRef();
-        });
+    template <typename Function, typename... Args>
+    void inorder(Function func, Args&&... args){
+        internal_inorder(m_pRoot, func, std::forward<Args>(args)...);
     }
 
-    // variadic templates
-    template <typename Function, typename... Args>
-    void inorder(Function func, Args&&... args) {
-        inorder_helper(m_pRoot, 0, [&](Node* pNode, size_t) {
-            func(pNode->getDataRef(), std::forward<Args>(args)...);
-        });
+    void inorder(){
+        auto print = [](Node* pNode, const string& suffix){ 
+            cout << pNode->getData() << "(" << pNode->getRef() << ")" << suffix;
+        };
+        inorder(print, " ");
     }
 
     // Variadic templates (See foreach.h)
@@ -241,7 +246,6 @@ public:
 template <typename Traits>
 ostream & operator<<(std::ostream &os, CBinaryTree<Traits> &obj){
     os << "CBinaryTree with " << obj.size() << " elements.";
-    obj.inorder(os);
     return os;
 }
 
