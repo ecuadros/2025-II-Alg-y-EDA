@@ -9,7 +9,11 @@
 using namespace std;
 
 template <typename Traits>
+class CBinaryTree;
+
+template <typename Traits>
 class CBinaryTreeNode{
+    friend class CBinaryTree<Traits>;
 public:
   using value_type = typename Traits::T;
   using Node       = CBinaryTreeNode<T>;
@@ -35,7 +39,7 @@ public:
     value_type  getData()                {   return m_data;    }
     value_type &getDataRef()             {   return m_data;    }
  
-protected: // TODO: Add this class as friend of the BinaryTree
+private: // TODO: Add this class as friend of the BinaryTree - done
         // and make these methods private
     void      setpChild(const Node *pChild, size_t pos)  {   m_pChild[pos] = pChild;  }
     Node    * getChild(size_t branch){ return m_pChild[branch];  }
@@ -124,7 +128,7 @@ protected:
         }
 
         size_t branch = Compfn(elem, rpOrigin->getDataRef()) ? 0 : 1;
-        Node *pNode = internal_insert(elem, ref, nullptr, rpOrigin, rpOrigin->getChildRef(branch));
+        Node *pNode = internal_insert(elem, ref, nullptr, rpOrigin->getChildRef(branch));
         return pNode;
     }
 public:
