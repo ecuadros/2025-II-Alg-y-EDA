@@ -106,6 +106,18 @@ protected:
     Node* CreateNode(Node* pParent, value_type elem, Ref ref) {
         return new Node(pParent, elem, ref);
     }
+    
+    // Copia el nodo y sus hijos recursivamente
+    Node* copyTree(Node* pNode, Node* pParent) {
+        if (!pNode) return nullptr;
+        
+        Node* newNode = CreateNode(pParent, pNode->getDataRef(), pNode->m_ref);
+        newNode->getChildRef(0) = copyTree(pNode->getChild(0), newNode);
+        newNode->getChildRef(1) = copyTree(pNode->getChild(1), newNode);
+        
+        return newNode;
+    }
+    
     virtual Node* internal_insert(value_type &elem, Ref ref,
                                   Node* pParent, Node*& rpOrigin)
     {
@@ -121,11 +133,18 @@ protected:
 public:
     CBinaryTree(){} // Empty tree
     
-    // TODO: Copy Constructor. We have duplicate each node
-    CBinaryTree(Binary &other);
+    // Copy Constructor
+    CBinaryTree(const CBinaryTree &other) 
+        : m_pRoot(nullptr), m_size(0), Compfn(other.Compfn)
+    {
+        if (other.m_pRoot) {
+            m_pRoot = copyTree(other.m_pRoot, nullptr);
+            m_size = other.m_size;
+        }
+    }
     
     // Move Constructor
-    CBinaryTree(Binary &&other)
+    CBinaryTree(CBinaryTree &&other)
         : m_pRoot(std::exchange(other.m_pRoot, nullptr)), 
           m_size (std::exchange(other.m_size, 0)), 
           Compfn (std::exchange(other.Compfn, nullptr))
