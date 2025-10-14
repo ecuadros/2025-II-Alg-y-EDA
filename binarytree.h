@@ -7,6 +7,8 @@
 #include <fstream>
 #include <utility>
 #include <ostream>
+#include <type_traits>
+#include <utility> 
 #include "types.h"
 //#include "util.h"
 using namespace std;
@@ -40,9 +42,58 @@ public:
     value_type       &getDataRef()             {   return m_data;    }
     const value_type &getDataRef()        const{   return m_data;    }
 
+    // preorder 
+    template <typename F, typename... Args>
+    void preorder(F&& f, Args&&... args) {
+        preorder_impl(m_pRoot, 0, std::forward<F>(f), std::forward<Args>(args)...);
+    }
+
+    //postorder
+    template <typename F, typename... Args>
+    void postorder(F&& f, Args&&... args) {
+        postorder_impl(m_pRoot, 0, std::forward<F>(f), std::forward<Args>(args)...);
+    }
+
+
+
+
 protected: // TODO Hecho : Add this class as friend of the BinaryTree
         // and make these methods private
-    void      setpChild( Node *pChild, size_t pos)  {   m_pChild[pos] = pChild;  }
+
+    template <typename F, typename... Args>
+    static void call_visit(F&& f, Node* n, size_t level, Args&&... args) {
+        if constexpr (std::is_invocable_v<F, Node*, size_t, Args...>) {
+            std::invoke(std::forward<F>(f), n, level, std::forward<Args>(args)...);
+        } else if constexpr (std::is_invocable_v<F, value_type&, size_t, Args...>) {
+            std::invoke(std::forward<F>(f), n->getDataRef(), level, std::forward<Args>(args)...);
+        } else if constexpr (std::is_invocable_v<F, value_type&, Args...>) {
+            std::invoke(std::forward<F>(f), n->getDataRef(), std::forward<Args>(args)...);
+        } else if constexpr (std::is_invocable_v<F, Node*, Args...>) {
+            std::invoke(std::forward<F>(f), n, std::forward<Args>(args)...);
+        } else {
+            static_assert([]{return false;}(), "Visitor con firma no soportada");
+        }
+    }
+
+    // Implementación recursiva de preorden
+    template <typename F, typename... Args>
+    static void preorder_impl(Node* n, size_t level, F&& f, Args&&... args) {
+        if (!n) return;
+        call_visit(std::forward<F>(f), n, level, std::forward<Args>(args)...);
+        preorder_impl(n->getChild(0), level + 1, std::forward<F>(f), std::forward<Args>(args)...);
+        preorder_impl(n->getChild(1), level + 1, std::forward<F>(f), std::forward<Args>(args)...);
+    }
+
+    // Implementación recursiva de posorden
+    template <typename F, typename... Args>
+    static void postorder_impl(Node* n, size_t level, F&& f, Args&&... args) {
+        if (!n) return;
+        postorder_impl(n->getChild(0), level + 1, std::forward<F>(f), std::forward<Args>(args)...);
+        postorder_impl(n->getChild(1), level + 1, std::forward<F>(f), std::forward<Args>(args)...);
+        call_visit(std::forward<F>(f), n, level, std::forward<Args>(args)...);
+    }
+
+    void      setupChild( Node *pChild, size_t pos)  {   m_pChild[pos] = pChild;  }
     Node    * getChild(size_t branch){ return m_pChild[branch];  }
     Node    *&getChildRef(size_t branch){ return m_pChild[branch];  }
     Ref      getRef()   const{   return m_ref;     }
