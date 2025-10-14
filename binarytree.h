@@ -1,12 +1,13 @@
 #ifndef __BINARY_TREE_H__  
 #define __BINARY_TREE_H__ 
-//#include <utility>
-//#include <algorithm>
+#include <utility>
+#include <algorithm>
 #include <cassert>
 #include <fstream>
 #include "types.h"
 //#include "util.h"
 #include "general_iterator.h"
+#include <vector>
 using namespace std;
 
 template <typename Traits>
@@ -41,6 +42,26 @@ public:
     value_type  getData()                {   return m_data;    }
     value_type &getDataRef()             {   return m_data;    }
     Ref     getRef()                     {   return m_ref;     }
+
+    Node* getpNext() {
+        Node* current = this;
+        if (current->m_pChild[1]) 
+        {
+            current = current->m_pChild[1];
+            while (current->m_pChild[0])
+                current = current->m_pChild[0];
+            return current;
+        }
+
+        Node* parent = current->m_pParent;
+        while (parent && current == parent->m_pChild[1])
+        {
+            current = parent;
+            parent = parent->m_pParent;
+        }
+        return parent;
+    }
+
  
 private: // TODO: Add this class as friend of the BinaryTree
         // and make these methods private
@@ -104,7 +125,7 @@ public:
     bool    empty() const       { return size() == 0;  }
 
     void insert(value_type elem, Ref ref) {
-        m_pRoot = internal_insert(elem, ref, nullptr, m_pRoot);
+        internal_insert(elem, ref, nullptr, m_pRoot);
     }
 
      Node* getExtremeNode(Node* startNode, int direction) const {
