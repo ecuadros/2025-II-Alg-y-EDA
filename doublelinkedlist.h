@@ -4,6 +4,7 @@
 #include "types.h"
 #include <mutex>
 #include "traits.h"
+#include <functional> 
 
 template <typename Traits>
 class DLLNode{
@@ -168,11 +169,12 @@ public:
 
     // TODO: crear foreach generico aplicando una funcion a cada elemento
     template <typename Function, typename... Args>
-    void foreach(Function func, Args const&... args){
-        ::foreach(begin(), end(), func, args...);
-        // auto iter = begin();
-        // for(; iter != end() ; ++iter )
-        //     std::invoke(func, *iter, args...);
+    void foreach(Function &&func, Args&&... args){
+        std::lock_guard<std::mutex> lock(m_mutex); 
+        auto iter = begin();
+        for(; iter != end(); ++iter) {
+            std::invoke(std::forward<Function>(func), *iter, std::forward<Args>(args)...);
+        }
     }
 };
 

@@ -5,6 +5,7 @@
 #include <cassert>
 #include <fstream>
 #include "types.h"
+#include "general_iterator.h"
 //#include "util.h"
 using namespace std;
 
@@ -12,9 +13,11 @@ template <typename Traits>
 class CBinaryTreeNode{
 public:
   using value_type = typename Traits::T;
-  using Node       = CBinaryTreeNode<T>;
+  using Node       = CBinaryTreeNode<Traits>;
 
 protected:
+    friend class CBinaryTree<Traits>;
+
     value_type     m_data;
     Node          *m_pParent = nullptr;
     Ref            m_ref;
@@ -43,31 +46,49 @@ protected: // TODO: Add this class as friend of the BinaryTree
     Node    * getParent() { return m_pParent;   }
 };
 
+//forward iterator
 template <typename Container>
-class binary_tree_iterator : public general_iterator<Container,  class binary_tree_iterator<Container> > // 
-{  
+class binary_tree_forward_iterator : public general_iterator<Container, binary_tree_forward_iterator<Container>> {
 public:
-    using Parent    = class general_iterator<Container, binary_tree_iterator<Container> >;     \
-    using Node      = typename Container::Node;
-    using Container = binary_tree_iterator<Container>;
+    using Parent = general_iterator<Container, binary_tree_forward_iterator<Container>>;
+    using Node = typename Container::Node;
+    using value_type = typename Container::value_type;
 
-  public:
-    binary_tree_iterator(Container *pContainer, Node *pNode) : Parent (pContainer,pNode) {}
-    binary_tree_iterator(Container &other)  : Parent (other) {}
-    binary_tree_iterator(Container &&other) : Parent(other) {} // Move constructor C++11 en adelante
+    binary_tree_forward_iterator(Container* pContainer = nullptr, Node* pNode = nullptr): Parent(pContainer, pNode) {}
+
+    binary_tree_forward_iterator(const binary_tree_forward_iterator&) = default;
+    binary_tree_forward_iterator(binary_tree_forward_iterator&&) = default;
 
 public:
-    // TODO: Revisar el avance de un iterator
-    binary_tree_iterator operator++() {
-        Parent::m_pNode = Parent::m_pNode ? (Node*)Parent::m_pNode->getpNext() : nullptr;
+    binary_tree_forward_iterator& operator=(const binary_tree_forward_iterator&) = default;
+
+    binary_tree_forward_iterator& operator++() {
+        Node* cur = Parent::m_pNode;
+        if (!cur) return *this;
+        if (cur->getChild(1)) {
+            cur = cur->getChild(1);
+            while (cur->getChild(0)) cur = cur->getChild(0);
+            Parent::m_pNode = cur;
+            return *this;
+        }
+        Node* parent = cur->getParent();
+        while (parent && cur == parent->getChild(1)){
+            cur = parent;
+            parent = parent->getParent();
+        }
+        Parent::m_pNode = parent; // may be nullptr -> end()
         return *this;
     }
+
+    value_type& operator*() const { return Parent::m_pNode->getDataRef(); }
+
+    Node* node() const { return Parent::m_pNode; }
 };
 
 template <typename _T>
 struct BinaryTreeAscTraits{
     using  T         = _T;
-    using  Node      = CBinaryTreeNode<T>;
+    using  Node      = CBinaryTreeNode< BinaryTreeAscTraits<_T> >;
     using  CompareFn = less<T>;
 };
 
@@ -75,7 +96,7 @@ template <typename _T>
 struct BinaryTreeDescTraits
 {
     using  T         = _T;
-    using  Node      = CBinaryTreeNode<T>;
+    using  Node      = CBinaryTreeNode< BinaryTreeDescTraits<_T> >;
     using  CompareFn = greater<T>;
 };
 
@@ -87,7 +108,7 @@ public:
     
     using CompareFn     = typename Traits::CompareFn;
     using Container     = CBinaryTree<Traits>;
-    using iterator      = binary_tree_iterator<Container>;
+    using forward_iterator = binary_tree_forward_iterator<Container>;
 
 protected:
     Node    *m_pRoot = nullptr;
@@ -98,7 +119,7 @@ public:
     bool    empty() const       { return size() == 0;  }
 
     void insert(value_type elem, Ref ref) {
-        m_pRoot = internal_insert(elem, ref, nullptr, nullptr, m_pRoot);
+        m_pRoot = internal_insert(elem, ref, nullptr, m_pRoot);
     }
 
      Node* getExtremeNode(Node* startNode, int direction) const {
@@ -144,11 +165,11 @@ public:
     virtual ~CBinaryTree(){  } 
     
     // TODO: begin dede comenzar el el nodo mas a la izquierda (0)
-    iterator begin() { 
+    forward_iterator begin() { 
         if (!m_pRoot) return end();
-        return iterator(this, getExtremeNode(m_pRoot, 0));
+        return forward_iterator(this, getExtremeNode(m_pRoot, 0));
     }
-    iterator end()   { return iterator(this, nullptr); }
+    forward_iterator end()   { return forward_iterator(this, nullptr); }
 
     // TODO: begin debe comenzar el el nodo mas a la derecha (1)
     // riterator rbegin(){ 
