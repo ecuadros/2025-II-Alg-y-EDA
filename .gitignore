@@ -3,3 +3,4 @@ main
 main.dSYM
 *.txt
 generated-docs/
+.idea
