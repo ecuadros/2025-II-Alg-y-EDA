@@ -5,12 +5,17 @@
 #include <cassert>
 #include <fstream>
 #include "types.h"
+#include <utility>
 //#include "util.h"
 #include "general_iterator.h"
 using namespace std;
 
 template <typename Traits>
+class CBinaryTree;
+
+template <typename Traits>
 class CBinaryTreeNode{
+    friend class CBinaryTree<Traits>;
 public:
   using value_type = typename Traits::T;
   using Node       = CBinaryTreeNode<Traits>;
@@ -23,7 +28,7 @@ protected:
 
 public:
     CBinaryTreeNode(Node* pParent, value_type data, Ref ref, Node* p0 = nullptr, Node* p1 = nullptr)
-        : m_pParent(pParent), m_data(data), m_ref(ref)
+        : m_data(data), m_pParent(pParent), m_ref(ref)
     {
         m_pChild[0] = p0;
         m_pChild[1] = p1;
@@ -36,8 +41,7 @@ public:
     value_type  getData()                {   return m_data;    }
     value_type &getDataRef()             {   return m_data;    }
     Ref     getRef()                     {   return m_ref;     }
- 
-protected: // TODO: Add this class as friend of the BinaryTree
+private: // TODO (Done): Add this class as friend of the BinaryTree
         // and make these methods private
     void      setChild(const Node *pChild, size_t pos)  {   m_pChild[pos] = pChild;  }
     Node    * getChild(size_t branch){ return m_pChild[branch];  }
@@ -99,7 +103,7 @@ public:
     bool    empty() const       { return size() == 0;  }
 
     void insert(value_type elem, Ref ref) {
-        m_pRoot = internal_insert(elem, ref, nullptr, m_pRoot);
+        internal_insert(elem, ref, nullptr, m_pRoot);
     }
 
      Node* getExtremeNode(Node* startNode, int direction) const {
@@ -125,16 +129,28 @@ protected:
         }
 
         size_t branch = Compfn(elem, rpOrigin->getDataRef()) ? 0 : 1;
-        Node *pNode = internal_insert(elem, ref, nullptr, rpOrigin, rpOrigin->getChildRef(branch));
+        Node *pNode = internal_insert(elem, ref, rpOrigin, rpOrigin->getChildRef(branch));
+        if (rpOrigin->getChild(branch))
+            rpOrigin->getChild(branch)->m_pParent = rpOrigin;
+
         return pNode;
+    }
+
+    Node* CopySubTree(Node* otherNode, Node* parent) {
+        if (!otherNode)
+            return nullptr;
+        Node* newNode = CreateNode(parent, otherNode->m_data, otherNode->m_ref);
+        newNode->m_pChild[0] = CopySubTree(otherNode->m_pChild[0], newNode);
+        newNode->m_pChild[1] = CopySubTree(otherNode->m_pChild[1], newNode);
+        return newNode;
     }
 public:
     CBinaryTree(){} // Empty tree
     
-    // TODO: Copy Constructor. We have duplicate each node
+    // TODO: (Done)Copy Constructor. We have duplicate each node
     CBinaryTree(CBinaryTree &other);
     
-    // TODO: Done: Move Constructor
+    // TODO: (Done): Move Constructor
     CBinaryTree(CBinaryTree &&other)
         : m_pRoot(std::exchange(other.m_pRoot, nullptr)), 
           m_size (std::exchange(other.m_size, 0)), 
@@ -236,6 +252,17 @@ public:
     // TODO: Leer en el arbol desde un stream asumiendo que esta en preorden
     void Read(istream &is)  { /* TODO */  }
 };
+
+
+template <typename Traits>
+CBinaryTree<Traits>::CBinaryTree(CBinaryTree &other)
+    : m_pRoot(nullptr), m_size(0), Compfn(other.Compfn)
+{
+    if (other.m_pRoot) {
+        m_pRoot = CopySubTree(other.m_pRoot, nullptr);
+        m_size = other.m_size;
+    }
+}
 
 // TODO: este operator << debe seguir estando fuera de la clase
 template <typename Traits>

@@ -4,6 +4,7 @@
 #include "hilos.h"
 #include "linkedlist.h"
 #include "doublelinkedlist.h"
+#include "binarytree.h"
 
 using namespace std;
 
@@ -27,6 +28,7 @@ int main(){
     // DemoVector();
     DemoLinkedList();
     DemoDoubleLinkedList();
+    DemoBinaryTree();
     return 0;
 }
 
