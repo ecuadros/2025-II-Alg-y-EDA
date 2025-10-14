@@ -3,7 +3,10 @@
 //#include <utility>
 //#include <algorithm>
 #include <cassert>
+#include <functional>
 #include <fstream>
+#include <utility>
+#include <ostream>
 #include "types.h"
 //#include "util.h"
 using namespace std;
@@ -12,13 +15,13 @@ template <typename Traits>
 class CBinaryTreeNode{
 public:
   using value_type = typename Traits::T;
-  using Node       = CBinaryTreeNode<T>;
+  using Node       = CBinaryTreeNode<Traits>;
 
 protected:
-    T       m_data;
+    value_type       m_data{};
     Node *  m_pParent = nullptr;
-    Ref     m_ref;
-    vector<Node *> m_pChild = {nullptr, nullptr}; // 2 hijos inicializados en nullptr
+    Ref     m_ref{};
+    vector<Node *> m_pChild = {nullptr, nullptr}; // 2 hijos inicializados en nullptr 
 
 public:
     CBinaryTreeNode(Node* pParent, value_type data, Ref ref, Node* p0 = nullptr, Node* p1 = nullptr)
@@ -33,15 +36,17 @@ public:
     }
 
     // TODO: Keynode 
-    T         getData()                {   return m_data;    }
-    T        &getDataRef()             {   return m_data;    }
- 
-public: // TODO: Add this class as friend of the BinaryTree
+    value_type        getData()           const{   return m_data;    }
+    value_type       &getDataRef()             {   return m_data;    }
+    const value_type &getDataRef()        const{   return m_data;    }
+
+protected: // TODO Hecho : Add this class as friend of the BinaryTree
         // and make these methods private
-    void      setpChild(const Node *pChild, size_t pos)  {   m_pChild[pos] = pChild;  }
+    void      setpChild( Node *pChild, size_t pos)  {   m_pChild[pos] = pChild;  }
     Node    * getChild(size_t branch){ return m_pChild[branch];  }
     Node    *&getChildRef(size_t branch){ return m_pChild[branch];  }
-    Node    * getParent() { return m_pParent;   }
+    Ref      getRef()   const{   return m_ref;     }
+    Node    * getParent()    { return m_pParent;   }
 };
 
 template <typename Container>
@@ -93,12 +98,45 @@ public:
 protected:
     Node    *m_pRoot = nullptr;
     size_t   m_size  = 0;
-    CompareFn Compfn;
+    CompareFn Compfn{};
 public: 
+    CBinaryTree() = default;
+    CBinaryTree(const CBinaryTree&) = delete; //disable copy
+    CBinaryTree& operator=(const CBinaryTree&) = delete;   // disable copy assignment
+
+    // Move Constructor
+    CBinaryTree(CBinaryTree&& other) noexcept
+        : m_pRoot(std::exchange(other.m_pRoot, nullptr))
+        , m_size (std::exchange(other.m_size, 0))
+        , Compfn(std::move(other.Compfn))
+    {}
+
+    // Move assignment
+    CBinaryTree& operator=(CBinaryTree&& other) noexcept {
+        if (this != &other) {
+            clear(); // libera lo actual
+            m_pRoot = std::exchange(other.m_pRoot, nullptr);
+            m_size  = std::exchange(other.m_size, 0);
+            Compfn  = std::move(other.Compfn);
+        }
+        return *this;
+    }
+
+    // Destructor SEGURO
+    virtual ~CBinaryTree() noexcept { clear(); }
+
+    // Limpieza  
+    void clear() noexcept {
+        delete m_pRoot;   // ~CBinaryTreeNode borra recursivamente toda la descendencia
+        m_pRoot = nullptr;
+        m_size  = 0;
+    }
+    
+
     size_t  size()  const       { return m_size;       }
     bool    empty() const       { return size() == 0;  }
     // TODO: insert must receive two paramaters: elem and Ref value
-    void insert(value_type elem, Ref ref) {
+    void insert(value_type& elem, Ref ref) {
         m_pRoot = internal_insert(elem, ref, nullptr, nullptr, m_pRoot);
     }
 
