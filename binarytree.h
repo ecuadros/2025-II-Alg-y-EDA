@@ -140,8 +140,10 @@ public:
           Compfn (std::exchange(other.Compfn, nullptr))
     { }
 
-    // TODO: Recursivo y seguro. Destruir Nodes recursivamente
-    virtual ~CBinaryTree(){  } 
+    // TODO(listo): Recursivo y seguro. Destruir Nodes recursivamente
+    virtual ~CBinaryTree(){
+        clear();
+    } 
     
     // TODO: begin dede comenzar el el nodo mas a la izquierda (0)
     iterator begin() { 
@@ -160,7 +162,7 @@ public:
     // TODO: Generalizar estos recorridos para recibir cualquier funcion
     // con una cantidad flexible de parametros con variadic templates
     // Google: C++ parameter packs cplusplus
-        void inorder  (ostream &os)    {   inorder  (m_pRoot, 0, os);  }
+    void inorder  (ostream &os)    {   inorder  (m_pRoot, 0, os);  }
     // TODO: 
     void inorder(Node  *pNode, size_t level, ostream &os){
         if( pNode ){
@@ -231,6 +233,31 @@ public:
 
     // TODO: Leer en el arbol desde un stream asumiendo que esta en preorden
     void Read(istream &is)  { /* TODO */  }
+
+    void clear(){
+        if (m_pRoot){
+            deleteSubTree(m_pRoot);
+            m_pRoot = nullptr;
+            m_size = 0;
+        }
+    }
+
+private:
+    void deleteSubTree(Node* node){
+        if (!node) return;
+
+        Node* leftChild =node->getChild(0);
+        Node* rightChild = node ->getChild(1);
+
+        node -> getChildRef(0) =nullptr;
+        node -> getChildRef(1) =nullptr;
+
+        deleteSubTree(leftChild);
+        deleteSubTree(rightChild);
+
+        delete node;
+    }
+
 };
 
 // TODO: este operator << debe seguir estando fuera de la clase
