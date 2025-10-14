@@ -4,6 +4,7 @@
 #include "hilos.h"
 #include "linkedlist.h"
 #include "doublelinkedlist.h"
+#include "binarytree.h"
 
 using namespace std;
 
@@ -23,10 +24,11 @@ using namespace std;
 int main(){
     cout << "Hello Alg y EDA-UNI" << endl;
     // DemoThreads();
-    [[maybe_unused]] int x = 5;
+    //[[maybe_unused]] int x = 5;
     // DemoVector();
-    DemoLinkedList();
-    DemoDoubleLinkedList();
+    //DemoLinkedList();
+    //DemoDoubleLinkedList();
+    DemoBinaryTree();
     return 0;
 }
 
