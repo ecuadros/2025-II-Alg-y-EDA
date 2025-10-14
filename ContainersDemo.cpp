@@ -110,11 +110,11 @@ void DemoBinaryTree(){
     std::cout << std::endl;
 
     std::cout << "Imprimiendo con forward iterator" << std::endl;
-    // foreach(bt. begin(), bt. end(), ::Print<T1>);
+    foreach(bt. fbegin(), bt. fend(), ::Print<T1>);
     std::cout << std::endl;
 
     std::cout << "Imprimiendo con backward iterator" << std::endl;
-    foreach(bt.begin(), bt.end(), ::Print<T1>);
+    foreach(bt.rbegin(), bt.rend(), ::Print<T1>);
     std::cout << std::endl;
     
     std::ofstream of("BT.txt");
