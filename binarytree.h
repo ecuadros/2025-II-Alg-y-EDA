@@ -45,6 +45,7 @@ protected: // TODO: Add this class as friend of the BinaryTree
     Node    *&getChildRef(size_t branch){ return m_pChild[branch];  }
     Node    * getParent() { return m_pParent;   }
 
+public:
     Node* getNext() {
         if (m_pChild[1]) {
             Node* p = m_pChild[1];
@@ -101,7 +102,7 @@ public:
 public:
     // TODO: Revisar el avance de un iterator
     iterator& operator++() {
-        this->m_pNode = this->m_pNode ? (Node*)this->m_pNode->getpNext() : nullptr;
+        this->m_pNode = this->m_pNode ? (Node*)this->m_pNode->getNext() : nullptr;
         return *this;
     }
 };

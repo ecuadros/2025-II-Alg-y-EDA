@@ -86,16 +86,15 @@ void DemoDoubleLinkedList(){
 
 void DemoBinaryTree(){
     std::vector< std::pair<T1, Ref> > v1 = {
-       {4, 1}, {2, 2}, {6, 3}, {1, 4}, {3, 5}, {5, 6}, {7, 7}
+       {4, 1}, {2, 2}, {6, 3}, {1, 4}, {3, 5}, {5, 6}, {7, 7}, {8,8}
     };
     CBinaryTree< BinaryTreeAscTraits<T1> > bt;
     for (auto &par : v1)
         bt.insert(par.first, par.second);
     std::cout << bt << std::endl;
-    bt.print(cout);
 /*
     std::cout << "Inorder traversal:" << std::endl;
-    // bt.inorder();
+    //bt.inorder();
     std::cout << std::endl;
 
     std::cout << "Preorder traversal:" << std::endl;
@@ -105,9 +104,9 @@ void DemoBinaryTree(){
     std::cout << "Postorder traversal:" << std::endl;
     // bt.postorder();
     std::cout << std::endl;
-
+*/
     std::cout << "Tree structure:" << std::endl;
-    // bt.print();
+    bt.print(cout);
     std::cout << std::endl;
 
     std::cout << "Imprimiendo con forward iterator" << std::endl;
@@ -115,7 +114,7 @@ void DemoBinaryTree(){
     std::cout << std::endl;
 
     std::cout << "Imprimiendo con backward iterator" << std::endl;
-    // foreach(bt.rbegin(), bt.rend(), ::Print<T1>);
+    foreach(bt.begin(), bt.end(), ::Print<T1>);
     std::cout << std::endl;
     
     std::ofstream of("BT.txt");
