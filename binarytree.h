@@ -39,6 +39,7 @@ public:
     }
 
     value_type  getData()                {   return m_data;    }
+    value_type getParentData()           {   return m_pParent ? m_pParent->m_data : value_type(); }
     value_type &getDataRef()             {   return m_data;    }
     Ref     getRef()                     {   return m_ref;     }
     Node* getpNext() {
@@ -287,7 +288,7 @@ public:
         }
     }
 
-    void postorder  (ostream &os)    {   inorder  (m_pRoot, 0, os);  }
+    void postorder  (ostream &os)    {   postorder  (m_pRoot, 0, os);  }
 
     void postorder(Node  *pNode, size_t level, ostream &os){
         if( pNode ){
@@ -331,6 +332,21 @@ public:
             preorder(pNode->getChild(1), level+1, os);            
         }
     }
+
+    template <typename Function, typename... Args>
+    void print_variadic(Function&& func, Args&&... args) {
+        print_aux(m_pRoot, 0, std::forward<Function>(func), std::forward<Args>(args)...);
+    }
+
+    template <typename Function, typename... Args>
+    void print_aux(Node* pNode, size_t level, Function&& func, Args&&... args) {
+        if (pNode) {
+            print_aux(pNode->getChild(1), level + 1, std::forward<Function>(func), std::forward<Args>(args)...);
+            std::invoke(std::forward<Function>(func), pNode, level, std::forward<Args>(args)...);
+            print_aux(pNode->getChild(0), level + 1, std::forward<Function>(func), std::forward<Args>(args)...);
+        }
+    }
+
 
     void print    (ostream &os)    {   print    (m_pRoot, 0, os);  }
     // TODO: generalize this function to apply any function
