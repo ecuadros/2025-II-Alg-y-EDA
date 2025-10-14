@@ -2,6 +2,10 @@
 #include "binarytree.h"
 #include <vector>
 
+void Patata(CBinaryTreeNode<BinaryTreeAscTraits<int>>* node, const std::string &label){
+	std::cout << label;
+}
+
 void BinaryTreeDemo() {
 
 	std::vector< std::pair<T1, Ref> > v1 = {
@@ -15,8 +19,10 @@ void BinaryTreeDemo() {
 
 	CBinaryTree<BinaryTreeAscTraits<int>> tree2(tree);
 
-	for (auto _ = tree.rbegin(); _ != tree.rend(); ++_){
-		std::cout << *_ << " ";
-	}
+	// for (auto _ = tree.rbegin(); _ != tree.rend(); ++_){
+	// 	std::cout << *_ << " ";
+	// }
+
+	tree.postorder_variadic(Patata, ":) ");
 
 }
