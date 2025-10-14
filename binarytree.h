@@ -85,6 +85,47 @@ public:
     Node* node() const { return Parent::m_pNode; }
 };
 
+
+//backward iterator
+template <typename Container>
+class binary_tree_backward_iterator : public general_iterator<Container, binary_tree_backward_iterator<Container>> {
+public:
+    using value_type = typename Container::value_type;
+    using Node = typename Container::Node;
+    using Parent = general_iterator<Container, binary_tree_backward_iterator<Container>>;
+
+    binary_tree_backward_iterator(Container* pContainer = nullptr, Node* pNode = nullptr)
+        : Parent(pContainer, pNode) {}
+
+    binary_tree_backward_iterator(const binary_tree_backward_iterator&) = default;
+    binary_tree_backward_iterator(binary_tree_backward_iterator&&) = default;
+    binary_tree_backward_iterator& operator=(const binary_tree_backward_iterator&) = default;
+
+    binary_tree_backward_iterator& operator++() {
+        Node* cur = Parent::m_pNode;
+        if (!cur) return *this;
+        if (cur->getChild(0)) {
+            cur = cur->getChild(0);
+            while (cur->getChild(1)) cur = cur->getChild(1);
+            Parent::m_pNode = cur;
+            return *this;
+        }
+        Node* parent = cur->getParent();
+        while (parent && cur == parent->getChild(0)){
+            cur = parent;
+            parent = parent->getParent();
+        }
+        Parent::m_pNode = parent; 
+        return *this;
+    }
+
+    value_type& operator*() const { return Parent::m_pNode->getDataRef(); }
+
+    Node* node() const { return Parent::m_pNode; }
+};
+
+
+
 template <typename _T>
 struct BinaryTreeAscTraits{
     using  T         = _T;
@@ -109,6 +150,7 @@ public:
     using CompareFn     = typename Traits::CompareFn;
     using Container     = CBinaryTree<Traits>;
     using forward_iterator = binary_tree_forward_iterator<Container>;
+    using backward_iterator = binary_tree_backward_iterator<Container>;
 
 protected:
     Node    *m_pRoot = nullptr;
@@ -170,6 +212,12 @@ public:
         return forward_iterator(this, getExtremeNode(m_pRoot, 0));
     }
     forward_iterator end()   { return forward_iterator(this, nullptr); }
+
+    backward_iterator rbegin() {
+        if (!m_pRoot) return rend();
+        return backward_iterator(this, getExtremeNode(m_pRoot, 1));
+    }
+    backward_iterator rend() { return backward_iterator(this, nullptr); }
 
     // TODO: begin debe comenzar el el nodo mas a la derecha (1)
     // riterator rbegin(){ 
