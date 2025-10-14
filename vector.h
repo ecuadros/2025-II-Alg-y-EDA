@@ -122,7 +122,7 @@ CVector<Traits>::CVector(CVector &v)
 template <typename Traits>
 void CVector<Traits>::resize(){
     value_type *pTmp = new value_type[m_max+10];
-    for(auto i=0; i < m_max ; ++i)
+    for(size_t i=0; i < m_max ; ++i)
         pTmp[i] = m_pVect[i];
     delete [] m_pVect;
     m_max += 10;

@@ -1,9 +1,5 @@
 #include <iostream>
-#include "vector.h"
-#include "DemoVector.h"
-#include "hilos.h"
-#include "linkedlist.h"
-#include "doublelinkedlist.h"
+#include "BinaryTreeDemo.cpp"
 
 using namespace std;
 
@@ -25,8 +21,9 @@ int main(){
     // DemoThreads();
     [[maybe_unused]] int x = 5;
     // DemoVector();
-    DemoLinkedList();
-    DemoDoubleLinkedList();
+    // DemoLinkedList();
+    // DemoDoubleLinkedList();
+    DemoBinaryTree();
     return 0;
 }
 
