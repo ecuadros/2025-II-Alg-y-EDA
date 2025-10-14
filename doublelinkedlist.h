@@ -190,14 +190,12 @@ void CDoubleLinkedList<Traits>::Insert(value_type &elem, Ref ref){
 // TODO: Done Agregar el enlace para el Prev()
 template <typename Traits>
 void CDoubleLinkedList<Traits>::InternalInsert(Node *&rParent, value_type &elem, Ref ref){
-    if( !rParent || m_fCompare(elem, rParent->GetDataRef()) ){
-        Node *pNew = rParent = new Node(elem, ref, rParent);
-        if( !pNew->GetNext() ) // Final de la lista
-        {
-            InternalInsertTail(elem, ref);
-            return;
-        }
-        
+    if( !rParent ){
+        InternalInsertTail(elem, ref);
+        return;
+    }
+    if(m_fCompare(elem, rParent->GetDataRef()) ){
+        Node *pNew = rParent = new Node(elem, ref, rParent);        
         // Puente hacia atras
         Node *pNext = pNew->GetNext();
         if( pNext ){ // Hay algo a continuacion
