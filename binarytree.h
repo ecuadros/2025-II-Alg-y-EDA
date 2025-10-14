@@ -269,15 +269,18 @@ public:
         }
     }
 
-    void print    (ostream &os)    {   print    (m_pRoot, 0, os);  }
-    // TODO: generalize this function to apply any function
-    // Google: C++ parameter packs cplusplus
-    void print(Node  *pNode, size_t level, ostream &os){
-        if( pNode ){
-            Node *pParent = pNode->getParent();
-            print(pNode->getChild(1), level+1, os);
-            os << string(" | ") * level << pNode->getDataRef() << "(" << (pParent?to_string(pParent->getData()):"Root") << ")" <<endl;
-            print(pNode->getChild(0), level+1, os);
+    template <typename Function, typename... Args>
+    void print(Function func, Args const&... args) {
+        print(m_pRoot, 0, func, args...);
+    }
+
+    template <typename Function, typename... Args>
+    void print(Node* pNode, size_t level,
+               Function func, Args const&... args) {
+        if (pNode) {
+            print(pNode->getChild(1), level + 1, func, args...);
+            func(pNode, level);
+            print(pNode->getChild(0), level + 1, func, args...);
         }
     }
 
