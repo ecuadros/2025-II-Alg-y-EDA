@@ -109,7 +109,7 @@ public:
     bool    empty() const       { return size() == 0;  }
     // TODO: insert must receive two paramaters: elem and Ref value
     void insert(value_type elem, Ref ref) {
-        m_pRoot = internal_insert(elem, ref, nullptr, nullptr, m_pRoot);
+        m_pRoot = internal_insert(elem, ref, nullptr, m_pRoot);
     }
 
 protected:
@@ -125,8 +125,8 @@ protected:
         }
 
         size_t branch = Compfn(elem, rpOrigin->getDataRef()) ? 0 : 1;
-        Node *pNode = internal_insert(elem, ref, nullptr, rpOrigin, rpOrigin->getChildRef(branch));
-        return pNode;
+        rpOrigin->getChildRef(branch) = internal_insert(elem, ref, rpOrigin, rpOrigin->getChildRef(branch));
+        return rpOrigin;
     }
 public:
     CBinaryTree(){} // Empty tree
@@ -144,28 +144,37 @@ public:
     // TODO: Recursivo y seguro. Destruir Nodes recursivamente
     virtual ~CBinaryTree(){  } 
     
-    // TODO: Generalizar estos recorridos para recibir cualquier funcion
-    // con una cantidad flexible de parametros con variadic templates
-    // Google: C++ parameter packs cplusplus
-        void inorder  (ostream &os)    {   inorder  (m_pRoot, 0, os);  }
-    // TODO: 
-    void inorder(Node  *pNode, size_t level, ostream &os){
-        if( pNode ){
-            //Node *pParent = pNode->getParent();
-            inorder(pNode->getChild(0), level+1, os);
+    // TODO (DONE): Generalized inorder traversal - accepts any function/lambda
+    // Overload for ostream (backward compatibility)
+    void inorder(ostream &os) { inorder(m_pRoot, 0, os); }
+    
+    // Generalized version - accepts any callable (function, lambda, functor)
+    template <typename Function>
+    void inorder(Function func) {
+        inorder(m_pRoot, func);
+    }
+    
+private:
+    // Private helper for ostream version
+    void inorder(Node *pNode, size_t level, ostream &os) {
+        if (pNode) {
+            inorder(pNode->getChild(0), level + 1, os);
             os << " --> " << pNode->getDataRef();
-            inorder(pNode->getChild(1), level+1, os);
+            inorder(pNode->getChild(1), level + 1, os);
+        }
+    }
+    
+    // Private helper for generalized version
+    template <typename Function>
+    void inorder(Node *pNode, Function func) {
+        if (pNode) {
+            inorder(pNode->getChild(0), func);
+            func(pNode->getDataRef());
+            inorder(pNode->getChild(1), func);
         }
     }
 
-    // TODO: Generalize this function by using iterators and apply any function
-    void inorder(Node  *pNode, void (*visit) (value_type& item)){
-        if( pNode ){   
-            inorder(pNode->getChild(0), *visit);
-            (*visit)(pNode->getDataRef());
-            inorder(pNode->getChild(1), *visit);
-        }
-    }
+public:
 
     // Variadic templates (See foreach.h)
     template <typename Function, typename... Args>
@@ -181,26 +190,70 @@ public:
             func(pNode, level); 
         }
     }
-    // TODO: generalize this function to apply any function
-    void postorder(Node  *pNode, size_t level, ostream &os){
+    
+    // TODO (DONE): Generalized postorder traversal - accepts any function/lambda
+    // Overload for ostream (backward compatibility)
+    void postorder(ostream &os) { postorder_ostream(m_pRoot, 0, os); }
+    
+    // Generalized version - accepts any callable (function, lambda, functor)
+    template <typename Function>
+    void postorder(Function func) {
+        postorder_impl(m_pRoot, func);
+    }
+
+private:
+    // Private helper for ostream version
+    void postorder_ostream(Node  *pNode, size_t level, ostream &os){
         if( pNode ){   
-            postorder(pNode->getChild(0), level+1, os);
-            postorder(pNode->getChild(1), level+1, os);
+            postorder_ostream(pNode->getChild(0), level+1, os);
+            postorder_ostream(pNode->getChild(1), level+1, os);
             os << " --> " << pNode->getDataRef();
         }
     }
-
-    // TODO: Generalize this function to apply any function
-    void preorder (ostream &os)    {   preorder (m_pRoot, 0, os);  }
-    // TODO: Generalize this function to apply any function
-    void preorder(Node  *pNode, size_t level, ostream &os){
-        if( pNode ){   
-            os << " --> " << pNode->getDataRef();
-            preorder(pNode->getChild(0), level+1, os);
-            preorder(pNode->getChild(1), level+1, os);            
+    
+    // Private helper for generalized version
+    template <typename Function>
+    void postorder_impl(Node *pNode, Function func) {
+        if (pNode) {
+            postorder_impl(pNode->getChild(0), func);
+            postorder_impl(pNode->getChild(1), func);
+            func(pNode->getDataRef());
         }
     }
 
+public:
+
+    // TODO (DONE): Generalized preorder traversal - accepts any function/lambda
+    // Overload for ostream (backward compatibility)
+    void preorder(ostream &os) { preorder(m_pRoot, 0, os); }
+    
+    // Generalized version - accepts any callable (function, lambda, functor)
+    template <typename Function>
+    void preorder(Function func) {
+        preorder(m_pRoot, func);
+    }
+    
+private:
+    // Private helper for ostream version
+    void preorder(Node *pNode, size_t level, ostream &os) {
+        if (pNode) {
+            os << " --> " << pNode->getDataRef();
+            preorder(pNode->getChild(0), level + 1, os);
+            preorder(pNode->getChild(1), level + 1, os);
+        }
+    }
+    
+    // Private helper for generalized version
+    template <typename Function>
+    void preorder(Node *pNode, Function func) {
+        if (pNode) {
+            func(pNode->getDataRef());
+            preorder(pNode->getChild(0), func);
+            preorder(pNode->getChild(1), func);
+        }
+    }
+
+public:
     void print    (ostream &os)    {   print    (m_pRoot, 0, os);  }
     // TODO: generalize this function to apply any function
     // Google: C++ parameter packs cplusplus
