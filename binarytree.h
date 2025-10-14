@@ -1,5 +1,5 @@
-#ifndef __BINARY_TREE_H__  
-#define __BINARY_TREE_H__ 
+#ifndef __BINARY_TREE_H__
+#define __BINARY_TREE_H__
 //#include <utility>
 //#include <algorithm>
 #include <cassert>
@@ -9,7 +9,12 @@
 using namespace std;
 
 template <typename Traits>
+class CBinaryTree;
+
+template <typename Traits>
 class CBinaryTreeNode{
+    friend class CBinaryTree<Traits>;
+
 public:
   using value_type = typename Traits::T;
   using Node       = CBinaryTreeNode<T>;
@@ -18,7 +23,7 @@ protected:
     value_type     m_data;
     Node          *m_pParent = nullptr;
     Ref            m_ref;
-    vector<Node *> m_pChild  = {nullptr, nullptr}; // 2 hijos inicializados en nullptr
+    vector<Node *> m_pChild  = {nullptr, nullptr};
 
 public:
     CBinaryTreeNode(Node* pParent, value_type data, Ref ref, Node* p0 = nullptr, Node* p1 = nullptr)
@@ -34,9 +39,8 @@ public:
 
     value_type  getData()                {   return m_data;    }
     value_type &getDataRef()             {   return m_data;    }
- 
-protected: // TODO: Add this class as friend of the BinaryTree
-        // and make these methods private
+
+private:
     void      setpChild(const Node *pChild, size_t pos)  {   m_pChild[pos] = pChild;  }
     Node    * getChild(size_t branch){ return m_pChild[branch];  }
     Node    *&getChildRef(size_t branch){ return m_pChild[branch];  }
