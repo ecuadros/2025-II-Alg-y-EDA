@@ -18,6 +18,12 @@ template <typename Traits>
 class CBinaryTree;
 
 template <typename Traits>
+class CAVLNode;
+
+template <typename Traits>
+class CAVLTree;
+
+template <typename Traits>
 class CBinaryTreeNode{
 public:
   using value_type = typename Traits::T;
@@ -85,6 +91,8 @@ public:
     }
 
     friend class CBinaryTree<Traits>;
+    friend class CAVLTree<Traits>;
+    friend class CAVLNode<Traits>;
     template <typename Container> 
     friend class binary_tree_forward_iterator;
 

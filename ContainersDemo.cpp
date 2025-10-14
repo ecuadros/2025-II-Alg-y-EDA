@@ -7,6 +7,7 @@
 //#include "linkedlist.h"
 #include "doublelinkedlist.h"
 #include "binarytree.h"
+#include "avl.h"
 #include "foreach.h"
 #include "types.h"
 #include "util.h"
@@ -123,3 +124,19 @@ void DemoBinaryTree(){
 
     // Next classes: AVL, BTree*/
 }
+
+void DemoAVLTree(){
+    std::vector<std::pair<T1, Ref>> v1 = {
+        {5, 1}, {2, 2}, {9, 3}, {1, 4}, {8, 5}, {10, 6}, {6,6}, {11, 11}
+    };
+    CAVLTree<AVLAscTraits<T1>> avl;
+
+    for (auto &par : v1) {
+        std::cout << "Insertando: " << par.first << std::endl;
+        avl.insert(par.first, par.second);
+    }
+
+    std::cout << avl << std::endl;
+
+    avl.print(cout);
+}   

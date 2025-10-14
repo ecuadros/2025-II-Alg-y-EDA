@@ -3,4 +3,5 @@
 
 void DemoVector();
 void DemoBinaryTree();
+void DemoAVLTree();
 #endif // __DEMO_VECTOR_H__

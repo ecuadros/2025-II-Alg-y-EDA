@@ -27,7 +27,8 @@ int main(){
     // DemoVector();
     //DemoLinkedList();
     //DemoDoubleLinkedList();
-    DemoBinaryTree();
+    //DemoBinaryTree();
+    DemoAVLTree();
     return 0;
 }
 
