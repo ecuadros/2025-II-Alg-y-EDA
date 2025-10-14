@@ -61,9 +61,26 @@ public:
     binary_tree_iterator(Container &&other) : Parent(other) {} // Move constructor C++11 en adelante
 
 public:
-    // TODO: Revisar el avance de un iterator
     binary_tree_iterator operator++() {
-        Parent::m_pNode = Parent::m_pNode ? (Node*)Parent::m_pNode->getpNext() : nullptr;
+        if (!Parent::m_pNode) return *this;
+
+        Node* current = Parent::m_pNode;
+
+        if (current->getChild(1)) {
+            current = current->getChild(1);
+            while (current->getChild(0)) {
+                current = current->getChild(0);
+            }
+            Parent::m_pNode = current;
+        } else {
+            Node* parent = current->getParent();
+            while (parent && current == parent->getChild(1)) {
+                current = parent;
+                parent = parent->getParent();
+            }
+            Parent::m_pNode = parent;
+        }
+
         return *this;
     }
 };
