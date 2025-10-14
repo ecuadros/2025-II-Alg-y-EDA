@@ -174,8 +174,11 @@ public:
           Compfn (std::exchange(other.Compfn, nullptr))
     { }
 
-    // TODO: Recursivo y seguro. Destruir Nodes recursivamente
-    virtual ~CBinaryTree(){  } 
+    virtual ~CBinaryTree(){
+        delete m_pRoot;
+        m_pRoot = nullptr;
+        m_size = 0;
+    } 
     
     // TODO: begin dede comenzar el el nodo mas a la izquierda (0)
     iterator begin() { 
