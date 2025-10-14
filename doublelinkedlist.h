@@ -133,6 +133,7 @@ public:
     void Insert(value_type &elem, Ref ref);
 private:
     void InternalInsert(Node *&rParent, value_type &elem, Ref ref);
+    void InternalInsertTail(Node *&rParent, value_type &elem, Ref ref);
     Node *GetRoot()    {    return m_pRoot;     };
     
     void Destroy() {
@@ -208,6 +209,23 @@ void CDoubleLinkedList<Traits>::InternalInsert(Node *&rParent, value_type &elem,
 }
 
 template <typename Traits>
+void CDoubleLinkedList<Traits>::InternalInsertTail(Node *&rParent, value_type &elem, Ref ref) {
+    // Crear un nuevo nodo
+    Node *pNew = new Node(elem, ref, nullptr); 
+
+    if (!m_pTail) { // lista vacía
+        m_pRoot = pNew; 
+        m_pTail = pNew; 
+    } else { 
+        m_pTail->SetNext(pNew); 
+        pNew->SetPrev(m_pTail); 
+        m_pTail = pNew;         
+    }
+
+    m_nElem++; 
+}
+
+template <typename Traits>
 std::istream &CDoubleLinkedList<Traits>::Read(std::istream &is)
 {
     Destroy();
@@ -237,7 +255,7 @@ CDoubleLinkedList<Traits>::CDoubleLinkedList(CDoubleLinkedList &other){
     Node *node = other.m_pRoot;
 
     while( node ){
-        Insert( node->GetData(), node->GetRef() );
+        InternalInsertTail(m_pRoot, node->GetDataRef(), node->GetRef());
         node = node->GetNext();
     }
 }

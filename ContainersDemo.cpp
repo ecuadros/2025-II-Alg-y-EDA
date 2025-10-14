@@ -6,7 +6,7 @@
 //#include "linkedlist.h"
 #include "doublelinkedlist.h"
 //#include "binarytree.h"
-//#include "foreach.h"
+#include "foreach.h"
 #include "types.h"
 #include "util.h"
 
@@ -34,9 +34,11 @@ void DemoDoubleLinkedList(){
         l1.Insert(par.first, par.second);
     std::cout << l1 << std::endl;
 
-    std::cin >> l1;
-    std::cout << l1 << std::endl;
-/*
+    CDoubleLinkedList< AscendingTrait<T1> > l2 = CDoubleLinkedList< AscendingTrait<T1> >(l1)    ;
+    std::cout << "Lista Copiada: " << l2 << std::endl;
+    //std::cin >> l1;
+    //std::cout << l1 << std::endl;
+
     std::cout << "Imprimiendo con forward iterator" << std::endl;
     foreach(l1. begin(), l1. end(), ::Print<T1>);
     std::cout << std::endl;
@@ -54,7 +56,7 @@ void DemoDoubleLinkedList(){
     std::ofstream of("DLL.txt");
     l1.foreach(::PrintY<T1>, 1, 3, of);
     of.close();
-*/
+
     std::cout << std::endl;
 }
 /*
