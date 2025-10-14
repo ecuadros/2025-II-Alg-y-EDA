@@ -1,6 +1,7 @@
 #ifndef __DOUBLE_LINKEDLIST_H__
 #define __DOUBLE_LINKEDLIST_H__
 #include <iostream>
+#include <mutex>
 #include "types.h"
 #include "traits.h"
 
@@ -118,6 +119,7 @@ private:
     Node   *m_pTail = nullptr;
     size_t m_nElem = 0;
     Func   m_fCompare;
+    std::mutex m_mutex; 
 
 public:
     // Constructor
@@ -136,7 +138,7 @@ private:
     void InternalInsertTail(value_type &elem, Ref ref);
     Node *GetRoot()    {    return m_pRoot;     };
     
-    void Destroy() {
+    /*void Destroy() {
         Destroy(m_pRoot);
         m_pRoot = nullptr;
         m_pTail = nullptr;
@@ -148,6 +150,21 @@ private:
             Destroy(node->GetNext());
             delete node;
         }
+    }*/
+
+    void Destroy() {
+        std::lock_guard<std::mutex> lock(m_mutex); 
+
+        Node *current = m_pRoot; 
+        while (current) {
+            Node *next = current->GetNext();
+            delete current;                 
+            current = next;                 
+        }
+
+        m_pRoot = nullptr;
+        m_pTail = nullptr;
+        m_nElem = 0;
     }
 
 public:
@@ -161,6 +178,8 @@ public:
 public:
     // Persistence
     std::ostream &Write(std::ostream &os) {
+        std::lock_guard<std::mutex> lock(m_mutex);
+
         auto pRoot = this->GetRoot();
         while( pRoot ){
             os << pRoot->GetData() << "(" << pRoot->GetRef() << ")  ";
@@ -184,6 +203,7 @@ public:
 
 template <typename Traits>
 void CDoubleLinkedList<Traits>::Insert(value_type &elem, Ref ref){
+    std::lock_guard<std::mutex> lock(m_mutex); 
     InternalInsert(m_pRoot, elem, ref);
 }
 
@@ -211,6 +231,7 @@ void CDoubleLinkedList<Traits>::InternalInsert(Node *&rParent, value_type &elem,
 
 template <typename Traits>
 void CDoubleLinkedList<Traits>::InternalInsertTail(value_type &elem, Ref ref) {
+    //std::lock_guard<std::mutex> lock(m_mutex);
     // Crear un nuevo nodo
     Node *pNew = new Node(elem, ref, nullptr); 
 
@@ -228,7 +249,8 @@ void CDoubleLinkedList<Traits>::InternalInsertTail(value_type &elem, Ref ref) {
 
 template <typename Traits>
 std::istream &CDoubleLinkedList<Traits>::Read(std::istream &is)
-{
+{   
+    std::lock_guard<std::mutex> lock(m_mutex);
     Destroy();
     value_type val;
     Ref       ref;

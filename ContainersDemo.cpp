@@ -2,6 +2,7 @@
 #include <fstream>
 #include <vector>
 #include <utility> // para std::pair
+#include <thread>
 
 //#include "linkedlist.h"
 #include "doublelinkedlist.h"
@@ -13,15 +14,22 @@
 void opex(int &n){ n++; }
 
 template <typename T>
-void PrintX(T &val, ostream &os){ os << val << " "; }
+void PrintX(const T &val, ostream &os){ os << val << " "; }
 
 template <typename T>
-void PrintY(T &val, T value1, T value2, ostream &os){ 
+void PrintY(T val, T value1, T value2, ostream &os){ 
     val += value1 + value2; 
     os << val << " "; 
 }
 
-
+void threadInsert(CDoubleLinkedList< AscendingTrait<T1> > &list, 
+                  std::vector< std::pair<T1, Ref> > &data) {
+    for (auto &par : data) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(par.first));
+        list.Insert(par.first, par.second);
+    }
+    cout << list << std::endl;
+}
 
 void DemoDoubleLinkedList(){
     std::vector< std::pair<T1, Ref> > v1 = {
@@ -38,6 +46,22 @@ void DemoDoubleLinkedList(){
     std::cout << "Lista Copiada: " << l2 << std::endl;
     //std::cin >> l1;
     //std::cout << l1 << std::endl;
+
+    std::vector<std::pair<T1, Ref>> v2 = {
+        {15, 42}, {88, 19}, {37, 73}, {6, 55}, {29, 11}
+    };
+
+    std::vector<std::pair<T1, Ref>> v3 = {
+        {54, 23}, {91, 67}, {12, 31}, {78, 49}, {33, 8}
+    };
+
+    std::cout << "Iniciando insercion concurrente" << std::endl;
+    std::thread t1(threadInsert, std::ref(l2), std::ref(v2));
+    std::thread t2(threadInsert, std::ref(l2), std::ref(v3));
+
+    t1.join(); t2.join();
+
+
 
     std::cout << "Imprimiendo con forward iterator" << std::endl;
     foreach(l1. begin(), l1. end(), ::Print<T1>);

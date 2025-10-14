@@ -55,6 +55,8 @@
         "stdexcept": "cpp",
         "stop_token": "cpp",
         "cinttypes": "cpp",
-        "typeinfo": "cpp"
+        "typeinfo": "cpp",
+        "condition_variable": "cpp",
+        "mutex": "cpp"
     }
 }
