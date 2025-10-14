@@ -126,6 +126,17 @@ public:
 private:
     void InternalInsert(Node *&rParent, value_type &elem, Ref ref);
     Node *GetRoot()    {    return m_pRoot;     };
+    void Destroy(){
+        Node *current = m_pRoot;
+        while(current){
+            Node *next = current->GetNext();
+            delete current;
+            current = next;
+        }
+        m_pRoot = nullptr;
+        m_pTail = nullptr;
+        m_nElem = 0;
+    }
 
 public:
     forward_iterator begin(){ return forward_iterator(this, m_pRoot); };
@@ -205,8 +216,30 @@ CDoubleLinkedList<Traits>::CDoubleLinkedList(CDoubleLinkedList &&other){
 
 // TODO: Implementar y liberar la memoria de cada Node
 template <typename Traits>
-CDoubleLinkedList<Traits>::~CDoubleLinkedList()
-{
+CDoubleLinkedList<Traits>::~CDoubleLinkedList(){
+    Destroy();    
+}
+
+template <typename Traits>
+std::istream &CDoubleLinkedList<Traits>::Read(std::istream &is){
+    Destroy();
+    value_type val;
+    Ref ref;
+    while(is >> val >> ref) {
+        Insert(val, ref);
+    }
+    return is;
+}
+
+
+template <typename Traits>
+std::istream &operator>>(std::istream &is, CDoubleLinkedList<Traits> &list) {
+    return list.Read(is);
+}
+
+template <typename Traits>
+std::ostream &operator<<(std::ostream &os, CDoubleLinkedList<Traits> &list) {
+    return list.Write(os);
 }
 
 // TODO: Este operador debe quedar fuera de la clase
