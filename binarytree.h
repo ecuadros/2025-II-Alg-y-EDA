@@ -235,6 +235,23 @@ public:
     // TODO: Generalizar estos recorridos para recibir cualquier funcion
     // con una cantidad flexible de parametros con variadic templates
     // Google: C++ parameter packs cplusplus
+
+
+    // Variadic templates (See foreach.h)
+    template <typename Function, typename... Args>
+    void inorder_variadic(Function&& func, Args&&... args) {
+        inorder_aux(m_pRoot, std::forward<Function>(func), std::forward<Args>(args)...);
+    }
+
+    template <typename Function, typename... Args>
+    void inorder_aux(Node* pNode, Function&& func, Args&&... args) {
+        if (pNode) {
+            inorder_aux(pNode->getChild(0), std::forward<Function>(func), std::forward<Args>(args)...);
+            std::invoke(std::forward<Function>(func), pNode, std::forward<Args>(args)...);
+            inorder_aux(pNode->getChild(1), std::forward<Function>(func), std::forward<Args>(args)...);
+        }
+    }
+
     void inorder  (ostream &os)    {   inorder  (m_pRoot, 0, os);  }
     // TODO: 
     void inorder(Node  *pNode, size_t level, ostream &os){
@@ -257,24 +274,50 @@ public:
 
     // Variadic templates (See foreach.h)
     template <typename Function, typename... Args>
-    void postorder(Function func, Args const&... args)
-    {    postorder(m_pRoot, 0, func, args...);}
+    void postorder_variadic(Function&& func, Args&&... args) {
+        postorder_aux(m_pRoot, std::forward<Function>(func), std::forward<Args>(args)...);
+    }
 
-    template <typename Function,typename... Args>
-    void postorder(Node* pNode, size_t level, 
-                   Function func, Args const&... args) {
+    template <typename Function, typename... Args>
+    void postorder_aux(Node* pNode, Function&& func, Args&&... args) {
         if (pNode) {
-            postorder(pNode->getChild(0), level + 1, func, args...);
-            postorder(pNode->getChild(1), level + 1, func, args...);
-            func(pNode, level); 
+            postorder_aux(pNode->getChild(0), std::forward<Function>(func), std::forward<Args>(args)...);
+            postorder_aux(pNode->getChild(1), std::forward<Function>(func), std::forward<Args>(args)...);
+            std::invoke(std::forward<Function>(func), pNode, std::forward<Args>(args)...);
         }
     }
-    // TODO: generalize this function to apply any function
+
+    void postorder  (ostream &os)    {   inorder  (m_pRoot, 0, os);  }
+
     void postorder(Node  *pNode, size_t level, ostream &os){
-        if( pNode ){   
+        if( pNode ){
+            //Node *pParent = pNode->getParent();
             postorder(pNode->getChild(0), level+1, os);
             postorder(pNode->getChild(1), level+1, os);
             os << " --> " << pNode->getDataRef();
+        }
+    }
+    // // TODO: generalize this function to apply any function
+    // void postorder(Node  *pNode, size_t level, ostream &os){
+    //     if( pNode ){   
+    //         postorder(pNode->getChild(0), level+1, os);
+    //         postorder(pNode->getChild(1), level+1, os);
+    //         os << " --> " << pNode->getDataRef();
+    //     }
+    // }
+
+    // Variadic templates (See foreach.h)
+    template <typename Function, typename... Args>
+    void preorder_variadic(Function&& func, Args&&... args) {
+        preorder_aux(m_pRoot, std::forward<Function>(func), std::forward<Args>(args)...);
+    }
+
+    template <typename Function, typename... Args>
+    void preorder_aux(Node* pNode, Function&& func, Args&&... args) {
+        if (pNode) {
+            std::invoke(std::forward<Function>(func), pNode, std::forward<Args>(args)...);
+            preorder_aux(pNode->getChild(0), std::forward<Function>(func), std::forward<Args>(args)...);
+            preorder_aux(pNode->getChild(1), std::forward<Function>(func), std::forward<Args>(args)...);
         }
     }
 
@@ -337,7 +380,7 @@ CBinaryTree<Traits>::~CBinaryTree() {
 	m_size 		= 0;
 }
 
-// TODO: este operator << debe seguir estando fuera de la clase
+// TODO: (Done) este operator << debe seguir estando fuera de la clase
 template <typename Traits>
 ostream & operator<<(std::ostream &os, CBinaryTree<Traits> &obj){
     os << "CBinaryTree with " << obj.size() << " elements.";

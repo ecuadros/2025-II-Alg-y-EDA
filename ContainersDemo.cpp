@@ -120,6 +120,10 @@ void DemoDoubleLinkedList(){
     std::cout << std::endl;
 }
 
+void PrintWithLabel(CBinaryTreeNode<BinaryTreeAscTraits<int>>* node, std::ostream &os, const std::string &label) {
+    os << label << ": " << node->getDataRef()  << "\n";
+}
+
 void DemoBinaryTree(){
     std::cout << "Binary tree: " << std::endl;
     std::vector< std::pair<T1, Ref> > v1 = {
@@ -152,25 +156,37 @@ void DemoBinaryTree(){
     bt.preorder(std::cout);
     std::cout << std::endl;
 
-    // std::cout << "Postorder traversal:" << std::endl;
-    // bt.postorder(std::cout);
-    // std::cout << std::endl;
+    std::cout << "Postorder traversal:" << std::endl;
+    bt.postorder(std::cout);
+    std::cout << std::endl;
 
     std::cout << "Tree structure:" << std::endl;
     bt.print(std::cout);
     std::cout << std::endl;
 
     std::cout << "Imprimiendo con forward iterator" << std::endl;
-    foreach(bt. begin(), bt. end(), ::Print<T1>);
+    foreach(bt.begin(), bt.end(), ::Print<T1>);
     std::cout << std::endl;
 
     std::cout << "Imprimiendo con backward iterator" << std::endl;
     foreach(bt.rbegin(), bt.rend(), ::Print<T1>);
     std::cout << std::endl;
+
+    std::cout << bt <<std::endl;
     
+
+    cout << "POSTORDER variadic:" << endl;
+    bt.postorder_variadic(PrintWithLabel, std::cout, std::string("[Nodo]"));
+
+    cout << "INORDER variadic:" << endl;
+    bt.inorder_variadic(PrintWithLabel, std::cout, std::string("[Nodo]"));
+
+    cout << "PREORDER variadic:" << endl;
+    bt.preorder_variadic(PrintWithLabel, std::cout, std::string("[Nodo]"));
+
     // std::ofstream of("BT.txt");
     // bt.Write(of);
     // of.close();
 
     // Next classes: AVL, BTree
-}
+}   
