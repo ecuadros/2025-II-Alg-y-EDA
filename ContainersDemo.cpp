@@ -3,14 +3,15 @@
 #include <vector>
 #include <utility> // para std::pair
 
-#include "linkedlist.h"
-#include "doublelinkedlist.h"
+//#include "linkedlist.h"
+//#include "doublelinkedlist.h"
 #include "binarytree.h"
 #include "foreach.h"
 #include "types.h"
 #include "util.h"
+using namespace std;
 
-void opex(int &n){ n++; }
+/*void opex(int &n){ n++; }
 
 void DemoLinkedList(){
     std::vector< std::pair<T1, Ref> > v1 = {
@@ -72,32 +73,44 @@ void DemoDoubleLinkedList(){
 
     std::cout << "Imprimiendo con backward iterator" << std::endl;
     foreach(l1.rbegin(), l1.rend(), ::Print<T1>);
-}
+}*/
 
 void DemoBinaryTree(){
-    std::vector< std::pair<T1, Ref> > v1 = {
+    vector< pair<int, long> > v1 = {
         {4, 8}, {2, 5}, {7, 3}, {1, 9}, {5, 2}
     };
-    CBinaryTree< AscendingTrait<T1> > bt;
+    
+    // Usar BinaryTreeAscTraits
+    CBinaryTree< BinaryTreeAscTraits<int> > bt;
     for (auto &par : v1)
         bt.insert(par.first, par.second);
-    std::cout << bt << std::endl;
-
-    std::cout << "Inorder traversal:" << std::endl;
-    // bt.inorder();
-    std::cout << std::endl;
-
-    std::cout << "Preorder traversal:" << std::endl;
-    // bt.preorder();
-    std::cout << std::endl;
-
-    std::cout << "Postorder traversal:" << std::endl;
-    // bt.postorder();
-    std::cout << std::endl;
-
-    std::cout << "Tree structure:" << std::endl;
-    // bt.print();
-    std::cout << std::endl;
+    
+    cout << "Binary Tree created with " << bt.size() << " elements" << endl;
+    
+    cout << "Inorder traversal:" << endl;
+    bt.inorder(cout);
+    cout << endl;
+    
+    cout << "Preorder traversal:" << endl;
+    bt.preorder(cout);
+    cout << endl;
+    
+    cout << "Postorder traversal:" << endl;
+    bt.postorder(cout);
+    cout << endl;
+    
+    cout << "Tree structure:" << endl;
+    bt.print(cout);
+    cout << endl;
+    
+    cout << "Serialized tree (preorder):" << endl;
+    cout << bt << endl;
+    
+    cout << "Using iterators:" << endl;
+    for(auto it = bt.begin(); it != bt.end(); ++it) {
+        cout << *it << " ";
+    }
+    cout << endl;
 
     // std::cout << "Imprimiendo con forward iterator" << std::endl;
     // foreach(bt. begin(), bt. end(), ::Print<T1>);
