@@ -94,6 +94,16 @@ protected:
     Node    *m_pRoot = nullptr;
     size_t   m_size  = 0;
     CompareFn Compfn;
+
+private:
+    void destroy(Node* node) {
+        if (node == nullptr) return;
+        destroy(node->getChild(0));
+        destroy(node->getChild(1));
+        delete node;
+        
+    }
+
 public: 
     size_t  size()  const       { return m_size;       }
     bool    empty() const       { return size() == 0;  }
@@ -132,7 +142,11 @@ public:
     { }
 
     // TODO: Recursivo y seguro. Destruir Nodes recursivamente
-    virtual ~CBinaryTree(){  } 
+    virtual ~CBinaryTree(){
+        destroy(m_pRoot);
+        m_pRoot = nullptr;
+        m_size  = 0;
+    } 
     
     // TODO: Generalizar estos recorridos para recibir cualquier funcion
     // con una cantidad flexible de parametros con variadic templates
