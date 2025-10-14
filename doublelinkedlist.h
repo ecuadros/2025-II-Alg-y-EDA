@@ -2,6 +2,7 @@
 #define __DOUBLE_LINKEDLIST_H__
 #include <iostream>
 #include "types.h"
+#include <mutex>
 #include "traits.h"
 
 template <typename Traits>
@@ -111,6 +112,8 @@ private:
     size_t m_nElem = 0;
     Func   m_fCompare;
 
+    std::mutex m_mutex;
+
 public:
     // Constructor
     CDoubleLinkedList();
@@ -124,8 +127,21 @@ public:
 
     void Insert(value_type &elem, Ref ref);
 private:
-    void InternalInsert(Node *&rParent, value_type &elem, Ref ref);
+    void InternalInsert(Node *&rParent, value_type &elem, Ref ref);    
     Node *GetRoot()    {    return m_pRoot;     };
+    void InsertTail(value_type &elem, Ref ref);
+    void Destroy(){
+        std::lock_guard<std::mutex> lock(m_mutex);
+        Node *current = m_pRoot;
+        while(current){
+            Node *next = current->GetNext();
+            delete current;
+            current = next;
+        }
+        m_pRoot = nullptr;
+        m_pTail = nullptr;
+        m_nElem = 0;
+    }
 
 public:
     forward_iterator begin(){ return forward_iterator(this, m_pRoot); };
@@ -162,6 +178,7 @@ public:
 
 template <typename Traits>
 void CDoubleLinkedList<Traits>::Insert(value_type &elem, Ref ref){
+    std::lock_guard<std::mutex> lock(m_mutex);
     InternalInsert(m_pRoot, elem, ref);
 }
 
@@ -193,20 +210,73 @@ CDoubleLinkedList<Traits>::CDoubleLinkedList(){}
 //      Hacer loop copiando cada elemento
 template <typename Traits>
 CDoubleLinkedList<Traits>::CDoubleLinkedList(CDoubleLinkedList &other){
+    std::lock_guard<std::mutex> lock(other.m_mutex);
+    m_fCompare = other.m_fCompare;
+
+    Node *node = other.m_pRoot;
+    while(node) {
+        InsertTail(node->GetDataRef(), node->GetRef());
+        node = node->GetNext();
+    }
+}
+
+template <typename Traits>
+void CDoubleLinkedList<Traits>::InsertTail(value_type &elem, Ref ref) {
+    std::lock_guard<std::mutex> lock(m_mutex);
+    Node *newNode = new Node(elem, ref, nullptr);
+    
+    if (!m_pTail) {
+        m_pRoot = newNode;
+        m_pTail = newNode;
+    } else {
+        m_pTail->SetNext(newNode);
+        newNode->SetPrev(m_pTail);
+        m_pTail = newNode;
+    }
+    m_nElem++;
 }
 
 // Move Constructor
 template <typename Traits>
 CDoubleLinkedList<Traits>::CDoubleLinkedList(CDoubleLinkedList &&other){
+    std::lock_guard<std::mutex> lock(other.m_mutex);
     m_pRoot    = std::move(other.m_pRoot);
+    m_pTail    = std::move(other.m_pTail);
     m_nElem    = std::move(other.m_nElem);
     m_fCompare = std::move(other.m_fCompare);
+
+    other.m_pRoot = nullptr;
+    other.m_pTail = nullptr;
+    other.m_nElem = 0;
 }
 
 // TODO: Implementar y liberar la memoria de cada Node
 template <typename Traits>
-CDoubleLinkedList<Traits>::~CDoubleLinkedList()
-{
+CDoubleLinkedList<Traits>::~CDoubleLinkedList(){
+    Destroy();    
+}
+
+template <typename Traits>
+std::istream &CDoubleLinkedList<Traits>::Read(std::istream &is){
+    std::lock_guard<std::mutex> lock(m_mutex);
+    Destroy();
+    value_type val;
+    Ref ref;
+    while(is >> val >> ref) {
+        Insert(val, ref);
+    }
+    return is;
+}
+
+
+template <typename Traits>
+std::istream &operator>>(std::istream &is, CDoubleLinkedList<Traits> &list) {
+    return list.Read(is);
+}
+
+template <typename Traits>
+std::ostream &operator<<(std::ostream &os, CDoubleLinkedList<Traits> &list) {
+    return list.Write(os);
 }
 
 // TODO: Este operador debe quedar fuera de la clase
