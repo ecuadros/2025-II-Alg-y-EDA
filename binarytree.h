@@ -61,6 +61,7 @@ protected: // TODO Hecho total : Add this class as friend of the BinaryTree
     Node    * getParent()    { return m_pParent;   }
     Node    * getParent() const{ return m_pParent; }
     template <typename> friend class CBinaryTree;
+    template <typename> friend class CAVLTree;
 
 };
 
