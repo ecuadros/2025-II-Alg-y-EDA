@@ -154,6 +154,7 @@ public:
     using CompareFn     = typename Traits::CompareFn;
     using Container     = CBinaryTree<Traits>;
     using iterator      = binary_tree_iterator<Container>;
+    using riterator    = reverse_iterator<iterator>;
 
     template <typename C> friend class binary_tree_iterator;
 protected:
@@ -239,11 +240,12 @@ public:
     iterator end()   { return iterator(this, nullptr); }
 
     // TODO: begin debe comenzar el el nodo mas a la derecha (1)
-    // riterator rbegin(){ 
-    //     if (!m_pRoot) return rend();
-    //     return iterator(this, getExtremeNode(m_pRoot, 1));
-    //  }
-    // riterator rend()  { return iterator(this, nullptr); }
+    riterator rbegin() {
+      return riterator(end());  // Envuelve end()
+    }
+    riterator rend() {
+      return riterator(begin()); // Envuelve begin()
+    }
 
     // TODO: Generalizar estos recorridos para recibir cualquier funcion
     // con una cantidad flexible de parametros con variadic templates

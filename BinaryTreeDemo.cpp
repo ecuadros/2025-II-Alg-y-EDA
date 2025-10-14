@@ -47,7 +47,7 @@ void testBasicInsertion() {
 }
 
 void testIterators() {
-    cout << "\n========== TEST 2: Iteradores (begin/end) ==========\n";
+    cout << "\n========== TEST 2: Iteradores forward (begin/end) ==========\n";
     CBinaryTree<IntTraits> tree;
 
     tree.insert(50, 1);
@@ -60,7 +60,10 @@ void testIterators() {
     tree.insert(10, 8);
     tree.insert(90, 9);
 
-    cout << "Recorrido con iterador (++): ";
+    cout << "Árbol: 50, 30, 70, 20, 40, 60, 80, 10, 90\n";
+    cout << "Esperado (in-orden ascendente): 10 20 30 40 50 60 70 80 90\n\n";
+
+    cout << "Recorrido con iterador forward (++): ";
     for (auto it = tree.begin(); it != tree.end(); ++it) {
         cout << *it << " ";
     }
@@ -85,13 +88,54 @@ void testIteratorDecrement() {
     tree.insert(60, 6);
     tree.insert(80, 7);
 
-    cout << "Recorrido de fin a inicio: ";
+    cout << "Recorrido de fin a inicio usando --: ";
     auto it = tree.end();
     while (it != tree.begin()) {
         --it;
         cout << *it << " ";
     }
     cout << endl;
+}
+
+void testReverseIterator() {
+    cout << "\n========== TEST 3.5: Reverse Iterator (rbegin/rend) ==========\n";
+    CBinaryTree<IntTraits> tree;
+
+    tree.insert(50, 1);
+    tree.insert(30, 2);
+    tree.insert(70, 3);
+    tree.insert(20, 4);
+    tree.insert(40, 5);
+    tree.insert(60, 6);
+    tree.insert(80, 7);
+    tree.insert(10, 8);
+    tree.insert(90, 9);
+
+    cout << "Árbol: 50, 30, 70, 20, 40, 60, 80, 10, 90\n";
+    cout << "Esperado (in-orden descendente): 90 80 70 60 50 40 30 20 10\n\n";
+
+    cout << "Recorrido con reverse iterator (rbegin -> rend): ";
+    for (auto it = tree.rbegin(); it != tree.rend(); ++it) {
+        cout << *it << " ";
+    }
+    cout << endl;
+
+    cout << "\nComparación:\n";
+    cout << "  Forward  (begin  -> end ): ";
+    for (auto it = tree.begin(); it != tree.end(); ++it) {
+        cout << *it << " ";
+    }
+    cout << endl;
+
+    cout << "  Reverse  (rbegin -> rend): ";
+    for (auto it = tree.rbegin(); it != tree.rend(); ++it) {
+        cout << *it << " ";
+    }
+    cout << endl;
+
+    cout << "\nVerificando que rbegin apunta al mayor elemento:\n";
+    cout << "  *tree.begin()  = " << *tree.begin() << " (debería ser 10)\n";
+    cout << "  *tree.rbegin() = " << *tree.rbegin() << " (debería ser 90)\n";
 }
 
 void testCopyConstructor() {
@@ -313,6 +357,7 @@ void DemoBinaryTree() {
         testBasicInsertion();
         testIterators();
         testIteratorDecrement();
+        testReverseIterator();
         testCopyConstructor();
         testCopyAssignment();
         testMoveConstructor();
@@ -333,6 +378,7 @@ void DemoBinaryTree() {
         cout << "  ✓ Destructor recursivo\n";
         cout << "  ✓ Método clear()\n";
         cout << "  ✓ Iteradores begin() y end()\n";
+        cout << "  ✓ Reverse iterators rbegin() y rend()\n";
         cout << "  ✓ Operadores ++ y -- del iterador\n";
         cout << "  ✓ getExtremeNode()\n";
         cout << "  ✓ Métodos como amigos (acceso privado)\n";
