@@ -283,8 +283,19 @@ public:
         });
     }
 
-    // TODO: Leer en el arbol desde un stream asumiendo que esta en preorden
-    void Read(istream &is)  { /* TODO */  }
+    void Read(istream &is) {
+        delete m_pRoot;
+        m_pRoot = nullptr;
+
+        size_t count;
+        is >> count;
+
+        for (size_t i = 0; i < count && is; ++i) {
+            value_type value;
+            is >> value;
+            insert(value, Ref());
+        }
+    }
 };
 
 // TODO: este operator << debe seguir estando fuera de la clase
