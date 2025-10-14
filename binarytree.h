@@ -4,15 +4,22 @@
 //#include <algorithm>
 #include <cassert>
 #include <fstream>
+#include <utility> 
 #include "types.h"
+#include "general_iterator.h"
 //#include "util.h"
 using namespace std;
+
+template <typename Traits>
+class CBinaryTree;
 
 template <typename Traits>
 class CBinaryTreeNode{
 public:
   using value_type = typename Traits::T;
-  using Node       = CBinaryTreeNode<T>;
+  using Node       = CBinaryTreeNode<Traits>;
+
+  template <typename C> friend class binary_tree_iterator;
 
 protected:
     value_type     m_data;
@@ -27,17 +34,14 @@ public:
         m_pChild[0] = p0;
         m_pChild[1] = p1;
     }
-    ~CBinaryTreeNode(){
-        delete m_pChild[0]; m_pChild[0] = nullptr;
-        delete m_pChild[1]; m_pChild[1] = nullptr;
-    }
+    ~CBinaryTreeNode(){    }
 
     value_type  getData()                {   return m_data;    }
     value_type &getDataRef()             {   return m_data;    }
  
 protected: // TODO: Add this class as friend of the BinaryTree
         // and make these methods private
-    void      setpChild(const Node *pChild, size_t pos)  {   m_pChild[pos] = pChild;  }
+    void      setChild(const Node *pChild, size_t pos)  {   m_pChild[pos] = pChild;  }
     Node    * getChild(size_t branch){ return m_pChild[branch];  }
     Node    *&getChildRef(size_t branch){ return m_pChild[branch];  }
     Node    * getParent() { return m_pParent;   }
@@ -49,7 +53,7 @@ class binary_tree_iterator : public general_iterator<Container,  class binary_tr
 public:
     using Parent    = class general_iterator<Container, binary_tree_iterator<Container> >;     \
     using Node      = typename Container::Node;
-    using Container = binary_tree_iterator<Container>;
+
 
   public:
     binary_tree_iterator(Container *pContainer, Node *pNode) : Parent (pContainer,pNode) {}
@@ -57,11 +61,71 @@ public:
     binary_tree_iterator(Container &&other) : Parent(other) {} // Move constructor C++11 en adelante
 
 public:
-    // TODO: Revisar el avance de un iterator
-    binary_tree_iterator operator++() {
-        Parent::m_pNode = Parent::m_pNode ? (Node*)Parent::m_pNode->getpNext() : nullptr;
-        return *this;
-    }
+    // TODO(listo): Revisar el avance de un iterator
+    binary_tree_iterator& operator++() {
+          if (!Parent::m_pNode) return *this;
+
+          if (Parent::m_pNode->getChild(1)) {
+              Parent::m_pNode = Parent::m_pContainer->getExtremeNode(
+                  Parent::m_pNode->getChild(1), 0
+              );
+          }
+          else {
+              Node* current = Parent::m_pNode;
+              Node* parent = current->getParent();
+
+              while (parent && current == parent->getChild(1)) {
+                  current = parent;
+                  parent = parent->getParent();
+              }
+
+              Parent::m_pNode = parent;
+          }
+
+          return *this;
+      }
+
+      binary_tree_iterator operator++(int) {
+          binary_tree_iterator temp(*this);
+          ++(*this);
+          return temp;
+      }
+
+      binary_tree_iterator& operator--() {
+          if (!Parent::m_pNode) {
+              if (Parent::m_pContainer && Parent::m_pContainer->m_pRoot) {
+                  Parent::m_pNode = Parent::m_pContainer->getExtremeNode(
+                      Parent::m_pContainer->m_pRoot, 1
+                  );
+              }
+              return *this;
+          }
+
+          if (Parent::m_pNode->getChild(0)) {
+              Parent::m_pNode = Parent::m_pContainer->getExtremeNode(
+                  Parent::m_pNode->getChild(0), 1
+              );
+          }
+          else {
+              Node* current = Parent::m_pNode;
+              Node* parent = current->getParent();
+
+              while (parent && current == parent->getChild(0)) {
+                  current = parent;
+                  parent = parent->getParent();
+              }
+
+              Parent::m_pNode = parent;
+          }
+
+          return *this;
+      }
+
+      binary_tree_iterator operator--(int) {
+          binary_tree_iterator temp(*this);
+          --(*this);
+          return temp;
+      }
 };
 
 template <typename _T>
@@ -89,6 +153,7 @@ public:
     using Container     = CBinaryTree<Traits>;
     using iterator      = binary_tree_iterator<Container>;
 
+    template <typename C> friend class binary_tree_iterator;
 protected:
     Node    *m_pRoot = nullptr;
     size_t   m_size  = 0;
@@ -115,8 +180,7 @@ protected:
     Node* CreateNode(Node* pParent, value_type elem, Ref ref) {
         return new Node(pParent, elem, ref);
     }
-    virtual Node* internal_insert(value_type &elem, Ref ref,
-                                  Node* pParent, Node*& rpOrigin)
+    virtual Node* internal_insert(value_type &elem, Ref ref,Node* pParent, Node*& rpOrigin)
     {
         if (!rpOrigin) {
             ++m_size;
@@ -124,7 +188,7 @@ protected:
         }
 
         size_t branch = Compfn(elem, rpOrigin->getDataRef()) ? 0 : 1;
-        Node *pNode = internal_insert(elem, ref, nullptr, rpOrigin, rpOrigin->getChildRef(branch));
+        Node *pNode = internal_insert(elem, ref, rpOrigin, rpOrigin->getChildRef(branch));
         return pNode;
     }
 public:
@@ -154,7 +218,7 @@ public:
     }
     
     // TODO: Done: Move Constructor
-    CBinaryTree(Binary &&other)
+    CBinaryTree(CBinaryTree &&other)
         : m_pRoot(std::exchange(other.m_pRoot, nullptr)), 
           m_size (std::exchange(other.m_size, 0)), 
           Compfn (std::exchange(other.Compfn, nullptr))
@@ -243,7 +307,10 @@ public:
         if( pNode ){
             Node *pParent = pNode->getParent();
             print(pNode->getChild(1), level+1, os);
-            os << string(" | ") * level << pNode->getDataRef() << "(" << (pParent?to_string(pParent->getData()):"Root") << ")" <<endl;
+            for(size_t i = 0; i < level; ++i){
+				os << string(" | ");
+			}
+            os << pNode->getDataRef() << "(" << (pParent?to_string(pParent->getData()):"Root") << ")" <<endl;
             print(pNode->getChild(0), level+1, os);
         }
     }
