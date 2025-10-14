@@ -146,12 +146,21 @@ public:
     CBinaryTree(const CBinaryTree& other) : m_size(other.m_size), Compfn(other.Compfn) {
         m_pRoot = copyTree(other.m_pRoot, nullptr);
     }
-    
+    CBinaryTree& operator=(const CBinaryTree& other) {
+        if(this != &other) {
+            destroy(m_pRoot);
+            m_pRoot = nullptr;
+            m_pRoot = copyTree(other.m_pRoot, nullptr);
+            m_size = other.m_size;
+            Compfn = other.Compfn;
+        }
+        return *this;
+    }
     // Move Constructor
-    CBinaryTree(Binary &&other)
+    CBinaryTree(CBinaryTree &&other)
         : m_pRoot(std::exchange(other.m_pRoot, nullptr)), 
           m_size (std::exchange(other.m_size, 0)), 
-          Compfn (std::exchange(other.Compfn, nullptr))
+          Compfn (std::move(other.Compfn))
     { }
 
     // TODO: Recursivo y seguro. Destruir Nodes recursivamente
