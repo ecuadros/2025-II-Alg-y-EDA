@@ -32,7 +32,7 @@ void sumarYMostrar(int n, int incremento) {
 
 
 void DemoLinkedList(){
-    /*std::vector< std::pair<T1, Ref> > v1 = {
+    std::vector< std::pair<T1, Ref> > v1 = {
         {4, 8}, {2, 5}, {7, 3}, {1, 9}, {5, 2}
     };
     CLinkedList< AscendingTrait<T1> > l1;
@@ -50,7 +50,7 @@ void DemoLinkedList(){
     }
     std::cout << l2 << std::endl;
 
-    std::cout << "Ahora utilizando foreach #1..." << std::endl;
+    /*std::cout << "Ahora utilizando foreach #1..." << std::endl;
     foreach(l1, ::opex);
     std::cout << "Imprimiendo: l1 (debe haber aumentado en 1) ..." << std::endl;
     foreach(l1, ::Print<T1>);

@@ -133,11 +133,24 @@ protected:
         Node *pNode = internal_insert(elem, ref, nullptr, rpOrigin->getChildRef(branch));
         return pNode;
     }
+
+    Node* CopyNode(Node* node, Node* parent) {
+        if (!node) return nullptr;
+        Node* newNode = CreateNode(parent, node->m_data, node->m_ref);
+        newNode->m_pChild[0] = CopyNode(node->m_pChild[0], newNode);
+        newNode->m_pChild[1] = CopyNode(node->m_pChild[1], newNode);
+        return newNode;
+    }
+
 public:
     CBinaryTree(){} // Empty tree
     
     // TODO: Copy Constructor. We have duplicate each node
-    CBinaryTree(CBinaryTree &other);
+    CBinaryTree(CBinaryTree &other){
+        m_pRoot = CopyNode(other.m_pRoot, nullptr);
+        m_size  = other.m_size;
+        Compfn  = other.Compfn;
+    }
     
     // TODO: Done: Move Constructor
     CBinaryTree(CBinaryTree &&other)
