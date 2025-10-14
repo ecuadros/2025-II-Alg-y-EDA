@@ -34,8 +34,8 @@ public:
         m_pChild[1] = p1;
     }
     ~CBinaryTreeNode(){
-        delete m_pChild[0]; m_pChild[0] = nullptr;
-        delete m_pChild[1]; m_pChild[1] = nullptr;
+        m_pChild[0] = nullptr;
+        m_pChild[1] = nullptr;
     }
 
     value_type  getData()                {   return m_data;    }
@@ -157,8 +157,9 @@ public:
           Compfn (std::exchange(other.Compfn, nullptr))
     { }
 
-    // TODO: Recursivo y seguro. Destruir Nodes recursivamente
-    virtual ~CBinaryTree(){  } 
+    // TODO (Done): Recursivo y seguro. Destruir Nodes recursivamente
+	void Destroy(Node* pNode);
+    virtual ~CBinaryTree();
     
     // TODO: begin dede comenzar el el nodo mas a la izquierda (0)
     iterator begin() { 
@@ -262,6 +263,21 @@ CBinaryTree<Traits>::CBinaryTree(CBinaryTree &other)
         m_pRoot = CopySubTree(other.m_pRoot, nullptr);
         m_size = other.m_size;
     }
+}
+
+template <typename Traits>
+void CBinaryTree<Traits>::Destroy(Node* pNode) {
+	if (!pNode) return;
+	Destroy(pNode->m_pChild[0]);
+	Destroy(pNode->m_pChild[1]);
+	delete pNode;
+}
+
+template <typename Traits>
+CBinaryTree<Traits>::~CBinaryTree() {
+	Destroy(m_pRoot);
+	m_pRoot 	= nullptr;
+	m_size 		= 0;
 }
 
 // TODO: este operator << debe seguir estando fuera de la clase
