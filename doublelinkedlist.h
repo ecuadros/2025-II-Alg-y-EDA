@@ -124,8 +124,9 @@ public:
 
     void Insert(value_type &elem, Ref ref);
 private:
-    void InternalInsert(Node *&rParent, value_type &elem, Ref ref);
+    void InternalInsert(Node *&rParent, value_type &elem, Ref ref);    
     Node *GetRoot()    {    return m_pRoot;     };
+    void InsertTail(value_type &elem, Ref ref);
 
 public:
     forward_iterator begin(){ return forward_iterator(this, m_pRoot); };
@@ -162,6 +163,7 @@ public:
 
 template <typename Traits>
 void CDoubleLinkedList<Traits>::Insert(value_type &elem, Ref ref){
+    std::lock_guard<std::mutex> lock(m_mutex);
     InternalInsert(m_pRoot, elem, ref);
 }
 
@@ -193,6 +195,28 @@ CDoubleLinkedList<Traits>::CDoubleLinkedList(){}
 //      Hacer loop copiando cada elemento
 template <typename Traits>
 CDoubleLinkedList<Traits>::CDoubleLinkedList(CDoubleLinkedList &other){
+    m_fCompare = other.m_fCompare;
+
+    Node *node = other.m_pRoot;
+    while(node) {
+        InsertTail(node->GetDataRef(), node->GetRef());
+        node = node->GetNext();
+    }
+}
+
+template <typename Traits>
+void CDoubleLinkedList<Traits>::InsertTail(value_type &elem, Ref ref) {
+    Node *newNode = new Node(elem, ref, nullptr);
+    
+    if (!m_pTail) {
+        m_pRoot = newNode;
+        m_pTail = newNode;
+    } else {
+        m_pTail->SetNext(newNode);
+        newNode->SetPrev(m_pTail);
+        m_pTail = newNode;
+    }
+    m_nElem++;
 }
 
 // Move Constructor
