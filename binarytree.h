@@ -223,10 +223,8 @@ public:
 		if (!m_pRoot) return end();
 		return iterator(this, getExtremeNode(m_pRoot, 0));
 	}
-
 	iterator end()   { return iterator(this, nullptr); }
 
-	// TODO: begin debe comenzar el el nodo mas a la derecha (1)
 	riterator rbegin(){ 
 		if (!m_pRoot) return rend();
 		return riterator(this, getExtremeNode(m_pRoot, 1));
