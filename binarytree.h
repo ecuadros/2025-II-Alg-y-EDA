@@ -8,6 +8,7 @@
 #include <vector>
 #include "general_iterator.h"
 //#include "util.h"
+#include "treeprinter.h"
 using namespace std;
 
 template <typename Traits>
@@ -34,16 +35,16 @@ public:
         delete m_pChild[1]; m_pChild[1] = nullptr;
     }
 
-    T getData()                {   return m_data;    }
-    T &getDataRef()             {   return m_data;    }
-    auto        getRef()     const       {   return m_ref;     }
-    void        setRef(Ref ref)          {   m_ref = ref;      }
-    const Node * getpParent()     const  {   return m_pParent; }
-    const Node **getpChildren()   const  {   return m_pChild.data(); }
+    T getData()                    { return m_data;    }
+    T &getDataRef()                { return m_data;    }
+    auto        getRef()     const { return m_ref;     }
+    void        setRef(Ref ref)    { m_ref = ref;      }
+    Node *getpParent()     const  { return m_pParent; }
+    Node* const* getpChildren()   const  { return m_pChild.data(); }
 
 // protected: // TODO: Add this class as friend of the BinaryTree
         // and make these methods private
-    void      setpChild(const Node *pChild, size_t pos)  {   m_pChild[pos] = pChild;  }
+    void      setpChild(const Node *pChild, size_t pos)  { m_pChild[pos] = pChild;  }
     Node    * getChild(size_t branch){ return m_pChild[branch];  }
     Node    *&getChildRef(size_t branch){ return m_pChild[branch];  }
     Node    * getParent() { return m_pParent;   }
@@ -233,6 +234,9 @@ public:
             os << pNode->getDataRef() << "(" << (pParent?to_string(pParent->getData()):"Root") << ")" <<endl;
             print(pNode->getChild(0), level+1, os);
         }
+    }
+    void print(){
+        cout << getTreeDisplay(m_pRoot) << endl;
     }
 
     // TODO: Tip: recorrer el arbol en preorden
