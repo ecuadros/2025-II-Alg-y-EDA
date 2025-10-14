@@ -58,6 +58,25 @@ public:
         }
         return parent;
     }
+
+    Node* getpPrev() {
+        Node* current = this;
+
+        if (current->m_pChild[0]) {
+            current = current->m_pChild[0];
+            while (current->m_pChild[1])
+                current = current->m_pChild[1];
+            return current;
+        }
+
+        Node* parent = current->m_pParent;
+        while (parent && current == parent->m_pChild[0]) {
+            current = parent;
+            parent = parent->m_pParent;
+        }
+        return parent;
+    }
+
 private: // TODO (Done): Add this class as friend of the BinaryTree
         // and make these methods private
     void      setChild(const Node *pChild, size_t pos)  {   m_pChild[pos] = pChild;  }
@@ -86,6 +105,26 @@ public:
     }
 };
 
+template <typename Container>
+class rbinary_tree_iterator : public general_iterator<Container,  class rbinary_tree_iterator<Container> > // 
+{  
+public:
+    using Parent    = class general_iterator<Container, rbinary_tree_iterator<Container> >;     \
+    using Node      = typename Container::Node;
+
+  public:
+    rbinary_tree_iterator(Container *pContainer, Node *pNode) : Parent (pContainer,pNode) {}
+    rbinary_tree_iterator(Container &other)  : Parent (other) {}
+    rbinary_tree_iterator(Container &&other) : Parent(other) {} // Move constructor C++11 en adelante
+
+public:
+    // TODO (Done): Revisar el avance de un iterator
+    rbinary_tree_iterator operator++() {
+        Parent::m_pNode = Parent::m_pNode ? (Node*)Parent::m_pNode->getpPrev() : nullptr;
+        return *this;
+    }
+};
+
 template <typename _T>
 struct BinaryTreeAscTraits{
     using  T         = _T;
@@ -110,6 +149,7 @@ public:
     using CompareFn     = typename Traits::CompareFn;
     using Container     = CBinaryTree<Traits>;
     using iterator      = binary_tree_iterator<Container>;
+    using riterator      = rbinary_tree_iterator<Container>;
 
 protected:
     Node    *m_pRoot = nullptr;
@@ -186,11 +226,11 @@ public:
     iterator end()   { return iterator(this, nullptr); }
 
     // TODO: begin debe comenzar el el nodo mas a la derecha (1)
-    // riterator rbegin(){ 
-    //     if (!m_pRoot) return rend();
-    //     return iterator(this, getExtremeNode(m_pRoot, 1));
-    //  }
-    // riterator rend()  { return iterator(this, nullptr); }
+    riterator rbegin(){ 
+        if (!m_pRoot) return rend();
+        return riterator(this, getExtremeNode(m_pRoot, 1));
+     }
+    riterator rend()  { return riterator(this, nullptr); }
 
     // TODO: Generalizar estos recorridos para recibir cualquier funcion
     // con una cantidad flexible de parametros con variadic templates
