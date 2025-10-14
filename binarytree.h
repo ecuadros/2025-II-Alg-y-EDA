@@ -130,8 +130,28 @@ protected:
 public:
     CBinaryTree(){} // Empty tree
     
-    // TODO: Copy Constructor. We have duplicate each node
-    CBinaryTree(Binary &other);
+    // TODO(listo): Copy Constructor. We have duplicate each node
+    CBinaryTree(const CBinaryTree &other)
+        : m_pRoot(nullptr), m_size(0), Compfn(other.Compfn){
+            if(other.m_pRoot){
+                m_pRoot = copySubtree(other.m_pRoot,nullptr);
+                m_size=other.m_size;
+            }
+        }
+    // Copy Assignment Operator
+    CBinaryTree& operator=(const CBinaryTree &other){
+        if(this != &other){
+            clear();
+
+            if(other.m_pRoot){
+                m_pRoot=copySubtree(other.m_pRoot,nullptr);
+                m_size=other.m_size;
+            }
+
+            Compfn=other.Compfn;
+        }
+        return *this;
+    }
     
     // TODO: Done: Move Constructor
     CBinaryTree(Binary &&other)
@@ -256,6 +276,18 @@ private:
         deleteSubTree(rightChild);
 
         delete node;
+    }
+
+    Node* copySubtree(Node* sourceNode,Node* newParent){
+
+        if(!sourceNode) return nullptr;
+
+        Node* newNode = CreateNode(newParent,sourceNode->getData(),sourceNode->m_ref);
+
+        newNode->getChildRef(0) = copySubtree(sourceNode->getChild(0), newNode);
+        newNode->getChildRef(1) = copySubtree(sourceNode->getChild(1), newNode);
+
+        return newNode;
     }
 
 };
