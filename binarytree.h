@@ -41,6 +41,23 @@ public:
     value_type  getData()                {   return m_data;    }
     value_type &getDataRef()             {   return m_data;    }
     Ref     getRef()                     {   return m_ref;     }
+    Node* getpNext() {
+        Node* current = this;
+
+        if (current->m_pChild[1]) {
+            current = current->m_pChild[1];
+            while (current->m_pChild[0])
+                current = current->m_pChild[0];
+            return current;
+        }
+
+        Node* parent = current->m_pParent;
+        while (parent && current == parent->m_pChild[1]) {
+            current = parent;
+            parent = parent->m_pParent;
+        }
+        return parent;
+    }
 private: // TODO (Done): Add this class as friend of the BinaryTree
         // and make these methods private
     void      setChild(const Node *pChild, size_t pos)  {   m_pChild[pos] = pChild;  }
@@ -62,7 +79,7 @@ public:
     binary_tree_iterator(Container &&other) : Parent(other) {} // Move constructor C++11 en adelante
 
 public:
-    // TODO: Revisar el avance de un iterator
+    // TODO (Done): Revisar el avance de un iterator
     binary_tree_iterator operator++() {
         Parent::m_pNode = Parent::m_pNode ? (Node*)Parent::m_pNode->getpNext() : nullptr;
         return *this;
@@ -161,7 +178,7 @@ public:
 	void Destroy(Node* pNode);
     virtual ~CBinaryTree();
     
-    // TODO: begin dede comenzar el el nodo mas a la izquierda (0)
+    // TODO: (Done): begin dede comenzar el el nodo mas a la izquierda (0)
     iterator begin() { 
         if (!m_pRoot) return end();
         return iterator(this, getExtremeNode(m_pRoot, 0));

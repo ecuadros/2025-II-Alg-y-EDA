@@ -135,25 +135,34 @@ void DemoBinaryTree(){
     bt2.preorder(std::cout);
     std::cout << std::endl;
 
-    // std::cout << "Inorder traversal:" << std::endl;
-    // // bt.inorder();
-    // std::cout << std::endl;
 
-    // std::cout << "Preorder traversal:" << std::endl;
-    // // bt.preorder();
-    // std::cout << std::endl;
+    CBinaryTree<BinaryTreeAscTraits<int>> tree;
+
+    std::cout << std::endl;
+    for (auto it = bt.begin(); it != bt.end(); ++it) {
+        cout << *it << " ";
+    }
+    std::cout << std::endl;
+
+    std::cout << "Inorder traversal:" << std::endl;
+    bt.inorder(std::cout);
+    std::cout << std::endl;
+
+    std::cout << "Preorder traversal:" << std::endl;
+    bt.preorder(std::cout);
+    std::cout << std::endl;
 
     // std::cout << "Postorder traversal:" << std::endl;
-    // // bt.postorder();
+    // bt.postorder(std::cout);
     // std::cout << std::endl;
 
-    // std::cout << "Tree structure:" << std::endl;
-    // // bt.print();
-    // std::cout << std::endl;
+    std::cout << "Tree structure:" << std::endl;
+    bt.print(std::cout);
+    std::cout << std::endl;
 
-    // std::cout << "Imprimiendo con forward iterator" << std::endl;
-    // // foreach(bt. begin(), bt. end(), ::Print<T1>);
-    // std::cout << std::endl;
+    std::cout << "Imprimiendo con forward iterator" << std::endl;
+    foreach(bt. begin(), bt. end(), ::Print<T1>);
+    std::cout << std::endl;
 
     // std::cout << "Imprimiendo con backward iterator" << std::endl;
     // // foreach(bt.rbegin(), bt.rend(), ::Print<T1>);
