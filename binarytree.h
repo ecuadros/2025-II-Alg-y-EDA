@@ -5,6 +5,7 @@
 #include <cassert>
 #include <fstream>
 #include <utility> 
+#include <vector>
 #include "types.h"
 #include "general_iterator.h"
 //#include "util.h"
@@ -30,7 +31,7 @@ protected:
 
 public:
     CBinaryTreeNode(Node* pParent, value_type data, Ref ref, Node* p0 = nullptr, Node* p1 = nullptr)
-        : m_pParent(pParent), m_data(data), m_ref(ref)
+        : m_data(data), m_pParent(pParent), m_ref(ref)
     {
         m_pChild[0] = p0;
         m_pChild[1] = p1;
@@ -164,7 +165,7 @@ public:
     bool    empty() const       { return size() == 0;  }
 
     void insert(value_type elem, Ref ref) {
-        m_pRoot = internal_insert(elem, ref, nullptr, nullptr, m_pRoot);
+        m_pRoot = internal_insert(elem, ref, nullptr, m_pRoot);
     }
 
      Node* getExtremeNode(Node* startNode, int direction) const {
@@ -219,10 +220,10 @@ public:
     }
     
     // TODO: Done: Move Constructor
-    CBinaryTree(CBinaryTree &&other)
-        : m_pRoot(std::exchange(other.m_pRoot, nullptr)), 
-          m_size (std::exchange(other.m_size, 0)), 
-          Compfn (std::exchange(other.Compfn, nullptr))
+    CBinaryTree(CBinaryTree &&other) noexcept
+        : m_pRoot(std::exchange(other.m_pRoot, nullptr)),
+          m_size (std::exchange(other.m_size, 0)),
+          Compfn (std::move(other.Compfn))
     { }
 
     // TODO(listo): Recursivo y seguro. Destruir Nodes recursivamente
@@ -230,7 +231,7 @@ public:
         clear();
     } 
     
-    // TODO: begin dede comenzar el el nodo mas a la izquierda (0)
+    // TODO(listo): begin dede comenzar el el nodo mas a la izquierda (0)
     iterator begin() { 
         if (!m_pRoot) return end();
         return iterator(this, getExtremeNode(m_pRoot, 0));
@@ -311,7 +312,13 @@ public:
             for(size_t i = 0; i < level; ++i){
 				os << string(" | ");
 			}
-            os << pNode->getDataRef() << "(" << (pParent?to_string(pParent->getData()):"Root") << ")" <<endl;
+            os << pNode->getDataRef() << "(";
+            if (pParent) {
+                os << pParent->getData();
+            } else {
+                os << "Root";
+            }
+            os << ")" << endl;
             print(pNode->getChild(0), level+1, os);
         }
     }
