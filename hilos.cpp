@@ -3,9 +3,9 @@
 #include <vector>
 #include "hilos.h"
 #include "vector.h"
+#include <mutex>
 using namespace std;
 
-mutex cout_mutex;
 
 // Function to be run by the thread
 void func(int thread_id, CVector<int> &v) {
