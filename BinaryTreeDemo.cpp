@@ -15,4 +15,8 @@ void BinaryTreeDemo() {
 
 	CBinaryTree<BinaryTreeAscTraits<int>> tree2(tree);
 
+	for (auto _ = tree.begin(); _ != tree.end(); ++_){
+		std::cout << *_ << std::endl;
+	}
+
 }

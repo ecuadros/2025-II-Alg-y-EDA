@@ -7,15 +7,20 @@
 #include <vector>
 #include <utility>
 #include "types.h"
+#include "generalIterator.h"
 //#include "util.h"
 using namespace std;
 
 template <typename Traits>
 class CBinaryTree;
 
+template <typename Container>
+class binary_tree_iterator;
+
 template <typename Traits>
 class CBinaryTreeNode{
 friend class CBinaryTree<Traits>;
+friend class binary_tree_iterator<CBinaryTree<Traits>>;
 public:
 	using value_type = typename Traits::T;
 	using Node = CBinaryTreeNode<Traits>;
@@ -38,12 +43,29 @@ public:
 		m_pChild[1] = nullptr;
 	}
 
-
 	value_type  getData()                { return m_data; }
 	value_type &getDataRef()             { return m_data; }
 	Ref getRef() { return m_ref; }
 
-private: 
+private:
+	Node* getpNext(){
+		Node* current = this;
+
+		if (current->m_pChild[1]) {
+			current = current->m_pChild[1];
+			while (current->m_pChild[0])
+				current = current->m_pChild[0];
+			return current;
+		}
+
+		Node* parent = current->m_pParent;
+		while (parent && current == parent->m_pChild[1]) {
+			current = parent;
+			parent = parent->m_pParent;
+		}
+		return parent;
+	}
+	
 	void      setChild(Node *pChild, size_t pos)  {   m_pChild[pos] = pChild;  }
 	Node    * getChild(size_t branch){ return m_pChild[branch];  }
 	Node    *&getChildRef(size_t branch){ return m_pChild[branch];  }
@@ -51,10 +73,10 @@ private:
 };
 
 template <typename Container>
-class binary_tree_iterator //: public general_iterator<Container,  class binary_tree_iterator<Container>> 
-{  
+class binary_tree_iterator : public general_iterator<Container,  class binary_tree_iterator<Container>> 
+{
 public:
-	using Parent    = typename Container::Node;
+	using Parent    = class general_iterator<Container, binary_tree_iterator<Container> >;;
 	using Node      = typename Container::Node;
 
 public:
@@ -63,7 +85,6 @@ public:
 	binary_tree_iterator(Container &&other) : Parent(other) {} // Move constructor C++11 en adelante
 
 public:
-	// TODO: Revisar el avance de un iterator
 	binary_tree_iterator operator++() {
 		Parent::m_pNode = Parent::m_pNode ? (Node*)Parent::m_pNode->getpNext() : nullptr;
 		return *this;
@@ -162,12 +183,12 @@ public:
 
 	void DestroySubtree(Node* pNode) {
 		if(!pNode) return;
-		Destroy(pNode->m_pChild[0]);
-		Destroy(pNode->m_pChild[1]);
+		DestroySubtree(pNode->m_pChild[0]);
+		DestroySubtree(pNode->m_pChild[1]);
 		delete pNode;
 	}
 	virtual ~CBinaryTree(){ 
-		Destroy(m_pRoot);
+		DestroySubtree(m_pRoot);
 		m_pRoot = nullptr;
 		m_size = 0;
 	} 
@@ -266,7 +287,9 @@ public:
 	}
 
 	// TODO: Tip: recorrer el arbol en preorden
-	void Write(ostream &os) { os << *this;  }
+	void Write(ostream &os) {
+		preorder(os);
+	}
 
 	// TODO: Leer en el arbol desde un stream asumiendo que esta en preorden
 	void Read(istream &is)  { }
