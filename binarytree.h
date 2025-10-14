@@ -178,10 +178,9 @@ public:
         delete m_pRoot;
         m_pRoot = nullptr;
         m_size = 0;
-    } 
-    
-    // TODO: begin dede comenzar el el nodo mas a la izquierda (0)
-    iterator begin() { 
+    }
+
+    iterator begin() {
         if (!m_pRoot) return end();
         return iterator(this, getExtremeNode(m_pRoot, 0));
     }
