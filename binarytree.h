@@ -255,6 +255,14 @@ private:
 
 public:
     void print    (ostream &os)    {   print    (m_pRoot, 0, os);  }
+    
+    // TODO (DONE): Print using inorder traversal
+    void print_inorder(ostream &os) {
+        inorder([&os](value_type& value) {
+            os << value << " ";
+        });
+    }
+    
     // TODO: generalize this function to apply any function
     // Google: C++ parameter packs cplusplus
     void print(Node  *pNode, size_t level, ostream &os){
