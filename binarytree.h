@@ -18,7 +18,7 @@ public:
   using Node       = CBinaryTreeNode<Traits>;
 
 protected:
-    T       m_data;
+    value_type     m_data;
     Node *  m_pParent = nullptr;
     Ref     m_ref;
     vector<Node *> m_pChild = {nullptr, nullptr}; // 2 hijos inicializados en nullptr
@@ -36,15 +36,18 @@ public:
     }
 
     // TODO: Keynode 
-    T         getData()                {   return m_data;    }
-    T        &getDataRef()             {   return m_data;    }
+    value_type  getData()                {   return m_data;    }
+    value_type &getDataRef()             {   return m_data;    }
+    Ref         getRef() const           {   return m_ref;     }
  
 public: // TODO: Add this class as friend of the BinaryTree
         // and make these methods private
-    void      setpChild(const Node *pChild, size_t pos)  {   m_pChild[pos] = pChild;  }
+    void      setpChild(Node *pChild, size_t pos)  {   m_pChild[pos] = pChild;  }
     Node    * getChild(size_t branch){ return m_pChild[branch];  }
     Node    *&getChildRef(size_t branch){ return m_pChild[branch];  }
     Node    * getParent() { return m_pParent;   }
+    
+    friend class CBinaryTree<Traits>;
 };
 
 template <typename Container>
@@ -71,7 +74,7 @@ public:
 template <typename _T>
 struct BinaryTreeAscTraits{
     using  T         = _T;
-    using  Node      = CBinaryTreeNode<T>;
+    using  Node      = CBinaryTreeNode<BinaryTreeAscTraits<_T>>;
     using  CompareFn = less<T>;
 };
 
@@ -79,7 +82,7 @@ template <typename _T>
 struct BinaryTreeDescTraits
 {
     using  T         = _T;
-    using  Node      = CBinaryTreeNode<T>;
+    using  Node      = CBinaryTreeNode<BinaryTreeDescTraits<_T>>;
     using  CompareFn = greater<T>;
 };
 
@@ -99,17 +102,16 @@ protected:
     CompareFn Compfn;
 
 private:
-    void destroy(Node* node) {
+    void destroyTree(Node* node) {
         if (node == nullptr) return;
-        destroy(node->getChild(0));
-        destroy(node->getChild(1));
+        destroyTree(node->getChild(0));
+        destroyTree(node->getChild(1));
         delete node;
-        
     }
 
     Node* copyTree(Node* original, Node* parent){
         if(original == nullptr) return nullptr;
-        Node* newNode = CreateNode(parent, original->getData(), original->getDataRef());
+        Node* newNode = CreateNode(parent, original->getData(), original->getRef());
         newNode->setpChild(copyTree(original->getChild(0), newNode), 0);
         newNode->setpChild(copyTree(original->getChild(1), newNode), 1);
         return newNode;
@@ -120,7 +122,7 @@ public:
     bool    empty() const       { return size() == 0;  }
     // TODO: insert must receive two paramaters: elem and Ref value
     void insert(value_type elem, Ref ref) {
-        m_pRoot = internal_insert(elem, ref, nullptr, nullptr, m_pRoot);
+        m_pRoot = internal_insert(elem, ref, nullptr, m_pRoot);
     }
 
 protected:
@@ -136,7 +138,7 @@ protected:
         }
 
         size_t branch = Compfn(elem, rpOrigin->getDataRef()) ? 0 : 1;
-        Node *pNode = internal_insert(elem, ref, nullptr, rpOrigin, rpOrigin->getChildRef(branch));
+        Node *pNode = internal_insert(elem, ref, rpOrigin, rpOrigin->getChildRef(branch));
         return pNode;
     }
 public:
@@ -148,7 +150,7 @@ public:
     }
     CBinaryTree& operator=(const CBinaryTree& other) {
         if(this != &other) {
-            destroy(m_pRoot);
+            destroyTree(m_pRoot);
             m_pRoot = nullptr;
             m_pRoot = copyTree(other.m_pRoot, nullptr);
             m_size = other.m_size;
@@ -165,7 +167,7 @@ public:
 
     // TODO: Recursivo y seguro. Destruir Nodes recursivamente
     virtual ~CBinaryTree(){
-        destroy(m_pRoot);
+        destroyTree(m_pRoot);
         m_pRoot = nullptr;
         m_size  = 0;
     } 
