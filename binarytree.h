@@ -34,8 +34,8 @@ public:
         m_pChild[1] = p1;
     }
     ~CBinaryTreeNode(){
-        delete m_pChild[0]; m_pChild[0] = nullptr;
-        delete m_pChild[1]; m_pChild[1] = nullptr;
+        m_pChild[0] = nullptr;
+        m_pChild[1] = nullptr;
     }
 
     value_type  getData()                {   return m_data;    }
@@ -142,6 +142,13 @@ protected:
         return newNode;
     }
 
+    void DestructorNode(Node* node) {
+        if (!node) return;
+        DestructorNode(node->m_pChild[0]);
+        DestructorNode(node->m_pChild[1]);
+        delete node;
+    }
+
 public:
     CBinaryTree(){} // Empty tree
     
@@ -160,7 +167,11 @@ public:
     { }
 
     // TODO: Recursivo y seguro. Destruir Nodes recursivamente
-    virtual ~CBinaryTree(){  } 
+    virtual ~CBinaryTree(){ 
+        DestructorNode(m_pRoot); 
+        m_pRoot = nullptr; 
+        m_size  = 0;
+     } 
     
     // TODO: begin dede comenzar el el nodo mas a la izquierda (0)
     iterator begin() { 
