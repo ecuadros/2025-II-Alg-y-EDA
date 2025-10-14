@@ -65,17 +65,17 @@ public:
     using pointer           = value_type*;
     using reference         = value_type&;
 
-    using Node              = typename Container::Node;
-
 private:
+    using Node = typename Container::Node;
+    using iterator = binary_tree_iterator<Container>;
+
+    Container *m_pTree;
     Node* m_pNode;
   
 public:
-    binary_tree_iterator(Node *pNode = nullptr) : m_pNode(pNode) {}
-    binary_tree_iterator(Container &other)  : m_pNode(other.m_pNode) {}
-    binary_tree_iterator(Container &&other) {
-        m_pNode = std::move(other.m_pNode);
-    } 
+    binary_tree_iterator(Container *pTree = nullptr, Node *pNode = nullptr) : m_pTree(pTree), m_pNode(pNode) {}
+    binary_tree_iterator(iterator &other)  : m_pTree(other.pTree),  m_pNode(other.m_pNode) {}
+
 
 public:
     // Operadores de acceso
@@ -173,12 +173,13 @@ struct BinaryTreeDescTraits
 template <typename Traits>
 class CBinaryTree{
 public:
-    using value_type    = typename Traits::T;
-    using Node          = typename Traits::Node;
+    using value_type        = typename Traits::T;
+    using Node              = typename Traits::Node;
     
-    using CompareFn     = typename Traits::CompareFn;
-    using Container     = CBinaryTree<Traits>;
-    using iterator      = binary_tree_iterator<Container>;
+    using CompareFn         = typename Traits::CompareFn;
+    using Container         = CBinaryTree<Traits>;
+    using iterator          = binary_tree_iterator<Container>;
+    using reverse_iterator  = std::reverse_iterator<iterator>;
 
 protected:
     Node    *m_pRoot = nullptr;
@@ -254,19 +255,23 @@ public:
         m_size  = 0;
     } 
     
-    // TODO: begin dede comenzar el el nodo mas a la izquierda (0)
+    // (DONE) Begin, End, RBegin y REnd.
     iterator begin() { 
         if (!m_pRoot) return end();
         return iterator(this, getExtremeNode(m_pRoot, 0));
     }
-    iterator end()   { return iterator(this, nullptr); }
+    
+    iterator end(){ 
+        return iterator(this, nullptr); 
+    }
 
-    // TODO: begin debe comenzar el el nodo mas a la derecha (1)
-    // riterator rbegin(){ 
-    //     if (!m_pRoot) return rend();
-    //     return iterator(this, getExtremeNode(m_pRoot, 1));
-    //  }
-    // riterator rend()  { return iterator(this, nullptr); }
+    reverse_iterator rbegin(){ 
+        return reverse_iterator(end());    
+    }
+
+    reverse_iterator rend()  { 
+        return reverse_iterator(begin());  
+    }
 
     // (DONE) Generalización de recorridos para cualquier funcion usando variadic templates
     // (DONE) Inorder generalizado
