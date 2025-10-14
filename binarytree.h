@@ -1,6 +1,6 @@
 #ifndef __BINARY_TREE_H__  
 #define __BINARY_TREE_H__ 
-//#include <utility>
+#include <iostream>
 //#include <algorithm>
 #include <cassert>
 #include <fstream>
@@ -11,7 +11,11 @@
 using namespace std;
 
 template <typename Traits>
+class CBinaryTree;
+
+template <typename Traits>
 class CBinaryTreeNode{
+friend class CBinaryTree<Traits>;
 public:
 	using value_type = typename Traits::T;
 	using Node = CBinaryTreeNode<Traits>;
@@ -34,11 +38,13 @@ public:
 		delete m_pChild[1]; m_pChild[1] = nullptr;
 	}
 
+
 	value_type  getData()                { return m_data; }
 	value_type &getDataRef()             { return m_data; }
+	Ref getRef() { return m_ref; }
 
 private: 
-	void      setpChild(const Node *pChild, size_t pos)  {   m_pChild[pos] = pChild;  }
+	void      setChild(Node *pChild, size_t pos)  {   m_pChild[pos] = pChild;  }
 	Node    * getChild(size_t branch){ return m_pChild[branch];  }
 	Node    *&getChildRef(size_t branch){ return m_pChild[branch];  }
 	Node    * getParent() { return m_pParent;   }
@@ -97,7 +103,7 @@ public:
 	bool    empty() const       { return size() == 0;  }
 
 	void insert(value_type elem, Ref ref) {
-		m_pRoot = internal_insert(elem, ref, nullptr, m_pRoot);
+		internal_insert(elem, ref, nullptr, m_pRoot);
 	}
 
 	Node* getExtremeNode(Node* startNode, int direction) const {
@@ -116,28 +122,40 @@ protected:
 	}
 	
 	virtual Node* internal_insert(
-		value_type &elem,
+		value_type elem,
 		Ref ref,
-		Node* pParent, 
-		Node*& rpOrigin) 
+		Node* pParent,
+		Node*& rpOrigin)
 	{
-		
 		if (!rpOrigin) {
 			++m_size;
-			return (rpOrigin = CreateNode(pParent, elem, ref));
+			rpOrigin = CreateNode(pParent, elem, ref);
+			return rpOrigin;
 		}
 		size_t branch = Compfn(elem, rpOrigin->getDataRef()) ? 0 : 1;
-		Node *pNode = internal_insert(elem, ref, rpOrigin->getChildRef(branch), rpOrigin);
-		return pNode;
+		return internal_insert(elem, ref, rpOrigin, rpOrigin->getChildRef(branch));
 	}
+
 public:
 	CBinaryTree(){} // Empty tree
 	
 	// TODO: Copy Constructor. We have duplicate each node
-	CBinaryTree(CBinaryTreeNode<Traits> &other){
+	CBinaryTree(CBinaryTree<Traits> &other)
+		:m_size(m_size), Compfn(other.Compfn) {
+		
+		m_pRoot = CopyConstructorAux(other.m_pRoot, nullptr);
+	}
+
+	Node* CopyConstructorAux(Node* otherNode, Node* parentNode){
+		if(otherNode == nullptr) return nullptr;
+
+		Node* newNode = CreateNode(parentNode, otherNode->getDataRef(), otherNode->getRef());
+		newNode->setChild(CopyConstructorAux(otherNode->getChild(0), newNode), 0);
+		newNode->setChild(CopyConstructorAux(otherNode->getChild(1), newNode), 1);
+		return newNode;
 	}
 	
-	CBinaryTree(CBinaryTreeNode<Traits> &&other)
+	CBinaryTree(CBinaryTree<Traits> &&other)
 		: m_pRoot(std::exchange(other.m_pRoot, nullptr)), 
 		m_size (std::exchange(other.m_size, 0)), 
 		Compfn (std::exchange(other.Compfn, nullptr))
