@@ -1,8 +1,12 @@
 #ifndef __LINKEDLIST_H__
 #define __LINKEDLIST_H__
 #include <iostream>
+#include <mutex>
 #include "types.h"
 #include "traits.h"
+
+template <typename Traits> class CLinkedList;
+template <typename Traits> std::ostream& operator<<(std::ostream& os, CLinkedList<Traits>& obj);
 
 template <typename Traits>
 class LLNode{
@@ -71,6 +75,7 @@ private:
     Node   *m_pRoot = nullptr;
     size_t m_nElem = 0;
     Func   m_fCompare;
+    std::mutex m_mutex;
 
 public:
     // Constructor
@@ -82,6 +87,7 @@ public:
 
     // Destructor seguro
     virtual ~CLinkedList();
+    void Destroy();
 
     void Insert(value_type &elem, Ref ref);
 private:
@@ -92,14 +98,7 @@ public:
     forward_iterator begin(){ return forward_iterator(this, m_pRoot); };
     forward_iterator end()  { return forward_iterator(this, nullptr); } 
 
-    friend std::ostream& operator<<(std::ostream &os, CLinkedList<Traits> &obj){
-        auto pRoot = obj.GetRoot();
-        while( pRoot ){
-            os << pRoot->GetData() << "(" << pRoot->GetRef() << ") ";
-            pRoot = pRoot->GetNext();
-        }
-        return os;
-    }
+    friend std::ostream &operator<< <>(std::ostream &os, CLinkedList<Traits> &obj);
 public:
     // Persistence
     std::ostream &Write(std::ostream &os) { return os << *this; }
@@ -110,6 +109,7 @@ public:
 
 template <typename Traits>
 void CLinkedList<Traits>::Insert(value_type &elem, Ref ref){
+    std::lock_guard<std::mutex> lock(m_mutex);
     InternalInsert(m_pRoot, elem, ref);
 }
 
@@ -130,31 +130,72 @@ CLinkedList<Traits>::CLinkedList(){}
 // TODO Constructor por copia
 //      Hacer loop copiando cada elemento
 template <typename Traits>
-CLinkedList<Traits>::CLinkedList(CLinkedList &other){
+CLinkedList<Traits>::CLinkedList(CLinkedList &other)
+    : m_pRoot(nullptr),
+      m_nElem(0),
+      m_fCompare(other.m_fCompare)
+{
+    std::lock_guard<std::mutex> lock(m_mutex);
+    if (!other.m_pRoot) return;
+
+    Node *posOther = other.m_pRoot;
+    Node *prev = nullptr;
+
+    while (posOther) {
+        Node *data = new Node(posOther->GetDataRef(), posOther->GetRef());
+        if (!m_pRoot){
+            m_pRoot = data;
+        }
+        else{
+            prev->GetNextRef() = data;
+        }
+
+        prev = data;
+        posOther = posOther->GetNext();
+        ++m_nElem;
+    }
+
 }
 
 // Move Constructor
 template <typename Traits>
 CLinkedList<Traits>::CLinkedList(CLinkedList &&other){
+    std::lock_guard<std::mutex> lock(m_mutex);
     m_pRoot    = std::move(other.m_pRoot);
     m_nElem    = std::move(other.m_nElem);
     m_fCompare = std::move(other.m_fCompare);
+}
+
+template <typename Traits>
+void CLinkedList<Traits>::Destroy(){
+    std::lock_guard<std::mutex> lock(m_mutex);
+    Node *pTmp = m_pRoot;
+    while(pTmp){
+        Node *pNext = pTmp->GetNext();
+        delete pTmp;
+        pTmp = pNext;
+    }
+    m_pRoot = nullptr;
+    m_nElem = 0;
 }
 
 // TODO: Implementar y liberar la memoria de cada Node
 template <typename Traits>
 CLinkedList<Traits>::~CLinkedList()
 {
+    Destroy();
 }
 
-// TODO: Este operador debe quedar fuera de la clase
-// template <typename Traits>
-// std::ostream &operator<<(std::ostream &os, CLinkedList<Traits> &obj){
-//     auto pRoot = obj.GetRoot();
-//     while( pRoot )
-//         os << pRoot->GetData() << " ";
-//     return os;
-// }
+template <typename Traits>
+std::ostream &operator<<(std::ostream &os, CLinkedList<Traits> &obj){
+    std::lock_guard<std::mutex> lock(obj.m_mutex);
+    auto pRoot = obj.GetRoot();
+    while( pRoot ){
+        os << pRoot->GetData() << "(" << pRoot->GetRef() << ") ";
+        pRoot = pRoot->GetNext();
+    }
+    return os;
+}
 
 void DemoLinkedList();
 

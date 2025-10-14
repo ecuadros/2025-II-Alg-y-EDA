@@ -1,8 +1,14 @@
 #ifndef __DOUBLE_LINKEDLIST_H__
 #define __DOUBLE_LINKEDLIST_H__
 #include <iostream>
+#include <mutex>
+#include <functional>
 #include "types.h"
 #include "traits.h"
+
+template <typename Traits> class CDoubleLinkedList;
+template <typename Traits> std::ostream& operator<<(std::ostream& os, CDoubleLinkedList<Traits>& obj);
+
 
 template <typename Traits>
 class DLLNode{
@@ -110,6 +116,7 @@ private:
     Node   *m_pTail = nullptr;
     size_t m_nElem = 0;
     Func   m_fCompare;
+    std::mutex m_mutex;
 
 public:
     // Constructor
@@ -121,7 +128,7 @@ public:
 
     // Destructor seguro
     virtual ~CDoubleLinkedList();
-
+    void Destroy();
     void Insert(value_type &elem, Ref ref);
 private:
     void InternalInsert(Node *&rParent, value_type &elem, Ref ref);
@@ -135,14 +142,7 @@ public:
     backward_iterator rbegin(){ return backward_iterator(this, m_pTail); };
     backward_iterator rend()  { return backward_iterator(this, nullptr); } 
 
-    friend std::ostream& operator<<(std::ostream &os, CDoubleLinkedList<Traits> &obj){
-        auto pRoot = obj.GetRoot();
-        while( pRoot ){
-            os << pRoot->GetData() << "(" << pRoot->GetRef() << ") ";
-            pRoot = pRoot->GetNext();
-        }
-        return os;
-    }
+    friend std::ostream &operator<< <>(std::ostream &os, CDoubleLinkedList<Traits> &obj);
 public:
     // Persistence
     std::ostream &Write(std::ostream &os) { return os << *this; }
@@ -153,15 +153,27 @@ public:
     // TODO: crear foreach generico aplicando una funcion a cada elemento
     template <typename Function, typename... Args>
     void foreach(Function func, Args const&... args){
-        ::foreach(begin(), end(), func, args...);
-        // auto iter = begin();
-        // for(; iter != end() ; ++iter )
-        //     std::invoke(func, *iter, args...);
+    //     // ::foreach(begin(), end(), func, args...);
+        auto iter = begin();
+        for(; iter != end() ; ++iter )
+            std::invoke(func, *iter, args...);
     }
+
+
+    template <typename Function, typename... Args>
+    void foreach(Function&& func, Args&&... args) {
+        auto iter = begin();
+        for (; iter != end(); ++iter)
+            std::invoke(std::forward<Function>(func),
+            *iter,
+            std::forward<Args>(args)...);
+    }
+
 };
 
 template <typename Traits>
 void CDoubleLinkedList<Traits>::Insert(value_type &elem, Ref ref){
+    std::lock_guard<std::mutex> lock(m_mutex);
     InternalInsert(m_pRoot, elem, ref);
 }
 
@@ -192,31 +204,74 @@ CDoubleLinkedList<Traits>::CDoubleLinkedList(){}
 // TODO Constructor por copia
 //      Hacer loop copiando cada elemento
 template <typename Traits>
-CDoubleLinkedList<Traits>::CDoubleLinkedList(CDoubleLinkedList &other){
+CDoubleLinkedList<Traits>::CDoubleLinkedList(CDoubleLinkedList &other)
+    : m_pRoot(nullptr),
+      m_pTail(nullptr),
+      m_nElem(0),
+      m_fCompare(other.m_fCompare)
+{
+    std::lock_guard<std::mutex> lock(m_mutex);
+    if (!other.m_pRoot) return;
+
+    Node *posOther = other.m_pRoot;
+    Node *prev = nullptr;
+
+    while (posOther) {
+        Node *data = new Node(posOther->GetDataRef(), posOther->GetRef());
+        if (!m_pRoot){
+            m_pRoot = data;
+        }
+        else{
+            prev->GetNextRef() = data;
+        }
+
+        prev = data;
+        posOther = posOther->GetNext();
+        ++m_nElem;
+    }
 }
 
 // Move Constructor
 template <typename Traits>
 CDoubleLinkedList<Traits>::CDoubleLinkedList(CDoubleLinkedList &&other){
+    std::lock_guard<std::mutex> lock(m_mutex);
     m_pRoot    = std::move(other.m_pRoot);
     m_nElem    = std::move(other.m_nElem);
     m_fCompare = std::move(other.m_fCompare);
+    m_pTail    = std::move(other.m_pTail);
+}
+
+template <typename Traits>
+void CDoubleLinkedList<Traits>::Destroy(){
+    std::lock_guard<std::mutex> lock(m_mutex);
+    Node *pTmp = m_pRoot;
+    while(pTmp){
+        Node *pNext = pTmp->GetNext();
+        delete pTmp;
+        pTmp = pNext;
+    }
+    m_pRoot = nullptr;
+    m_pTail = nullptr;
+    m_nElem = 0;
 }
 
 // TODO: Implementar y liberar la memoria de cada Node
 template <typename Traits>
 CDoubleLinkedList<Traits>::~CDoubleLinkedList()
 {
+    Destroy();
 }
 
-// TODO: Este operador debe quedar fuera de la clase
-// template <typename Traits>
-// std::ostream &operator<<(std::ostream &os, CDoubleLinkedList<Traits> &obj){
-//     auto pRoot = obj.GetRoot();
-//     while( pRoot )
-//         os << pRoot->GetData() << " ";
-//     return os;
-// }
+template <typename Traits>
+std::ostream& operator<<(std::ostream &os, CDoubleLinkedList<Traits> &obj){
+    std::lock_guard<std::mutex> lock(obj.m_mutex);
+    auto pRoot = obj.GetRoot();
+    while( pRoot ){
+        os << pRoot->GetData() << "(" << pRoot->GetRef() << ") ";
+        pRoot = pRoot->GetNext();
+    }
+    return os;
+}
 
 void DemoDoubleLinkedList();
 

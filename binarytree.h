@@ -6,13 +6,14 @@
 #include <fstream>
 #include "types.h"
 //#include "util.h"
+#include "general_iterator.h"
 using namespace std;
 
 template <typename Traits>
 class CBinaryTreeNode{
 public:
   using value_type = typename Traits::T;
-  using Node       = CBinaryTreeNode<T>;
+  using Node       = CBinaryTreeNode<Traits>;
 
 protected:
     value_type     m_data;
@@ -34,10 +35,11 @@ public:
 
     value_type  getData()                {   return m_data;    }
     value_type &getDataRef()             {   return m_data;    }
+    Ref     getRef()                     {   return m_ref;     }
  
 protected: // TODO: Add this class as friend of the BinaryTree
         // and make these methods private
-    void      setpChild(const Node *pChild, size_t pos)  {   m_pChild[pos] = pChild;  }
+    void      setChild(const Node *pChild, size_t pos)  {   m_pChild[pos] = pChild;  }
     Node    * getChild(size_t branch){ return m_pChild[branch];  }
     Node    *&getChildRef(size_t branch){ return m_pChild[branch];  }
     Node    * getParent() { return m_pParent;   }
@@ -49,7 +51,6 @@ class binary_tree_iterator : public general_iterator<Container,  class binary_tr
 public:
     using Parent    = class general_iterator<Container, binary_tree_iterator<Container> >;     \
     using Node      = typename Container::Node;
-    using Container = binary_tree_iterator<Container>;
 
   public:
     binary_tree_iterator(Container *pContainer, Node *pNode) : Parent (pContainer,pNode) {}
@@ -67,7 +68,7 @@ public:
 template <typename _T>
 struct BinaryTreeAscTraits{
     using  T         = _T;
-    using  Node      = CBinaryTreeNode<T>;
+    using  Node      = CBinaryTreeNode<BinaryTreeAscTraits<_T>>;
     using  CompareFn = less<T>;
 };
 
@@ -75,7 +76,7 @@ template <typename _T>
 struct BinaryTreeDescTraits
 {
     using  T         = _T;
-    using  Node      = CBinaryTreeNode<T>;
+    using  Node      = CBinaryTreeNode<BinaryTreeDescTraits<_T>>;
     using  CompareFn = greater<T>;
 };
 
@@ -98,7 +99,7 @@ public:
     bool    empty() const       { return size() == 0;  }
 
     void insert(value_type elem, Ref ref) {
-        m_pRoot = internal_insert(elem, ref, nullptr, nullptr, m_pRoot);
+        m_pRoot = internal_insert(elem, ref, nullptr, m_pRoot);
     }
 
      Node* getExtremeNode(Node* startNode, int direction) const {
@@ -131,10 +132,10 @@ public:
     CBinaryTree(){} // Empty tree
     
     // TODO: Copy Constructor. We have duplicate each node
-    CBinaryTree(Binary &other);
+    CBinaryTree(CBinaryTree &other);
     
     // TODO: Done: Move Constructor
-    CBinaryTree(Binary &&other)
+    CBinaryTree(CBinaryTree &&other)
         : m_pRoot(std::exchange(other.m_pRoot, nullptr)), 
           m_size (std::exchange(other.m_size, 0)), 
           Compfn (std::exchange(other.Compfn, nullptr))
@@ -160,7 +161,7 @@ public:
     // TODO: Generalizar estos recorridos para recibir cualquier funcion
     // con una cantidad flexible de parametros con variadic templates
     // Google: C++ parameter packs cplusplus
-        void inorder  (ostream &os)    {   inorder  (m_pRoot, 0, os);  }
+    void inorder  (ostream &os)    {   inorder  (m_pRoot, 0, os);  }
     // TODO: 
     void inorder(Node  *pNode, size_t level, ostream &os){
         if( pNode ){
@@ -221,7 +222,10 @@ public:
         if( pNode ){
             Node *pParent = pNode->getParent();
             print(pNode->getChild(1), level+1, os);
-            os << string(" | ") * level << pNode->getDataRef() << "(" << (pParent?to_string(pParent->getData()):"Root") << ")" <<endl;
+            for(size_t i = 0; i < level; ++i){
+				os << string(" | ");
+			}
+            os << pNode->getDataRef() << "(" << (pParent?to_string(pParent->getData()):"Root") << ")" <<endl;
             print(pNode->getChild(0), level+1, os);
         }
     }
