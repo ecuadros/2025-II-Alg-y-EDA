@@ -49,6 +49,8 @@ public:
 protected:
     /* ----- Rotaciones AVL ----- */
     Node* rotacionIzq(Node* A){
+        // Transforma A --> B --> C 
+        // A <-- B --> C
         Node* B = static_cast<Node*>(A->getChild(1));
         Node* B_izq = static_cast<Node*>(B->getChild(0));
 
@@ -67,6 +69,8 @@ protected:
     }
 
     Node* rotacionDer(Node* A){
+        // Transforma C <-- B <-- A
+        // C <-- B --> A
         Node* B = static_cast<Node*>(A->getChild(0));
         Node* B_der = static_cast<Node*>(B->getChild(1));
 
@@ -89,26 +93,26 @@ protected:
         if (A->m_balanceFactor > 1){
             Node* B = static_cast<Node*>(A->getChild(1));
             if (B->m_balanceFactor < 0){
-                A->setChild(rotacionDer(B), 1);
+                A->setChild(rotacionDer(B), 1); // Para rotaciones Der-Izq
             }
-            newRoot = rotacionIzq(A);
+            newRoot = rotacionIzq(A); // Rotaciones puramente Izq
         } else if (A->m_balanceFactor < -1){
             Node* B = static_cast<Node*>(A->getChild(0));
             if (B->m_balanceFactor > 0){
-                A->setChild(rotacionIzq(B), 0);
+                A->setChild(rotacionIzq(B), 0); // Para rotaciones Izq-Der
             }
-            newRoot = rotacionDer(A);
+            newRoot = rotacionDer(A); // Rotaciones puramente Der
         }
 
         if (newRoot) {
-            Node* pParent = static_cast<Node*>(newRoot->getParent());
+            Node* pParent = static_cast<Node*>(newRoot->getParent()); // Para actualizar al padre
 
             if (!pParent) {
-                this->m_pRoot = newRoot;
+                this->m_pRoot = newRoot;            // Actualiza la raíz del árbol
             } else if (pParent->getChild(0) == A) {
-                pParent->setChild(newRoot, 0);
+                pParent->setChild(newRoot, 0);      // Actualiza el hijo izquierdo
             } else {
-                pParent->setChild(newRoot, 1);
+                pParent->setChild(newRoot, 1);      // Actualiza el hijo derecho
             }
         }
     }
@@ -116,29 +120,29 @@ protected:
 public:
     void insert(value_type elem, Ref ref){
         Node* pParent = nullptr;
-        Node* pCurrent = static_cast<Node*>(this->m_pRoot);
+        Node* pCurrent = static_cast<Node*>(this->m_pRoot); // Empezamos en la raiz
 
         while (pCurrent) {
             pParent = pCurrent;
             if (this->Compfn(elem, pCurrent->getData())) {
-                pCurrent = static_cast<Node*>(pCurrent->getChild(0));
+                pCurrent = static_cast<Node*>(pCurrent->getChild(0)); // va bajando en el arbol
             } else {
                 pCurrent = static_cast<Node*>(pCurrent->getChild(1));
             }
         }
 
-        Node* newNode = static_cast<Node*>(this->CreateNode(pParent, elem, ref));
+        Node* newNode = static_cast<Node*>(this->CreateNode(pParent, elem, ref)); // Crea nuevo nodo
         this->m_size++;
 
         if (!pParent) {
-            this->m_pRoot = newNode;
-        } else if (this->Compfn(elem, pParent->getData())) {
+            this->m_pRoot = newNode;                            // arbol vacio
+        } else if (this->Compfn(elem, pParent->getData())) {    // donde deja el hijo, izq o der?
             pParent->getChildRef(0) = newNode;
         } else {
             pParent->getChildRef(1) = newNode;
         }
 
-        Node* pNode = static_cast<Node*>(newNode);
+        Node* pNode = static_cast<Node*>(newNode);              // actualiza factores de balance
         while (pNode != this->m_pRoot) {
             Node* pParent = static_cast<Node*>(pNode->getParent());
             if (pParent->getChild(0) == pNode) {
@@ -151,7 +155,7 @@ public:
                 break;
             }
 
-            if (std::abs(pParent->m_balanceFactor) > 1) {
+            if (std::abs(pParent->m_balanceFactor) > 1) {       // Si alguno es > 1 o < -1 rebalancea
                 balance(pParent);
                 break;
             }
