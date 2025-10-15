@@ -193,7 +193,7 @@ void CDoubleLinkedList<Traits>::InternalInsert(Node *&rParent, value_type &elem,
             m_pRoot = pNew;
         }
         
-        rParent = pNew;  // ✅ CRÍTICO: actualizar la referencia
+        rParent = pNew;  //  CRÍTICO: actualizar la referencia
         m_nElem++;
         return;
     }

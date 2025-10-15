@@ -57,10 +57,10 @@ class forward_linkedlist_iterator{
 };
 
 // TODO Agregar control de concurrencia
-// ✅ Solución: usar std::mutex para proteger operaciones críticas
+// Solución: usar std::mutex para proteger operaciones críticas
 
 // TODO Agregar que sea ascendente o descendente con el mismo codigo
-// ✅ Solución: el comportamiento depende de Traits::Func (comparador)
+// Solución: el comportamiento depende de Traits::Func (comparador)
 
 template <typename Traits>
 class CLinkedList{
@@ -75,7 +75,7 @@ private:
     Node   *m_pRoot = nullptr;
     size_t m_nElem = 0;
     Func   m_fCompare;
-    mutable std::mutex m_mutex; // 🔒 control de concurrencia
+    mutable std::mutex m_mutex; //  control de concurrencia
 
 public:
     // Constructor
@@ -115,7 +115,7 @@ public:
 
 template <typename Traits>
 void CLinkedList<Traits>::Insert(value_type &elem, Ref ref){
-    std::lock_guard<std::mutex> lock(m_mutex); // 🔒 proteger inserción
+    std::lock_guard<std::mutex> lock(m_mutex); //  proteger inserción
     InternalInsert(m_pRoot, elem, ref);
 }
 
@@ -175,7 +175,7 @@ CLinkedList<Traits>::~CLinkedList()
 }
 
 // TODO: Este operador debe quedar fuera de la clase
-// ✅ Ya está dentro como friend, pero lo dejamos comentado fuera por compatibilidad
+//  Ya está dentro como friend, pero lo dejamos comentado fuera por compatibilidad
 // template <typename Traits>
 // std::ostream &operator<<(std::ostream &os, CLinkedList<Traits> &obj){
 //     auto pRoot = obj.GetRoot();

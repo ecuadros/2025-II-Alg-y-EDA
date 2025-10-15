@@ -6,6 +6,7 @@
 #include <vector>
 #include <iostream>
 #include <functional>
+#include <type_traits>
 #include "types.h"
 using namespace std;
 
@@ -200,19 +201,8 @@ public:
         }
     }
 
-    // Variadic templates (See foreach.h)
-  template <typename Function, typename... Args>
-    void postorder(Function func, Args const&... args)
-    { postorder(m_pRoot, 0, func, args...); }
+   
 
-    template <typename Function,typename... Args>
-    void postorder(Node* pNode, size_t level, Function func, Args const&... args) {
-        if (pNode) {
-            postorder(pNode->getChild(0), level + 1, func, args...);
-            postorder(pNode->getChild(1), level + 1, func, args...);
-            func(pNode, level, args...); 
-        }
-    }
     void postorder(ostream &os) { postorder(m_pRoot, 0, os); }
 
     // TODO: generalize this function to apply any function

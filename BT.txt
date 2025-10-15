@@ -1,0 +1,1 @@
+CBinaryTree with 5 elements. --> 5
