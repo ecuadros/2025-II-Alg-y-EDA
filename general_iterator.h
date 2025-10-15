@@ -1,6 +1,5 @@
 #ifndef __GENERAL_ITERATOR_H__
 #define __GENERAL_ITERATOR_H__
-
 #include <iterator>
 #include <utility>
 
@@ -11,7 +10,7 @@ public:
     using difference_type = std::ptrdiff_t;
     using pointer = value_type*;
     using reference = value_type&;
-    using iterator_category = std::forward_iterator_tag;
+
     using Node = typename Container::Node;
 
 protected:
@@ -20,14 +19,14 @@ protected:
 
 public:
     // Constructores
-    general_iterator(Container* pContainer, Node* pNode) 
+    general_iterator(Container* pContainer, Node* pNode)
         : m_pContainer(pContainer), m_pNode(pNode) {}
-
-    general_iterator(const general_iterator& other) 
+    
+    general_iterator(const general_iterator& other)
         : m_pContainer(other.m_pContainer), m_pNode(other.m_pNode) {}
-
-    general_iterator(general_iterator&& other) 
-        : m_pContainer(std::exchange(other.m_pContainer, nullptr)), 
+    
+    general_iterator(general_iterator&& other)
+        : m_pContainer(std::exchange(other.m_pContainer, nullptr)),
           m_pNode(std::exchange(other.m_pNode, nullptr)) {}
 
     // Operadores de asignación
@@ -68,7 +67,7 @@ public:
     // Operadores de incremento (deben ser implementados por la clase derivada)
     Derived& operator++() {
         // Este método debe ser sobrescrito por la clase derivada
-        static_assert(sizeof(Derived) == 0, 
+        static_assert(sizeof(Derived) == 0,
             "general_iterator::operator++() must be implemented by derived class");
         return *static_cast<Derived*>(this);
     }

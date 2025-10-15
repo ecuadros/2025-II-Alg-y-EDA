@@ -36,10 +36,7 @@ public:
         m_pChild[1] = p1;
     }
     
-    ~CBinaryTreeNode(){
-        delete m_pChild[0]; m_pChild[0] = nullptr;
-        delete m_pChild[1]; m_pChild[1] = nullptr;
-    }
+    ~CBinaryTreeNode(){}
 
     value_type getData() const { return m_data; }
     value_type &getDataRef() { return m_data; }
@@ -79,6 +76,7 @@ public:
     using Parent = general_iterator<Container, binary_tree_iterator<Container>>;
     using Node = typename Container::Node;
     using value_type = typename Container::value_type;
+    using iterator_category = std::bidirectional_iterator_tag;
 
 public:
     binary_tree_iterator(Container* pContainer, Node* pNode) : Parent(pContainer, pNode) {}
@@ -110,6 +108,43 @@ public:
     binary_tree_iterator operator++(int) {
         binary_tree_iterator tmp(*this);
         ++(*this);
+        return tmp;
+    }
+
+    binary_tree_iterator& operator--() {
+        Node* current = Parent::getNode();
+        
+        if(current == nullptr) {
+            current = Parent::getContainer()->m_pRoot;
+            if(current != nullptr) {
+                while(current->getChild(1) != nullptr) {
+                    current = current->getChild(1);
+                }
+            }
+            Parent::setNode(current);
+            return *this;
+        }
+
+        if(current->getChild(0) != nullptr) {
+            current = current->getChild(0);
+            while(current->getChild(1) != nullptr) {
+                current = current->getChild(1);
+            }
+            Parent::setNode(current);
+        } else {
+            Node* parent = current->getParent();
+            while(parent != nullptr && current == parent->getChild(0)) {
+                current = parent;
+                parent = parent->getParent();
+            }
+            Parent::setNode(parent);
+        }
+        return *this;
+    }
+
+    binary_tree_iterator operator--(int) {
+        binary_tree_iterator tmp(*this);
+        --(*this);
         return tmp;
     }
 };
@@ -352,6 +387,9 @@ public:
             throw;
         }
     }
+
+    template <typename Container>
+    friend class binary_tree_iterator;
 };
 
 // TODO: este operator << debe seguir estando fuera de la clase
