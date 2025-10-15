@@ -43,6 +43,7 @@ public:
     value_type  getData()                {   return m_data;    }
     value_type &getDataRef()             {   return m_data;    }
     Ref     getRef()                     {   return m_ref;     }
+    Node*  getParentNode()                {   return m_pParent; }
 
     Node* getpNext(bool forward = true) {
         Node* current = this;
@@ -63,7 +64,6 @@ public:
         return parent;
     }
 
- 
 private: // TODO: Add this class as friend of the BinaryTree
         // and make these methods private
     void      setChild(const Node *pChild, size_t pos)  {   m_pChild[pos] = pChild;  }
@@ -299,6 +299,22 @@ public:
             os << pNode->getDataRef() << "(" << (pParent?to_string(pParent->getData()):"Root") << ")" <<endl;
             print(pNode->getChild(0), level+1, os);
         }
+    }
+
+    template <typename F, typename... Params>
+    void print_generic(F&& action, Params&&... params) {
+        print_node(m_pRoot, 0, std::forward<F>(action), std::forward<Params>(params)...);
+    }
+
+    template <typename F, typename... Params>
+    void print_node(Node* node, std::size_t depth, F&& action, Params&&... params) {
+        if (!node) return;
+
+        print_node(node->getChild(1), depth + 1, std::forward<F>(action), std::forward<Params>(params)...);
+
+        std::invoke(std::forward<F>(action), node, depth, std::forward<Params>(params)...);
+
+        print_node(node->getChild(0), depth + 1, std::forward<F>(action), std::forward<Params>(params)...);
     }
 
     // TODO: Tip: recorrer el arbol en preorden

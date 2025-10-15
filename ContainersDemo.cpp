@@ -135,6 +135,15 @@ void DemoBinaryTree(){
     foreach(bt.rbegin(), bt.rend(), ::Print<T1>);
     std::cout << std::endl;
 
+    auto prettier = [](CBinaryTree< BinaryTreeAscTraits<T1> >::Node* node, std::size_t depth, std::ostream& os) {
+        for (std::size_t i = 0; i < depth; ++i) os << " | ";
+        auto parent = node->getParentNode();
+        os << node->getData()
+           << " (" << (parent->getData()) << ")"
+           << " [ref=" << node->getRef() << "]\n";
+    };
+    bt.print_generic(prettier, std::cout);
+
     // std::cout << "Inorder traversal:" << std::endl;
     // // bt.inorder();
     // std::cout << std::endl;
