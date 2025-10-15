@@ -1,10 +1,10 @@
 #include <iostream>
-#include "vector.h"
-#include "DemoVector.h"
-#include "hilos.h"
-#include "linkedlist.h"
-#include "doublelinkedlist.h"
-
+// #include "vector.h"
+// #include "DemoVector.h"
+// #include "hilos.h"
+// #include "linkedlist.h"
+// #include "doublelinkedlist.h"
+#include "DemoAVLTree.h"
 using namespace std;
 
 /* Revisado por:
@@ -23,10 +23,11 @@ using namespace std;
 int main(){
     cout << "Hello Alg y EDA-UNI" << endl;
     // DemoThreads();
-    [[maybe_unused]] int x = 5;
+    // [[maybe_unused]] int x = 5;
     // DemoVector();
-    DemoLinkedList();
-    DemoDoubleLinkedList();
+    // DemoLinkedList();
+    // DemoDoubleLinkedList();
+    DemoAVLTree();
     return 0;
 }
 
