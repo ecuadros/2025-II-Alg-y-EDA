@@ -1,6 +1,5 @@
 #ifndef __AVL_H__
 #define __AVL_H__
-#include <algorithm>   
 #include <functional>
 #include "binarytree.h"
 #include "types.h"
