@@ -139,7 +139,7 @@ void DemoBinaryTree(){
         for (std::size_t i = 0; i < depth; ++i) os << " | ";
         auto parent = node->getParentNode();
         os << node->getData()
-           << " (" << (parent->getData()) << ")"
+           << " (" << (parent ? parent->getData() : T1()) << ")"
            << " [ref=" << node->getRef() << "]\n";
     };
     bt.print_generic(prettier, std::cout);
