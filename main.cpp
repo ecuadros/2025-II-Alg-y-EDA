@@ -5,6 +5,9 @@
 #include "linkedlist.h"
 #include "doublelinkedlist.h"
 
+void DemoBinaryTree();
+void DemoAVL();
+
 using namespace std;
 
 /* Revisado por:
@@ -23,10 +26,12 @@ using namespace std;
 int main(){
     cout << "Hello Alg y EDA-UNI" << endl;
     // DemoThreads();
-    [[maybe_unused]] int x = 5;
-    // DemoVector();
-    DemoLinkedList();
-    DemoDoubleLinkedList();
+    // [[maybe_unused]] int x = 5;
+    // // DemoVector();
+    // DemoLinkedList();
+    // DemoDoubleLinkedList();
+    DemoBinaryTree();
+    DemoAVL();
     return 0;
 }
 
