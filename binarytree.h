@@ -19,8 +19,10 @@ public:
   using value_type = typename Traits::T;
   using Node       = CBinaryTreeNode<Traits>;
 
-  // Friend class so CBinaryTree can access protected members
+  // Friend classes so they can access protected members
   template <typename T> friend class CBinaryTree;
+  template <typename T> friend class CAVLTree;
+  template <typename T> friend class CAVLNode;
 
 protected:
     value_type  m_data;
