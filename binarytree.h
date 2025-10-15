@@ -49,6 +49,8 @@ public:
 
     value_type  getData()                {   return m_data;    }
     value_type &getDataRef()             {   return m_data;    }
+    Ref  getRef()                        {   return m_ref;    }
+    Ref &getRefRef()                     {   return m_ref;    }
  
 protected: // TODO: Add this class as friend of the BinaryTree
         // and make these methods private
@@ -228,7 +230,7 @@ protected:
         }
 
         size_t branch = Compfn(elem, rpOrigin->getDataRef()) ? 0 : 1;
-        Node *pNode = internal_insert(elem, ref, rpOrigin, rpOrigin->getChildRef(branch));
+        Node *pNode = Binary::internal_insert(elem, ref, rpOrigin, rpOrigin->getChildRef(branch));
         return pNode;
     }
 public:
@@ -371,7 +373,7 @@ public:
         if( pNode ){
             Node *pParent = pNode->getParent();
             print(pNode->getChild(1), level+1, os);
-            os << string(level*5, ' ') << " " << pNode->getDataRef() << "(" << (pParent?to_string(pParent->getData()):"Root") << ")" <<endl;
+            os << string(level*5, ' ') << " " << pNode->getDataRef() << "(" << (pParent?to_string(pParent->getRef()):"Root") << ")" <<endl;
             print(pNode->getChild(0), level+1, os);
         }
     }

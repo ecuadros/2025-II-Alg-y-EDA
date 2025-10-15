@@ -127,16 +127,33 @@ void DemoBinaryTree(){
 
 void DemoAVLTree(){
     std::vector<std::pair<T1, Ref>> v1 = {
-        {5, 1}, {2, 2}, {9, 3}, {1, 4}, {8, 5}, {10, 6}, {6,6}, {11, 11}
+         //{2, 2}, {9, 3}, {1, 4}, {10, 6}, {11, 11}
+         //{5,1}, {6,7}, {7,5}
+         //{5,1}, {4,7}, {3,5}
+         //{3,2},{1,4},{2,8}
+         //{1,4},{3,2},{2,8}
+         {10,10}, {5,2}, {15,3}, {2,40}, {8,5}, {12,60},
+    {18,7}, {9,8}, {1,10}, {3,17}, {7,11}, {6,12}
     };
+    CBinaryTree< BinaryTreeAscTraits<T1> > bt;
+
     CAVLTree<AVLAscTraits<T1>> avl;
 
     for (auto &par : v1) {
-        std::cout << "Insertando: " << par.first << std::endl;
+        //std::cout << "Insertando: " << par.first << std::endl;
         avl.insert(par.first, par.second);
+        bt.insert(par.first, par.second);
     }
 
     std::cout << avl << std::endl;
 
+    
+    avl.printBF(std::cout);
+
+    std::cout << std::endl << std::endl;
+    std::cout << "AVL Tree:" << std::endl;
     avl.print(cout);
+    std::cout << std::endl << std::endl;
+    std::cout << "BSTree:" << std::endl;
+    bt.print(cout);
 }   
