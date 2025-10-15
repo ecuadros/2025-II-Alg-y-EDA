@@ -31,8 +31,10 @@ public:
         m_pChild[1] = p1;
     }
     ~CBinaryTreeNode(){
-        delete m_pChild[0]; m_pChild[0] = nullptr;
-        delete m_pChild[1]; m_pChild[1] = nullptr;
+        delete m_pChild[0];
+        delete m_pChild[1];
+        m_pChild[0] = nullptr;
+        m_pChild[1] = nullptr;
     }
 
     T getData()                    { return m_data;    }
@@ -44,7 +46,7 @@ public:
 
 // protected: // TODO: Add this class as friend of the BinaryTree
         // and make these methods private
-    void      setpChild(const Node *pChild, size_t pos)  { m_pChild[pos] = pChild;  }
+    void      setpChild(Node *pChild, size_t pos)  { m_pChild[pos] = pChild;  }
     Node    * getChild(size_t branch){ return m_pChild[branch];  }
     Node    *&getChildRef(size_t branch){ return m_pChild[branch];  }
     Node    * getParent() { return m_pParent;   }
@@ -263,8 +265,11 @@ public:
           Compfn (std::exchange(other.Compfn, nullptr))
     { }
 
-    // TODO: Recursivo y seguro. Destruir Nodes recursivamente
-    virtual ~CBinaryTree(){  } 
+    virtual ~CBinaryTree(){ 
+        delete m_pRoot;
+        m_pRoot = nullptr;
+        m_size  = 0;
+    } 
     
     // TODO: begin debe comenzar el el nodo mas a la derecha (1)
     // riterator rbegin(){ 
