@@ -63,7 +63,7 @@ template <typename Container>
 class binary_tree_iterator
 {  
 public:
-    using iterator_category = std::forward_iterator_tag;
+    using iterator_category = std::bidirectional_iterator_tag;
     using value_type        = typename Container::value_type;
     using difference_type   = std::ptrdiff_t;
     using pointer           = value_type*;
