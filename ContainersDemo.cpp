@@ -144,6 +144,19 @@ void DemoBinaryTree(){
     };
     bt.print_generic(prettier, std::cout);
 
+    
+    std::ofstream ofs("tree.txt");
+    bt.Write(ofs);
+    ofs << std::endl;
+    ofs.close();
+
+    CBinaryTree< BinaryTreeAscTraits<T1> > bt2;
+    std::ifstream ifs("tree.txt");
+    bt2.Read(ifs);
+    ifs.close();
+    std::cout << "Tree read from file:" << std::endl;
+    std::cout << bt2 << std::endl;
+
     // std::cout << "Inorder traversal:" << std::endl;
     // // bt.inorder();
     // std::cout << std::endl;

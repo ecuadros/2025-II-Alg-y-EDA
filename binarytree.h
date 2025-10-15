@@ -318,10 +318,42 @@ public:
     }
 
     // TODO: Tip: recorrer el arbol en preorden
-    void Write(ostream &os) { os << *this;  }
+    void Write(ostream &os) { 
+        WriteRecursive(m_pRoot, os);
+     }
+
+    void WriteRecursive(Node* node, std::ostream &os) {
+        if (!node) {
+            os << "@ ";
+            return;
+        }
+        os << node->getData() << " " << node->getRef() << " ";
+        WriteRecursive(node->getChild(0), os);
+        WriteRecursive(node->getChild(1), os);
+    }
 
     // TODO: Leer en el arbol desde un stream asumiendo que esta en preorden
-    void Read(istream &is)  { /* TODO */  }
+    void Read(istream &is)  { 
+        DestructorNode(m_pRoot);
+        m_size  = 0;
+        m_pRoot = ReadRecursive(nullptr, is);
+    }
+
+    Node* ReadRecursive(Node* pParent, std::istream &is) {
+        std::string token;
+        if (!(is >> token)) return nullptr;
+        if (token == "@") return nullptr;
+
+        value_type value = static_cast<value_type>(std::stoi(token)); // convierte valor
+        Ref ref;
+        is >> ref;
+
+        Node* node = CreateNode(pParent, value, ref);
+        node->m_pChild[0] = ReadRecursive(node, is);
+        node->m_pChild[1] = ReadRecursive(node, is);
+        ++m_size;
+        return node;
+    }
 };
 
 // TODO: este operator << debe seguir estando fuera de la clase
