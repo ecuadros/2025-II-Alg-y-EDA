@@ -8,6 +8,7 @@
 //#include "util.h"
 #include "general_iterator.h"
 #include <vector>
+#include <functional>
 using namespace std;
 
 template <typename Traits>
@@ -29,7 +30,7 @@ protected:
 
 public:
     CBinaryTreeNode(Node* pParent, value_type data, Ref ref, Node* p0 = nullptr, Node* p1 = nullptr)
-        : m_pParent(pParent), m_data(data), m_ref(ref)
+        : m_data(data), m_pParent(pParent), m_ref(ref)
     {
         m_pChild[0] = p0;
         m_pChild[1] = p1;
@@ -43,18 +44,18 @@ public:
     value_type &getDataRef()             {   return m_data;    }
     Ref     getRef()                     {   return m_ref;     }
 
-    Node* getpNext() {
+    Node* getpNext(bool forward = true) {
         Node* current = this;
-        if (current->m_pChild[1]) 
+        if (current->m_pChild[forward]) 
         {
-            current = current->m_pChild[1];
-            while (current->m_pChild[0])
-                current = current->m_pChild[0];
+            current = current->m_pChild[forward];
+            while (current->m_pChild[!forward])
+                current = current->m_pChild[!forward];
             return current;
         }
 
         Node* parent = current->m_pParent;
-        while (parent && current == parent->m_pChild[1])
+        while (parent && current == parent->m_pChild[forward])
         {
             current = parent;
             parent = parent->m_pParent;
@@ -84,9 +85,28 @@ public:
     binary_tree_iterator(Container &&other) : Parent(other) {} // Move constructor C++11 en adelante
 
 public:
-    // TODO: Revisar el avance de un iterator
     binary_tree_iterator operator++() {
         Parent::m_pNode = Parent::m_pNode ? (Node*)Parent::m_pNode->getpNext() : nullptr;
+        return *this;
+    }
+};
+
+
+template <typename Container>
+class rbinary_tree_iterator : public general_iterator<Container,  class rbinary_tree_iterator<Container> > // 
+{  
+public:
+    using Parent    = class general_iterator<Container, rbinary_tree_iterator<Container> >;     \
+    using Node      = typename Container::Node;
+
+  public:
+    rbinary_tree_iterator(Container *pContainer, Node *pNode) : Parent (pContainer,pNode) {}
+    rbinary_tree_iterator(Container &other)  : Parent (other) {}
+    rbinary_tree_iterator(Container &&other) : Parent(other) {} // Move constructor C++11 en adelante
+
+public:
+    rbinary_tree_iterator operator++() {
+        Parent::m_pNode = Parent::m_pNode ? (Node*)Parent::m_pNode->getpNext(false) : nullptr;
         return *this;
     }
 };
@@ -115,6 +135,7 @@ public:
     using CompareFn     = typename Traits::CompareFn;
     using Container     = CBinaryTree<Traits>;
     using iterator      = binary_tree_iterator<Container>;
+    using riterator     = rbinary_tree_iterator<Container>;
 
 protected:
     Node    *m_pRoot = nullptr;
@@ -151,7 +172,7 @@ protected:
         }
 
         size_t branch = Compfn(elem, rpOrigin->getDataRef()) ? 0 : 1;
-        Node *pNode = internal_insert(elem, ref, nullptr, rpOrigin->getChildRef(branch));
+        Node *pNode = internal_insert(elem, ref, rpOrigin, rpOrigin->getChildRef(branch));
         return pNode;
     }
 
@@ -202,11 +223,11 @@ public:
     iterator end()   { return iterator(this, nullptr); }
 
     // TODO: begin debe comenzar el el nodo mas a la derecha (1)
-    // riterator rbegin(){ 
-    //     if (!m_pRoot) return rend();
-    //     return iterator(this, getExtremeNode(m_pRoot, 1));
-    //  }
-    // riterator rend()  { return iterator(this, nullptr); }
+    riterator rbegin(){ 
+         if (!m_pRoot) return rend();
+        return riterator(this, getExtremeNode(m_pRoot, 1));
+    }
+    riterator rend()  { return riterator(this, nullptr); }
 
     // TODO: Generalizar estos recorridos para recibir cualquier funcion
     // con una cantidad flexible de parametros con variadic templates

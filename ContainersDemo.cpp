@@ -129,6 +129,12 @@ void DemoBinaryTree(){
          bt.insert(par.first, par.second);
     std::cout << bt << std::endl;
 
+    foreach(bt.begin(), bt.end(), ::Print<T1>);
+    std::cout << std::endl;
+
+    foreach(bt.rbegin(), bt.rend(), ::Print<T1>);
+    std::cout << std::endl;
+
     // std::cout << "Inorder traversal:" << std::endl;
     // // bt.inorder();
     // std::cout << std::endl;
