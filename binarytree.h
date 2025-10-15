@@ -8,6 +8,7 @@
 #include <iostream>
 #include <string>
 #include <functional>
+#include <memory>
 #include "types.h"
 #include "util.h"
 using namespace std;
@@ -89,6 +90,128 @@ struct BinaryTreeDescTraits
     using  CompareFn = greater<_T>;
 };
 
+// Forward declarations
+template <typename Traits> class CBinaryTree;
+template <typename Traits> class binary_tree_iterator;
+template <typename Traits> class binary_tree_reverse_iterator;
+
+// TODO (DONE): Forward iterator - uses shared vector populated by inorder traversal
+template <typename Traits>
+class binary_tree_iterator {
+public:
+    using value_type = typename Traits::T;
+    using Container = CBinaryTree<Traits>;
+    using iterator_category = std::bidirectional_iterator_tag;
+    using difference_type = std::ptrdiff_t;
+    using pointer = value_type*;
+    using reference = value_type&;
+
+private:
+    std::shared_ptr<std::vector<value_type*>> m_nodes;  // Shared among begin/end iterators
+    size_t m_index;
+
+public:
+    binary_tree_iterator() : m_nodes(nullptr), m_index(0) {}
+    
+    binary_tree_iterator(Container* pContainer, bool is_end) : m_index(0) {
+        if (pContainer) {
+            // Populate vector using existing inorder() method
+            m_nodes = std::make_shared<std::vector<value_type*>>();
+            pContainer->inorder([this](value_type& data) {
+                m_nodes->push_back(&data);
+            });
+            
+            if (is_end) {
+                m_index = m_nodes->size();
+            }
+        }
+    }
+
+    reference operator*() const { return *(*m_nodes)[m_index]; }
+    pointer operator->() const { return (*m_nodes)[m_index]; }
+
+    binary_tree_iterator& operator++() {
+        ++m_index;
+        return *this;
+    }
+
+    binary_tree_iterator operator++(int) {
+        binary_tree_iterator temp = *this;
+        ++m_index;
+        return temp;
+    }
+
+    bool operator==(const binary_tree_iterator& other) const {
+        if (!m_nodes && !other.m_nodes) return true;
+        if (!m_nodes || !other.m_nodes) return false;
+        return m_index == other.m_index && m_nodes->size() == other.m_nodes->size();
+    }
+
+    bool operator!=(const binary_tree_iterator& other) const {
+        return !(*this == other);
+    }
+};
+
+// TODO (DONE): Reverse iterator - iterates backwards through vector populated by inorder
+template <typename Traits>
+class binary_tree_reverse_iterator {
+public:
+    using value_type = typename Traits::T;
+    using Container = CBinaryTree<Traits>;
+    using iterator_category = std::bidirectional_iterator_tag;
+    using difference_type = std::ptrdiff_t;
+    using pointer = value_type*;
+    using reference = value_type&;
+
+private:
+    std::shared_ptr<std::vector<value_type*>> m_nodes;  // Shared among rbegin/rend iterators
+    size_t m_index;
+
+public:
+    binary_tree_reverse_iterator() : m_nodes(nullptr), m_index(0) {}
+    
+    binary_tree_reverse_iterator(Container* pContainer, bool is_end) : m_index(0) {
+        if (pContainer) {
+            // Populate vector using existing inorder() method
+            m_nodes = std::make_shared<std::vector<value_type*>>();
+            pContainer->inorder([this](value_type& data) {
+                m_nodes->push_back(&data);
+            });
+            
+            // Reverse iteration: start from end, decrement towards beginning
+            if (!is_end && !m_nodes->empty()) {
+                m_index = m_nodes->size() - 1;
+            } else if (is_end) {
+                m_index = (size_t)-1;  // Sentinel value for rend()
+            }
+        }
+    }
+
+    reference operator*() const { return *(*m_nodes)[m_index]; }
+    pointer operator->() const { return (*m_nodes)[m_index]; }
+
+    binary_tree_reverse_iterator& operator++() {
+        --m_index;
+        return *this;
+    }
+
+    binary_tree_reverse_iterator operator++(int) {
+        binary_tree_reverse_iterator temp = *this;
+        --m_index;
+        return temp;
+    }
+
+    bool operator==(const binary_tree_reverse_iterator& other) const {
+        if (!m_nodes && !other.m_nodes) return true;
+        if (!m_nodes || !other.m_nodes) return false;
+        return m_index == other.m_index && m_nodes->size() == other.m_nodes->size();
+    }
+
+    bool operator!=(const binary_tree_reverse_iterator& other) const {
+        return !(*this == other);
+    }
+};
+
 template <typename Traits>
 class CBinaryTree{
 public:
@@ -97,8 +220,12 @@ public:
     
     using CompareFn     = typename Traits::CompareFn;
     using Container     = CBinaryTree<Traits>;
-    // TODO: forward iterator
-    // using iterator      = binary_tree_iterator<Container>;
+    
+    // TODO (DONE): Iterator type definitions
+    using iterator              = binary_tree_iterator<Traits>;
+    using reverse_iterator      = binary_tree_reverse_iterator<Traits>;
+    using const_iterator        = const iterator;
+    using const_reverse_iterator = const reverse_iterator;
 
 protected:
     Node    *m_pRoot = nullptr;
@@ -107,6 +234,40 @@ protected:
 public: 
     size_t  size()  const       { return m_size;       }
     bool    empty() const       { return size() == 0;  }
+    
+    // TODO (DONE): Iterator methods
+    iterator begin() {
+        return iterator(this, false);
+    }
+    
+    iterator end() {
+        return iterator(this, true);
+    }
+    
+    const_iterator begin() const {
+        return const_iterator(const_cast<Container*>(this), false);
+    }
+    
+    const_iterator end() const {
+        return const_iterator(const_cast<Container*>(this), true);
+    }
+    
+    reverse_iterator rbegin() {
+        return reverse_iterator(this, false);
+    }
+    
+    reverse_iterator rend() {
+        return reverse_iterator(this, true);
+    }
+    
+    const_reverse_iterator rbegin() const {
+        return const_reverse_iterator(const_cast<Container*>(this), false);
+    }
+    
+    const_reverse_iterator rend() const {
+        return const_reverse_iterator(const_cast<Container*>(this), true);
+    }
+    
     // TODO: insert must receive two paramaters: elem and Ref value
     void insert(value_type elem, Ref ref) {
         m_pRoot = internal_insert(elem, ref, nullptr, m_pRoot);
