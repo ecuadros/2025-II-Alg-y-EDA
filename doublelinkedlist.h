@@ -3,6 +3,7 @@
 #include <iostream>
 #include "types.h"
 #include "traits.h"
+#include "foreach.h"
 
 template <typename Traits>
 class DLLNode{
@@ -189,10 +190,14 @@ void CDoubleLinkedList<Traits>::InternalInsert(Node *&rParent, value_type &elem,
 template <typename Traits>
 CDoubleLinkedList<Traits>::CDoubleLinkedList(){}
 
-// TODO Constructor por copia
-//      Hacer loop copiando cada elemento
 template <typename Traits>
 CDoubleLinkedList<Traits>::CDoubleLinkedList(CDoubleLinkedList &other){
+    Node *pCurrent = other.m_pRoot;
+    while(pCurrent){
+        value_type data = pCurrent->GetData();
+        Insert(data, pCurrent->GetRef());
+        pCurrent = pCurrent->GetNext();
+    }
 }
 
 // Move Constructor
@@ -203,10 +208,17 @@ CDoubleLinkedList<Traits>::CDoubleLinkedList(CDoubleLinkedList &&other){
     m_fCompare = std::move(other.m_fCompare);
 }
 
-// TODO: Implementar y liberar la memoria de cada Node
 template <typename Traits>
 CDoubleLinkedList<Traits>::~CDoubleLinkedList()
 {
+    Node *pCurrent = m_pRoot;
+    while(pCurrent){
+        Node *pNext = pCurrent->GetNext();
+        delete pCurrent;
+        pCurrent = pNext;
+    }
+    m_pRoot = nullptr;
+    m_pTail = nullptr;
 }
 
 // TODO: Este operador debe quedar fuera de la clase

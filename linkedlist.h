@@ -101,9 +101,16 @@ public:
         return os;
     }
 public:
+    value_type &operator[](size_t index){
+        Node *pCurrent = m_pRoot;
+        for(size_t i = 0; i < index && pCurrent; ++i)
+            pCurrent = pCurrent->GetNext();
+        return pCurrent->GetDataRef();
+    }
+
     // Persistence
     std::ostream &Write(std::ostream &os) { return os << *this; }
-    
+
     // TODO: Read (istream &is)
     std::istream &Read (std::istream &is);
 };
@@ -127,10 +134,14 @@ void CLinkedList<Traits>::InternalInsert(Node *&rParent, value_type &elem, Ref r
 template <typename Traits>
 CLinkedList<Traits>::CLinkedList(){}
 
-// TODO Constructor por copia
-//      Hacer loop copiando cada elemento
 template <typename Traits>
 CLinkedList<Traits>::CLinkedList(CLinkedList &other){
+    Node *pCurrent = other.m_pRoot;
+    while(pCurrent){
+        value_type data = pCurrent->GetData();
+        Insert(data, pCurrent->GetRef());
+        pCurrent = pCurrent->GetNext();
+    }
 }
 
 // Move Constructor
@@ -141,10 +152,16 @@ CLinkedList<Traits>::CLinkedList(CLinkedList &&other){
     m_fCompare = std::move(other.m_fCompare);
 }
 
-// TODO: Implementar y liberar la memoria de cada Node
 template <typename Traits>
 CLinkedList<Traits>::~CLinkedList()
 {
+    Node *pCurrent = m_pRoot;
+    while(pCurrent){
+        Node *pNext = pCurrent->GetNext();
+        delete pCurrent;
+        pCurrent = pNext;
+    }
+    m_pRoot = nullptr;
 }
 
 // TODO: Este operador debe quedar fuera de la clase
