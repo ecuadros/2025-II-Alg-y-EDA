@@ -177,6 +177,30 @@ void testVariadicTraversals() {
         if (node->getDataRef() > mx) mx = node->getDataRef();
     }, count, max_val);
     cout << "  Cantidad: " << count << ", Maximo: " << max_val << "\n";
+
+    cout << "\n--- Tests de print() variadic ---\n";
+
+    cout << "\nPrint con lambda simple (mostrar datos con nivel):\n";
+    tree.print([](auto* node, size_t level) {
+        for(size_t i = 0; i < level; i++) cout << "  ";
+        cout << "Nivel " << level << ": " << node->getDataRef() << "\n";
+    });
+
+    cout << "\nPrint con lambda (contar nodos):\n";
+    int print_count = 0;
+    tree.print([](auto* node, size_t level, int& cnt) {
+        cnt++;
+    }, print_count);
+    cout << "  Total de nodos contados: " << print_count << " (esperado: 7)\n";
+
+    cout << "\nPrint con multiples parametros (suma y minimo):\n";
+    int print_sum = 0, min_val = 999999;
+    tree.print([](auto* node, size_t level, int& s, int& mn) {
+        int val = node->getDataRef();
+        s += val;
+        if (val < mn) mn = val;
+    }, print_sum, min_val);
+    cout << "  Suma: " << print_sum << ", Minimo: " << min_val << "\n";
 }
 
 void testEdgeCases() {
@@ -204,6 +228,38 @@ void testEdgeCases() {
     cout << "\n";
 }
 
+void testWriteMethod() {
+    cout << "\n========== TEST 7: Write() en preorden ==========\n";
+    CBinaryTree<IntTraits> tree;
+
+    tree.insert(50, 1);
+    tree.insert(30, 2);
+    tree.insert(70, 3);
+    tree.insert(20, 4);
+    tree.insert(40, 5);
+
+    cout << "Arbol insertado: 50, 30, 70, 20, 40\n";
+    cout << "Tamaño: " << tree.size() << "\n\n";
+
+    cout << "Arbol visual:\n";
+    tree.print(cout);
+
+    cout << "\nWrite() - Salida en preorden:\n";
+    cout << "---\n";
+    tree.Write(cout);
+    cout << "---\n";
+
+    cout << "\nComparacion con preorder():\n";
+    cout << "  Preorden tradicional:";
+    tree.preorder(cout);
+    cout << "\n";
+
+    cout << "\nVerificacion del orden:\n";
+    cout << "  Orden esperado: 50 (raiz) -> 30 -> 20 -> 40 -> 70\n";
+    cout << "  Formato: cada nodo escribe 'dato ref' seguido de sus hijos\n";
+    cout << "  Nodos null: marcados como 'null' para estructura completa\n";
+}
+
 void DemoBinaryTree() {
     cout << "\n";
     cout << "========================================================\n";
@@ -217,6 +273,7 @@ void DemoBinaryTree() {
         testMemoryManagement();
         testVariadicTraversals();
         testEdgeCases();
+        testWriteMethod();
 
         cout << "\n";
         cout << "========================================================\n";
@@ -231,7 +288,9 @@ void DemoBinaryTree() {
         cout << "  [LISTO] Destructor recursivo\n";
         cout << "  [LISTO] begin() - nodo mas a la izquierda\n";
         cout << "  [LISTO] rbegin()/rend() - reverse iterator\n";
-        cout << "  [LISTO] Recorridos variadic templates\n";
+        cout << "  [LISTO] Recorridos variadic templates (inorder, preorder, postorder)\n";
+        cout << "  [LISTO] Print variadic templates\n";
+        cout << "  [LISTO] Write() - serializar arbol en preorden\n";
         cout << "\nFuncionalidades probadas:\n";
         cout << "  - Insercion y recorridos (inorden, preorden, postorden)\n";
         cout << "  - Iteradores forward y reverse\n";
@@ -239,8 +298,9 @@ void DemoBinaryTree() {
         cout << "  - Constructor por copia y movimiento\n";
         cout << "  - Operador de asignacion\n";
         cout << "  - Destructor y clear()\n";
-        cout << "  - Recorridos variadic con lambdas\n";
+        cout << "  - Recorridos variadic con lambdas (inorder, preorder, postorder, print)\n";
         cout << "  - Arboles con diferentes tipos y comparadores\n";
+        cout << "  - Serializacion de arbol con Write() en preorden\n";
         cout << "\n";
 
     } catch (const exception& e) {

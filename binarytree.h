@@ -273,29 +273,19 @@ public:
         preorder_variadic(m_pRoot, 0, func, std::forward<Args>(args)...);
     }
 
-    void print    (ostream &os)    {   print    (m_pRoot, 0, os);  }
-    // TODO: generalize this function to apply any function
+    void print    (ostream &os)    {   print_ostream(m_pRoot, 0, os);  }
+    // TODO(listo): generalize this function to apply any function
     // Google: C++ parameter packs cplusplus
-    void print(Node  *pNode, size_t level, ostream &os){
-        if( pNode ){
-            Node *pParent = pNode->getParent();
-            print(pNode->getChild(1), level+1, os);
-            for(size_t i = 0; i < level; ++i){
-				os << string(" | ");
-			}
-            os << pNode->getDataRef() << "(";
-            if (pParent) {
-                os << pParent->getData();
-            } else {
-                os << "Root";
-            }
-            os << ")" << endl;
-            print(pNode->getChild(0), level+1, os);
-        }
+    template <typename Function, typename... Args>
+    void print(Function func, Args&&... args) {
+      print_variadic(m_pRoot, 0, func, std::forward<Args>(args)...);
     }
 
-    // TODO: Tip: recorrer el arbol en preorden
-    void Write(ostream &os) { os << *this;  }
+    // TODO(listo): Tip: recorrer el arbol en preorden
+    void Write(ostream &os) {
+        os << m_size << endl;
+        preorder_write(m_pRoot, os);
+      }
 
     // TODO: Leer en el arbol desde un stream asumiendo que esta en preorden
     void Read(istream &is)  { /* TODO */  }
@@ -386,6 +376,43 @@ private:
             preorder_variadic(pNode->getChild(1), level + 1, func, std::forward<Args>(args)...);
         }
     }
+
+    void print_ostream(Node *pNode, size_t level, ostream &os){
+      if( pNode ){
+          Node *pParent = pNode->getParent();
+          print_ostream(pNode->getChild(1), level+1, os);  // cambiar aquí
+          for(size_t i = 0; i < level; ++i){
+              os << string(" | ");
+          }
+          os << pNode->getDataRef() << "(";
+          if (pParent) {
+              os << pParent->getData();
+          } else {
+              os << "Root";
+          }
+          os << ")" << endl;
+          print_ostream(pNode->getChild(0), level+1, os);  // y aquí
+      }
+    }
+
+    template <typename Function, typename... Args>
+    void print_variadic(Node* pNode, size_t level, Function func, Args&&... args) {
+      if (pNode) {
+          print_variadic(pNode->getChild(1), level + 1, func, std::forward<Args>(args)...);
+          func(pNode, level, std::forward<Args>(args)...);
+          print_variadic(pNode->getChild(0), level + 1, func, std::forward<Args>(args)...);
+      }
+    }
+
+    void preorder_write(Node* pNode, ostream &os) {
+      if (pNode) {
+          os << pNode->getDataRef() << " " << pNode->m_ref << endl;
+          preorder_write(pNode->getChild(0), os);
+          preorder_write(pNode->getChild(1), os);
+      } else {
+          os << "null" << endl;
+      }
+  }
 
 };
 
