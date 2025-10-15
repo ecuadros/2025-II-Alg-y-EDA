@@ -45,8 +45,9 @@ public: // TODO: Add this class as friend of the BinaryTree
     Node    * getParent() { return m_pParent;   }
 };
 
+// Forward Iterator
 template <typename Container>
-class binary_tree_iterator {
+class binary_tree_forward_iterator {
 public:
     using Node = typename Container::Node;
     using value_type = typename Container::value_type;
@@ -57,63 +58,54 @@ public:
 
 private:
     Node* m_current;
-    std::vector<Node*> m_stack;
 
-    // Función auxiliar: empuja todos los nodos izquierdos al stack
-    void pushLeft(Node* node) {
-        while (node) {
-            m_stack.push_back(node);
+    // Encuentra el mínimo del subárbol
+    Node* findMin(Node* node) {
+        while (node && node->getChild(0)) {
             node = node->getChild(0);
         }
+        return node;
     }
 
 public:
-    // Constructor: comienza desde la raíz
-    binary_tree_iterator(Node* root = nullptr) : m_current(nullptr) {
-        if (root) {
-            pushLeft(root);  // Empuja todos los nodos izquierdos
-            if (!m_stack.empty()) {
-                m_current = m_stack.back();
-                m_stack.pop_back();
-            }
-        }
-    }
+    // Constructor: inicia en el nodo más a la izquierda
+    binary_tree_forward_iterator(Node* root = nullptr) 
+        : m_current(root ? findMin(root) : nullptr) {}
 
-    // Desreferenciar: devuelve el valor actual
     reference operator*() const { return m_current->getDataRef(); }
     pointer operator->() const { return &(m_current->getDataRef()); }
 
-    // Avanzar al siguiente nodo (en inorder)
-    binary_tree_iterator& operator++() {
-        if (m_current) {
-            // Si hay hijo derecho, procesar su subárbol izquierdo
-            if (m_current->getChild(1)) {
-                pushLeft(m_current->getChild(1));
+    // Avanza al siguiente en orden ascendente
+    binary_tree_forward_iterator& operator++() {
+        if (!m_current) return *this;
+
+        // Si tiene hijo derecho, ir a su mínimo
+        if (m_current->getChild(1)) {
+            m_current = findMin(m_current->getChild(1));
+        }
+        // Si no, subir mientras sea hijo derecho
+        else {
+            Node* parent = m_current->getParent();
+            while (parent && m_current == parent->getChild(1)) {
+                m_current = parent;
+                parent = parent->getParent();
             }
-            // Siguiente nodo es el tope del stack
-            if (!m_stack.empty()) {
-                m_current = m_stack.back();
-                m_stack.pop_back();
-            } else {
-                m_current = nullptr;  // Fin del recorrido
-            }
+            m_current = parent;
         }
         return *this;
     }
 
-    // Post-incremento
-    binary_tree_iterator operator++(int) {
-        binary_tree_iterator tmp = *this;
+    binary_tree_forward_iterator operator++(int) {
+        binary_tree_forward_iterator tmp = *this;
         ++(*this);
         return tmp;
     }
 
-    // Comparación
-    bool operator==(const binary_tree_iterator& other) const {
+    bool operator==(const binary_tree_forward_iterator& other) const {
         return m_current == other.m_current;
     }
 
-    bool operator!=(const binary_tree_iterator& other) const {
+    bool operator!=(const binary_tree_forward_iterator& other) const {
         return !(*this == other);
     }
 };
@@ -141,7 +133,7 @@ public:
     
     using CompareFn     = typename Traits::CompareFn;
     using Container     = CBinaryTree<Traits>;
-    using iterator      = binary_tree_iterator<Container>;
+    using iterator      = binary_tree_forward_iterator<Container>;
 
 protected:
     Node    *m_pRoot = nullptr;
