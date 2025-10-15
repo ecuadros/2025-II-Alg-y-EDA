@@ -9,8 +9,8 @@
 #include <utility>
 #include <ostream>
 #include <type_traits>
-#include <vector>
 #include <utility> 
+#include  "vector.h"
 #include "types.h"
 //#include "util.h"
 using namespace std;
@@ -26,15 +26,22 @@ protected:
     value_type       m_data{};
     Node *  m_pParent = nullptr;
     Ref     m_ref{};
-    vector<Node *> m_pChild = {nullptr, nullptr}; // 2 hijos inicializados en nullptr 
+    struct ChildVecTraits { using value_type = Node*; };
+    CVector<ChildVecTraits> m_pChild;// 2 hijos inicializados en nullptr 
 
 public:
     CBinaryTreeNode(Node* pParent, value_type data, Ref ref, Node* p0 = nullptr, Node* p1 = nullptr)
-        : m_pParent(pParent), m_data(data), m_ref(ref)
+        : m_pParent(pParent), m_data(data), m_ref(ref), m_pChild(0)
     {
-        m_pChild[0] = p0;
-        m_pChild[1] = p1;
+    // CVector::insert(value_type&): requiere LVALUES
+    Node* a = p0;  m_pChild.insert(a);
+    Node* b = p1;  m_pChild.insert(b);
+    // ahora size()==2, ya es válido usar m_pChild[0] y m_pChild[1]
     }
+    //     {
+    //     m_pChild[0] = p0;
+    //     m_pChild[1] = p1;
+    // }
     ~CBinaryTreeNode(){
         delete m_pChild[0]; m_pChild[0] = nullptr;
         delete m_pChild[1]; m_pChild[1] = nullptr;
@@ -88,7 +95,7 @@ protected: // TODO Hecho total : Add this class as friend of the BinaryTree
 
 template <typename _T>
 struct BinaryTreeAscTraits{
-    using  T         = _T;
+    using  T         = _T; 
     using  Node      = CBinaryTreeNode<BinaryTreeAscTraits<_T>>;
     using  CompareFn = less<T>;
 };
@@ -301,7 +308,7 @@ public:
         postorder_impl(m_pRoot, 0, std::forward<F>(f), std::forward<Args>(args)...);
     }
 
-    void inorder_print(std::ostream& os)  { inorder([&](value_type& x){ os << " --> " << x; }); }
+    void inorder_print(std::ostream& os)  { inorder([&](value_type& x){ os << " --> " << x; }); } // funcion para imprimir inorder
     void preorder_print(std::ostream& os) { preorder([&](value_type& x){ os << " --> " << x; }); }
     void postorder_print(std::ostream& os){ postorder([&](value_type& x){ os << " --> " << x; }); }
 
@@ -377,7 +384,7 @@ protected:
 template <typename Traits>
 ostream & operator<<(std::ostream &os, CBinaryTree<Traits> &obj){
     os << "CBinaryTree with " << obj.size() << " elements.";
-    obj.inorder_print(os);
+    obj.inorder_print(os); // Imprimir en orden
     return os;
 }
 
