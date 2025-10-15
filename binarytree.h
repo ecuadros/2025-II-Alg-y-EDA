@@ -232,8 +232,19 @@ public:
     // TODO: Generalizar estos recorridos para recibir cualquier funcion
     // con una cantidad flexible de parametros con variadic templates
     // Google: C++ parameter packs cplusplus
-    void inorder  (ostream &os)    {   inorder  (m_pRoot, 0, os);  }
+    template <typename Function, typename... Args>
+    void inorder(Function&& func, Args&&... args) {
+        inorder_impl(m_pRoot, std::forward<Function>(func), std::forward<Args>(args)...);
+    }
     // TODO: 
+    template <typename Function, typename... Args>
+    void inorder_impl(Node* pNode, Function&& func, Args&&... args) {
+        if (!pNode) return;
+        inorder_impl(pNode->getChild(0), std::forward<Function>(func), std::forward<Args>(args)...);
+        std::invoke(std::forward<Function>(func), pNode, std::forward<Args>(args)...);
+        inorder_impl(pNode->getChild(1), std::forward<Function>(func), std::forward<Args>(args)...);
+    }
+
     void inorder(Node  *pNode, size_t level, ostream &os){
         if( pNode ){
             //Node *pParent = pNode->getParent();
@@ -254,18 +265,18 @@ public:
 
     // Variadic templates (See foreach.h)
     template <typename Function, typename... Args>
-    void postorder(Function func, Args const&... args)
-    {    postorder(m_pRoot, 0, func, args...);}
+    void postorder(Function&& func, Args&&... args)
+    {    postorder_impl(m_pRoot, 0, std::forward<Function>(func), std::forward<Args>(args)...);}
 
     template <typename Function,typename... Args>
-    void postorder(Node* pNode, size_t level, 
-                   Function func, Args const&... args) {
+    void postorder_impl(Node* pNode, Function&& func, Args&&... args) {
         if (pNode) {
-            postorder(pNode->getChild(0), level + 1, func, args...);
-            postorder(pNode->getChild(1), level + 1, func, args...);
-            func(pNode, level); 
+            postorder_impl(pNode->getChild(0), std::forward<Function>(func), std::forward<Args>(args)...);
+            postorder_impl(pNode->getChild(1), std::forward<Function>(func), std::forward<Args>(args)...);
+            std::invoke(std::forward<Function>(func), pNode, std::forward<Args>(args)...);
         }
     }
+
     // TODO: generalize this function to apply any function
     void postorder(Node  *pNode, size_t level, ostream &os){
         if( pNode ){   
@@ -276,7 +287,19 @@ public:
     }
 
     // TODO: Generalize this function to apply any function
-    void preorder (ostream &os)    {   preorder (m_pRoot, 0, os);  }
+    template <typename Function, typename... Args>
+    void preorder(Function&& func, Args&&... args) {
+        preorder_impl(m_pRoot, 0, std::forward<Function>(func), std::forward<Args>(args)...);
+    }
+
+    template <typename Function, typename... Args>
+    void preorder_impl(Node* pNode, Function&& func, Args&&... args) {
+        if (!pNode) return;
+        std::invoke(std::forward<Function>(func), pNode, std::forward<Args>(args)...);
+        preorder_impl(pNode->getChild(0), std::forward<Function>(func), std::forward<Args>(args)...);
+        preorder_impl(pNode->getChild(1), std::forward<Function>(func), std::forward<Args>(args)...);
+    }
+
     // TODO: Generalize this function to apply any function
     void preorder(Node  *pNode, size_t level, ostream &os){
         if( pNode ){   
@@ -358,9 +381,11 @@ public:
 
 // TODO: este operator << debe seguir estando fuera de la clase
 template <typename Traits>
-ostream & operator<<(std::ostream &os, CBinaryTree<Traits> &obj){
+std::ostream& operator<<(std::ostream& os, CBinaryTree<Traits>& obj) {
     os << "CBinaryTree with " << obj.size() << " elements.";
-    obj.inorder(os);
+    obj.inorder([&os](typename CBinaryTree<Traits>::Node* pNode) {
+        os << " --> " << pNode->getData();
+    });
     return os;
 }
 
