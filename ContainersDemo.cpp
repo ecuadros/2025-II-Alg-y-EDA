@@ -6,6 +6,7 @@
 #include "linkedlist.h"
 #include "doublelinkedlist.h"
 #include "binarytree.h"
+// #include "avl.h"
 #include "foreach.h"
 #include "types.h"
 #include "util.h"
@@ -135,3 +136,41 @@ void DemoBinaryTree(){
 
     // Next classes: AVL, BTree
 }
+
+// void DemoAVLTree(){
+//     std::vector< std::pair<T1, Ref> > v1 = {
+//         {4, 8}, {2, 5}, {7, 3}, {1, 9}, {5, 2}
+//     };
+//     CAVLTree< AVLAscTraits<T1> > avl;
+//     for (auto &par : v1)
+//         avl.insert(par.first, par.second);
+//     std::cout << avl << std::endl;
+
+//     std::cout << "Inorder traversal:" << std::endl;
+//     // avl.inorder();
+//     std::cout << std::endl;
+
+//     std::cout << "Preorder traversal:" << std::endl;
+//     // avl.preorder();
+//     std::cout << std::endl;
+
+//     std::cout << "Postorder traversal:" << std::endl;
+//     // avl.postorder();
+//     std::cout << std::endl;
+
+//     std::cout << "Tree structure:" << std::endl;
+//     // avl.print();
+//     std::cout << std::endl;
+
+//     std::cout << "Imprimiendo con forward iterator" << std::endl;
+//     // foreach(avl. begin(), avl. end(), ::Print<T1>);
+//     std::cout << std::endl;
+
+//     std::cout << "Imprimiendo con backward iterator" << std::endl;
+//     // foreach(avl.rbegin(), avl.rend(), ::Print<T1>);
+//     std::cout << std::endl;
+    
+//     std::ofstream of("AVL.txt");
+//     avl.Write(of);
+//     of.close();
+// }

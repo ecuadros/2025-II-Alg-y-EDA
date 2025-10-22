@@ -60,6 +60,7 @@ public:
     // TODO: Revisar el avance de un iterator
     binary_tree_iterator operator++() {
         Parent::m_pNode = Parent::m_pNode ? (Node*)Parent::m_pNode->getpNext() : nullptr;
+        
         return *this;
     }
 };
@@ -157,17 +158,17 @@ public:
     //  }
     // riterator rend()  { return iterator(this, nullptr); }
 
-    // TODO: Generalizar estos recorridos para recibir cualquier funcion
-    // con una cantidad flexible de parametros con variadic templates
-    // Google: C++ parameter packs cplusplus
-        void inorder  (ostream &os)    {   inorder  (m_pRoot, 0, os);  }
-    // TODO: 
-    void inorder(Node  *pNode, size_t level, ostream &os){
-        if( pNode ){
-            //Node *pParent = pNode->getParent();
-            inorder(pNode->getChild(0), level+1, os);
-            os << " --> " << pNode->getDataRef();
-            inorder(pNode->getChild(1), level+1, os);
+    template <typename Function, typename... Args>
+    void inorder(Function func, Args const&... args) {
+        inorder(m_pRoot, 0, func, args...);
+    }
+
+    template <typename Function, typename... Args>
+    void inorder(Node* pNode, size_t level, Function func, Args const&... args) {
+        if (pNode) {
+            inorder(pNode->getChild(0), level + 1, func, args...);
+            func(pNode, level, args...);
+            inorder(pNode->getChild(1), level + 1, func, args...);
         }
     }
 
@@ -182,16 +183,16 @@ public:
 
     // Variadic templates (See foreach.h)
     template <typename Function, typename... Args>
-    void postorder(Function func, Args const&... args)
-    {    postorder(m_pRoot, 0, func, args...);}
+    void postorder(Function func, Args const&&... args)
+    {    postorder(m_pRoot, 0, func, std::forward<Args>(args)...);}
 
     template <typename Function,typename... Args>
     void postorder(Node* pNode, size_t level, 
-                   Function func, Args const&... args) {
+                   Function func, Args const&&... args) {
         if (pNode) {
-            postorder(pNode->getChild(0), level + 1, func, args...);
-            postorder(pNode->getChild(1), level + 1, func, args...);
-            func(pNode, level); 
+            postorder(pNode->getChild(0), func, std::forward<Args>(args)...);
+            postorder(pNode->getChild(1), func, std::forward<Args>(args)...);
+            func(pNode, std::forward<Args>(args)...);
         }
     }
     // TODO: generalize this function to apply any function
@@ -203,14 +204,17 @@ public:
         }
     }
 
-    // TODO: Generalize this function to apply any function
-    void preorder (ostream &os)    {   preorder (m_pRoot, 0, os);  }
-    // TODO: Generalize this function to apply any function
-    void preorder(Node  *pNode, size_t level, ostream &os){
-        if( pNode ){   
-            os << " --> " << pNode->getDataRef();
-            preorder(pNode->getChild(0), level+1, os);
-            preorder(pNode->getChild(1), level+1, os);            
+    template <typename Function, typename... Args>
+    void preorder(Function func, Args const&... args) {
+        preorder(m_pRoot, 0, func, args...);
+    }
+
+    template <typename Function, typename... Args>
+    void preorder(Node* pNode, size_t level, Function func, Args const&... args) {
+        if (pNode) {
+            func(pNode, level, args...);
+            preorder(pNode->getChild(0), level + 1, func, args...);
+            preorder(pNode->getChild(1), level + 1, func, args...);
         }
     }
 
