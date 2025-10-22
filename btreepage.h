@@ -127,13 +127,13 @@ protected:
        void  Destroy () {   Reset(); delete this;}
        void  clear ();
 
-       bool  Redistribute1   (size_t &pos);
-       bool  Redistribute2   (size_t pos);
+       bool  RedistributeWith1Brother   (size_t &pos);
+       bool  RedistributeWith2Brothers   (size_t pos);
        void  RedistributeR2L (size_t pos);
        void  RedistributeL2R (size_t pos);
 
        bool    TreatUnderflow  (size_t &pos)
-       {       return Redistribute1(pos) || Redistribute2(pos);}
+       {       return RedistributeWith1Brother(pos) || RedistributeWith2Brothers(pos);}
 
        bt_ErrorCode    Merge  (size_t pos);
        bt_ErrorCode    MergeRoot ();
@@ -209,7 +209,7 @@ bt_ErrorCode CBTreePage<Trait>::Insert(const keyType& key, const ObjIDType ObjID
                // recursive insertion
                error = m_SubPages[pos]->Insert(key, ObjID);
                if( error == bt_overflow ){
-                       if( !Redistribute1(pos) )
+                       if( !RedistributeWith1Brother(pos) )
                                SplitChild(pos);
                        if( Overflow() )  // Propagate overflow
                                return bt_overflow;
@@ -222,7 +222,7 @@ bt_ErrorCode CBTreePage<Trait>::Insert(const keyType& key, const ObjIDType ObjID
 }
 
 template <typename Trait>
-bool CBTreePage<Trait>::Redistribute1(size_t &pos)
+bool CBTreePage<Trait>::RedistributeWith1Brother(size_t &pos)
 {
        if( m_SubPages[pos]->Underflow() )
        {
@@ -267,11 +267,12 @@ bool CBTreePage<Trait>::Redistribute1(size_t &pos)
        return true;
 }
 
-// Redistribute2 function
-// it considers two brothers m_SubPages[pos-1] && m_SubPages[pos+1]
-// if it fails the only way is merge !
+/** RedistributeWith2Brothers function
+   it considers two brothers m_SubPages[pos-1] && m_SubPages[pos+1]
+   if it fails the only way is merge !
+**/
 template <typename Trait>
-bool CBTreePage<Trait>::Redistribute2(size_t pos)
+bool CBTreePage<Trait>::RedistributeWith2Brothers(size_t pos)
 {
        assert( pos > 0 && pos < NumberOfKeys()  );
        assert( m_SubPages[pos-1] != 0 && m_SubPages[pos] != 0 && m_SubPages[pos+1] != 0 );
