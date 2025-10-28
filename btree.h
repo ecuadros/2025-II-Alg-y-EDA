@@ -15,11 +15,27 @@ struct BTreeTrait
        // TODO: agregar funcion de comparacion
 };
 
+template <typename _keyType, typename _ObjIDType>
+struct BTreeAscTraits{
+    using  keyType            = _keyType;
+    using  ObjIDType          = _ObjIDType;
+    using  CompareFn          = less<_keyType>;
+};
+
+template <typename _keyType, typename _ObjIDType>
+struct BTreeDescTraits
+{
+    using  keyType           = _keyType;
+    using  ObjIDType         = _ObjIDType;
+    using  CompareFn         = greater<_keyType>;
+};
+
 template <typename Trait>
 class BTree // this is the full version of the BTree
 {
-       typedef typename Trait::keyType    keyType;
-       typedef typename Trait::ObjIDType    ObjIDType;
+       typedef typename Trait::keyType      keyType;
+       typedef typename Trait::ObjIDType    ObjIDType; 
+       typedef typename Trait::CompareFn    CompareFn;
        
        typedef CBTreePage <Trait> BTNode;// useful shorthand
 
@@ -45,8 +61,8 @@ public:
        //int           Open (char * name, int mode);
        //int           Create (char * name, int mode);
        //int           Close ();
-       bool            Insert (const keyType key, const long ObjID);
-       bool            Remove (const keyType key, const long ObjID);
+       bool            Insert (const keyType key, const ObjIDType ObjID);
+       bool            Remove (const keyType key, const ObjIDType ObjID);
        ObjIDType       Search (const keyType key)
        {      ObjIDType ObjID = -1;
               m_Root.Search(key, ObjID);
@@ -77,7 +93,7 @@ protected:
 };     
 
 template <typename Trait>
-bool BTree<Trait>::Insert(const keyType key, const long ObjID){
+bool BTree<Trait>::Insert(const keyType key, const ObjIDType ObjID){
        bt_ErrorCode error = m_Root.Insert(key, ObjID);
        if( error == bt_duplicate )
                return false;
@@ -90,7 +106,7 @@ bool BTree<Trait>::Insert(const keyType key, const long ObjID){
 }
 
 template <typename Trait>
-bool BTree<Trait>::Remove (const keyType key, const long ObjID)
+bool BTree<Trait>::Remove (const keyType key, const ObjIDType ObjID)
 {
        bt_ErrorCode error = m_Root.Remove(key, ObjID);
        if( error == bt_duplicate || error == bt_nofound )
