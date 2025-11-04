@@ -2,24 +2,44 @@
 #define __BTREE_H__
 
 #include <iostream>
+#include <functional>
 #include "btreepage.h"
 #define DEFAULT_BTREE_ORDER 3
 
 const size_t MaxHeight = 5; 
 
-template <typename _keyType, typename _ObjIDType>
+template <typename _keyType, typename _ObjIDType, typename _Compare>
 struct BTreeTrait
 {
        using keyType = _keyType;
        using ObjIDType = _ObjIDType;
-       // TODO: agregar funcion de comparacion
+       using CompareFn = _Compare;
+       // TODO (LISTO): agregar funcion de comparacion
 };
+
+template <typename Key, typename Value>
+struct BTreeDescTrait {
+    using keyType = Key;
+    using ObjIDType = Value;
+    using CompareFn = std::greater<Key>;
+};
+
+
+template <typename Key, typename Value>
+struct BTreeAscTrait {
+    using keyType = Key;
+    using ObjIDType = Value;
+    using CompareFn = std::less<Key>;
+};
+
+
 
 template <typename Trait>
 class BTree // this is the full version of the BTree
 {
        typedef typename Trait::keyType    keyType;
        typedef typename Trait::ObjIDType    ObjIDType;
+       typedef typename Trait::CompareFn    CompareFn;
        
        typedef CBTreePage <Trait> BTNode;// useful shorthand
 
@@ -33,14 +53,16 @@ public:
 
 public:
        BTree(size_t order = DEFAULT_BTREE_ORDER, bool unique = true)
-              : m_Order(order),
-                m_Root(2 * order  + 1, unique),
+              : m_Root(2 * order + 1, unique),
+                m_Height(1),
+                m_Order(order),
+                m_NumKeys(0),
                 m_Unique(unique),
-                m_NumKeys(0)
+                m_Comp()
        {
               m_Root.SetMaxKeysForChilds(order);
-              m_Height = 1;
        }
+
        ~BTree() {}
        //int           Open (char * name, int mode);
        //int           Create (char * name, int mode);
@@ -74,6 +96,7 @@ protected:
        size_t          m_Order;   // order of tree
        size_t          m_NumKeys; // number of keys
        bool            m_Unique;  // Accept the elements only once ?
+       CompareFn       m_Comp;
 };     
 
 template <typename Trait>
@@ -101,5 +124,7 @@ bool BTree<Trait>::Remove (const keyType key, const long ObjID)
                m_Height--;
        return true;
 }
+
+void DemoBTree();
 
 #endif
