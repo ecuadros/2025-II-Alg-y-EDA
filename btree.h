@@ -72,6 +72,18 @@ public:
               m_Root.Read(is);
        }
        
+       // ForEach y FirstThat generalizados con variadic templates
+       template<typename Func, typename... Args>
+       void ForEach(Func func, Args&&... args) { 
+              m_Root.ForEach(func, std::forward<Args>(args)...); 
+       }
+
+       template<typename Pred, typename... Args>
+       ObjectInfo* FirstThat(Pred predicate, Args&&... args) { 
+              return m_Root.FirstThat(predicate, std::forward<Args>(args)...); 
+       }
+       
+       
        void            ForEach( lpfnForEach2 lpfn, void *pExtra1 )
        {               m_Root.ForEach(lpfn, 0, pExtra1);              }
        void            ForEach( lpfnForEach3 lpfn, void *pExtra1, void *pExtra2)

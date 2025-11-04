@@ -100,6 +100,17 @@ class CBTreePage //: public SimpleIndex <keyType>
        void            Write  (ostream &os);
        void            Read   (istream &is);
 
+       // ForEach y FirstThat generalizados con variadic templates
+       template<typename Func, typename... Args>
+       void ForEach(Func func, Args&&... args) {
+              ForEach_internal(func, 0, std::forward<Args>(args)...);
+       }
+
+       template<typename Pred, typename... Args>
+       ObjectInfo* FirstThat(Pred predicate, Args&&... args) {
+              return FirstThat_internal(predicate, 0, std::forward<Args>(args)...);
+       }
+
        // TODO: #6 change by Invoke
        // TODO: #7 ForEach must be a template inside this template
        void            ForEach(lpfnForEach2 lpfn, size_t level, void *pExtra1);
@@ -167,6 +178,32 @@ protected:
        }
 
 private:
+       // Métodos internos con level para recursión usando variadic templates
+        template<typename Func, typename... Args>
+        void ForEach_internal(Func func, size_t level, Args&&... args) {
+        if(m_SubPages[0]) m_SubPages[0]->ForEach_internal(func, level + 1, std::forward<Args>(args)...);
+        for(size_t i = 0; i < m_KeyCount; i++) {
+                func(m_Keys[i], level, std::forward<Args>(args)...);
+                if(m_SubPages[i+1]) m_SubPages[i+1]->ForEach_internal(func, level + 1, std::forward<Args>(args)...);
+        }
+        }
+
+        template<typename Pred, typename... Args>
+        ObjectInfo* FirstThat_internal(Pred predicate, size_t level, Args&&... args) {
+        if(m_SubPages[0]) {
+                auto result = m_SubPages[0]->FirstThat_internal(predicate, level + 1, std::forward<Args>(args)...);
+                if(result) return result;
+        }
+        for(size_t i = 0; i < m_KeyCount; i++) {
+                if(predicate(m_Keys[i], level, std::forward<Args>(args)...)) return &m_Keys[i];
+                if(m_SubPages[i+1]) {
+                auto result = m_SubPages[i+1]->FirstThat_internal(predicate, level + 1, std::forward<Args>(args)...);
+                if(result) return result;
+                }
+        }
+        return nullptr;
+        }
+
        bool SplitRoot();
        void SplitPageInto3(vector<ObjectInfo>   & tmpKeys,
                                                vector<BTPage *>  & SubPages,
