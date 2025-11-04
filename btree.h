@@ -93,6 +93,9 @@ public:
 		return m_Root.FirstThat(lpfn, 0, pExtra1, pExtra2);
 	}
 	//typedef               ObjectInfo iterator;
+
+	friend std::ostream& operator<<(std::ostream &os, BTree<Trait> &obj);
+
 };     
 
 template <typename Trait>
@@ -119,6 +122,11 @@ bool BTree<Trait>::Remove (const keyType key, const long ObjID)
 	if( error == bt_rootmerged )
 		 m_Height--;
 	return true;
+}
+
+template <typename Trait>
+std::ostream& operator<<(std::ostream &os, BTree<Trait> &obj) {
+	os << obj.m_Root.Print();
 }
 
 #endif
