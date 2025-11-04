@@ -7,17 +7,18 @@
 
 const size_t MaxHeight = 5; 
 
-template <typename _keyType, typename _ObjIDType>
+template <typename _keyType, typename _ObjIDType, typename _Compare = std::less<_keyType>>
 struct BTreeTrait
 {
        using keyType = _keyType;
        using ObjIDType = _ObjIDType;
+       using Compare = _Compare;
        // TODO: agregar funcion de comparacion
 };
 
 template <typename Trait>
 class BTree // this is the full version of the BTree
-{
+{ 
        typedef typename Trait::keyType    keyType;
        typedef typename Trait::ObjIDType    ObjIDType;
        
