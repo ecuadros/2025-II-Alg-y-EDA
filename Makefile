@@ -10,15 +10,21 @@ SRCS = main.cpp \
 
 OBJS = $(SRCS:.cpp=.o)
 
-all: $(TARGET)
+all: demo
 
 $(TARGET): $(OBJS)
 	$(CXX) $(LDFLAGS) $^ -o $@
+
+demo: demo.o
+	$(CXX) $(LDFLAGS) $^ -o $@
+
+demo.o: demo.cpp btree.h btreepage.h
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 clean:
-	rm -f $(OBJS) $(TARGET)
+	rm -f $(OBJS) demo.o $(TARGET) demo
 
 .PHONY: all clean

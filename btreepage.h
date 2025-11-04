@@ -108,7 +108,7 @@ class CBTreePage //: public SimpleIndex <keyType>
        ObjectInfo*     FirstThat(lpfnFirstThat3 lpfn, size_t level, void *pExtra1, void *pExtra2);
 
 protected:
-       // TODO: #9 change by size_t
+ 
        size_t  m_MinKeys; // minimum number of keys in a node
        size_t  m_MaxKeys, // maximum number of keys in a node
 
@@ -120,7 +120,7 @@ protected:
        vector<ObjectInfo> m_Keys;
        vector<BTPage *>m_SubPages;
        
-       // TODO: #10 size_t
+
        size_t  m_KeyCount;
        void  Create();
        void  Reset ();
@@ -697,7 +697,7 @@ bt_ErrorCode CBTreePage<Trait>::Merge(size_t pos)
 
        nKeys = pChild2->GetFreeCells();
 
-       // TODO: #32 change int by size_t
+
        size_t j = ++i;
        for(i = 0 ; i < nKeys ; i++, j++ )
        {
@@ -716,7 +716,7 @@ bt_ErrorCode CBTreePage<Trait>::Merge(size_t pos)
 template <typename Trait>
 bt_ErrorCode CBTreePage<Trait>::MergeRoot()
 {
-        // TODO: #33 change int by size_t
+
        size_t pos = 1;
        assert( m_SubPages[pos-1]->NumberOfKeys() +
                        m_SubPages[ pos ]->NumberOfKeys() +
@@ -724,7 +724,7 @@ bt_ErrorCode CBTreePage<Trait>::MergeRoot()
                        3*m_SubPages[ pos ]->MinNumberOfKeys() - 1);
 
        BTPage  *pChild1 = m_SubPages[pos-1], *pChild2 = m_SubPages[ pos ], *pChild3 = m_SubPages[pos+1];
-       // TODO: #34 change int by size_t
+ 
        size_t nKeys = pChild1->NumberOfKeys() + pChild2->NumberOfKeys() + pChild3->NumberOfKeys() + 2;
 
        // FIRST: Put all the elements into a vector
@@ -794,7 +794,6 @@ void CBTreePage<Trait>::Create()
 template <typename Trait>
 void CBTreePage<Trait>::Reset()
 {
-        // TODO: #35 change int by size_t
        for( size_t i = 0 ; i < m_KeyCount ; i++ )
                delete m_SubPages[i];
        clear();
@@ -817,7 +816,6 @@ CBTreePage<Trait> * CreateBTreeNode (size_t maxKeys, bool unique)
 template <typename Trait>
 void CBTreePage<Trait>::MovePage(BTPage *pChildPage, vector<ObjectInfo> &tmpKeys,vector<BTPage *> &tmpSubPages)
 {
-        // TODO: #37 change int by size_t
        size_t nKeys = pChildPage->GetNumberOfKeys();
        size_t i = 0;
        for(i = 0; i < nKeys; i++ )
