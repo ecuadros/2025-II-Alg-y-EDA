@@ -33,6 +33,14 @@ public:
 	typedef typename BTNode::lpfnFirstThat3  lpfnFirstThat3;
 	typedef typename BTNode::ObjectInfo      ObjectInfo;
 
+protected:
+	BTNode          m_Root;
+	size_t          m_Height;  // height of tree
+	size_t          m_Order;   // order of tree
+	size_t          m_NumKeys; // number of keys
+	bool            m_Unique;  // Accept the elements only once ?
+	CompareFn		m_Compfn;
+
 public:
 	BTree(size_t order = DEFAULT_BTREE_ORDER, bool unique = true)
 		: m_Order(order),
@@ -43,6 +51,16 @@ public:
 		m_Root.SetMaxKeysForChilds(order);
 		m_Height = 1;
 	}
+	
+	BTree(BTree &&other) {
+		m_Root = std::move(other.m_Root);
+		m_Height = std::move(other.m_Height);
+		m_Order = std::move(other.m_Order);
+		m_NumKeys = std::move(other.m_NumKeys);
+		m_Unique = std::move(other.m_Unique);
+		m_Compfn = std::move(other.m_Compfn);
+	}
+	
 	~BTree() {}
 	//int           Open (char * name, int mode);
 	//int           Create (char * name, int mode);
@@ -58,25 +76,23 @@ public:
 	size_t            height() { return m_Height;      }
 	size_t            GetOrder() { return m_Order;     }
 
-	void            Print (ostream &os)
-	{               m_Root.Print(os);                              }
-	void            ForEach( lpfnForEach2 lpfn, void *pExtra1 )
-	{               m_Root.ForEach(lpfn, 0, pExtra1);              }
-	void            ForEach( lpfnForEach3 lpfn, void *pExtra1, void *pExtra2)
-	{               m_Root.ForEach(lpfn, 0, pExtra1, pExtra2);     }
-	ObjectInfo*     FirstThat( lpfnFirstThat2 lpfn, void *pExtra1 )
-	{               return m_Root.FirstThat(lpfn, 0, pExtra1);     }
-	ObjectInfo*     FirstThat( lpfnFirstThat3 lpfn, void *pExtra1, void *pExtra2)
-	{               return m_Root.FirstThat(lpfn, 0, pExtra1, pExtra2);   }
-	//typedef               ObjectInfo iterator;
+	void Print (ostream &os){ m_Root.Print(os); }
+	
+	void ForEach( lpfnForEach2 lpfn, void *pExtra1 ){ 
+		m_Root.ForEach(lpfn, 0, pExtra1); 
+	}
+	void ForEach( lpfnForEach3 lpfn, void *pExtra1, void *pExtra2){
+		m_Root.ForEach(lpfn, 0, pExtra1, pExtra2);
+	}
 
-protected:
-	BTNode          m_Root;
-	size_t          m_Height;  // height of tree
-	size_t          m_Order;   // order of tree
-	size_t          m_NumKeys; // number of keys
-	bool            m_Unique;  // Accept the elements only once ?
-	CompareFn	Compfn;
+	ObjectInfo* FirstThat( lpfnFirstThat2 lpfn, void *pExtra1 ){
+		return m_Root.FirstThat(lpfn, 0, pExtra1);
+	}
+	
+	ObjectInfo* FirstThat( lpfnFirstThat3 lpfn, void *pExtra1, void *pExtra2){ 
+		return m_Root.FirstThat(lpfn, 0, pExtra1, pExtra2);
+	}
+	//typedef               ObjectInfo iterator;
 };     
 
 template <typename Trait>
