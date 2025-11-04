@@ -25,7 +25,7 @@ class BTree // this is the full version of the BTree
        typedef CBTreePage <Trait> BTNode;// useful shorthand
 
 public:
-       //typedef ObjectInfo iterator;
+       typedef BTreeIterator<Trait>             iterator;
        typedef typename BTNode::lpfnForEach2    lpfnForEach2;
        typedef typename BTNode::lpfnForEach3    lpfnForEach3;
        typedef typename BTNode::lpfnFirstThat2  lpfnFirstThat2;
@@ -67,7 +67,22 @@ public:
        {               return m_Root.FirstThat(lpfn, 0, pExtra1);     }
        ObjectInfo*     FirstThat( lpfnFirstThat3 lpfn, void *pExtra1, void *pExtra2)
        {               return m_Root.FirstThat(lpfn, 0, pExtra1, pExtra2);   }
-       //typedef               ObjectInfo iterator;
+
+       iterator begin()
+       {
+               if (m_NumKeys == 0)
+                       return end();
+
+               BTNode* node = &m_Root;
+               while (node->m_SubPages[0])
+                       node = node->m_SubPages[0];
+               return iterator(node, 0);
+       }
+
+       iterator end()
+       {
+               return iterator(nullptr, 0);
+       }
 
 protected:
        BTNode          m_Root;
