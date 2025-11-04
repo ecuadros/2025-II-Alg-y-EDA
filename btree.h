@@ -12,7 +12,8 @@ struct BTreeTrait
 {
        using keyType = _keyType;
        using ObjIDType = _ObjIDType;
-       // TODO: agregar funcion de comparacion
+       // TODO: agregar funcion de comparacion (DONE)
+       using Compare = std::less<_keyType>;
 };
 
 template <typename Trait>
@@ -45,8 +46,8 @@ public:
        //int           Open (char * name, int mode);
        //int           Create (char * name, int mode);
        //int           Close ();
-       bool            Insert (const keyType key, const long ObjID);
-       bool            Remove (const keyType key, const long ObjID);
+       bool            Insert (const keyType key, const ObjIDType ObjID);
+       bool            Remove (const keyType key, const ObjIDType ObjID);
        ObjIDType       Search (const keyType key)
        {      ObjIDType ObjID = -1;
               m_Root.Search(key, ObjID);
@@ -77,7 +78,7 @@ protected:
 };     
 
 template <typename Trait>
-bool BTree<Trait>::Insert(const keyType key, const long ObjID){
+bool BTree<Trait>::Insert(const keyType key, const ObjIDType ObjID){
        bt_ErrorCode error = m_Root.Insert(key, ObjID);
        if( error == bt_duplicate )
                return false;
@@ -90,7 +91,7 @@ bool BTree<Trait>::Insert(const keyType key, const long ObjID){
 }
 
 template <typename Trait>
-bool BTree<Trait>::Remove (const keyType key, const long ObjID)
+bool BTree<Trait>::Remove (const keyType key, const ObjIDType ObjID)
 {
        bt_ErrorCode error = m_Root.Remove(key, ObjID);
        if( error == bt_duplicate || error == bt_nofound )

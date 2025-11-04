@@ -14,13 +14,13 @@ const char * keys2 = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuv
 const char * keys3 = "�DYZakHIUwxVJ203ejOP9Qc8AdtuEop1XvTRghSNbW567BfiCqrs4FGMyz�KLlmn";
 
 const int BTreeSize = 3;
-int main (int argc, char * argv){
+int main (int argc, char ** argv){
        int result, i;
-       BTree <char> bt (BTreeSize);
+       BTree<BTreeTrait<char, int>> bt(BTreeSize);
        for (i = 0; keys1[i]; i++)
        {
                //cout<<"Inserting "<<keys1[i]<<endl;
-               result = bt.Insert(keys1[i], i*i);
+               result = bt.Insert(keys1[i], i+1); 
                //bt.Print(cout);
        }
        bt.Print(cout);
