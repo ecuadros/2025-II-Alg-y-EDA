@@ -2,6 +2,7 @@
 #define __BTREE_H__
 
 #include <iostream>
+#include <utility>  // Para std::move
 #include "btreepage.h"
 #define DEFAULT_BTREE_ORDER 3
 
@@ -48,8 +49,51 @@ public:
                 m_NumKeys(0)
        {
               m_Root.SetMaxKeysForChilds(order);
+              m_Root.SetParent(nullptr);  // Root no tiene padre
               m_Height = 1;
        }
+
+       // Delete copy constructor and copy assignment (evitar copias accidentales)
+       BTree(const BTree&) = delete;
+       BTree& operator=(const BTree&) = delete;
+
+       // Move Constructor
+       BTree(BTree&& other) noexcept
+              : m_Order(other.m_Order),
+                m_Root(std::move(other.m_Root)),
+                m_Height(other.m_Height),
+                m_Unique(other.m_Unique),
+                m_NumKeys(other.m_NumKeys)
+       {
+              // El root no debe tener padre
+              m_Root.SetParent(nullptr);
+              
+              // Reset other to a valid but empty state
+              other.m_Height = 1;
+              other.m_NumKeys = 0;
+       }
+
+       // Move Assignment Operator
+       BTree& operator=(BTree&& other) noexcept
+       {
+              if (this != &other) {
+                     // Move data from other
+                     m_Order = other.m_Order;
+                     m_Root = std::move(other.m_Root);
+                     m_Height = other.m_Height;
+                     m_Unique = other.m_Unique;
+                     m_NumKeys = other.m_NumKeys;
+
+                     // El root no debe tener padre
+                     m_Root.SetParent(nullptr);
+
+                     // Reset other to a valid but empty state
+                     other.m_Height = 1;
+                     other.m_NumKeys = 0;
+              }
+              return *this;
+       }
+
        ~BTree() {}
        //int           Open (char * name, int mode);
        //int           Create (char * name, int mode);

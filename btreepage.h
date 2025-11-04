@@ -4,7 +4,7 @@
 #include <vector>
 #include <assert.h>
 #include <functional>
-#include <iterator>
+#include <utility>  // Para std::move
 
 // TODO: #1 Crear una function para agregarla al demo.cpp ( no trivial )
 // TODO: #2 Agregarle un Trait (prueba git) ( no trivial )
@@ -104,6 +104,68 @@ private:
  public:
        CBTreePage(size_t maxKeys, bool unique = true);
        virtual ~CBTreePage();
+
+       // Delete copy constructor and copy assignment (evitar copias accidentales)
+       CBTreePage(const CBTreePage&) = delete;
+       CBTreePage& operator=(const CBTreePage&) = delete;
+
+       // Move Constructor
+       CBTreePage(CBTreePage&& other) noexcept
+              : m_MaxKeys(other.m_MaxKeys),
+                m_Unique(other.m_Unique),
+                m_Compare(std::move(other.m_Compare)),
+                m_Parent(nullptr),  // El nuevo nodo no tiene padre inicialmente
+                m_KeyCount(other.m_KeyCount),
+                m_MinKeys(other.m_MinKeys),
+                m_MaxKeysForChilds(other.m_MaxKeysForChilds),
+                m_isRoot(other.m_isRoot),
+                m_Keys(std::move(other.m_Keys)),
+                m_SubPages(std::move(other.m_SubPages))
+       {
+              // Actualizar referencias de padre en los hijos
+              for (size_t i = 0; i <= m_KeyCount; i++) {
+                     if (m_SubPages[i]) {
+                            m_SubPages[i]->SetParent(this);
+                     }
+              }
+
+              // Reset other to a valid but empty state
+              other.m_Parent = nullptr;
+              other.m_KeyCount = 0;
+       }
+
+       // Move Assignment Operator
+       CBTreePage& operator=(CBTreePage&& other) noexcept
+       {
+              if (this != &other) {
+                     // First, clean up current resources
+                     Reset();
+
+                     // Move data from other
+                     m_MaxKeys = other.m_MaxKeys;
+                     m_MinKeys = other.m_MinKeys;
+                     m_MaxKeysForChilds = other.m_MaxKeysForChilds;
+                     m_Unique = other.m_Unique;
+                     m_isRoot = other.m_isRoot;
+                     m_KeyCount = other.m_KeyCount;
+                     m_Parent = nullptr;  // El nodo movido no tiene padre
+                     m_Compare = std::move(other.m_Compare);
+                     m_Keys = std::move(other.m_Keys);
+                     m_SubPages = std::move(other.m_SubPages);
+
+                     // Actualizar referencias de padre en los hijos
+                     for (size_t i = 0; i <= m_KeyCount; i++) {
+                            if (m_SubPages[i]) {
+                                   m_SubPages[i]->SetParent(this);
+                            }
+                     }
+
+                     // Reset other to a valid but empty state
+                     other.m_Parent = nullptr;
+                     other.m_KeyCount = 0;
+              }
+              return *this;
+       }
 
        bt_ErrorCode    Insert (const keyType &key, const ObjIDType ObjID);
        bt_ErrorCode    Remove (const keyType &key, const ObjIDType ObjID);
