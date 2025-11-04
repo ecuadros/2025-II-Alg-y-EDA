@@ -17,7 +17,10 @@ template <typename Trait>
 class BTree;
 
 template <typename Trait>
-class BTreeIterator;
+class forward_btree_iterator;
+
+template <typename Trait>
+class backward_btree_iterator;
 
 using namespace std;
 enum bt_ErrorCode {bt_ok, bt_overflow, bt_underflow, bt_duplicate, bt_nofound, bt_rootmerged};
@@ -82,7 +85,8 @@ class CBTreePage //: public SimpleIndex <keyType>
 // this is the in-memory version of the CBTreePage
 {
        friend class BTree<Trait>;
-       friend class BTreeIterator<Trait>;
+       friend class forward_btree_iterator<Trait>;
+       friend class backward_btree_iterator<Trait>;
        typedef typename Trait::keyType  keyType;
        typedef typename Trait::ObjIDType  ObjIDType;
        typedef typename Trait::Compare  Compare;
@@ -899,177 +903,211 @@ void CBTreePage<Trait>::MovePage(BTPage *pChildPage, vector<ObjectInfo> &tmpKeys
        pChildPage->clear();
 }
 
+// Forward iterator: recorre el árbol en orden ascendente (in-order traversal)
 template <typename Trait>
-class BTreeIterator
+class forward_btree_iterator
 {
+private:
+       using value_type = typename BTree<Trait>::ObjectInfo;
+       using BTPage     = typename BTree<Trait>::BTNode;
+       using iterator   = forward_btree_iterator<Trait>;
+
+       BTree<Trait> *m_pTree = nullptr;
+       BTPage       *m_pPage = nullptr;
+       size_t        m_Index = 0;
+
 public:
-       typedef CBTreePage<Trait> BTPage;
-       typedef typename BTPage::ObjectInfo ObjectInfo;
-       typedef typename Trait::keyType keyType;
-
-       typedef std::bidirectional_iterator_tag iterator_category;
-       typedef ObjectInfo value_type;
-       typedef std::ptrdiff_t difference_type;
-       typedef ObjectInfo* pointer;
-       typedef ObjectInfo& reference;
-
-       BTreeIterator(BTPage* page = nullptr, size_t index = 0)
-               : m_Page(page), m_Index(index)
+       forward_btree_iterator(BTree<Trait> *pTree, BTPage *pPage, size_t index = 0)
+               : m_pTree(pTree), m_pPage(pPage), m_Index(index)
        {
-               if (m_Page && m_Page->m_SubPages[0])
+               // Si estamos en un nodo interno, ir a la primera hoja
+               if (m_pPage && m_pPage->m_SubPages[0])
                        goToFirstLeaf();
        }
 
-       ObjectInfo& operator*() const { return m_Page->m_Keys[m_Index]; }
-       ObjectInfo* operator->() const { return &m_Page->m_Keys[m_Index]; }
+       forward_btree_iterator(const iterator &other)
+               : m_pTree(other.m_pTree), m_pPage(other.m_pPage), m_Index(other.m_Index)
+       {}
 
-       BTreeIterator& operator++()
-       {
-               if (!m_Page) return *this;
+       bool operator==(const iterator& other) const {
+               return m_pTree == other.m_pTree &&
+                      m_pPage == other.m_pPage &&
+                      m_Index == other.m_Index;
+       }
 
-               if (m_Page->m_SubPages[m_Index + 1])
-               {
-                       m_Page = m_Page->m_SubPages[m_Index + 1];
+       bool operator!=(const iterator& other) const {
+               return !(*this == other);
+       }
+
+       // Operador de avance (SOLO FORWARD)
+       iterator operator++() {
+               if (!m_pPage)
+                       return *this;
+
+               // Si hay subárbol derecho, ir al mínimo de ese subárbol
+               if (m_pPage->m_SubPages[m_Index + 1]) {
+                       m_pPage = m_pPage->m_SubPages[m_Index + 1];
                        m_Index = 0;
                        goToFirstLeaf();
                }
-               else if (m_Index + 1 < m_Page->GetNumberOfKeys())
-               {
+               // Si hay más claves en este nodo, avanzar al siguiente
+               else if (m_Index + 1 < m_pPage->GetNumberOfKeys()) {
                        m_Index++;
                }
-               else
-               {
+               // Subir al padre
+               else {
                        goToNextInParent();
                }
 
                return *this;
        }
 
-       BTreeIterator operator++(int)
-       {
-               BTreeIterator tmp = *this;
+       // Post-incremento
+       iterator operator++(int) {
+               iterator tmp = *this;
                ++(*this);
                return tmp;
        }
 
-       BTreeIterator& operator--()
-       {
-               if (!m_Page) return *this;
-
-               // Si hay subárbol izquierdo, ir al máximo de ese subárbol
-               if (m_Page->m_SubPages[m_Index])
-               {
-                       m_Page = m_Page->m_SubPages[m_Index];
-                       goToLastLeaf();
-                       m_Index = m_Page->GetNumberOfKeys() - 1;
-               }
-               // Si hay más claves a la izquierda en el nodo actual
-               else if (m_Index > 0)
-               {
-                       m_Index--;
-               }
-               // Subir al padre
-               else
-               {
-                       goToPrevInParent();
-               }
-
-               return *this;
+       value_type& operator*() const {
+               return m_pPage->m_Keys[m_Index];
        }
 
-       BTreeIterator operator--(int)
-       {
-               BTreeIterator tmp = *this;
-               --(*this);
-               return tmp;
-       }
-
-       bool operator==(const BTreeIterator& other) const
-       {
-               return m_Page == other.m_Page && m_Index == other.m_Index;
-       }
-
-       bool operator!=(const BTreeIterator& other) const
-       {
-               return !(*this == other);
+       value_type* operator->() const {
+               return &m_pPage->m_Keys[m_Index];
        }
 
 private:
-       BTPage* m_Page;
-       size_t m_Index;
-
-       void goToFirstLeaf()
-       {
-               while (m_Page && m_Page->m_SubPages[0])
-               {
-                       m_Page = m_Page->m_SubPages[0];
+       void goToFirstLeaf() {
+               while (m_pPage && m_pPage->m_SubPages[0]) {
+                       m_pPage = m_pPage->m_SubPages[0];
                        m_Index = 0;
                }
        }
 
-       void goToLastLeaf()
-       {
-               while (m_Page && m_Page->m_SubPages[m_Page->GetNumberOfKeys()])
-               {
-                       m_Page = m_Page->m_SubPages[m_Page->GetNumberOfKeys()];
-               }
-       }
+       void goToNextInParent() {
+               BTPage* child = m_pPage;
+               m_pPage = m_pPage->GetParent();
 
-       void goToNextInParent()
-       {
-               BTPage* child = m_Page;
-               m_Page = m_Page->GetParent();
-
-               while (m_Page)
-               {
-                       for (size_t i = 0; i <= m_Page->GetNumberOfKeys(); i++)
-                       {
-                               if (m_Page->m_SubPages[i] == child)
-                               {
-                                       if (i < m_Page->GetNumberOfKeys())
-                                       {
+               while (m_pPage) {
+                       for (size_t i = 0; i <= m_pPage->GetNumberOfKeys(); i++) {
+                               if (m_pPage->m_SubPages[i] == child) {
+                                       if (i < m_pPage->GetNumberOfKeys()) {
                                                m_Index = i;
                                                return;
                                        }
                                        break;
                                }
                        }
-                       child = m_Page;
-                       m_Page = m_Page->GetParent();
+                       child = m_pPage;
+                       m_pPage = m_pPage->GetParent();
                }
 
-               m_Page = nullptr;
+               m_pPage = nullptr;
                m_Index = 0;
        }
+};
 
-       void goToPrevInParent()
+// Backward iterator: recorre el árbol en orden descendente (reverse in-order traversal)
+template <typename Trait>
+class backward_btree_iterator
+{
+private:
+       using value_type = typename BTree<Trait>::ObjectInfo;
+       using BTPage     = typename BTree<Trait>::BTNode;
+       using iterator   = backward_btree_iterator<Trait>;
+
+       BTree<Trait> *m_pTree = nullptr;
+       BTPage       *m_pPage = nullptr;
+       size_t        m_Index = 0;
+
+public:
+       backward_btree_iterator(BTree<Trait> *pTree, BTPage *pPage, size_t index = 0)
+               : m_pTree(pTree), m_pPage(pPage), m_Index(index)
        {
-               BTPage* child = m_Page;
-               m_Page = m_Page->GetParent();
+               // Si estamos en un nodo interno, ir a la última hoja
+               if (m_pPage && m_pPage->m_SubPages[0])
+                       goToLastLeaf();
+       }
 
-               while (m_Page)
-               {
-                       // Buscar la posición del hijo en el padre
-                       for (size_t i = 0; i <= m_Page->GetNumberOfKeys(); i++)
-                       {
-                               if (m_Page->m_SubPages[i] == child)
-                               {
-                                       // Si no es el primer hijo, retornar la clave anterior
-                                       if (i > 0)
-                                       {
+       backward_btree_iterator(const iterator &other)
+               : m_pTree(other.m_pTree), m_pPage(other.m_pPage), m_Index(other.m_Index)
+       {}
+
+       bool operator==(const iterator& other) const {
+               return m_pTree == other.m_pTree &&
+                      m_pPage == other.m_pPage &&
+                      m_Index == other.m_Index;
+       }
+
+       bool operator!=(const iterator& other) const {
+               return !(*this == other);
+       }
+
+       // Operador de avance (avanza BACKWARD en el árbol)
+       iterator operator++() {
+               if (!m_pPage)
+                       return *this;
+
+               // Si hay subárbol izquierdo, ir al máximo de ese subárbol
+               if (m_pPage->m_SubPages[m_Index]) {
+                       m_pPage = m_pPage->m_SubPages[m_Index];
+                       goToLastLeaf();
+                       m_Index = m_pPage->GetNumberOfKeys() - 1;
+               }
+               // Si hay más claves a la izquierda en este nodo
+               else if (m_Index > 0) {
+                       m_Index--;
+               }
+               // Subir al padre
+               else {
+                       goToPrevInParent();
+               }
+
+               return *this;
+       }
+
+       // Post-incremento
+       iterator operator++(int) {
+               iterator tmp = *this;
+               ++(*this);
+               return tmp;
+       }
+
+       value_type& operator*() const {
+               return m_pPage->m_Keys[m_Index];
+       }
+
+       value_type* operator->() const {
+               return &m_pPage->m_Keys[m_Index];
+       }
+
+private:
+       void goToLastLeaf() {
+               while (m_pPage && m_pPage->m_SubPages[m_pPage->GetNumberOfKeys()]) {
+                       m_pPage = m_pPage->m_SubPages[m_pPage->GetNumberOfKeys()];
+               }
+       }
+
+       void goToPrevInParent() {
+               BTPage* child = m_pPage;
+               m_pPage = m_pPage->GetParent();
+
+               while (m_pPage) {
+                       for (size_t i = 0; i <= m_pPage->GetNumberOfKeys(); i++) {
+                               if (m_pPage->m_SubPages[i] == child) {
+                                       if (i > 0) {
                                                m_Index = i - 1;
                                                return;
                                        }
-                                       // Es el primer hijo, seguir subiendo
                                        break;
                                }
                        }
-                       child = m_Page;
-                       m_Page = m_Page->GetParent();
+                       child = m_pPage;
+                       m_pPage = m_pPage->GetParent();
                }
 
-               // Llegamos al inicio
-               m_Page = nullptr;
+               m_pPage = nullptr;
                m_Index = 0;
        }
 };

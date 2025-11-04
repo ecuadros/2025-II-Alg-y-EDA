@@ -21,16 +21,24 @@ class BTree // this is the full version of the BTree
 { 
        typedef typename Trait::keyType    keyType;
        typedef typename Trait::ObjIDType    ObjIDType;
+       typedef typename Trait::Compare    Compare;
        
        typedef CBTreePage <Trait> BTNode;// useful shorthand
 
 public:
-       typedef BTreeIterator<Trait>             iterator;
+       // Typedefs de iteradores (siguiendo el patrón de doublelinkedlist.h)
+       typedef forward_btree_iterator<Trait>    iterator;
+       typedef backward_btree_iterator<Trait>   reverse_iterator;
+
        typedef typename BTNode::lpfnForEach2    lpfnForEach2;
        typedef typename BTNode::lpfnForEach3    lpfnForEach3;
        typedef typename BTNode::lpfnFirstThat2  lpfnFirstThat2;
        typedef typename BTNode::lpfnFirstThat3  lpfnFirstThat3;
        typedef typename BTNode::ObjectInfo      ObjectInfo;
+
+       // Friend declarations para los iteradores
+       friend class forward_btree_iterator<Trait>;
+       friend class backward_btree_iterator<Trait>;
 
 public:
        BTree(size_t order = DEFAULT_BTREE_ORDER, bool unique = true)
@@ -68,20 +76,36 @@ public:
        ObjectInfo*     FirstThat( lpfnFirstThat3 lpfn, void *pExtra1, void *pExtra2)
        {               return m_Root.FirstThat(lpfn, 0, pExtra1, pExtra2);   }
 
+       // Iteradores forward (in-order traversal: orden ascendente)
        iterator begin()
        {
                if (m_NumKeys == 0)
                        return end();
-
-               BTNode* node = &m_Root;
-               while (node->m_SubPages[0])
-                       node = node->m_SubPages[0];
-               return iterator(node, 0);
+               return iterator(this, &m_Root, 0);
        }
 
        iterator end()
        {
-               return iterator(nullptr, 0);
+               return iterator(this, nullptr, 0);
+       }
+
+       // Iteradores reverse (reverse in-order: orden descendente)
+       reverse_iterator rbegin()
+       {
+               if (m_NumKeys == 0)
+                       return rend();
+
+               // Ir al último elemento (nodo más a la derecha)
+               BTNode* node = &m_Root;
+               while (node->m_SubPages[node->GetNumberOfKeys()])
+                       node = node->m_SubPages[node->GetNumberOfKeys()];
+
+               return reverse_iterator(this, node, node->GetNumberOfKeys() - 1);
+       }
+
+       reverse_iterator rend()
+       {
+               return reverse_iterator(this, nullptr, 0);
        }
 
 protected:

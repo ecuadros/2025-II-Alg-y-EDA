@@ -2,8 +2,6 @@
 #include <functional>
 #include <cmath>
 #include <cstring>
-#include <algorithm>
-#include <numeric>
 #include "btree.h"
 
 using namespace std;
@@ -239,32 +237,56 @@ int main() {
     }
     cout << endl;
 
-    cout << "\n4. Usando STL algorithm - find_if:" << endl;
-    auto found = find_if(btree_it.begin(), btree_it.end(),
-        [](const auto& item) { return item.key == 18; });
-    if (found != btree_it.end()) {
-        cout << "   Encontrado: " << found->key << " -> " << found->ObjID << endl;
+    cout << "\n4. Buscando elemento con clave 18 (manual):" << endl;
+    bool found = false;
+    int found_objid = -1;
+    for (auto it = btree_it.begin(); it != btree_it.end(); ++it) {
+        if (it->key == 18) {
+            found = true;
+            found_objid = it->ObjID;
+            break;
+        }
+    }
+    if (found) {
+        cout << "   Encontrado: 18 -> " << found_objid << endl;
     }
 
-    cout << "\n5. Usando STL algorithm - count_if:" << endl;
-    auto count = count_if(btree_it.begin(), btree_it.end(),
-        [](const auto& item) { return item.key > 15; });
+    cout << "\n5. Contando elementos mayores a 15:" << endl;
+    int count = 0;
+    for (auto it = btree_it.begin(); it != btree_it.end(); ++it) {
+        if (it->key > 15) count++;
+    }
     cout << "   Elementos mayores a 15: " << count << endl;
 
-    cout << "\n6. Usando STL algorithm - accumulate (suma de claves):" << endl;
-    auto sum = accumulate(btree_it.begin(), btree_it.end(), 0,
-        [](int acc, const auto& item) { return acc + item.key; });
+    cout << "\n6. Suma de todas las claves:" << endl;
+    int sum = 0;
+    for (auto it = btree_it.begin(); it != btree_it.end(); ++it) {
+        sum += it->key;
+    }
     cout << "   Suma de todas las claves: " << sum << endl;
 
-    cout << "\n7. Usando STL algorithm - all_of:" << endl;
-    bool all_positive = all_of(btree_it.begin(), btree_it.end(),
-        [](const auto& item) { return item.key > 0; });
+    cout << "\n7. Verificando si todos son positivos:" << endl;
+    bool all_positive = true;
+    for (auto it = btree_it.begin(); it != btree_it.end(); ++it) {
+        if (it->key <= 0) {
+            all_positive = false;
+            break;
+        }
+    }
     cout << "   Todos los elementos son positivos: " << (all_positive ? "Si" : "No") << endl;
 
-    cout << "\n8. Usando STL algorithm - for_each:" << endl;
+    cout << "\n8. Mostrando claves x2:" << endl;
     cout << "   Claves x2: ";
-    for_each(btree_it.begin(), btree_it.end(),
-        [](const auto& item) { cout << (item.key * 2) << " "; });
+    for (auto it = btree_it.begin(); it != btree_it.end(); ++it) {
+        cout << (it->key * 2) << " ";
+    }
+    cout << endl;
+
+    cout << "\n9. Iteracion BACKWARD con reverse_iterator:" << endl;
+    cout << "   ";
+    for (auto it = btree_it.rbegin(); it != btree_it.rend(); ++it) {
+        cout << it->key << " ";
+    }
     cout << endl;
 
     cout << "\n=== Todos los demos completados ===" << endl;
