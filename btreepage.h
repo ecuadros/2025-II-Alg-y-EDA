@@ -18,22 +18,22 @@ class BTree;
 using namespace std;
 enum bt_ErrorCode {bt_ok, bt_overflow, bt_underflow, bt_duplicate, bt_nofound, bt_rootmerged};
 
-template <typename Container, typename ObjType>
-size_t binary_search(Container& container, size_t first, size_t last, ObjType &object)
+template <typename Container, typename ObjType, typename Compare>
+size_t binary_search(Container& container, size_t first, size_t last, ObjType &object, Compare comp)
 {
 	   if( first >= last )
 		   return first;
 	   while( first < last )
 	   {
 		   size_t mid = (first+last)/2;
-		   if( object == (ObjType)container[mid ] )
+		   if(!comp(container[mid], object) && !comp(object, container[mid]))
 			   return mid;
-		   if( object > (ObjType)container[mid ] )
+		   if( comp(container[mid], object) )
 			   first = mid+1;
 		   else
 			   last  = mid;
 	   }
-	   if( object <= (ObjType)container[first] )
+	   if(!comp(object, container[first]))
 		   return first;
 	   return last;
 }
@@ -79,7 +79,7 @@ class CBTreePage //: public SimpleIndex <keyType>
 	   friend class BTree<Trait>;
 	   typedef typename Trait::keyType  keyType;
 	   typedef typename Trait::ObjIDType  ObjIDType;
-	//    typedef typename Trait::CompareFn CompareFn;
+	   typedef typename Trait::CompareFn CompareFn;
 
 	   typedef CBTreePage<Trait>    BTPage;         // useful shorthand
 	   typedef tagObjectInfo<keyType, ObjIDType> ObjectInfo;
@@ -108,6 +108,7 @@ class CBTreePage //: public SimpleIndex <keyType>
 	   ObjectInfo*     FirstThat(lpfnFirstThat3 lpfn, size_t level, void *pExtra1, void *pExtra2);
 
 protected:
+	CompareFn	Compfn;
 	size_t  m_MinKeys; // minimum number of keys in a node
 	size_t  m_MaxKeys, // maximum number of keys in a node
 
@@ -190,7 +191,7 @@ CBTreePage<Trait>::~CBTreePage()
 
 template <typename Trait>
 bt_ErrorCode CBTreePage<Trait>::Insert(const keyType& key, const ObjIDType ObjID){
-	   size_t pos = binary_search(m_Keys, 0, m_KeyCount, key);
+	   size_t pos = binary_search(m_Keys, 0, m_KeyCount, key, Compfn);
 	   bt_ErrorCode error = bt_ok;
 
 	   if( pos < m_KeyCount && (keyType)m_Keys[pos] == key && m_Unique)
@@ -486,20 +487,22 @@ bool CBTreePage<Trait>::SplitRoot(){
 template <typename Trait>
 bool CBTreePage<Trait>::Search(const keyType &key, ObjIDType &ObjID)
 {
-	   size_t pos = binary_search(m_Keys, 0, m_KeyCount, key);
-	   if( pos >= m_KeyCount )
-	   {    if( m_SubPages[pos] )
-		return m_SubPages[pos]->Search(key, ObjID);
-		else
-		return false;
+	   size_t pos = binary_search(m_Keys, 0, m_KeyCount, key, Compfn);
+	   if( pos >= m_KeyCount ) {
+			if( m_SubPages[pos] )
+				return m_SubPages[pos]->Search(key, ObjID);
+			else
+				return false;
 	   }
-	   if( key == m_Keys[pos].key )
+	   
+	   if(!Compfn(m_Keys[pos].key, key) && !Compfn(key, m_Keys[pos].key))
 	   {
 		   ObjID = m_Keys[pos].ObjID;
 		   m_Keys[pos].UseCounter++;
 		   return true;
 	   }
-	   if( key < m_Keys[pos].key )
+	   
+	   if(Compfn(key, m_Keys[pos].key))
 		   if( m_SubPages[pos] )
 			   return m_SubPages[pos]->Search(key, ObjID);
 	   return false;
@@ -602,8 +605,8 @@ template <typename Trait>
 bt_ErrorCode CBTreePage<Trait>::Remove(const keyType &key, const ObjIDType ObjID)
 {
 	   bt_ErrorCode error = bt_ok;
-	   size_t pos = binary_search(m_Keys, 0, m_KeyCount, key);
-	   if( pos < NumberOfKeys() && key == m_Keys[pos].key /*&& m_Keys[pos].m_ObjID == ObjID*/) // We found it !
+	   size_t pos = binary_search(m_Keys, 0, m_KeyCount, key, Compfn);
+	   if( pos < NumberOfKeys() && !Compfn(m_Keys[pos].key, key) && !Compfn(key, m_Keys[pos].key) /*&& m_Keys[pos].m_ObjID == ObjID*/) // We found it !
 	   {
 		   // This is a leave: First
 		   if( !m_SubPages[pos+1] )  // This is a leave ? FIRST CASE !

@@ -1,5 +1,6 @@
 {
     "files.associations": {
+        "*.rmd": "markdown",
         "__threading_support": "cpp",
         "__mutex_base": "cpp",
         "thread": "cpp",
@@ -12,6 +13,7 @@
         "streambuf": "cpp",
         "vector": "cpp",
         "utility": "cpp",
-        "iosfwd": "cpp"
+        "iosfwd": "cpp",
+        "random": "cpp"
     }
 }

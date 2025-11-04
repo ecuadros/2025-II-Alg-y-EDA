@@ -7,12 +7,12 @@
 
 const size_t MaxHeight = 5; 
 
-template <typename _keyType, typename _ObjIDType>
+template <typename _keyType, typename _ObjIDType, typename _CompareFn>
 struct BTreeTrait
 {
 	using keyType = _keyType;
 	using ObjIDType = _ObjIDType;
-	// using CompareFn = _CompareFn;
+	using CompareFn = _CompareFn;
 	// TODO: agregar funcion de comparacion
 };
 
@@ -21,7 +21,7 @@ class BTree // this is the full version of the BTree
 {
 	typedef typename Trait::keyType	keyType;
 	typedef typename Trait::ObjIDType	ObjIDType;
-	// typedef typename Trait::CompareFn	CompareFn;
+	typedef typename Trait::CompareFn	CompareFn;
 	
 	typedef CBTreePage <Trait> BTNode;// useful shorthand
 
@@ -76,6 +76,7 @@ protected:
 	size_t          m_Order;   // order of tree
 	size_t          m_NumKeys; // number of keys
 	bool            m_Unique;  // Accept the elements only once ?
+	CompareFn	Compfn;
 };     
 
 template <typename Trait>
