@@ -97,6 +97,8 @@ class CBTreePage //: public SimpleIndex <keyType>
        bt_ErrorCode    Remove (const keyType &key, const ObjIDType ObjID);
        bool            Search (const keyType &key, ObjIDType &ObjID);
        void            Print  (ostream &os);
+       void            Write  (ostream &os);
+       void            Read   (istream &is);
 
        // TODO: #6 change by Invoke
        // TODO: #7 ForEach must be a template inside this template
@@ -779,6 +781,65 @@ void CBTreePage<Trait>::Print(ostream & os)
 {
        lpfnForEach2 lpfn = &::Print<keyType, ObjIDType>;
        ForEach(lpfn, 0, &os);
+}
+
+template <typename Trait>
+void CBTreePage<Trait>::Write(std::ostream& os)
+{
+       // Guardamos número de claves
+       os << m_KeyCount << "\n";
+       
+       // Guardamos pares (key, ObjID)
+       for(size_t i = 0; i < m_KeyCount; i++) {
+              os << m_Keys[i].key << " " << m_Keys[i].ObjID << "\n";
+       }
+       
+       // Indicamos si tiene hijos
+       bool hasChildren = (m_SubPages[0] != nullptr);
+       os << hasChildren << "\n";
+       
+       // Guardamos subpáginas recursivamente
+       if(hasChildren) {
+              for(size_t i = 0; i <= m_KeyCount; i++) {
+                     bool hasChild = (m_SubPages[i] != nullptr);
+                     os << hasChild << "\n";
+                     if(hasChild) {
+                            m_SubPages[i]->Write(os);
+                     }
+              }
+       }
+}
+
+template <typename Trait>
+void CBTreePage<Trait>::Read(std::istream& is)
+{
+       // Se lee número de claves
+       is >> m_KeyCount;
+       
+       // Se lee pares (key, ObjID)
+       for(size_t i = 0; i < m_KeyCount; i++) {
+              keyType key;
+              ObjIDType objID;
+              is >> key >> objID;
+              m_Keys[i] = ObjectInfo(key, objID);
+       }
+       
+       // Verificamos si tiene hijos
+       bool hasChildren;
+       is >> hasChildren;
+       
+       // Se lee las subpáginas recursivamente
+       if(hasChildren) {
+              for(size_t i = 0; i <= m_KeyCount; i++) {
+                     bool hasChild;
+                     is >> hasChild;
+                     if(hasChild) {
+                            if(!m_SubPages[i])
+                                   m_SubPages[i] = new BTPage(m_MaxKeys, m_Unique);
+                            m_SubPages[i]->Read(is);
+                     }
+              }
+       }
 }
 
 template <typename Trait>

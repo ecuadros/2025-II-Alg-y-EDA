@@ -58,6 +58,20 @@ public:
 
        void            Print (ostream &os)
        {               m_Root.Print(os);                              }
+       
+       // Write: guarda el árbol en formato texto
+       void Write(std::ostream& os) {
+              os << m_Order << " " << m_Height << " " 
+                 << m_NumKeys << " " << m_Unique << "\n";
+              m_Root.Write(os);
+       }
+       
+       // Read: carga el árbol desde formato texto
+       void Read(std::istream& is) {
+              is >> m_Order >> m_Height >> m_NumKeys >> m_Unique;
+              m_Root.Read(is);
+       }
+       
        void            ForEach( lpfnForEach2 lpfn, void *pExtra1 )
        {               m_Root.ForEach(lpfn, 0, pExtra1);              }
        void            ForEach( lpfnForEach3 lpfn, void *pExtra1, void *pExtra2)
