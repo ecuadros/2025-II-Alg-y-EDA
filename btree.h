@@ -42,6 +42,9 @@ protected:
 	CompareFn		m_Compfn;
 
 public:
+	/// @brief Constructs a new BTree with a given order and uniqueness policy.
+	/// @param order The maximum number of keys per node. Defaults to DEFAULT_BTREE_ORDER.
+	/// @param unique If true, prevents duplicate keys from being inserted.
 	BTree(size_t order = DEFAULT_BTREE_ORDER, bool unique = true)
 		: m_Order(order),
 		  m_Root(2 * order  + 1, unique),
@@ -52,6 +55,9 @@ public:
 		m_Height = 1;
 	}
 	
+	/// @brief Move constructor.
+	///	 Transfers ownership of the resources from another BTree.
+	/// @param other The BTree instance to move from.
 	BTree(BTree &&other) {
 		m_Root = std::move(other.m_Root);
 		m_Height = std::move(other.m_Height);
@@ -61,12 +67,27 @@ public:
 		m_Compfn = std::move(other.m_Compfn);
 	}
 	
+	/// @brief Destructor.
 	~BTree() {}
 	//int           Open (char * name, int mode);
 	//int           Create (char * name, int mode);
 	//int           Close ();
+
+	/// @brief Inserts a key and associated object ID into the tree.
+	/// @param key The key to insert.
+	/// @param ObjID The identifier associated with the key.
+	/// @return true if the insertion was successful, if not, returs false.
 	bool            Insert (const keyType key, const long ObjID);
+
+	/// @brief Removes a key and its associated object ID from the tree.
+	/// @param key The key to remove.
+	/// @param ObjID The identifier associated with the key.
+	/// @return true  if the key was successfully removed, if not, returns false.
 	bool            Remove (const keyType key, const long ObjID);
+
+	/// @brief Searches for a key in the tree.
+	/// @param key The key to search for.
+	/// @return The object ID associated with the key, or -1 if not found.
 	ObjIDType       Search (const keyType key)
 	{      ObjIDType ObjID = -1;
 		m_Root.Search(key, ObjID);
@@ -76,6 +97,8 @@ public:
 	size_t            height() { return m_Height;      }
 	size_t            GetOrder() { return m_Order;     }
 
+	/// @brief Prints the structure of the tree to an output stream.
+	/// @param os The output stream where the tree will be printed.
 	void Print (ostream &os){ m_Root.Print(os); }
 	
 	void ForEach( lpfnForEach2 lpfn, void *pExtra1 ){ 
