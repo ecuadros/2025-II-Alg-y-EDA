@@ -1,3 +1,8 @@
+/**
+ * @file btreepage.h
+ * @brief Implementación de páginas/nodos del Árbol B
+ */
+
 #ifndef __CBTreePage_H__
 #define __CBTreePage_H__
 
@@ -16,8 +21,17 @@ template <typename Trait>
 class BTree;
 
 using namespace std;
+
+/** @brief Códigos de error para operaciones del BTree */
 enum bt_ErrorCode {bt_ok, bt_overflow, bt_underflow, bt_duplicate, bt_nofound, bt_rootmerged};
 
+/** @brief Búsqueda binaria en un contenedor
+ *  @param container Contenedor donde buscar
+ *  @param first Índice inicial
+ *  @param last Índice final
+ *  @param object Objeto a buscar
+ *  @param comp Función de comparación
+ *  @return Posición donde se encuentra o debería insertarse el objeto */
 template <typename Container, typename ObjType, typename Compare>
 size_t binary_search(Container& container, size_t first, size_t last, ObjType &object, Compare comp)
 {
@@ -38,8 +52,10 @@ size_t binary_search(Container& container, size_t first, size_t last, ObjType &o
        return last;
 }
 
-// Error al poner size_t
-// Posible motivo: El i está disminuyendo
+/** @brief Inserta un objeto en una posición específica del contenedor
+ *  @param container Contenedor donde insertar
+ *  @param object Objeto a insertar
+ *  @param pos Posición donde insertar */
 template <typename Container, typename ObjType>
 void insert_at(Container& container, ObjType object, int pos)
 {
@@ -50,6 +66,9 @@ void insert_at(Container& container, ObjType object, int pos)
        container[pos] =  object;	
 }
 
+/** @brief Remueve un elemento de una posición específica del contenedor
+ *  @param container Contenedor del cual remover
+ *  @param pos Posición del elemento a remover */
 template <typename Container>
 void remove(Container& container, size_t pos)
 {
@@ -58,24 +77,38 @@ void remove(Container& container, size_t pos)
            container[i-1] = container[i];
 }
 
+/** @brief Información del objeto almacenado en el árbol
+ *  @tparam keyType Tipo de clave
+ *  @tparam ObjIDType Tipo de identificador */
 template <typename keyType, typename ObjIDType>
 struct tagObjectInfo
 {
-       keyType                 key;
-       ObjIDType               ObjID;
-       size_t                    UseCounter;
+       keyType                 key;          ///< Clave del objeto
+       ObjIDType               ObjID;        ///< Identificador del objeto
+       size_t                    UseCounter; ///< Contador de uso
+       
+       /** @brief Constructor con clave y ObjID */
        tagObjectInfo(const keyType     &_key, ObjIDType _ObjID)
                : key(_key), ObjID(_ObjID), UseCounter(0) {}
+       
+       /** @brief Constructor de copia */
        tagObjectInfo(const tagObjectInfo &objInfo)
                : key(objInfo.key), ObjID(objInfo.ObjID), UseCounter(0) {}
+       
+       /** @brief Constructor por defecto */
        tagObjectInfo()                          {}
+       
+       /** @brief Operador de conversión a keyType */
        operator keyType                         ()     { return key; }
+       
+       /** @brief Retorna el contador de uso */
        size_t                    GetUseCounter() { return UseCounter;    }
 };
 
+/** @brief Página/Nodo del árbol B (versión en memoria)
+ *  @tparam Trait Configuración de tipos (BTreeTrait) */
 template <typename Trait>
-class CBTreePage //: public SimpleIndex <keyType>
-// this is the in-memory version of the CBTreePage
+class CBTreePage
 {
        friend class BTree<Trait>;
        typedef typename Trait::keyType  keyType;
@@ -91,9 +124,12 @@ class CBTreePage //: public SimpleIndex <keyType>
        typedef ObjectInfo *(*lpfnFirstThat2)(ObjectInfo &info, size_t level, void *pExtra1);
        typedef ObjectInfo *(*lpfnFirstThat3)(ObjectInfo &info, size_t level, void *pExtra1, void *pExtra2);
  public:
+       /** @brief Constructor de la página del BTree
+        *  @param maxKeys Número máximo de claves por nodo
+        *  @param unique Si es true, no permite claves duplicadas */
        CBTreePage(size_t maxKeys, bool unique = true);
        
-       // Move constructor: transfiere recursos sin copiar
+       /** @brief Move constructor (transfiere recursos sin copiar) */
        CBTreePage(CBTreePage&& other) noexcept
               : m_MinKeys(other.m_MinKeys),
                 m_MaxKeys(other.m_MaxKeys),
@@ -111,7 +147,7 @@ class CBTreePage //: public SimpleIndex <keyType>
               other.m_Parent = nullptr;
        }
        
-       // Move assignment operator
+       /** @brief Move assignment operator */
        CBTreePage& operator=(CBTreePage&& other) noexcept {
               if (this != &other) {
                      // Limpiar recursos actuales
@@ -136,51 +172,80 @@ class CBTreePage //: public SimpleIndex <keyType>
               return *this;
        }
        
+       /** @brief Destructor virtual */
        virtual ~CBTreePage();
 
+       /** @brief Inserta una clave en la página
+        *  @param key Clave a insertar
+        *  @param ObjID ID del objeto asociado
+        *  @return Código de error (bt_ok, bt_overflow, bt_duplicate) */
        bt_ErrorCode    Insert (const keyType &key, const ObjIDType ObjID);
+       
+       /** @brief Remueve una clave de la página
+        *  @param key Clave a remover
+        *  @param ObjID ID del objeto asociado
+        *  @return Código de error (bt_ok, bt_underflow, bt_nofound) */
        bt_ErrorCode    Remove (const keyType &key, const ObjIDType ObjID);
+       
+       /** @brief Busca una clave en la página
+        *  @param key Clave a buscar
+        *  @param ObjID Referencia donde se almacenará el ObjID encontrado
+        *  @return true si se encontró, false en caso contrario */
        bool            Search (const keyType &key, ObjIDType &ObjID);
+       
+       /** @brief Imprime la página en formato visual
+        *  @param os Stream de salida */
        void            Print  (ostream &os);
+       
+       /** @brief Guarda la página en formato texto
+        *  @param os Stream de salida */
        void            Write  (ostream &os);
+       
+       /** @brief Carga la página desde formato texto
+        *  @param is Stream de entrada */
        void            Read   (istream &is);
 
-       // ForEach y FirstThat generalizados con variadic templates
+       /** @brief Aplica una función a cada elemento (con variadic templates)
+        *  @param func Función a aplicar
+        *  @param args Argumentos adicionales */
        template<typename Func, typename... Args>
        void ForEach(Func func, Args&&... args) {
               ForEach_internal(func, 0, std::forward<Args>(args)...);
        }
 
+       /** @brief Encuentra el primer elemento que cumple un predicado (con variadic templates)
+        *  @param predicate Predicado a evaluar
+        *  @param args Argumentos adicionales
+        *  @return Puntero al ObjectInfo encontrado, o nullptr */
        template<typename Pred, typename... Args>
        ObjectInfo* FirstThat(Pred predicate, Args&&... args) {
               return FirstThat_internal(predicate, 0, std::forward<Args>(args)...);
        }
 
-       // TODO: #6 change by Invoke
-       // TODO: #7 ForEach must be a template inside this template
+       /** @brief ForEach con puntero a función (versión legacy con 2 parámetros) */
        void            ForEach(lpfnForEach2 lpfn, size_t level, void *pExtra1);
+       
+       /** @brief ForEach con puntero a función (versión legacy con 3 parámetros) */
        void            ForEach(lpfnForEach3 lpfn, size_t level, void *pExtra1, void *pExtra2);
 
-       // TODO: #8 You may reduce these two function by using Invoke
+       /** @brief FirstThat con puntero a función (versión legacy con 2 parámetros) */
        ObjectInfo*     FirstThat(lpfnFirstThat2 lpfn, size_t level, void *pExtra1);
+       
+       /** @brief FirstThat con puntero a función (versión legacy con 3 parámetros) */
        ObjectInfo*     FirstThat(lpfnFirstThat3 lpfn, size_t level, void *pExtra1, void *pExtra2);
 
 protected:
-       // TODO: #9 change by size_t
-       size_t  m_MinKeys; // minimum number of keys in a node
-       size_t  m_MaxKeys, // maximum number of keys in a node
-
-                m_MaxKeysForChilds; // just to distinguish the root
-       bool m_Unique;
-       bool m_isRoot;
-       //size_t           NextNode; // address of next node at same level
-       //size_t RecAddr; // address of this node in the BTree file
-       vector<ObjectInfo> m_Keys;
-       vector<BTPage *>m_SubPages;
-       BTPage* m_Parent;  // Puntero al nodo padre
-       // TODO: #10 size_t
-       size_t  m_KeyCount;
-       Compare m_Compare;  // Función de comparación
+       size_t  m_MinKeys;           ///< Número mínimo de claves por nodo
+       size_t  m_MaxKeys;           ///< Número máximo de claves por nodo
+       size_t  m_MaxKeysForChilds;  ///< Distingue el nodo raíz
+       bool    m_Unique;            ///< Si es true, no permite duplicados
+       bool    m_isRoot;            ///< Indica si es el nodo raíz
+       vector<ObjectInfo> m_Keys;   ///< Vector de claves
+       vector<BTPage *>m_SubPages;  ///< Vector de subpáginas/hijos
+       BTPage* m_Parent;            ///< Puntero al nodo padre
+       size_t  m_KeyCount;          ///< Contador de claves actuales
+       Compare m_Compare;           ///< Función de comparación
+       
        void  Create();
        void  Reset ();
        void  Destroy () {   Reset(); delete this;}
@@ -191,6 +256,7 @@ protected:
        void  RedistributeR2L (size_t pos);
        void  RedistributeL2R (size_t pos);
 
+       /** @brief Trata el underflow redistribuyendo con hermanos */
        bool    TreatUnderflow  (size_t &pos)
        {       return RedistributeWith1Brother(pos) || RedistributeWith2Brothers(pos);}
 
@@ -200,31 +266,50 @@ protected:
 
        ObjectInfo &GetFirstObjectInfo();
 
+       /** @brief Verifica si hay overflow */
        bool Overflow()  { return m_KeyCount > m_MaxKeys; }
+       
+       /** @brief Verifica si hay underflow */
        bool Underflow() { return m_KeyCount < MinNumberOfKeys(); }
+       
+       /** @brief Verifica si está lleno */
        bool IsFull()    { return m_KeyCount >= m_MaxKeys; }
 
-
+       /** @brief Retorna el número mínimo de claves */
        size_t  MinNumberOfKeys()  { return 2*m_MaxKeys/3.0; }
+       
+       /** @brief Retorna el número de celdas libres */
        size_t  GetFreeCells()  { return m_MaxKeys - m_KeyCount; }
+       
+       /** @brief Retorna referencia al contador de claves */
        size_t& NumberOfKeys()  { return m_KeyCount; }
+       
+       /** @brief Retorna el número de claves */
        size_t  GetNumberOfKeys()  { return m_KeyCount; }
+       
+       /** @brief Verifica si es el nodo raíz */
        bool IsRoot()  { return m_MaxKeysForChilds != m_MaxKeys; }
+       
+       /** @brief Establece el orden para los hijos */
        void SetMaxKeysForChilds(size_t orderforchilds)
        {        m_MaxKeysForChilds = orderforchilds;       }
+       
+       /** @brief Retorna celdas libres en el hermano izquierdo */
        size_t GetFreeCellsOnLeft(size_t pos)
-       {        if( pos > 0 )                                   // there is some page on left ?
+       {        if( pos > 0 )
                         return m_SubPages[pos-1]->GetFreeCells();
                 return 0;
        }
+       
+       /** @brief Retorna celdas libres en el hermano derecho */
        size_t GetFreeCellsOnRight(size_t pos)
-       {    if( pos < GetNumberOfKeys() )   // there is some page on right ?
+       {    if( pos < GetNumberOfKeys() )
                 return m_SubPages[pos+1]->GetFreeCells();
             return 0;
        }
 
 private:
-       // Métodos internos con level para recursión usando variadic templates
+       /** @brief Método interno recursivo para ForEach con variadic templates */
         template<typename Func, typename... Args>
         void ForEach_internal(Func func, size_t level, Args&&... args) {
         if(m_SubPages[0]) m_SubPages[0]->ForEach_internal(func, level + 1, std::forward<Args>(args)...);
@@ -234,6 +319,7 @@ private:
         }
         }
 
+        /** @brief Método interno recursivo para FirstThat con variadic templates */
         template<typename Pred, typename... Args>
         ObjectInfo* FirstThat_internal(Pred predicate, size_t level, Args&&... args) {
         if(m_SubPages[0]) {
@@ -352,10 +438,9 @@ bool CBTreePage<Trait>::RedistributeWith1Brother(size_t &pos)
        return true;
 }
 
-/** RedistributeWith2Brothers function
-   it considers two brothers m_SubPages[pos-1] && m_SubPages[pos+1]
-   if it fails the only way is merge !
-**/
+/** @brief Redistribuye claves con dos hermanos
+ *  Considera dos hermanos m_SubPages[pos-1] y m_SubPages[pos+1].
+ *  Si falla, la única opción es hacer merge. */
 template <typename Trait>
 bool CBTreePage<Trait>::RedistributeWith2Brothers(size_t pos)
 {
@@ -609,19 +694,6 @@ bool CBTreePage<Trait>::Search(const keyType &key, ObjIDType &ObjID)
        return false;
 }
 
-/*template <typename keyType, typename ObjIDType>
-void CBTreePage<keyType, ObjIDType>::ForEachReverse(lpfnForEach2 lpfn, size_t level, void *pExtra1)
-{
-       if( m_SubPages[m_KeyCount] )
-               m_SubPages[m_KeyCount]->ForEach(lpfn, level+1, pExtra1);
-       for(size_t i = m_KeyCount-1 ; i >= 0  ; i--)
-       {
-               lpfn(m_Keys[i], level, pExtra1);
-               if( m_SubPages[i] )
-                       m_SubPages[i]->ForEach(lpfn, level+1, pExtra1);
-       }
-}*/
-
 template <typename Trait>
 void CBTreePage<Trait>::ForEach(lpfnForEach2 lpfn, size_t level, void *pExtra1)
 {
@@ -634,20 +706,6 @@ void CBTreePage<Trait>::ForEach(lpfnForEach2 lpfn, size_t level, void *pExtra1)
        if( m_SubPages[m_KeyCount] )
                m_SubPages[m_KeyCount]->ForEach(lpfn, level+1, pExtra1);
 }
-
-/*template <typename keyType, typename ObjIDType>
-void CBTreePage<keyType, ObjIDType>::ForEachReverse(lpfnForEach3 lpfn,
-                                                                                                       size_t level, void *pExtra1, void *pExtra2)
-{
-       if( m_SubPages[m_KeyCount] )
-               m_SubPages[m_KeyCount]->ForEach(lpfn, level+1, pExtra1, pExtra2);
-       for(size_t i = m_KeyCount-1 ; i >= 0  ; i--)
-       {
-               lpfn(m_Keys[i], level, pExtra1, pExtra2);
-               if( m_SubPages[i] )
-                       m_SubPages[i]->ForEach(lpfn, level+1, pExtra1, pExtra2);
-       }
-}*/
 
 template <typename Trait>
 void CBTreePage<Trait>::ForEach(lpfnForEach3 lpfn, size_t level, void *pExtra1, void *pExtra2)
@@ -662,8 +720,6 @@ void CBTreePage<Trait>::ForEach(lpfnForEach3 lpfn, size_t level, void *pExtra1, 
                m_SubPages[m_KeyCount]->ForEach(lpfn, level+1, pExtra1, pExtra2);
 }
 
-// Apicar una funcion hasta encontrar el 1er elemento
-// aque que retorne true ante esta funcion
 template <typename Trait>
 typename CBTreePage<Trait>::ObjectInfo *
 CBTreePage<Trait>::FirstThat(lpfnFirstThat2 lpfn, size_t level, void *pExtra1)
@@ -877,6 +933,7 @@ CBTreePage<Trait>::GetFirstObjectInfo()
         return m_Keys[0];
 }
 
+/** @brief Función auxiliar para imprimir ObjectInfo */
 template <typename keyType, typename ObjIDType>
 void Print(tagObjectInfo<keyType, ObjIDType> &info, size_t level, void *pExtra)
 {
@@ -999,6 +1056,16 @@ void CBTreePage<Trait>::MovePage(BTPage *pChildPage, vector<ObjectInfo> &tmpKeys
        }
        tmpSubPages.push_back(pChildPage->m_SubPages[i]);
        pChildPage->clear();
+}
+
+/** @brief Crea un nodo del BTree
+ *  @param maxKeys Número máximo de claves
+ *  @param unique Si es true, no permite duplicados
+ *  @return Puntero al nuevo nodo */
+template <typename Trait>
+CBTreePage<Trait> * CreateBTreeNode (size_t maxKeys, bool unique)
+{
+       return new CBTreePage<Trait> (maxKeys, unique);
 }
 
 #endif

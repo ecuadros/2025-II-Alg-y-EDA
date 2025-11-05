@@ -60,6 +60,8 @@
         "xstring": "cpp",
         "xtr1common": "cpp",
         "xutility": "cpp",
-        "sstream": "cpp"
+        "sstream": "cpp",
+        "mutex": "cpp",
+        "shared_mutex": "cpp"
     }
 }
