@@ -5,6 +5,7 @@
 #include <functional>
 #include <mutex>
 #include <shared_mutex>
+#include <utility>
 #include "btreepage.h"
 #define DEFAULT_BTREE_ORDER 3
 
@@ -100,12 +101,12 @@ public:
         */
        BTree(BTree &&other) {
               std::lock_guard<std::shared_mutex> lock(other.m_Mutex);
-		m_Root = std::move(other.m_Root);
-		m_Height = std::move(other.m_Height);
-		m_Order = std::move(other.m_Order);
-		m_NumKeys = std::move(other.m_NumKeys);
-		m_Unique = std::move(other.m_Unique);
-		m_Comp = std::move(other.m_Comp);
+		m_Root = std::exchange(other.m_Root, nullptr);
+              m_Height = std::exchange(other.m_Height, 0);
+              m_Order  = std::exchange(other.m_Order, 0);
+              m_NumKeys = std::exchange(other.m_NumKeys, 0);
+              m_Unique = std::exchange(other.m_Unique, false);
+    		m_Comp = std::move(other.m_Comp);
 	}
 
        ~BTree() {}
