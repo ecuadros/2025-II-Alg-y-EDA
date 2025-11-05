@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <utility>  // Para std::move
+#include <mutex>    // Para concurrencia con std::mutex
 #include "btreepage.h"
 #define DEFAULT_BTREE_ORDER 3
 
@@ -61,18 +62,45 @@ public:
                 m_Unique(other.m_Unique),
                 m_NumKeys(other.m_NumKeys)
        {
+              // Lock both mutexes in consistent order (by address) to prevent deadlock
+              if (this < &other) {
+                     m_mutex.lock();
+                     other.m_mutex.lock();
+              } else {
+                     other.m_mutex.lock();
+                     m_mutex.lock();
+              }
+              
               // El root no debe tener padre
               m_Root.SetParent(nullptr);
               
               // Reset other to a valid but empty state
               other.m_Height = 1;
               other.m_NumKeys = 0;
+              
+              // Unlock in reverse order
+              if (this < &other) {
+                     other.m_mutex.unlock();
+                     m_mutex.unlock();
+              } else {
+                     m_mutex.unlock();
+                     other.m_mutex.unlock();
+              }
        }
 
        // Move Assignment Operator
        BTree& operator=(BTree&& other) noexcept
        {
               if (this != &other) {
+                     // Lock both mutexes in consistent order
+                     if (this < &other) {
+                            m_mutex.lock();
+                            other.m_mutex.lock();
+                     } else {
+                            other.m_mutex.lock();
+                            m_mutex.lock();
+                     }
+                     
                      // Move data from other
                      m_Order = other.m_Order;
                      m_Root = std::move(other.m_Root);
@@ -86,6 +114,15 @@ public:
                      // Reset other to a valid but empty state
                      other.m_Height = 1;
                      other.m_NumKeys = 0;
+                     
+                     // Unlock in reverse order
+                     if (this < &other) {
+                            other.m_mutex.unlock();
+                            m_mutex.unlock();
+                     } else {
+                            m_mutex.unlock();
+                            other.m_mutex.unlock();
+                     }
               }
               return *this;
        }
@@ -97,20 +134,53 @@ public:
        bool            Insert (const keyType key, const long ObjID);
        bool            Remove (const keyType key, const long ObjID);
        ObjIDType       Search (const keyType key)
-       {      ObjIDType ObjID = -1;
+       {      
+              // Lock para thread-safety
+              m_mutex.lock();
+              
+              ObjIDType ObjID = -1;
               m_Root.Search(key, ObjID);
+              
+              // Unlock antes de return
+              m_mutex.unlock();
+              
               return ObjID;
        }
-       size_t            size()  { return m_NumKeys; }
-       size_t            height() { return m_Height;      }
-       size_t            GetOrder() { return m_Order;     }
+       size_t            size() const
+       {
+              m_mutex.lock();
+              size_t result = m_NumKeys;
+              m_mutex.unlock();
+              return result;
+       }
+       
+       size_t            height() const
+       {
+              m_mutex.lock();
+              size_t result = m_Height;
+              m_mutex.unlock();
+              return result;
+       }
+       
+       size_t            GetOrder() const
+       {
+              m_mutex.lock();
+              size_t result = m_Order;
+              m_mutex.unlock();
+              return result;
+       }
 
        void            Print (ostream &os)
-       {               m_Root.Print(os);                              }
+       {
+              m_mutex.lock();
+              m_Root.Print(os);
+              m_mutex.unlock();
+       }
        
        std::ostream& Write(std::ostream& os) const
        {
-
+               m_mutex.lock();
+               
                os << m_Order << "," << (m_Unique ? "1" : "0") << "\n";
                os << m_NumKeys << "\n";
                
@@ -119,11 +189,16 @@ public:
                        os << it->key << "," << it->ObjID << "\n";
                }
                
+               m_mutex.unlock();
+               
                return os;
        }
 
        std::istream& Read(std::istream& is)
        {
+               // Lock para preparar estructura
+               m_mutex.lock();
+               
                size_t order;
                int unique_int;
                size_t count;
@@ -142,6 +217,10 @@ public:
                m_Root.SetMaxKeysForChilds(order);
                m_Root.SetParent(nullptr);
                
+               // Unlock ANTES de llamar Insert (evitar deadlock)
+               m_mutex.unlock();
+               
+               // Insert hace su propio lock/unlock por cada elemento
                for(size_t i = 0; i < count; i++) {
                        keyType key;
                        ObjIDType objID;
@@ -156,11 +235,20 @@ public:
        // Template versions using std::invoke (TODO #6, #7, #8 completed)
        template <typename Func, typename... Args>
        void ForEach(Func&& func, Args&&... args)
-       {               m_Root.ForEach(std::forward<Func>(func), std::forward<Args>(args)...);  }
+       {
+              m_mutex.lock();
+              m_Root.ForEach(std::forward<Func>(func), std::forward<Args>(args)...);
+              m_mutex.unlock();
+       }
 
        template <typename Func, typename... Args>
        ObjectInfo* FirstThat(Func&& func, Args&&... args)
-       {               return m_Root.FirstThat(std::forward<Func>(func), std::forward<Args>(args)...);  }
+       {
+              m_mutex.lock();
+              ObjectInfo* result = m_Root.FirstThat(std::forward<Func>(func), std::forward<Args>(args)...);
+              m_mutex.unlock();
+              return result;
+       }
 
        // Iteradores forward (in-order traversal: orden ascendente)
        iterator begin()
@@ -210,32 +298,62 @@ protected:
        size_t          m_Order;   // order of tree
        size_t          m_NumKeys; // number of keys
        bool            m_Unique;  // Accept the elements only once ?
+       
+       // Mutex para concurrencia (TODO #11: Thread-safety)
+       mutable std::mutex m_mutex;
 };     
 
 template <typename Trait>
 bool BTree<Trait>::Insert(const keyType key, const long ObjID){
+       // Lock para thread-safety
+       m_mutex.lock();
+       
        bt_ErrorCode error = m_Root.Insert(key, ObjID);
-       if( error == bt_duplicate )
-               return false;
-       m_NumKeys++;
-       if( error == bt_overflow ){
-               m_Root.SplitRoot();
-               m_Height++;
+       
+       // Preparar resultado sin return intermedio
+       bool result = false;
+       
+       if( error == bt_duplicate ) {
+              result = false;
+       } else {
+              m_NumKeys++;
+              if( error == bt_overflow ){
+                     m_Root.SplitRoot();
+                     m_Height++;
+              }
+              result = true;
        }
-       return true;
+       
+       // Unlock antes de return
+       m_mutex.unlock();
+       
+       return result;
 }
 
 template <typename Trait>
 bool BTree<Trait>::Remove (const keyType key, const long ObjID)
 {
+       // Lock para thread-safety
+       m_mutex.lock();
+       
        bt_ErrorCode error = m_Root.Remove(key, ObjID);
-       if( error == bt_duplicate || error == bt_nofound )
-               return false;
-       m_NumKeys--;
-
-       if( error == bt_rootmerged )
-               m_Height--;
-       return true;
+       
+       // Preparar resultado sin return intermedio
+       bool result = false;
+       
+       if( error == bt_duplicate || error == bt_nofound ) {
+              result = false;
+       } else {
+              m_NumKeys--;
+              if( error == bt_rootmerged )
+                     m_Height--;
+              result = true;
+       }
+       
+       // Unlock antes de return
+       m_mutex.unlock();
+       
+       return result;
 }
 
 #endif
