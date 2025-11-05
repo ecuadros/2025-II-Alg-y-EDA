@@ -112,6 +112,9 @@ class CBTreePage //: public SimpleIndex <keyType>
        CBTreePage(size_t maxKeys, bool unique = true);
        virtual ~CBTreePage();
 
+       std::ostream& Write(ostream &os) const;
+       std::istream& Read(istream &is);
+
        bt_ErrorCode    Insert (const keyType &key, const ObjIDType ObjID);
        bt_ErrorCode    Remove (const keyType &key, const ObjIDType ObjID);
        bool            Search (const keyType &key, ObjIDType &ObjID);
@@ -845,6 +848,57 @@ void CBTreePage<Trait>::MovePage(BTPage *pChildPage, vector<ObjectInfo> &tmpKeys
        }
        tmpSubPages.push_back(pChildPage->m_SubPages[i]);
        pChildPage->clear();
+}
+
+template <typename Trait>
+std::ostream& CBTreePage<Trait>::Write(ostream &os) const
+{
+    os << m_KeyCount << " ";
+
+    for(size_t i = 0; i < m_KeyCount; ++i) os << m_Keys[i].key << " " << m_Keys[i].ObjID << " ";
+    os << "\n";
+
+    for(size_t i = 0; i <= m_KeyCount; ++i)
+    {
+        if(m_SubPages[i])
+        {
+            os << "* ";
+            m_SubPages[i]->Write(os);
+        }
+        else
+            os << "# ";
+    }
+    os << "\n";
+    return os;
+}
+
+
+template <typename Trait>
+std::istream& CBTreePage<Trait>::Read(istream &is)
+{
+    size_t keyCount;
+    if (!(is >> keyCount)) return is;
+
+    for (size_t i = 0; i < keyCount; ++i) {
+        keyType key{};
+        ObjIDType objID{};
+        is >> key >> objID;
+        m_Keys[i] = ObjectInfo(key, objID);
+        m_KeyCount++;
+    }
+
+    for (size_t i = 0; i <= keyCount; ++i) {
+        char marker = 0;
+        if (!(is >> marker)) return is;
+
+        if (marker == '*') {
+            m_SubPages[i] = new BTPage(m_MaxKeysForChilds, m_Unique);
+            m_SubPages[i]->Read(is);
+        } else {
+            m_SubPages[i] = nullptr;
+        }
+    }
+    return is;
 }
 
 #endif

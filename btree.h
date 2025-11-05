@@ -2,6 +2,8 @@
 #define __BTREE_H__
 
 #include <iostream>
+#include <fstream>
+#include <string>
 #include "btreepage.h"
 #define DEFAULT_BTREE_ORDER 3
 
@@ -97,6 +99,12 @@ public:
        template <typename T>
        friend std::ostream& operator<<(std::ostream &os, BTree<Trait> &obj);
 
+       bool Write(const std::string& filename) const;
+       bool Write(std::ostream& os) const;
+       bool Read(const std::string& filename);
+       bool Read(std::istream& is);
+       void Clear();
+
 protected:
        BTNode          m_Root;
        size_t          m_Height;  // height of tree
@@ -135,6 +143,56 @@ bool BTree<Trait>::Remove (const keyType key, const long ObjID)
 
        if( error == bt_rootmerged )
                m_Height--;
+       return true;
+}
+
+template <typename Trait>
+void BTree<Trait>::Clear() {
+    m_Root.Reset();
+    m_Root.Create();
+    m_Root.SetMaxKeysForChilds(m_Order);
+    m_NumKeys = 0;
+    m_Height  = 1;
+}
+
+template <typename Trait>
+bool BTree<Trait>::Write(const std::string& filename) const {
+    std::ofstream ofs(filename);
+    if (!ofs) return false;
+    Write(ofs);
+    return true;
+}
+
+template <typename Trait>
+bool BTree<Trait>::Write(std::ostream &os) const { 
+       os << m_Order << " " << m_Height << " " << m_NumKeys << " " << m_Unique << "\n";
+       m_Root.Write(os);
+       return true;
+}
+
+template <typename Trait>
+bool BTree<Trait>::Read(const std::string& filename) {
+    std::ifstream ifs(filename);
+    if (!ifs) return false;
+    return Read(ifs);
+}
+
+template <typename Trait>
+bool BTree<Trait>::Read(std::istream &is) { 
+       size_t order, height, numKeys;
+       bool unique;
+       is >> order >> height >> numKeys >> unique;
+
+       Clear();
+
+       m_Order = order;
+       m_Height = height;
+       m_NumKeys = numKeys;
+       m_Unique = unique;
+
+       m_Root = BTNode(2 * order + 1, unique);
+       m_Root.SetMaxKeysForChilds(order);
+       m_Root.Read(is);
        return true;
 }
 

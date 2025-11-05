@@ -32,5 +32,12 @@ int main()
 
     tree2.Print(cout);
 
+    tree1.Write("btree_data.txt");
+
+    BTree<BTreeDescTrait<T1, Ref>> tree3(3, true);
+    tree3.Read("btree_data.txt");
+
+    tree3.Print(cout);
+
     return 0;
 }
