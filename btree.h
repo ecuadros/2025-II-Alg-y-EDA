@@ -61,6 +61,18 @@ public:
        //int           Open (char * name, int mode);
        //int           Create (char * name, int mode);
        //int           Close ();
+
+        BTree(BTree&& other) noexcept
+              : m_Root(std::move(other.m_Root)),
+                m_Height(other.m_Height),
+                m_Order(other.m_Order),
+                m_NumKeys(other.m_NumKeys),
+                m_Unique(other.m_Unique)
+            {
+              other.m_Height = 1;
+              other.m_NumKeys = 0;
+            }
+
        bool            Insert (const keyType key, const ObjIDType ObjID);
        bool            Remove (const keyType key, const ObjIDType ObjID);
        ObjIDType       Search (const keyType key)
@@ -91,7 +103,7 @@ public:
        //typedef               ObjectInfo iterator;
 
        template <typename Function, typename... Args>
-       ObjectInfo* FirstThat(Function function, Args const&... args){ {
+       ObjectInfo* FirstThat(Function function, Args const&... args){ 
             return m_Root.FirstThat(function, 0, args...);
        }
 
