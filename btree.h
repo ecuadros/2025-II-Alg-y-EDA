@@ -117,6 +117,8 @@ public:
 	}
 	//typedef               ObjectInfo iterator;
 
+	void Write(ostream &os) { os << *this; }
+
 	friend std::ostream& operator<<(std::ostream &os, BTree<Trait> &obj);
 
 };     
