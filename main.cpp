@@ -1,42 +1,36 @@
 #include <iostream>
-#include "vector.h"
-#include "DemoVector.h"
-#include "hilos.h"
-#include "linkedlist.h"
-#include "doublelinkedlist.h"
+#include <functional>
+#include "types.h"
+#include "btree.h"
 
-using namespace std;
+int main()
+{
 
-/* Revisado por:
-   1. Ernesto Cuadros-Vargas
-   4. Héctor Bobbio Hermoza 
-   2. Jharvy Jonas Cadillo Tarazona
-   20. Ortiz Lozano Eric Hernan
-   22. Chandler Steven Perez Cueva
-*/
+    std::cout << "B Tree Asc " << std::endl;
+    vector<pair<T1, Ref>> v1 = {
+        {10, 300}, {20, 301}, {30, 302}, {40, 303}, {50, 304}, {60, 305}, {70, 306}, {80, 307}, {90, 308}, {100, 309}, {110, 310}};
 
-// Forma 1 de Compilar: 
-// g++ -std=c++17 -Wall -g -pthread -o main main.cpp
-// Forma #2 de Compilar (requiere el archivo Makefile)
-// make
+    BTree<BTreeAscTrait<T1, Ref>> tree1(3, true);
 
-int main(){
-    cout << "Hello Alg y EDA-UNI" << endl;
-    // DemoThreads();
-    [[maybe_unused]] int x = 5;
-    // DemoVector();
-    DemoLinkedList();
-    DemoDoubleLinkedList();
+    for (auto &par : v1)
+    {
+        tree1.Insert(par.first, par.second);
+    }
+
+    tree1.Print(cout);
+
+    std::cout << "B Tree Desc " << std::endl;
+    vector<pair<T1, Ref>> v2 = {
+        {100, 400}, {90, 401}, {80, 402}, {70, 403}, {60, 404}, {50, 405}, {40, 406}, {30, 407}, {20, 408}, {10, 409}};
+
+    BTree<BTreeDescTrait<T1, Ref>> tree2(3, true);
+
+    for (auto &par : v2)
+    {
+        tree2.Insert(par.first, par.second);
+    }
+
+    tree2.Print(cout);
+
     return 0;
 }
-
-// int main(int nArgs, char *pArgs[]){
-//     cout << "Hello Alg y EDA-UNI (forma #2)" << endl;
-//     int i;
-//     for(i = 0 ; i < nArgs ; ++i){
-//         cout << pArgs[i] << endl;
-//     }
-// }
-
-
-

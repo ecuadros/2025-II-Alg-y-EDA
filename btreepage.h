@@ -38,16 +38,34 @@ size_t binary_search(Container& container, size_t first, size_t last, ObjType &o
        return last;
 }
 
+template <typename Container, typename ObjType, typename Compare>
+size_t binary_search_compare(Container& container, size_t first, size_t last, const ObjType &object, Compare compare)
+{
+    if (first >= last) return first;
+    while (first < last) {
+        size_t mid = (first+last)/2;
+        auto midObj = (ObjType)container[mid];
+        if (!compare(midObj, object) && !compare(object, midObj))
+            return mid;
+        if (compare(midObj, object))
+            first = mid+1;
+        else
+            last = mid;
+    }
+    if (!compare((ObjType)container[first], object)) return first;
+    return last;
+}
+
 // Error al poner size_t
 // Posible motivo: El i está disminuyendo
 template <typename Container, typename ObjType>
-void insert_at(Container& container, ObjType object, int pos)
+void insert_at(Container& container, ObjType object, size_t pos)
 {
-        // TODO: #5 replace int, long by types such as size_t
-       size_t size = container.size();
-       for(int i = size-2 ; i >= pos ; i--)
-               container[i+1] = container[i];
-       container[pos] =  object;	
+        size_t size = container.size();
+        for (size_t i = size - 1; i-- > pos; ) {
+                container[i] = container[i-1];
+        }
+        container[pos] = object;	
 }
 
 template <typename Container>
@@ -79,7 +97,8 @@ class CBTreePage //: public SimpleIndex <keyType>
 {
        friend class BTree<Trait>;
        typedef typename Trait::keyType  keyType;
-       typedef typename Trait::ObjIDType  ObjIDType; 
+       typedef typename Trait::ObjIDType  ObjIDType;
+       typedef typename Trait::Compare  Compare;
 
        typedef CBTreePage<Trait>    BTPage;         // useful shorthand
        typedef tagObjectInfo<keyType, ObjIDType> ObjectInfo;
@@ -108,19 +127,18 @@ class CBTreePage //: public SimpleIndex <keyType>
        ObjectInfo*     FirstThat(lpfnFirstThat3 lpfn, size_t level, void *pExtra1, void *pExtra2);
 
 protected:
-       // TODO: #9 change by size_t
        size_t  m_MinKeys; // minimum number of keys in a node
        size_t  m_MaxKeys, // maximum number of keys in a node
 
                 m_MaxKeysForChilds; // just to distinguish the root
        bool m_Unique;
        bool m_isRoot;
+       Compare m_Compare;
        //size_t           NextNode; // address of next node at same level
        //size_t RecAddr; // address of this node in the BTree file
        vector<ObjectInfo> m_Keys;
        vector<BTPage *>m_SubPages;
        
-       // TODO: #10 size_t
        size_t  m_KeyCount;
        void  Create();
        void  Reset ();
@@ -192,7 +210,8 @@ CBTreePage<Trait>::~CBTreePage()
 
 template <typename Trait>
 bt_ErrorCode CBTreePage<Trait>::Insert(const keyType& key, const ObjIDType ObjID){
-       size_t pos = binary_search(m_Keys, 0, m_KeyCount, key);
+       //size_t pos = binary_search(m_Keys, 0, m_KeyCount, key);
+       size_t pos = binary_search_compare(m_Keys, 0, m_KeyCount, key, m_Compare);
        bt_ErrorCode error = bt_ok;
 
        if( pos < m_KeyCount && (keyType)m_Keys[pos] == key && m_Unique)
@@ -369,7 +388,6 @@ void CBTreePage<Trait>::SplitChild(size_t pos)
                        pChild1 = m_SubPages[pos];
                        pChild2 = m_SubPages[pos+1];
                }
-       size_t nKeys = pChild1->GetNumberOfKeys() + pChild2->GetNumberOfKeys() + 1;
 
        // SECOND: copy both pages to a temporal one
        // Create two tmp vector
@@ -488,20 +506,23 @@ bool CBTreePage<Trait>::SplitRoot(){
 template <typename Trait>
 bool CBTreePage<Trait>::Search(const keyType &key, ObjIDType &ObjID)
 {
-       size_t pos = binary_search(m_Keys, 0, m_KeyCount, key);
+       auto less = typename Trait::Compare{};
+       size_t pos = binary_search_compare(m_Keys, 0, m_KeyCount, key, m_Compare);
+       //size_t pos = binary_search(m_Keys, 0, m_KeyCount, key);
+       auto usedKey = m_Keys[pos].key;
        if( pos >= m_KeyCount )
        {    if( m_SubPages[pos] )
                 return m_SubPages[pos]->Search(key, ObjID);
             else
                 return false;
        }
-       if( key == m_Keys[pos].key )
+       if( !m_Compare(usedKey, key) && !m_Compare(key, usedKey) )
        {
                ObjID = m_Keys[pos].ObjID;
                m_Keys[pos].UseCounter++;
                return true;
        }
-       if( key < m_Keys[pos].key )
+       if( m_Compare(key, usedKey) )
                if( m_SubPages[pos] )
                        return m_SubPages[pos]->Search(key, ObjID);
        return false;
@@ -604,7 +625,9 @@ template <typename Trait>
 bt_ErrorCode CBTreePage<Trait>::Remove(const keyType &key, const ObjIDType ObjID)
 {
        bt_ErrorCode error = bt_ok;
-       size_t pos = binary_search(m_Keys, 0, m_KeyCount, key);
+       //size_t pos = binary_search(m_Keys, 0, m_KeyCount, key);
+       auto less = typename Trait::Compare{};
+       size_t pos = binary_search_compare(m_Keys, 0, m_KeyCount, key, m_Compare);
        if( pos < NumberOfKeys() && key == m_Keys[pos].key /*&& m_Keys[pos].m_ObjID == ObjID*/) // We found it !
        {
                // This is a leave: First
@@ -631,7 +654,7 @@ bt_ErrorCode CBTreePage<Trait>::Remove(const keyType &key, const ObjIDType ObjID
        }
        else if( pos == NumberOfKeys() ) // it is not here, go by the last branch
                error = m_SubPages[pos]->Remove(key, ObjID);
-       else if( key <= m_Keys[pos].key ) // = is because identical keys are inserted on left (see Insert)
+       else if( !m_Compare(m_Keys[pos].key, key) ) // = is because identical keys are inserted on left (see Insert)
        {        if( m_SubPages[pos] )
                        error = m_SubPages[pos]->Remove(key, ObjID);
                else
@@ -697,7 +720,6 @@ bt_ErrorCode CBTreePage<Trait>::Merge(size_t pos)
 
        nKeys = pChild2->GetFreeCells();
 
-       // TODO: #32 change int by size_t
        size_t j = ++i;
        for(i = 0 ; i < nKeys ; i++, j++ )
        {
@@ -716,7 +738,6 @@ bt_ErrorCode CBTreePage<Trait>::Merge(size_t pos)
 template <typename Trait>
 bt_ErrorCode CBTreePage<Trait>::MergeRoot()
 {
-        // TODO: #33 change int by size_t
        size_t pos = 1;
        assert( m_SubPages[pos-1]->NumberOfKeys() +
                        m_SubPages[ pos ]->NumberOfKeys() +
@@ -724,7 +745,7 @@ bt_ErrorCode CBTreePage<Trait>::MergeRoot()
                        3*m_SubPages[ pos ]->MinNumberOfKeys() - 1);
 
        BTPage  *pChild1 = m_SubPages[pos-1], *pChild2 = m_SubPages[ pos ], *pChild3 = m_SubPages[pos+1];
-       // TODO: #34 change int by size_t
+       
        size_t nKeys = pChild1->NumberOfKeys() + pChild2->NumberOfKeys() + pChild3->NumberOfKeys() + 2;
 
        // FIRST: Put all the elements into a vector
@@ -794,7 +815,6 @@ void CBTreePage<Trait>::Create()
 template <typename Trait>
 void CBTreePage<Trait>::Reset()
 {
-        // TODO: #35 change int by size_t
        for( size_t i = 0 ; i < m_KeyCount ; i++ )
                delete m_SubPages[i];
        clear();
@@ -817,7 +837,6 @@ CBTreePage<Trait> * CreateBTreeNode (size_t maxKeys, bool unique)
 template <typename Trait>
 void CBTreePage<Trait>::MovePage(BTPage *pChildPage, vector<ObjectInfo> &tmpKeys,vector<BTPage *> &tmpSubPages)
 {
-        // TODO: #37 change int by size_t
        size_t nKeys = pChildPage->GetNumberOfKeys();
        size_t i = 0;
        for(i = 0; i < nKeys; i++ )
