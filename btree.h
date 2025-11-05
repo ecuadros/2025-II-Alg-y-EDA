@@ -177,6 +177,12 @@ public:
        using reverse_iterator = std::reverse_iterator<iterator>;
 
 public:
+       /**
+        * @brief Constructor del B-Tree.
+        * @param order El orden del árbol.
+        * @param unique Verdadero si las claves deben ser únicas.
+        */
+public:
        BTree(size_t order = DEFAULT_BTREE_ORDER, bool unique = true)
               : m_Order(order),
                 m_Root(2 * order  + 1, unique),
@@ -186,8 +192,12 @@ public:
               m_Root.SetMaxKeysForChilds(order);
               m_Height = 1;
        }
+       /**
+        * @brief Constructor por movimiento.
+        * @param other El B-Tree a mover.
+        */
        BTree(BTree&& other) noexcept
-              : m_Root(std::move(other.m_Root)),
+              : m_Root(other.m_Root),
                 m_Height(std::exchange(other.m_Height, 1)),
                 m_Order(std::exchange(other.m_Order, 0)),
                 m_NumKeys(std::exchange(other.m_NumKeys, 0)),
@@ -195,11 +205,16 @@ public:
        {
 
        }
+       /// @brief Destructor.
        ~BTree() {}
        //int           Open (char * name, int mode);
        //int           Create (char * name, int mode);
        //int           Close ();
+       /// @brief Escribe el árbol a un flujo de salida para serialización.
+       /// @param os El flujo de salida.
        void            Write(ostream& os);
+       /// @brief Lee el árbol desde un flujo de entrada para deserialización.
+       /// @param is El flujo de entrada.
        void            Read(istream& is);
 
        /**
@@ -209,6 +224,12 @@ public:
         * @return Verdadero si la inserción fue exitosa, falso si la clave era un duplicado.
         */
        bool            Insert (const keyType key, const ObjIDType ObjID);
+       /**
+        * @brief Elimina una clave del árbol.
+        * @param key La clave a eliminar.
+        * @param ObjID El ID de objeto asociado (actualmente no se usa en la lógica de eliminación).
+        * @return Verdadero si la eliminación fue exitosa.
+        */
        bool            Remove (const keyType key, const ObjIDType ObjID);
        /**
         * @brief Busca una clave en el árbol.
@@ -262,11 +283,23 @@ public:
        reverse_iterator rend() { return reverse_iterator(begin()); }
 
 
+       /**
+        * @brief Aplica una función a cada elemento del árbol en orden.
+        * @tparam Func El tipo de la función.
+        * @tparam Args Los tipos de los argumentos adicionales para la función.
+        * @param level Nivel inicial para el recorrido (usualmente 0).
+        * @param func La función a aplicar.
+        * @param args Argumentos adicionales para la función.
+        */
        template<typename Func, typename... Args>
        void ForEach(size_t level, Func&& func, Args&&... args) {
               m_Root.ForEach(level, std::forward<Func>(func), std::forward<Args>(args)...);
        }
 
+       /**
+        * @brief Busca el primer elemento que satisface una condición.
+        * @return Un puntero al ObjectInfo si se encuentra, de lo contrario nullptr.
+        */
        template<typename Func, typename... Args>
        ObjectInfo* FirstThat(size_t level, Func&& func, Args&&... args) {
               return m_Root.FirstThat(level, std::forward<Func>(func), std::forward<Args>(args)...);
@@ -330,7 +363,7 @@ bool BTree<Trait>::Remove (const keyType key, const ObjIDType ObjID)
        return true;
 }
 
-/// Sobrecarga del operador <<
+/// Sobrecarga del operador << para imprimir el B-Tree.
 template <typename Trait>
 std::ostream& operator<<(std::ostream& os, const BTree<Trait>& tree) {
     tree.Print(os);

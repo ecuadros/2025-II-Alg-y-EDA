@@ -10,7 +10,7 @@ const char * keys3 = "DYZakHIUwxVJ203ejOP9Qc8AdtuEop1XvTRghSNbW567BfiCqrs4FGMyzK
 const int BTreeSize = 3;
 int main (int argc, char ** argv){
     int result, i;
-    cout << "--- Probando BTree con orden ascendente por defecto ---" << endl;
+    cout <<  " BTree con orden ascendente por defecto " << endl;
     // BTree con orden ascendente (std::less por defecto)
     BTree<BTreeTrait<char, int>> bt(BTreeSize);
     cout << bt;
@@ -19,8 +19,7 @@ int main (int argc, char ** argv){
     }
     cout << bt;
        
-    cout << "------------------------------------------\n" << endl;
-    cout << "\n--- Probando la busqueda ---" << endl;
+    cout << "\n Busqueda" << endl;
     for (i = 0; keys2[i]; ++i) {
         cout << "Buscando " << keys2[i] << ": ";
         int ObjID = bt.Search(keys2[i]);
@@ -29,16 +28,14 @@ int main (int argc, char ** argv){
         else
             cout <<"No encontrado " << keys2[i] << endl;
     }
-    cout << "------------------------------------------\n" << endl;
-    cout << "\n--- Probando BTree con orden descendente antes de ser movido ---" << endl;
-    // BTree con Trait de ejemplo
+    cout << "\n BTree con orden descendente antes de ser movido" << endl;
     BTree<BTreeDescTrait<char, int>> bt_desc(BTreeSize);
     for (i = 0; keys1[i]; i++) {
         result = bt_desc.Insert(keys1[i], i+1); 
     }
     cout << bt_desc;
 
-    cout << "\n--- Moviendo el arbol bt_desc a bt_moved ---" << endl;
+    cout << "\n Move el arbol bt_desc a bt_moved ---" << endl;
     BTree<BTreeDescTrait<char, int>> bt_moved(std::move(bt_desc));
 
     cout << "Arbol movido (bt_moved):" << endl;
@@ -46,9 +43,9 @@ int main (int argc, char ** argv){
 
     cout << "Arbol original (bt_desc) despues de mover:" << endl;
     if (bt_desc.size() == 0) {
-        cout << "(El arbol esta vacio)" << endl;
+        cout << "El arbol esta vacio" << endl;
     } else {
-        cout << bt_desc; // No deberia llegar aqui
+        cout << bt_desc;
     }
 
     cout << "------------------------------------------\n" << endl;
@@ -58,9 +55,9 @@ int main (int argc, char ** argv){
                 std::cout << "Clave: " << info.key << " en nivel " << level << std::endl;
         }
     });
-    cout << "\n--- Probando Write y Read ---" << endl;
+    cout << "\nWrite y Read" << endl;
     // Write
-    cout << "Guardando el arbol 'bt' en 'btree.dat'..." << endl;
+    cout << "\nGuardando el arbol 'bt' en 'btree.dat'" << endl;
     ofstream outFile("btree.txt");
     if (outFile) {
         bt.Write(outFile);
@@ -70,7 +67,7 @@ int main (int argc, char ** argv){
 
     // Read
     BTree<BTreeTrait<char, int>> bt_loaded(BTreeSize);
-    cout << "Cargando desde 'btree.txt' a 'bt_loaded' " << endl;
+    cout << "\nCargando desde btree.txt a bt_loaded " << endl;
     ifstream inFile("btree.txt");
     if (inFile) {
         bt_loaded.Read(inFile);
@@ -79,15 +76,10 @@ int main (int argc, char ** argv){
         cout << bt_loaded;
         
     }
-    cout << "------------------------------------------\n" << endl;
-    cout << "\n--- Probando iteradores ---" << endl;
-    
-    cout << "Recorriendo el arbol 'bt' con iteradores..." << endl;
+    cout << "\n Recorrido con iteradores" << endl;   
     for (auto it = bt.begin(); it != bt.end(); ++it) {
         cout << (*it).key;
     }
     cout << endl;
-    cout << "------------------------------------------\n" << endl;
-
-       return 1;
+    return 1;
 }

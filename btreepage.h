@@ -3,7 +3,7 @@
 
 /**
  * @file btreepage.h
- * @brief Define la clase CBTreePage, que representa un nodo de el B-Tree.
+ * @brief Define la clase CBTreePage, que representa un único nodo (página) en el B-Tree.
  */
 
 #include <vector>
@@ -129,8 +129,18 @@ class CBTreePage //: public SimpleIndex <keyType>
 
 
  public:
+       /**
+        * @brief Constructor por movimiento.
+        * @param other La página a mover.
+        */
        CBTreePage(CBTreePage&& other) noexcept; // Move Constructor
+       /**
+        * @brief Constructor de la página.
+        * @param maxKeys Número máximo de claves que puede contener la página.
+        * @param unique Verdadero si las claves deben ser únicas.
+        */
        CBTreePage(size_t maxKeys, bool unique = true);
+       /// @brief Destructor. Libera los recursos de la página.
        virtual ~CBTreePage();
 
        /**
@@ -176,12 +186,18 @@ protected:
        
        size_t  m_KeyCount;          ///< Número actual de claves en el nodo.
 
+       /// @brief Inicializa los vectores de claves y sub-páginas.
        void  Create();
+       /// @brief Libera los recursos de las sub-páginas.
        void  Reset ();
+       /// @brief Llama a Reset y elimina el objeto actual.
        void  Destroy () {   Reset(); delete this;}
+       /// @brief Reinicia el contador de claves a cero.
        void  clear ();
 
+       /// @brief Intenta redistribuir claves con un hermano (izquierdo o derecho).
        bool  RedistributeWith1Brother   (size_t &pos);
+       /// @brief Intenta redistribuir claves con ambos hermanos.
        bool  RedistributeWith2Brothers   (size_t pos);
        void  RedistributeR2L (size_t pos);
        void  RedistributeL2R (size_t pos);
@@ -189,24 +205,38 @@ protected:
        bool    TreatUnderflow  (size_t &pos)
        {       return RedistributeWith1Brother(pos) || RedistributeWith2Brothers(pos);}
 
+       /// @brief Fusiona este nodo con un hermano.
        bt_ErrorCode    Merge  (size_t pos);
+       /// @brief Fusiona los hijos de la raíz cuando esta tiene pocas claves.
        bt_ErrorCode    MergeRoot ();
+       /// @brief Divide un nodo hijo que está lleno.
        void  SplitChild (size_t pos);
 
+       /// @brief Obtiene el primer elemento (el de más a la izquierda) en el subárbol.
        ObjectInfo &GetFirstObjectInfo();
 
+       /// @brief Verifica si el nodo ha excedido su capacidad máxima de claves.
        bool Overflow()  { return m_KeyCount > m_MaxKeys; }
+       /// @brief Verifica si el nodo tiene menos claves que el mínimo permitido.
        bool Underflow() { return m_KeyCount < MinNumberOfKeys(); }
+       /// @brief Verifica si el nodo está lleno.
        bool IsFull()    { return m_KeyCount >= m_MaxKeys; }
 
 
+       /// @brief Calcula el número mínimo de claves que un nodo debe tener.
        size_t  MinNumberOfKeys()  { return 2*m_MaxKeys/3.0; }
+       /// @brief Devuelve el número de espacios libres para claves.
        size_t  GetFreeCells()  { return m_MaxKeys - m_KeyCount; }
+       /// @brief Devuelve una referencia al contador de claves.
        size_t& NumberOfKeys()  { return m_KeyCount; }
+       /// @brief Devuelve el número actual de claves.
        size_t  GetNumberOfKeys()  { return m_KeyCount; }
+       /// @brief Verifica si este nodo es la raíz del árbol.
        bool IsRoot()  { return m_MaxKeysForChilds != m_MaxKeys; }
+       /// @brief Establece el número máximo de claves para los nodos hijos.
        void SetMaxKeysForChilds(size_t orderforchilds)
        {        m_MaxKeysForChilds = orderforchilds;       }
+       /// @brief Establece el puntero al nodo padre.
        void SetParent(BTPage* pParent) { m_pParent = pParent; }
        size_t GetFreeCellsOnLeft(size_t pos)
        {        if( pos > 0 )                                   // there is some page on left ?
@@ -220,7 +250,9 @@ protected:
        }
 
 private:
+       /// @brief Divide el nodo raíz cuando está lleno.
        bool SplitRoot();
+       /// @brief Divide una página temporal grande en tres páginas más pequeñas.
        void SplitPageInto3(vector<ObjectInfo>   & tmpKeys,
                                                vector<BTPage *>  & SubPages,
                                                BTPage           *& pChild1,
@@ -286,10 +318,10 @@ CBTreePage<Trait>::CBTreePage(CBTreePage&& other) noexcept
       m_Keys(std::move(other.m_Keys)),
       m_SubPages(std::move(other.m_SubPages)),
       m_Compare(std::move(other.m_Compare)),
-      m_KeyCount(other.m_KeyCount),
+      m_KeyCount(std::exchange(other.m_KeyCount), 0),
       m_pParent(other.m_pParent)
 {
-    other.m_KeyCount = 0;
+        
 }
 
 template <typename Trait>
@@ -804,6 +836,12 @@ CBTreePage<Trait>::GetFirstObjectInfo()
         return m_Keys[0];
 }
 
+/**
+ * @brief Función de ayuda para imprimir un ObjectInfo.
+ * @param info El ObjectInfo a imprimir.
+ * @param level El nivel de profundidad en el árbol.
+ * @param pExtra Puntero genérico, usado aquí para pasar el ostream.
+ */
 template <typename keyType, typename ObjIDType>
 void Print(const tagObjectInfo<keyType, ObjIDType> &info, size_t level, void *pExtra)
 {
@@ -846,12 +884,19 @@ void CBTreePage<Trait>::clear()
        m_KeyCount = 0;
 }
 
+/**
+ * @brief Crea una nueva instancia de CBTreePage.
+ * @return Un puntero a la nueva página.
+ */
 template <typename Trait>
 CBTreePage<Trait> * CreateBTreeNode (size_t maxKeys, bool unique)
 {
        return new CBTreePage<Trait> (maxKeys, unique);
 }
 
+/**
+ * @brief Mueve el contenido de una página a vectores temporales.
+ */
 template <typename Trait>
 void CBTreePage<Trait>::MovePage(BTPage *pChildPage, vector<ObjectInfo> &tmpKeys,vector<BTPage *> &tmpSubPages)
 {
@@ -866,7 +911,9 @@ void CBTreePage<Trait>::MovePage(BTPage *pChildPage, vector<ObjectInfo> &tmpKeys
        tmpSubPages.push_back(pChildPage->m_SubPages[i]);
        pChildPage->clear();
 }
-
+/**
+ * @brief Escribe el contenido de un arbol
+ */
 template <typename Trait>
 void CBTreePage<Trait>::Write(ostream& os) const {
     bool is_leaf = (m_SubPages[0] == nullptr);
@@ -883,7 +930,9 @@ void CBTreePage<Trait>::Write(ostream& os) const {
         }
     }
 }
-
+/**
+ * @brief Lee el contenido de un arbol
+ */
 template <typename Trait>
 void CBTreePage<Trait>::Read(istream& is) {
     bool is_leaf;
