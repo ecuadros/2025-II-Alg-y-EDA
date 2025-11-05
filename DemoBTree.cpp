@@ -1,6 +1,9 @@
 #include <iostream>
 #include "btree.h"
 #include <functional>
+#include <thread>
+#include <vector>
+#include <chrono>
 using namespace std;
 
 template <typename _keyType, typename _ObjIDType>
@@ -115,4 +118,54 @@ void DemoBTree() {
     cout << "\nFinal tree state:" << endl;
     cout << "Tree size: " << tree.size() << endl;
     cout << "Tree height: " << tree.height() << endl;
+
+    // Test concurrency
+    cout << "\nTesting concurrency..." << endl;
+    
+    // Crear un nuevo árbol para las pruebas de concurrencia
+    BTree<DemoTraits<int, long>> concurrentTree(3);
+    
+    // Vector para almacenar todos los threads
+    vector<thread> threads;
+    
+    // Crear thread de escritura
+    cout << "Starting writer thread..." << endl;
+    threads.emplace_back([&concurrentTree]() {
+        for(int i = 0; i < 100; i++) {
+            concurrentTree.Insert(i, i * 10);
+            this_thread::sleep_for(chrono::milliseconds(1));  // Pequeña pausa para simular trabajo
+        }
+    });
+    
+    // Crear 5 threads de lectura
+    cout << "Starting 5 reader threads..." << endl;
+    for(int i = 0; i < 5; i++) {
+        threads.emplace_back([&concurrentTree, i]() {
+            for(int j = 0; j < 100; j++) {
+                long result = concurrentTree.Search(j);
+                if(result != -1) {
+                    cout << "Reader " << i << " found key " << j << " with value " << result << endl;
+                }
+                this_thread::sleep_for(chrono::milliseconds(2));  // Pequeña pausa para simular trabajo
+            }
+        });
+    }
+    
+    // Esperar a que todos los threads terminen
+    cout << "Waiting for all threads to finish..." << endl;
+    for(auto& t : threads) {
+        t.join();
+    }
+    
+    // Verificar el estado final del árbol concurrente
+    cout << "\nConcurrent tree final state:" << endl;
+    cout << "Tree size: " << concurrentTree.size() << endl;
+    cout << "Tree height: " << concurrentTree.height() << endl;
+    
+    // Verificar algunos valores
+    cout << "\nVerifying some values in the concurrent tree:" << endl;
+    for(int i = 0; i < 100; i += 10) {
+        long value = concurrentTree.Search(i);
+        cout << "Key " << i << " has value: " << value << endl;
+    }
 }

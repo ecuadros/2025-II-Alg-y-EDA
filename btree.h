@@ -30,10 +30,11 @@ struct BTreeTrait
 template <typename Trait>
 class BTree // this is the full version of the BTree
 {
+public:
        typedef typename Trait::keyType    keyType;
        typedef typename Trait::ObjIDType    ObjIDType;
-       
        typedef CBTreePage <Trait> BTNode;// useful shorthand
+private:
 
        // Estructura para el header del archivo
        struct FileHeader {
@@ -59,6 +60,7 @@ public:
        typedef typename BTNode::lpfnFirstThat3  lpfnFirstThat3;
        typedef typename BTNode::ObjectInfo      ObjectInfo;
 
+       
 public:
        BTree(size_t order = DEFAULT_BTREE_ORDER, bool unique = true)
               : m_Order(order),
@@ -67,9 +69,26 @@ public:
                 m_NumKeys(0)
        {
               m_Root.SetMaxKeysForChilds(order);
-              m_Height = 1;
+              m_Height = 1; 
        }
-       ~BTree() {}
+
+       // Constructor de movimiento
+       BTree(BTree&& other) noexcept
+              : m_Root(std::move(other.m_Root)),
+                m_Height(other.m_Height),
+                m_Order(other.m_Order),
+                m_NumKeys(other.m_NumKeys),
+                m_Unique(other.m_Unique)
+       {
+              // Reinicializar el otro objeto
+              other.m_Height = 1;
+              other.m_NumKeys = 0;
+       }
+
+       // Eliminar el constructor de copia explícitamente
+       BTree(const BTree&) = delete;
+       BTree& operator=(const BTree&) = delete;
+       ~BTree() {} //
 
        // Escribe el árbol a un archivo
        bool Write(const std::string& filename) {
