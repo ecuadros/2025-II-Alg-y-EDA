@@ -9,6 +9,8 @@
 #include <vector>
 #include <assert.h>
 #include <functional>
+#include <utility>  // Para std::exchange
+#include <shared_mutex>  // Para std::shared_mutex
 
 // TODO: #1 Crear una function para agregarla al demo.cpp ( no trivial )
 // TODO: #2 Agregarle un Trait (prueba git) ( no trivial )
@@ -131,46 +133,38 @@ class CBTreePage
        
        /** @brief Move constructor (transfiere recursos sin copiar) */
        CBTreePage(CBTreePage&& other) noexcept
-              : m_MinKeys(other.m_MinKeys),
-                m_MaxKeys(other.m_MaxKeys),
-                m_MaxKeysForChilds(other.m_MaxKeysForChilds),
-                m_Unique(other.m_Unique),
-                m_isRoot(other.m_isRoot),
-                m_Compare(other.m_Compare),
-                m_Parent(other.m_Parent),
+                : m_MinKeys(std::exchange(other.m_MinKeys, 0)),
+                m_MaxKeys(std::exchange(other.m_MaxKeys, 0)),
+                m_MaxKeysForChilds(std::exchange(other.m_MaxKeysForChilds, 0)),
+                m_Unique(std::exchange(other.m_Unique, true)),
+                m_isRoot(std::exchange(other.m_isRoot, false)),
                 m_Keys(std::move(other.m_Keys)),
                 m_SubPages(std::move(other.m_SubPages)),
-                m_KeyCount(other.m_KeyCount)
-       {
-              // Dejar other en estado válido
-              other.m_KeyCount = 0;
-              other.m_Parent = nullptr;
-       }
+                m_KeyCount(std::exchange(other.m_KeyCount, 0)),
+                m_Parent(std::exchange(other.m_Parent, nullptr)),
+                m_nodeMutex() {}  // Nuevo mutex, no se puede mover
        
        /** @brief Move assignment operator */
        CBTreePage& operator=(CBTreePage&& other) noexcept {
-              if (this != &other) {
-                     // Limpiar recursos actuales
-                     Reset();
-                     
-                     // Transferir datos de other
-                     m_MinKeys = other.m_MinKeys;
-                     m_MaxKeys = other.m_MaxKeys;
-                     m_MaxKeysForChilds = other.m_MaxKeysForChilds;
-                     m_Unique = other.m_Unique;
-                     m_isRoot = other.m_isRoot;
-                     m_Compare = other.m_Compare;
-                     m_Parent = other.m_Parent;
-                     m_Keys = std::move(other.m_Keys);
-                     m_SubPages = std::move(other.m_SubPages);
-                     m_KeyCount = other.m_KeyCount;
-                     
-                     // Dejar other en estado válido
-                     other.m_KeyCount = 0;
-                     other.m_Parent = nullptr;
-              }
-              return *this;
-       }
+        if (this != &other) {
+                std::unique_lock lock1(m_nodeMutex, std::defer_lock);
+                std::unique_lock lock2(other.m_nodeMutex, std::defer_lock);
+                std::lock(lock1, lock2);  // Evita deadlock
+                
+                Reset();  // Limpiar recursos actuales
+                
+                m_MinKeys = std::exchange(other.m_MinKeys, 0);
+                m_MaxKeys = std::exchange(other.m_MaxKeys, 0);
+                m_MaxKeysForChilds = std::exchange(other.m_MaxKeysForChilds, 0);
+                m_Unique = std::exchange(other.m_Unique, true);
+                m_isRoot = std::exchange(other.m_isRoot, false);
+                m_Keys = std::move(other.m_Keys);
+                m_SubPages = std::move(other.m_SubPages);
+                m_KeyCount = std::exchange(other.m_KeyCount, 0);
+                m_Parent = std::exchange(other.m_Parent, nullptr);
+        }
+        return *this;
+        }
        
        /** @brief Destructor virtual */
        virtual ~CBTreePage();
@@ -243,6 +237,7 @@ protected:
        vector<ObjectInfo> m_Keys;   ///< Vector de claves
        vector<BTPage *>m_SubPages;  ///< Vector de subpáginas/hijos
        BTPage* m_Parent;            ///< Puntero al nodo padre
+       mutable std::shared_mutex m_nodeMutex;  // Mutex por nodo
        size_t  m_KeyCount;          ///< Contador de claves actuales
        Compare m_Compare;           ///< Función de comparación
        
@@ -1066,6 +1061,17 @@ template <typename Trait>
 CBTreePage<Trait> * CreateBTreeNode (size_t maxKeys, bool unique)
 {
        return new CBTreePage<Trait> (maxKeys, unique);
+}
+
+/** @brief Operador de salida para imprimir el árbol
+ *  @param os Stream de salida
+ *  @param tree Árbol a imprimir
+ *  @return Referencia al stream de salida */
+template <typename Trait>
+std::ostream& operator<<(std::ostream& os, CBTreePage<Trait>& page) {
+    std::shared_lock lock(page.m_nodeMutex);  // Lock compartido
+    page.Print(os);
+    return os;
 }
 
 #endif
