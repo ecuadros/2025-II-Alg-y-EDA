@@ -176,6 +176,22 @@ public:
 	 */
        void            ForEach( lpfnForEach3 lpfn, void *pExtra1, void *pExtra2)
        {               std::lock_guard<std::shared_mutex> lock(m_Mutex); m_Root.ForEach(lpfn, 0, pExtra1, pExtra2);     }
+
+
+       /**
+        * @brief Aplica una función con parámetros variables a cada elemento
+        * @tparam Function Tipo de función/lambda
+        * @tparam Args Tipos de argumentos adicionales
+        * @param func Función a aplicar
+        * @param args Argumentos adicionales
+        */
+       template <typename Function, typename... Args>
+       void ForEach_variadic(Function&& func, Args&&... args) {
+              std::lock_guard<std::shared_mutex> lock(m_Mutex);
+              m_Root.ForEach_variadic(std::forward<Function>(func), 0, std::forward<Args>(args)...);
+       }
+
+       
        /**
 	 * @brief Busca el primer elemento que cumpla una condición dada
 	 * 
@@ -197,6 +213,19 @@ public:
        ObjectInfo*     FirstThat( lpfnFirstThat3 lpfn, void *pExtra1, void *pExtra2)
        {               std::shared_lock<std::shared_mutex> lock(m_Mutex); return m_Root.FirstThat(lpfn, 0, pExtra1, pExtra2);   }
        //typedef               ObjectInfo iterator;
+
+       /**
+        * @brief Busca el primero que cumpla una función con variadic templates
+        * @tparam Function Tipo de función/lambda
+        * @tparam Args Tipos de argumentos adicionales
+        * @param func Función a aplicar
+        * @param args Argumentos adicionales
+        */
+       template <typename Function, typename... Args>
+       ObjectInfo* FirstThat_variadic(Function&& func, Args&&... args) {
+              std::shared_lock<std::shared_mutex> lock(m_Mutex);
+              return m_Root.FirstThat_variadic(std::forward<Function>(func), 0, std::forward<Args>(args)...);
+       }
 
        /**
         * @brief Escribe el árbol por un flujo de salida (ostream)

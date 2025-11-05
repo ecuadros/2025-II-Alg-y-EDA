@@ -190,9 +190,20 @@ class CBTreePage //: public SimpleIndex <keyType>
          * @param lpfn Función callback que se ejecutará por cada clave
          * @param level Profundidad actual
          * @param pExtra1 Parámetro auxiliar opcional
-         * @param pExtra1 Parámetro auxiliar opcional
+         * @param pExtra2 Parámetro auxiliar opcional
          */
        void            ForEach(lpfnForEach3 lpfn, size_t level, void *pExtra1, void *pExtra2);
+
+        /**
+         * @brief Recorre el árbol aplicando una función a cada elemento con dos parámetros
+         * 
+         * @param func Función callback que se ejecutará por cada clave
+         * @param level Profundidad actual
+         * @param args Parámetros auxiliares opcionales
+         */
+        template <typename Function, typename... Args>
+        void ForEach_variadic(Function&& func, size_t level, Args&&... args);
+
 
        // TODO: #8 You may reduce these two function by using Invoke
         /**
@@ -204,7 +215,28 @@ class CBTreePage //: public SimpleIndex <keyType>
          * @return Puntero al objeto encontrado o nullptr si no se cumple
          */
        ObjectInfo*     FirstThat(lpfnFirstThat2 lpfn, size_t level, void *pExtra1);
+
+              // TODO: #8 You may reduce these two function by using Invoke
+        /**
+         * @brief Busca el primer elemento que cumpla una condición dada y 2 parámetros extras
+         * 
+         * @param lpfn Función predicado que retorna true al cumplir la condición
+         * @param level Nivel actual del recorrido
+         * @param pExtra1 Parámetro adicional
+         * @return Puntero al objeto encontrado o nullptr si no se cumple
+         */
        ObjectInfo*     FirstThat(lpfnFirstThat3 lpfn, size_t level, void *pExtra1, void *pExtra2);
+
+        /**
+         * @brief Busca el primer elemento que cumpla una condición dada usando variadic templates
+         * 
+         * @param func Función predicado que retorna true al cumplir la condición
+         * @param level Nivel actual del recorrido
+         * @param args Parámetros adicionales
+         * @return Puntero al objeto encontrado o nullptr si no se cumple
+         */
+        template <typename Function, typename... Args>
+        ObjectInfo* FirstThat_variadic(Function&& func, size_t level, Args&&... args);
         /**
          * @brief Escribe la página y sus subpáginas en un flujo de salida (ostream)
          * 
@@ -1079,5 +1111,49 @@ std::istream& CBTreePage<Trait>::Read(istream &is)
     }
     return is;
 }
+
+template <typename Trait>
+template <typename Function, typename... Args>
+void CBTreePage<Trait>::ForEach_variadic(Function&& func, size_t level, Args&&... args)
+{
+    for(size_t i = 0; i < m_KeyCount; i++)
+    {
+        if(m_SubPages[i])
+            m_SubPages[i]->ForEach_variadic(std::forward<Function>(func), level + 1, std::forward<Args>(args)...);
+        
+        std::invoke(std::forward<Function>(func), m_Keys[i], level, std::forward<Args>(args)...);
+    }
+    
+    if(m_SubPages[m_KeyCount])
+        m_SubPages[m_KeyCount]->ForEach_variadic(std::forward<Function>(func), level + 1, std::forward<Args>(args)...);
+}
+
+
+
+template <typename Trait>
+template <typename Function, typename... Args>
+typename CBTreePage<Trait>::ObjectInfo* 
+CBTreePage<Trait>::FirstThat_variadic(Function&& func, size_t level, Args&&... args)
+{
+    ObjectInfo *pTmp;
+    
+    for(size_t i = 0; i < m_KeyCount; i++)
+    {
+        if(m_SubPages[i])
+            if((pTmp = m_SubPages[i]->FirstThat_variadic(std::forward<Function>(func), level + 1, std::forward<Args>(args)...)))
+                return pTmp;
+        
+        if(std::invoke(std::forward<Function>(func), m_Keys[i], level, std::forward<Args>(args)...))
+                return &m_Keys[i];
+
+    }
+    
+    if(m_SubPages[m_KeyCount])
+        if((pTmp = m_SubPages[m_KeyCount]->FirstThat_variadic(std::forward<Function>(func), level + 1, std::forward<Args>(args)...)))
+            return pTmp;
+    
+    return nullptr;
+}
+
 
 #endif

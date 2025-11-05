@@ -4,6 +4,15 @@
 #include "btree.h"
 #include "types.h"
 
+void testForEach(BTree<BTreeAscTrait<T1, Ref>>::ObjectInfo& info, size_t level, T2 value){
+    info.ObjID += value;
+}
+
+bool testFirstThat(BTree<BTreeAscTrait<T1, Ref>>::ObjectInfo& info, size_t level, T2 limInf){
+    if(info.ObjID > limInf) return true;
+    return false;
+}
+
 void DemoBTree(){
     std::cout << "Demo B tree (ASC): " << std::endl;
     vector<pair<T1, Ref>> v1 = {
@@ -74,6 +83,17 @@ void DemoBTree(){
     ifs.close();
     std::cout << "TREE 2 READ" << std::endl;
     std::cout << tree2 << std::endl;
+
+    T1 value = 100;
+    tree2.ForEach_variadic(testForEach, value);
+    std::cout << "TREE 2 AFTER FOREACH" << std::endl;
+    std::cout << tree2 << std::endl;
+
+    T1 limInf = 309;
+    auto obj = tree2.FirstThat_variadic(testFirstThat, limInf);
+    std::cout << "TREE 2 FIRST THAT" << std::endl;
+    std::cout << obj->key << std::endl;
+    std::cout << obj->ObjID << std::endl;
 
 }
 
