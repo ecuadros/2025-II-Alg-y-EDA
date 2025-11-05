@@ -7,22 +7,42 @@
 #include "btreepage.h"
 #define DEFAULT_BTREE_ORDER 3
 
-const size_t MaxHeight = 5; 
+const size_t MaxHeight = 5;
 
+/**
+ * @brief Trait structure for BTree key and object ID types
+ * @tparam _keyType Type of the key
+ * @tparam _ObjIDType Type of the object ID
+ */
 template <typename _keyType, typename _ObjIDType>
 struct BTreeTrait
 {
        using keyType = _keyType;
        using ObjIDType = _ObjIDType;
 
-       // Comparison function: returns true if a == b
+       /**
+        * @brief Compares two keys for equality
+        * @param a First key
+        * @param b Second key
+        * @return true if keys are equal, false otherwise
+        */
        static bool isEqual(const keyType& a, const keyType& b) {
               return a == b;
        }
 };
 
+/**
+ * @brief Thread-safe B-Tree implementation
+ * @tparam Trait Trait type defining key and object ID types
+ *
+ * This implementation provides:
+ * - Concurrent read operations using shared locks
+ * - Exclusive write operations using unique locks
+ * - Forward and backward iterators
+ * - Move semantics support
+ */
 template <typename Trait>
-class BTree // this is the full version of the BTree
+class BTree
 {
        typedef typename Trait::keyType    keyType;
        typedef typename Trait::ObjIDType    ObjIDType;
@@ -32,6 +52,11 @@ class BTree // this is the full version of the BTree
 public:
        typedef typename BTNode::ObjectInfo      ObjectInfo;
 
+       /**
+        * @brief Iterator class for traversing BTree elements
+        *
+        * Supports both forward and backward iteration through the tree.
+        */
        class Iterator {
        private:
               std::vector<ObjectInfo*> items;
@@ -67,6 +92,11 @@ public:
        };
 
 public:
+       /**
+        * @brief Constructs a new BTree
+        * @param order Order of the BTree (default: DEFAULT_BTREE_ORDER)
+        * @param unique If true, duplicate keys are not allowed
+        */
        BTree(size_t order = DEFAULT_BTREE_ORDER, bool unique = true)
               : m_Order(order),
                 m_Root(2 * order  + 1, unique),
@@ -77,6 +107,10 @@ public:
               m_Height = 1;
        }
 
+       /**
+        * @brief Move constructor
+        * @param other BTree to move from
+        */
        BTree(BTree&& other) noexcept
               : m_Root(std::move(other.m_Root)),
                 m_Height(other.m_Height),
@@ -89,11 +123,31 @@ public:
        }
 
        ~BTree() {}
-       //int           Open (char * name, int mode);
-       //int           Create (char * name, int mode);
-       //int           Close ();
+
+       /**
+        * @brief Inserts a key-value pair into the tree
+        * @param key Key to insert
+        * @param ObjID Object ID associated with the key
+        * @return true if insertion successful, false if duplicate and unique mode enabled
+        * @note Thread-safe: uses unique lock for exclusive write access
+        */
        bool            Insert (const keyType key, const long ObjID);
+
+       /**
+        * @brief Removes a key-value pair from the tree
+        * @param key Key to remove
+        * @param ObjID Object ID associated with the key
+        * @return true if removal successful, false otherwise
+        * @note Thread-safe: uses unique lock for exclusive write access
+        */
        bool            Remove (const keyType key, const long ObjID);
+
+       /**
+        * @brief Searches for a key in the tree
+        * @param key Key to search for
+        * @return Object ID if found, -1 otherwise
+        * @note Thread-safe: uses shared lock for concurrent read access
+        */
        ObjIDType       Search (const keyType key)
        {
               std::shared_lock<std::shared_mutex> lock(m_Mutex);
@@ -101,25 +155,56 @@ public:
               m_Root.Search(key, ObjID);
               return ObjID;
        }
+
+       /**
+        * @brief Returns the number of keys in the tree
+        * @return Number of keys
+        * @note Thread-safe: uses shared lock for concurrent read access
+        */
        size_t            size()  {
               std::shared_lock<std::shared_mutex> lock(m_Mutex);
               return m_NumKeys;
        }
+
+       /**
+        * @brief Returns the height of the tree
+        * @return Height of the tree
+        * @note Thread-safe: uses shared lock for concurrent read access
+        */
        size_t            height() {
               std::shared_lock<std::shared_mutex> lock(m_Mutex);
               return m_Height;
        }
+
+       /**
+        * @brief Returns the order of the tree
+        * @return Order of the tree
+        * @note Thread-safe: uses shared lock for concurrent read access
+        */
        size_t            GetOrder() {
               std::shared_lock<std::shared_mutex> lock(m_Mutex);
               return m_Order;
        }
 
+       /**
+        * @brief Prints the tree structure to an output stream
+        * @param os Output stream
+        * @note Thread-safe: uses shared lock for concurrent read access
+        */
        void            Print (ostream &os)
        {
               std::shared_lock<std::shared_mutex> lock(m_Mutex);
               m_Root.Print(os);
        }
 
+       /**
+        * @brief Applies a function to each element in the tree
+        * @tparam Function Function type
+        * @tparam Args Variadic template for additional arguments
+        * @param func Function to apply to each element
+        * @param args Additional arguments to pass to the function
+        * @note Thread-safe: uses shared lock for concurrent read access
+        */
        template<typename Function, typename... Args>
        void ForEach(Function func, Args const&... args)
        {
@@ -127,6 +212,15 @@ public:
               m_Root.ForEach(func, 0, args...);
        }
 
+       /**
+        * @brief Finds the first element that satisfies a predicate
+        * @tparam Predicate Predicate function type
+        * @tparam Args Variadic template for additional arguments
+        * @param pred Predicate function
+        * @param args Additional arguments to pass to the predicate
+        * @return Pointer to ObjectInfo if found, nullptr otherwise
+        * @note Thread-safe: uses shared lock for concurrent read access
+        */
        template<typename Predicate, typename... Args>
        ObjectInfo* FirstThat(Predicate pred, Args const&... args)
        {
@@ -134,6 +228,11 @@ public:
               return m_Root.FirstThat(pred, 0, args...);
        }
 
+       /**
+        * @brief Returns an iterator to the beginning of the tree (forward)
+        * @return Forward iterator to the first element
+        * @note Thread-safe: uses shared lock for concurrent read access
+        */
        Iterator begin() {
               std::shared_lock<std::shared_mutex> lock(m_Mutex);
               collectItems.clear();
@@ -143,10 +242,19 @@ public:
               return Iterator(collectItems, 0, false);
        }
 
+       /**
+        * @brief Returns an iterator to the end of the tree (forward)
+        * @return Forward iterator past the last element
+        */
        Iterator end() {
               return Iterator(collectItems, collectItems.size(), false);
        }
 
+       /**
+        * @brief Returns a reverse iterator to the beginning (backward)
+        * @return Backward iterator to the last element
+        * @note Thread-safe: uses shared lock for concurrent read access
+        */
        Iterator rbegin() {
               std::shared_lock<std::shared_mutex> lock(m_Mutex);
               collectItems.clear();
@@ -156,6 +264,10 @@ public:
               return Iterator(collectItems, collectItems.size() - 1, true);
        }
 
+       /**
+        * @brief Returns a reverse iterator to the end (backward)
+        * @return Backward iterator before the first element
+        */
        Iterator rend() {
               return Iterator(collectItems, (size_t)-1, true);
        }
@@ -170,6 +282,12 @@ protected:
        mutable std::shared_mutex m_Mutex;
 };
 
+/**
+ * @brief Inserts a key-value pair into the tree
+ * @param key Key to insert
+ * @param ObjID Object ID associated with the key
+ * @return true if insertion successful, false if duplicate and unique mode enabled
+ */
 template <typename Trait>
 bool BTree<Trait>::Insert(const keyType key, const long ObjID){
        std::unique_lock<std::shared_mutex> lock(m_Mutex);
@@ -184,6 +302,12 @@ bool BTree<Trait>::Insert(const keyType key, const long ObjID){
        return true;
 }
 
+/**
+ * @brief Removes a key-value pair from the tree
+ * @param key Key to remove
+ * @param ObjID Object ID associated with the key
+ * @return true if removal successful, false otherwise
+ */
 template <typename Trait>
 bool BTree<Trait>::Remove (const keyType key, const long ObjID)
 {
@@ -198,6 +322,13 @@ bool BTree<Trait>::Remove (const keyType key, const long ObjID)
        return true;
 }
 
+/**
+ * @brief Overloaded stream insertion operator for BTree
+ * @tparam Trait Trait type defining key and object ID types
+ * @param os Output stream
+ * @param bt BTree to print
+ * @return Reference to the output stream
+ */
 template <typename Trait>
 std::ostream& operator<<(std::ostream& os, BTree<Trait>& bt)
 {
