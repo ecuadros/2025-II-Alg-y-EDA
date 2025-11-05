@@ -1,3 +1,9 @@
+/**
+ * @file btree.h
+ * @brief Implementación de un B-Tree en C++ con soporte para lectura/escritura concurrente.
+
+ */
+
 #ifndef __BTREE_H__
 #define __BTREE_H__
 
@@ -16,6 +22,12 @@ struct BTreeTrait
        // TODO: agregar funcion de comparacion
 };
 
+/**
+ * @brief Trait para BTree ascendente.
+ *
+ * @tparam _keyType Tipo de la clave.
+ * @tparam _ObjIDType Tipo del identificador de objeto.
+ */
 template <typename _keyType, typename _ObjIDType>
 struct BTreeAscTraits{
     using  keyType            = _keyType;
@@ -23,6 +35,12 @@ struct BTreeAscTraits{
     using  CompareFn          = less<_keyType>;
 };
 
+/**
+ * @brief Trait para BTree descendente.
+ *
+ * @tparam _keyType Tipo de la clave.
+ * @tparam _ObjIDType Tipo del identificador de objeto.
+ */
 template <typename _keyType, typename _ObjIDType>
 struct BTreeDescTraits
 {
@@ -31,6 +49,13 @@ struct BTreeDescTraits
     using  CompareFn         = greater<_keyType>;
 };
 
+/**
+ * @brief Implementación de un BTree genérico.
+ * 
+ * Soporta inserción, eliminación, búsqueda y recorridos. 
+ * 
+ * @tparam Trait Traits del BTree.
+ */
 template <typename Trait>
 class BTree // this is the full version of the BTree
 {
@@ -49,6 +74,11 @@ public:
        typedef typename BTNode::ObjectInfo      ObjectInfo;
 
 public:
+    /**
+     * @brief Constructor del BTree.
+     * @param order Orden máximo del árbol.
+     * @param unique Determina si los elementos deben ser únicos.
+     */
        BTree(size_t order = DEFAULT_BTREE_ORDER, bool unique = true)
               : m_Order(order),
                 m_Root(2 * order  + 1, unique),
@@ -63,6 +93,10 @@ public:
        //int           Create (char * name, int mode);
        //int           Close ();
 
+       /**
+        * @brief Move constructor.
+        * @param other Otro BTree a mover.
+        */
         BTree(BTree&& other) noexcept
               : m_Root(std::move(other.m_Root)),
                 m_Height(other.m_Height),
@@ -73,9 +107,28 @@ public:
               other.m_Height = 1;
               other.m_NumKeys = 0;
             }
-
+    
+       /**
+       @brief Inserta un nuevo elemento en el BTree.
+       @param key Clave del elemento a insertar.   
+       @param ObjID Identificador del objeto a insertar.
+       @return true si la inserción fue exitosa, false en caso contrario.
+       */     
        bool            Insert (const keyType key, const ObjIDType ObjID);
+
+       /**
+       @brief Elimina un elemento del BTree.
+       @param key Clave del elemento a eliminar.
+       @param ObjID Identificador del objeto a eliminar.
+       @return true si la eliminación fue exitosa, false en caso contrario.
+       */
        bool            Remove (const keyType key, const ObjIDType ObjID);
+
+       /**
+        * @brief Busca un objeto por su clave.
+        * @param key Clave a buscar.
+        * @return Identificador del objeto o -1 si no se encuentra.
+        */
        ObjIDType       Search (const keyType key)
        {      
               std::shared_lock lock(m_Mutex);
@@ -83,8 +136,22 @@ public:
               m_Root.Search(key, ObjID);
               return ObjID;
        }
+       /**
+       @brief Devuelve el número de claves en el BTree.
+       @return Número de claves.
+       */
        size_t            size()  { return m_NumKeys; }
+
+       /**
+       @brief Devuelve la altura del BTree.
+       @return Altura del árbol.
+       */
        size_t            height() { return m_Height;      }
+
+       /**
+       @brief Devuelve el orden del BTree.
+       @return Orden del árbol.
+       */
        size_t            GetOrder() { return m_Order;     }
 
        void            Print (ostream &os)
@@ -95,6 +162,12 @@ public:
        void            ForEach( lpfnForEach3 lpfn, void *pExtra1, void *pExtra2)
        {               m_Root.ForEach(lpfn, 0, pExtra1, pExtra2);     }
 
+
+       /**
+       @brief Aplica una función a cada elemento del BTree.
+       @tparam Function Tipo de la función a aplicar.
+       @tparam Args Tipos de los argumentos adicionales.
+       */
        template <typename Function, typename... Args>
        void ForEach(Function function, Args const&... args) {
               std::shared_lock lock(m_Mutex);
@@ -107,18 +180,31 @@ public:
        {               return m_Root.FirstThat(lpfn, 0, pExtra1, pExtra2);   }
        //typedef               ObjectInfo iterator;
 
+       /**
+       @brief Aplica una función hasta encontrar el primer elemento que cumpla una condición.
+       @tparam Function Tipo de la función
+       @tparam Args Tipos de los argumentos adicionales.       
+       */
        template <typename Function, typename... Args>
        ObjectInfo* FirstThat(Function function, Args const&... args){
             std::shared_lock lock(m_Mutex); 
             return m_Root.FirstThat(function, 0, args...);
        }
 
+       /**
+       @brief Escribe el BTree en un stream.
+       @param os Stream de salida.
+       */
        void Write(std::ostream &os){
             std::shared_lock lock(m_Mutex);
             os << m_Order << m_Height << m_NumKeys << m_Unique;
             m_Root.Write(os);
        }
 
+       /**
+       @brief Lee el BTree desde un stream.
+       @param is Stream de entrada.
+       */
        void Read(std::istream &is){
             std::unique_lock lock(m_Mutex);
             is >> m_Order >> m_Height >> m_NumKeys >> m_Unique;
