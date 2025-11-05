@@ -7,12 +7,12 @@
 
 const size_t MaxHeight = 5; 
 
-template <typename _keyType, typename _ObjIDType>
+template <typename _keyType, typename _ObjIDType, typename _Compare = std::less<_keyType>>
 struct BTreeTrait
 {
        using keyType = _keyType;
        using ObjIDType = _ObjIDType;
-       // TODO: agregar funcion de comparacion
+       using Compare = _Compare;
 };
 
 template <typename Trait>
@@ -41,6 +41,37 @@ public:
               m_Root.SetMaxKeysForChilds(order);
               m_Height = 1;
        }
+       
+       // Move constructor: transfiere recursos sin copiar
+       BTree(BTree&& other) noexcept
+              : m_Order(other.m_Order),
+                m_Root(std::move(other.m_Root)),
+                m_Height(other.m_Height),
+                m_NumKeys(other.m_NumKeys),
+                m_Unique(other.m_Unique)
+       {
+              // Dejar other en estado válido
+              other.m_Height = 1;
+              other.m_NumKeys = 0;
+       }
+       
+       // Move assignment operator 
+       BTree& operator=(BTree&& other) noexcept {
+              if (this != &other) {
+                     // Transferir datos de other
+                     m_Root = std::move(other.m_Root);
+                     m_Order = other.m_Order;
+                     m_Height = other.m_Height;
+                     m_NumKeys = other.m_NumKeys;
+                     m_Unique = other.m_Unique;
+                     
+                     // Dejar other en estado válido
+                     other.m_Height = 1;
+                     other.m_NumKeys = 0;
+              }
+              return *this;
+       }
+       
        ~BTree() {}
        //int           Open (char * name, int mode);
        //int           Create (char * name, int mode);
@@ -126,6 +157,13 @@ bool BTree<Trait>::Remove (const keyType key, const long ObjID)
        if( error == bt_rootmerged )
                m_Height--;
        return true;
+}
+
+// Operador << para imprimir el árbol
+template <typename Trait>
+std::ostream& operator<<(std::ostream& os, BTree<Trait>& tree) {
+       tree.Print(os);
+       return os;
 }
 
 #endif
