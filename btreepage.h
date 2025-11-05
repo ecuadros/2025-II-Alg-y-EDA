@@ -109,6 +109,9 @@ class CBTreePage //: public SimpleIndex <keyType>
        ObjectInfo*     FirstThat(lpfnFirstThat2 lpfn, size_t level, void *pExtra1);
        ObjectInfo*     FirstThat(lpfnFirstThat3 lpfn, size_t level, void *pExtra1, void *pExtra2);
 
+        std::ostream& Write(ostream &os);
+        std::istream& Read(istream &is);
+
 protected:
        // TODO: #9 change by size_t
        size_t  m_MinKeys; // minimum number of keys in a node
@@ -832,6 +835,65 @@ void CBTreePage<Trait>::MovePage(BTPage *pChildPage, vector<ObjectInfo> &tmpKeys
        }
        tmpSubPages.push_back(pChildPage->m_SubPages[i]);
        pChildPage->clear();
+}
+
+
+template <typename Trait>
+std::ostream& CBTreePage<Trait>::Write(ostream &os)
+{
+    os << m_KeyCount << " ";
+
+    for(size_t i = 0; i < m_KeyCount; ++i)
+    {
+        os << m_Keys[i].key << " " << m_Keys[i].ObjID << " ";
+    }
+    os << "\n";
+    
+    for(size_t i = 0; i <= m_KeyCount; ++i)
+    {
+        if(m_SubPages[i])
+        {
+            os << "1 ";
+            m_SubPages[i]->Write(os);
+        }
+        else
+            os << "0 ";
+    }
+    os << "\n";
+    return os;
+}
+
+
+template <typename Trait>
+std::istream& CBTreePage<Trait>::Read(istream &is)
+{
+    size_t keyCount;
+    is >> keyCount;
+    
+    for(size_t i = 0; i < keyCount; ++i)
+    {
+        keyType key;
+        ObjIDType objID;
+        is >> key >> objID;
+        
+        m_Keys[i] = ObjectInfo(key, objID);
+        m_KeyCount++;
+    }
+    
+    for(size_t i = 0; i <= keyCount; ++i)
+    {
+        int hasChild;
+        is >> hasChild;
+        
+        if(hasChild)
+        {
+            m_SubPages[i] = new BTPage(m_MaxKeysForChilds, m_Unique);
+            m_SubPages[i]->Read(is);
+        }
+        else
+            m_SubPages[i] = nullptr;
+    }
+    return is;
 }
 
 #endif

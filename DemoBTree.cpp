@@ -1,5 +1,6 @@
 #include <iostream>
 #include <functional>
+#include <fstream>
 #include "btree.h"
 #include "types.h"
 
@@ -59,6 +60,21 @@ void DemoBTree(){
     tree1.Print(std::cout);
 
     std::cout << tree1 << std::endl;
+
+    std::cout << "TREE 2 WRITE" << std::endl;
+    std::cout << tree2 << std::endl;
+
+    std::ofstream of("btree.txt");
+    tree2.Write(of);
+    of.close();
+
+    BTree<BTreeDescTrait<int, long>> tree3;
+    std::ifstream ifs("btree.txt");
+    tree2.Read(ifs);
+    ifs.close();
+    std::cout << "TREE 2 READ" << std::endl;
+    std::cout << tree2 << std::endl;
+
 }
 
 // int main() {

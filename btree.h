@@ -99,6 +99,30 @@ public:
        {               return m_Root.FirstThat(lpfn, 0, pExtra1, pExtra2);   }
        //typedef               ObjectInfo iterator;
 
+       std::ostream&  Write(std::ostream &os) { 
+              os << m_Order << " " << m_Height << " " << m_NumKeys << " " << m_Unique << "\n";
+              m_Root.Write(os); 
+              return os;
+       }
+
+       std::istream&  Read(std::istream &is) { 
+              size_t order, height, numKeys;
+              bool unique;
+              is >> order >> height >> numKeys >> unique;
+
+              m_Root.Reset();
+
+              m_Order = order;
+              m_Height = height;
+              m_NumKeys = numKeys;
+              m_Unique = unique;
+              
+              m_Root = BTNode(2 * order + 1, unique);
+              m_Root.SetMaxKeysForChilds(order);
+              m_Root.Read(is);
+              return is;
+       }
+
 protected:
        BTNode          m_Root;
        size_t          m_Height;  // height of tree
