@@ -118,8 +118,10 @@ class CBTreePage //: public SimpleIndex <keyType>
 
 
        // TODO: #8 You may reduce these two function by using Invoke
-       ObjectInfo*     FirstThat(lpfnFirstThat2 lpfn, size_t level, void *pExtra1);
-       ObjectInfo*     FirstThat(lpfnFirstThat3 lpfn, size_t level, void *pExtra1, void *pExtra2);
+//        ObjectInfo*     FirstThat(lpfnFirstThat2 lpfn, size_t level, void *pExtra1);
+//        ObjectInfo*     FirstThat(lpfnFirstThat3 lpfn, size_t level, void *pExtra1, void *pExtra2);
+        template <typename Function>
+        ObjectInfo*     FirstThat(Function fn, size_t level);
 
 protected:
        // TODO: #9 change by size_t
@@ -598,43 +600,64 @@ void CBTreePage<keyType, ObjIDType>::ForEachReverse(lpfnForEach3 lpfn,
 
 // Apicar una funcion hasta encontrar el 1er elemento
 // aque que retorne true ante esta funcion
+// template <typename Trait>
+// typename CBTreePage<Trait>::ObjectInfo *
+// CBTreePage<Trait>::FirstThat(lpfnFirstThat2 lpfn, size_t level, void *pExtra1)
+// {
+//        ObjectInfo *pTmp;
+//        for(size_t i = 0 ; i < m_KeyCount ; i++)
+//        {
+//                if( m_SubPages[i] )
+//                        if( (pTmp = m_SubPages[i]->FirstThat(lpfn, level+1, pExtra1)) )
+//                                return pTmp;
+//                if( lpfn(m_Keys[i], level, pExtra1) )
+//                        return &m_Keys[i];
+//        }
+//        if( m_SubPages[m_KeyCount] )
+//                if( (pTmp = m_SubPages[m_KeyCount]->FirstThat(lpfn, level+1, pExtra1)) )
+//                        return pTmp;
+//        return 0;
+// }
+
+// template <typename Trait>
+// typename CBTreePage<Trait>::ObjectInfo *
+// CBTreePage<Trait>::FirstThat(lpfnFirstThat3 lpfn,size_t level, void *pExtra1, void *pExtra2)
+// {
+//        ObjectInfo *pTmp;
+//        for(size_t i = 0 ; i < m_KeyCount ; i++)
+//        {
+//                if( m_SubPages[i] )
+//                        if( (pTmp = m_SubPages[i]->FirstThat(lpfn, level+1, pExtra1, pExtra2) ) )
+//                                return pTmp;
+//                if( lpfn(m_Keys[i], level, pExtra1, pExtra2) )
+//                        return &m_Keys[i];
+//        }
+//        if( m_SubPages[m_KeyCount] )
+//                if( (pTmp = m_SubPages[m_KeyCount]->FirstThat(lpfn, level+1, pExtra1, pExtra2) ) )
+//                        return pTmp;
+//        return 0;
+// }
+//generalizamos tambien first that
 template <typename Trait>
+template <typename Function>
 typename CBTreePage<Trait>::ObjectInfo *
-CBTreePage<Trait>::FirstThat(lpfnFirstThat2 lpfn, size_t level, void *pExtra1)
+CBTreePage<Trait>::FirstThat(Function fn, size_t level)
 {
        ObjectInfo *pTmp;
        for(size_t i = 0 ; i < m_KeyCount ; i++)
        {
                if( m_SubPages[i] )
-                       if( (pTmp = m_SubPages[i]->FirstThat(lpfn, level+1, pExtra1)) )
+                       if( (pTmp = m_SubPages[i]->FirstThat(fn, level+1) ) )
                                return pTmp;
-               if( lpfn(m_Keys[i], level, pExtra1) )
+               if( std::invoke(fn, m_Keys[i], level) )
                        return &m_Keys[i];
        }
        if( m_SubPages[m_KeyCount] )
-               if( (pTmp = m_SubPages[m_KeyCount]->FirstThat(lpfn, level+1, pExtra1)) )
+               if( (pTmp = m_SubPages[m_KeyCount]->FirstThat(fn, level+1) ) )
                        return pTmp;
        return 0;
 }
 
-template <typename Trait>
-typename CBTreePage<Trait>::ObjectInfo *
-CBTreePage<Trait>::FirstThat(lpfnFirstThat3 lpfn,size_t level, void *pExtra1, void *pExtra2)
-{
-       ObjectInfo *pTmp;
-       for(size_t i = 0 ; i < m_KeyCount ; i++)
-       {
-               if( m_SubPages[i] )
-                       if( (pTmp = m_SubPages[i]->FirstThat(lpfn, level+1, pExtra1, pExtra2) ) )
-                               return pTmp;
-               if( lpfn(m_Keys[i], level, pExtra1, pExtra2) )
-                       return &m_Keys[i];
-       }
-       if( m_SubPages[m_KeyCount] )
-               if( (pTmp = m_SubPages[m_KeyCount]->FirstThat(lpfn, level+1, pExtra1, pExtra2) ) )
-                       return pTmp;
-       return 0;
-}
 
 template <typename Trait>
 bt_ErrorCode CBTreePage<Trait>::Remove(const keyType &key, const ObjIDType ObjID)
