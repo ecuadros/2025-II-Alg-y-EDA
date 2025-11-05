@@ -20,151 +20,101 @@ struct BTreeTrait
        using ObjIDType = _ObjIDType;
        using CompareFn = _CompareFn;
 };
-
 template <typename Trait>
-class BTree // this is the full version of the BTree
+class BTree  
 {
        typedef typename Trait::keyType    keyType;
-       typedef typename Trait::ObjIDType  ObjIDType;
-       typedef typename Trait::CompareFn  CompareFn;
+       typedef typename Trait::ObjIDType    ObjIDType;
 
+       typedef typename Trait::CompareFn  CompareFn;
        typedef CBTreePage <Trait> BTNode;// useful shorthand
 
 public:
        typedef typename BTNode::ObjectInfo      ObjectInfo;
-
-       // =============================================================================
-       // Forward Iterator Implementation - C++17 Standard Compliant
-       // =============================================================================
-
-       // Simple vector-based iterator implementation
        class Iterator {
        public:
-               // Iterator traits - required by C++ standard
                using iterator_category = std::forward_iterator_tag;
                using value_type        = ObjectInfo;
                using difference_type   = std::ptrdiff_t;
                using pointer           = ObjectInfo*;
                using reference         = ObjectInfo&;
-
        private:
-               std::vector<ObjectInfo*> m_Elements; // All elements in-order
-               size_t                   m_Index;     // Current index
-
+               std::vector<ObjectInfo*> m_Elements;  
+               size_t                   m_Index;      
                friend class BTree<Trait>;
                friend class ConstIterator;
-
-               // Helper to collect all elements recursively
                static void collectElements(BTNode* node, std::vector<ObjectInfo*>& elements) {
                        if(!node || node->m_KeyCount == 0) return;
-
                        for(size_t i = 0; i < node->m_KeyCount; i++) {
-                               // Visit left child
                                if(node->m_SubPages[i])
                                        collectElements(node->m_SubPages[i], elements);
-
-                               // Visit key
                                elements.push_back(&(node->m_Keys[i]));
                        }
-
-                       // Visit rightmost child
                        if(node->m_SubPages[node->m_KeyCount])
                                collectElements(node->m_SubPages[node->m_KeyCount], elements);
                }
-
-               // Private constructor - only BTree can create iterators
                explicit Iterator(BTNode* root, bool isEnd = false)
                        : m_Index(0)
                {
                        if(!isEnd && root) {
                                collectElements(root, m_Elements);
                                if(m_Elements.empty())
-                                       m_Index = 0; // End iterator
+                                       m_Index = 0;  
                        }
                }
-
        public:
-               // Default constructor - creates end iterator
                Iterator() : m_Index(0) {}
-
-               // Dereference operator - returns reference to current element
                reference operator*() const {
                        assert(m_Index < m_Elements.size() && "Cannot dereference end iterator");
                        return *(m_Elements[m_Index]);
                }
-
-               // Arrow operator - returns pointer to current element
                pointer operator->() const {
                        assert(m_Index < m_Elements.size() && "Cannot dereference end iterator");
                        return m_Elements[m_Index];
                }
-
-               // Pre-increment operator (++it)
                Iterator& operator++() {
                        if(m_Index < m_Elements.size())
                                ++m_Index;
                        return *this;
                }
-
-               // Post-increment operator (it++)
                Iterator operator++(int) {
                        Iterator tmp = *this;
                        if(m_Index < m_Elements.size())
                                ++m_Index;
                        return tmp;
                }
-
-               // Equality comparison
                bool operator==(const Iterator& other) const {
-                       // Both at end
                        if(m_Index >= m_Elements.size() && other.m_Index >= other.m_Elements.size())
                                return true;
-                       // One at end, other not
                        if(m_Index >= m_Elements.size() || other.m_Index >= other.m_Elements.size())
                                return false;
-                       // Both valid, compare pointers
                        return m_Elements[m_Index] == other.m_Elements[other.m_Index];
                }
-
-               // Inequality comparison
                bool operator!=(const Iterator& other) const {
                        return !(*this == other);
                }
        };
-
-       // =============================================================================
-       // Const Iterator Implementation
-       // =============================================================================
-
        class ConstIterator {
        public:
-               // Iterator traits
                using iterator_category = std::forward_iterator_tag;
                using value_type        = const ObjectInfo;
                using difference_type   = std::ptrdiff_t;
                using pointer           = const ObjectInfo*;
                using reference         = const ObjectInfo&;
-
        private:
-               std::vector<ObjectInfo*> m_Elements; // All elements in-order
-               size_t                   m_Index;     // Current index
-
+               std::vector<ObjectInfo*> m_Elements;  
+               size_t                   m_Index;      
                friend class BTree<Trait>;
-
-               // Helper to collect all elements recursively
                static void collectElements(BTNode* node, std::vector<ObjectInfo*>& elements) {
                        if(!node || node->m_KeyCount == 0) return;
-
                        for(size_t i = 0; i < node->m_KeyCount; i++) {
                                if(node->m_SubPages[i])
                                        collectElements(node->m_SubPages[i], elements);
                                elements.push_back(&(node->m_Keys[i]));
                        }
-
                        if(node->m_SubPages[node->m_KeyCount])
                                collectElements(node->m_SubPages[node->m_KeyCount], elements);
                }
-
                explicit ConstIterator(const BTNode* root, bool isEnd = false)
                        : m_Index(0)
                {
@@ -174,36 +124,28 @@ public:
                                        m_Index = 0;
                        }
                }
-
        public:
                ConstIterator() : m_Index(0) {}
-
-               // Allow conversion from Iterator to ConstIterator
                ConstIterator(const Iterator& it) : m_Elements(it.m_Elements), m_Index(it.m_Index) {}
-
                reference operator*() const {
                        assert(m_Index < m_Elements.size() && "Cannot dereference end iterator");
                        return *(m_Elements[m_Index]);
                }
-
                pointer operator->() const {
                        assert(m_Index < m_Elements.size() && "Cannot dereference end iterator");
                        return m_Elements[m_Index];
                }
-
                ConstIterator& operator++() {
                        if(m_Index < m_Elements.size())
                                ++m_Index;
                        return *this;
                }
-
                ConstIterator operator++(int) {
                        ConstIterator tmp = *this;
                        if(m_Index < m_Elements.size())
                                ++m_Index;
                        return tmp;
                }
-
                bool operator==(const ConstIterator& other) const {
                        if(m_Index >= m_Elements.size() && other.m_Index >= other.m_Elements.size())
                                return true;
@@ -211,54 +153,39 @@ public:
                                return false;
                        return m_Elements[m_Index] == other.m_Elements[other.m_Index];
                }
-
                bool operator!=(const ConstIterator& other) const {
                        return !(*this == other);
                }
        };
-
-       // =============================================================================
-       // Reverse Iterator Implementation - Bidirectional Iterator
-       // =============================================================================
-
        class ReverseIterator {
        public:
-               // Iterator traits
                using iterator_category = std::bidirectional_iterator_tag;
                using value_type        = ObjectInfo;
                using difference_type   = std::ptrdiff_t;
                using pointer           = ObjectInfo*;
                using reference         = ObjectInfo&;
-
        private:
-               std::vector<ObjectInfo*> m_Elements; // All elements in-order
-               std::ptrdiff_t           m_Index;    // Current index (can be -1 for rend)
-
+               std::vector<ObjectInfo*> m_Elements;  
+               std::ptrdiff_t           m_Index;     
                friend class BTree<Trait>;
                friend class ConstReverseIterator;
-
-               // Helper to collect all elements recursively
                static void collectElements(BTNode* node, std::vector<ObjectInfo*>& elements) {
                        if(!node || node->m_KeyCount == 0) return;
-
                        for(size_t i = 0; i < node->m_KeyCount; i++) {
                                if(node->m_SubPages[i])
                                        collectElements(node->m_SubPages[i], elements);
                                elements.push_back(&(node->m_Keys[i]));
                        }
-
                        if(node->m_SubPages[node->m_KeyCount])
                                collectElements(node->m_SubPages[node->m_KeyCount], elements);
                }
-
-               // Private constructor - only BTree can create iterators
                explicit ReverseIterator(BTNode* root, bool isREnd = false)
                        : m_Index(0)
                {
                        if(root) {
                                collectElements(root, m_Elements);
                                if(isREnd) {
-                                       m_Index = -1; // rend() points before first
+                                       m_Index = -1;  
                                } else {
                                        m_Index = m_Elements.empty() ? -1 : (std::ptrdiff_t)m_Elements.size() - 1;
                                }
@@ -266,107 +193,73 @@ public:
                                m_Index = -1;
                        }
                }
-
        public:
-               // Default constructor - creates rend iterator
                ReverseIterator() : m_Index(-1) {}
-
-               // Dereference operator
                reference operator*() const {
                        assert(m_Index >= 0 && m_Index < (std::ptrdiff_t)m_Elements.size() && "Cannot dereference rend iterator");
                        return *(m_Elements[m_Index]);
                }
-
-               // Arrow operator
                pointer operator->() const {
                        assert(m_Index >= 0 && m_Index < (std::ptrdiff_t)m_Elements.size() && "Cannot dereference rend iterator");
                        return m_Elements[m_Index];
                }
-
-               // Pre-increment (move backward in original order)
                ReverseIterator& operator++() {
                        if(m_Index >= 0)
                                --m_Index;
                        return *this;
                }
-
-               // Post-increment
                ReverseIterator operator++(int) {
                        ReverseIterator tmp = *this;
                        if(m_Index >= 0)
                                --m_Index;
                        return tmp;
                }
-
-               // Pre-decrement (move forward in original order)
                ReverseIterator& operator--() {
                        if(m_Index < (std::ptrdiff_t)m_Elements.size() - 1)
                                ++m_Index;
                        return *this;
                }
-
-               // Post-decrement
                ReverseIterator operator--(int) {
                        ReverseIterator tmp = *this;
                        if(m_Index < (std::ptrdiff_t)m_Elements.size() - 1)
                                ++m_Index;
                        return tmp;
                }
-
-               // Equality comparison
                bool operator==(const ReverseIterator& other) const {
-                       // Both at rend
                        if(m_Index < 0 && other.m_Index < 0)
                                return true;
-                       // One at rend, other not
                        if(m_Index < 0 || other.m_Index < 0)
                                return false;
-                       // Both valid
                        if(m_Index >= (std::ptrdiff_t)m_Elements.size() ||
                           other.m_Index >= (std::ptrdiff_t)other.m_Elements.size())
                                return false;
                        return m_Elements[m_Index] == other.m_Elements[other.m_Index];
                }
-
-               // Inequality comparison
                bool operator!=(const ReverseIterator& other) const {
                        return !(*this == other);
                }
        };
-
-       // =============================================================================
-       // Const Reverse Iterator Implementation
-       // =============================================================================
-
        class ConstReverseIterator {
        public:
-               // Iterator traits
                using iterator_category = std::bidirectional_iterator_tag;
                using value_type        = const ObjectInfo;
                using difference_type   = std::ptrdiff_t;
                using pointer           = const ObjectInfo*;
                using reference         = const ObjectInfo&;
-
        private:
-               std::vector<ObjectInfo*> m_Elements; // All elements in-order
-               std::ptrdiff_t           m_Index;    // Current index
-
+               std::vector<ObjectInfo*> m_Elements;  
+               std::ptrdiff_t           m_Index;     
                friend class BTree<Trait>;
-
-               // Helper to collect all elements recursively
                static void collectElements(BTNode* node, std::vector<ObjectInfo*>& elements) {
                        if(!node || node->m_KeyCount == 0) return;
-
                        for(size_t i = 0; i < node->m_KeyCount; i++) {
                                if(node->m_SubPages[i])
                                        collectElements(node->m_SubPages[i], elements);
                                elements.push_back(&(node->m_Keys[i]));
                        }
-
                        if(node->m_SubPages[node->m_KeyCount])
                                collectElements(node->m_SubPages[node->m_KeyCount], elements);
                }
-
                explicit ConstReverseIterator(const BTNode* root, bool isREnd = false)
                        : m_Index(0)
                {
@@ -381,49 +274,39 @@ public:
                                m_Index = -1;
                        }
                }
-
        public:
                ConstReverseIterator() : m_Index(-1) {}
-
-               // Allow conversion from ReverseIterator to ConstReverseIterator
                ConstReverseIterator(const ReverseIterator& it) : m_Elements(it.m_Elements), m_Index(it.m_Index) {}
-
                reference operator*() const {
                        assert(m_Index >= 0 && m_Index < (std::ptrdiff_t)m_Elements.size() && "Cannot dereference rend iterator");
                        return *(m_Elements[m_Index]);
                }
-
                pointer operator->() const {
                        assert(m_Index >= 0 && m_Index < (std::ptrdiff_t)m_Elements.size() && "Cannot dereference rend iterator");
                        return m_Elements[m_Index];
                }
-
                ConstReverseIterator& operator++() {
                        if(m_Index >= 0)
                                --m_Index;
                        return *this;
                }
-
                ConstReverseIterator operator++(int) {
                        ConstReverseIterator tmp = *this;
                        if(m_Index >= 0)
                                --m_Index;
                        return tmp;
                }
-
                ConstReverseIterator& operator--() {
                        if(m_Index < (std::ptrdiff_t)m_Elements.size() - 1)
                                ++m_Index;
                        return *this;
                }
-
                ConstReverseIterator operator--(int) {
                        ConstReverseIterator tmp = *this;
                        if(m_Index < (std::ptrdiff_t)m_Elements.size() - 1)
                                ++m_Index;
                        return tmp;
                }
-
                bool operator==(const ConstReverseIterator& other) const {
                        if(m_Index < 0 && other.m_Index < 0)
                                return true;
@@ -434,18 +317,14 @@ public:
                                return false;
                        return m_Elements[m_Index] == other.m_Elements[other.m_Index];
                }
-
                bool operator!=(const ConstReverseIterator& other) const {
                        return !(*this == other);
                }
        };
-
-       // Type aliases for STL compatibility
        using iterator               = Iterator;
        using const_iterator         = ConstIterator;
        using reverse_iterator       = ReverseIterator;
        using const_reverse_iterator = ConstReverseIterator;
-
 public:
        BTree(size_t order = DEFAULT_BTREE_ORDER, bool unique = true)
               : m_Root(2 * order  + 1, unique, m_Compare),
@@ -458,22 +337,15 @@ public:
               m_Root.SetMaxKeysForChilds(order);
        }
        ~BTree() {}
-
-       // Rule of Five: Move semantics
        BTree(BTree&& other) noexcept;
        BTree& operator=(BTree&& other) noexcept;
-
-       // Rule of Five: Copy semantics (deleted to prevent accidental copies)
        BTree(const BTree& other) = delete;
        BTree& operator=(const BTree& other) = delete;
-
-       // Serialization: Persistent storage
        bool            Write (const std::string& filename) const;
        bool            Read  (const std::string& filename);
-
        bool            Insert (const keyType key, const long ObjID);
        bool            Remove (const keyType key, const long ObjID);
-       ObjIDType       Search (const keyType key)
+       ObjIDType       Search (const keyType key) const
        {      ObjIDType ObjID = -1;
               m_Root.Search(key, ObjID);
               return ObjID;
@@ -481,132 +353,78 @@ public:
        size_t            size() const { return m_NumKeys; }
        size_t            height() const { return m_Height;      }
        size_t            GetOrder() const { return m_Order;     }
-
        void            Print (ostream &os)
        {               m_Root.Print(os);                              }
-
-       // =============================================================================
-       // Iterator Access Methods - STL Container Interface
-       // =============================================================================
-
-       // Returns iterator to beginning of tree (leftmost element)
        iterator begin() {
                return Iterator(&m_Root, false);
        }
-
-       // Returns iterator to end of tree (one past last element)
        iterator end() {
                return Iterator(&m_Root, true);
        }
-
-       // Returns const_iterator to beginning of tree
        const_iterator begin() const {
                return ConstIterator(&m_Root, false);
        }
-
-       // Returns const_iterator to end of tree
        const_iterator end() const {
                return ConstIterator(&m_Root, true);
        }
-
-       // Returns const_iterator to beginning (explicit const version)
        const_iterator cbegin() const {
                return ConstIterator(&m_Root, false);
        }
-
-       // Returns const_iterator to end (explicit const version)
        const_iterator cend() const {
                return ConstIterator(&m_Root, true);
        }
-
-       // =============================================================================
-       // Reverse Iterator Access Methods - STL Container Interface
-       // =============================================================================
-
-       // Returns reverse_iterator to beginning (last element)
        reverse_iterator rbegin() {
                return ReverseIterator(&m_Root, false);
        }
-
-       // Returns reverse_iterator to end (before first element)
        reverse_iterator rend() {
                return ReverseIterator(&m_Root, true);
        }
-
-       // Returns const_reverse_iterator to beginning
        const_reverse_iterator rbegin() const {
                return ConstReverseIterator(&m_Root, false);
        }
-
-       // Returns const_reverse_iterator to end
        const_reverse_iterator rend() const {
                return ConstReverseIterator(&m_Root, true);
        }
-
-       // Returns const_reverse_iterator to beginning (explicit const version)
        const_reverse_iterator crbegin() const {
                return ConstReverseIterator(&m_Root, false);
        }
-
-       // Returns const_reverse_iterator to end (explicit const version)
        const_reverse_iterator crend() const {
                return ConstReverseIterator(&m_Root, true);
        }
-
-       // Generic ForEach using variadic templates - applies function to all elements in order
        template <typename Function, typename... Args>
        void ForEach(Function&& func, Args&&... args) const
        {               m_Root.ForEach(std::forward<Function>(func), 0, std::forward<Args>(args)...);    }
-
-       // Generic FirstThat using variadic templates - finds first element satisfying predicate
        template <typename Predicate, typename... Args>
        ObjectInfo* FirstThat(Predicate&& pred, Args&&... args)
        {               return m_Root.FirstThat(std::forward<Predicate>(pred), 0, std::forward<Args>(args)...);   }
-
-       // FindAll - finds all elements satisfying predicate
        template <typename Predicate, typename... Args>
        void FindAll(vector<ObjectInfo*>& results, Predicate&& pred, Args&&... args)
        {               m_Root.FindAll(results, std::forward<Predicate>(pred), 0, std::forward<Args>(args)...);   }
-
-       // CountIf - counts elements satisfying predicate
        template <typename Predicate, typename... Args>
-       size_t CountIf(Predicate&& pred, Args&&... args)
+       size_t CountIf(Predicate&& pred, Args&&... args) const
        {               return m_Root.CountIf(std::forward<Predicate>(pred), 0, std::forward<Args>(args)...);     }
-
-       // AnyOf - returns true if at least one element satisfies predicate
        template <typename Predicate, typename... Args>
-       bool AnyOf(Predicate&& pred, Args&&... args)
+       bool AnyOf(Predicate&& pred, Args&&... args) const
        {               return m_Root.AnyOf(std::forward<Predicate>(pred), 0, std::forward<Args>(args)...);       }
-
-       // AllOf - returns true if all elements satisfy predicate
        template <typename Predicate, typename... Args>
-       bool AllOf(Predicate&& pred, Args&&... args)
+       bool AllOf(Predicate&& pred, Args&&... args) const
        {               return m_Root.AllOf(std::forward<Predicate>(pred), 0, std::forward<Args>(args)...);       }
-
-       // NoneOf - returns true if no element satisfies predicate
        template <typename Predicate, typename... Args>
-       bool NoneOf(Predicate&& pred, Args&&... args)
+       bool NoneOf(Predicate&& pred, Args&&... args) const
        {               return m_Root.NoneOf(std::forward<Predicate>(pred), 0, std::forward<Args>(args)...);      }
-
-       // Accumulate - accumulates values using binary operation
        template <typename T, typename BinaryOp, typename... Args>
-       T Accumulate(T init, BinaryOp&& op, Args&&... args)
+       T Accumulate(T init, BinaryOp&& op, Args&&... args) const
        {               return m_Root.Accumulate(init, std::forward<BinaryOp>(op), 0, std::forward<Args>(args)...); }
-
-       // Transform - transforms all elements and stores results
        template <typename OutputContainer, typename UnaryOp, typename... Args>
-       void Transform(OutputContainer& output, UnaryOp&& op, Args&&... args)
+       void Transform(OutputContainer& output, UnaryOp&& op, Args&&... args) const
        {               m_Root.Transform(output, std::forward<UnaryOp>(op), 0, std::forward<Args>(args)...);      }
-
-       //typedef               ObjectInfo iterator;
-
 protected:
        BTNode          m_Root;
-       size_t          m_Height;  // height of tree
-       size_t          m_Order;   // order of tree
-       size_t          m_NumKeys; // number of keys
-       bool            m_Unique;  // Accept the elements only once ?
-       CompareFn       m_Compare; // Comparison function object
+       size_t          m_Height;   
+       size_t          m_Order;    
+       size_t          m_NumKeys;  
+       bool            m_Unique;   
+       CompareFn       m_Compare;  
 };
 
 template <typename Trait>
@@ -635,11 +453,6 @@ bool BTree<Trait>::Remove (const keyType key, const long ObjID)
        return true;
 }
 
-// =============================================================================
-// Move Semantics Implementation - Rule of Five
-// =============================================================================
-
-// Move Constructor - transfers ownership of the entire tree
 template <typename Trait>
 BTree<Trait>::BTree(BTree&& other) noexcept
        : m_Root(std::move(other.m_Root)),
@@ -649,27 +462,21 @@ BTree<Trait>::BTree(BTree&& other) noexcept
          m_Unique(other.m_Unique),
          m_Compare(std::move(other.m_Compare))
 {
-       // Leave other in a valid but empty state
        other.m_Height = 1;
        other.m_Order = DEFAULT_BTREE_ORDER;
        other.m_NumKeys = 0;
        other.m_Unique = true;
 }
-
-// Move Assignment Operator - transfers ownership with proper state management
 template <typename Trait>
 BTree<Trait>& BTree<Trait>::operator=(BTree&& other) noexcept
 {
        if(this != &other) {
-               // Transfer ownership (m_Root's destructor will clean up old resources)
                m_Root = std::move(other.m_Root);
                m_Height = other.m_Height;
                m_Order = other.m_Order;
                m_NumKeys = other.m_NumKeys;
                m_Unique = other.m_Unique;
                m_Compare = std::move(other.m_Compare);
-
-               // Leave other in a valid but empty state
                other.m_Height = 1;
                other.m_Order = DEFAULT_BTREE_ORDER;
                other.m_NumKeys = 0;
@@ -677,10 +484,6 @@ BTree<Trait>& BTree<Trait>::operator=(BTree&& other) noexcept
        }
        return *this;
 }
-
-// =============================================================================
-// Serialization: Write - Saves BTree to binary file
-// =============================================================================
 template <typename Trait>
 bool BTree<Trait>::Write(const std::string& filename) const
 {
@@ -690,27 +493,17 @@ bool BTree<Trait>::Write(const std::string& filename) const
                        std::cerr << "Error: Cannot open file for writing: " << filename << std::endl;
                        return false;
                }
-
-               // Write magic number for file validation
                const char magic[6] = "BTREE";
                out.write(magic, 5);
-
-               // Write version for future compatibility
                const uint32_t version = 1;
                out.write(reinterpret_cast<const char*>(&version), sizeof(version));
-
-               // Write BTree metadata
                out.write(reinterpret_cast<const char*>(&m_Height), sizeof(m_Height));
                out.write(reinterpret_cast<const char*>(&m_Order), sizeof(m_Order));
                out.write(reinterpret_cast<const char*>(&m_NumKeys), sizeof(m_NumKeys));
                out.write(reinterpret_cast<const char*>(&m_Unique), sizeof(m_Unique));
-
-               // Write tree structure recursively
                m_Root.WriteToDisk(out);
-
                out.close();
                return true;
-
        } catch(const std::exception& e) {
                std::cerr << "Exception during Write: " << e.what() << std::endl;
                return false;
@@ -719,10 +512,6 @@ bool BTree<Trait>::Write(const std::string& filename) const
                return false;
        }
 }
-
-// =============================================================================
-// Serialization: Read - Loads BTree from binary file
-// =============================================================================
 template <typename Trait>
 bool BTree<Trait>::Read(const std::string& filename)
 {
@@ -732,8 +521,6 @@ bool BTree<Trait>::Read(const std::string& filename)
                        std::cerr << "Error: Cannot open file for reading: " << filename << std::endl;
                        return false;
                }
-
-               // Read and validate magic number
                char magic[6] = {0};
                in.read(magic, 5);
                if(std::string(magic) != "BTREE") {
@@ -741,41 +528,28 @@ bool BTree<Trait>::Read(const std::string& filename)
                        in.close();
                        return false;
                }
-
-               // Read version
                uint32_t version = 0;
                in.read(reinterpret_cast<char*>(&version), sizeof(version));
                if(version != 1) {
                        std::cerr << "Warning: File version " << version << " may not be compatible" << std::endl;
                }
-
-               // Read BTree metadata
                size_t fileHeight, fileOrder, fileNumKeys;
                bool fileUnique;
-
                in.read(reinterpret_cast<char*>(&fileHeight), sizeof(fileHeight));
                in.read(reinterpret_cast<char*>(&fileOrder), sizeof(fileOrder));
                in.read(reinterpret_cast<char*>(&fileNumKeys), sizeof(fileNumKeys));
                in.read(reinterpret_cast<char*>(&fileUnique), sizeof(fileUnique));
-
-               // Validate metadata
                if(fileOrder != m_Order) {
                        std::cerr << "Warning: File order (" << fileOrder << ") differs from current order ("
                                  << m_Order << "). Adjusting..." << std::endl;
                        m_Order = fileOrder;
                }
-
-               // Read tree structure recursively
                m_Root.ReadFromDisk(in);
-
-               // Update tree metadata
                m_Height = fileHeight;
                m_NumKeys = fileNumKeys;
                m_Unique = fileUnique;
-
                in.close();
                return true;
-
        } catch(const std::exception& e) {
                std::cerr << "Exception during Read: " << e.what() << std::endl;
                return false;
@@ -784,20 +558,13 @@ bool BTree<Trait>::Read(const std::string& filename)
                return false;
        }
 }
-
-// =============================================================================
-// Stream Output Operator - operator<<
-// =============================================================================
-
 template <typename Trait>
 std::ostream& operator<<(std::ostream& os, const BTree<Trait>& bt)
 {
        using FormatStyle = btree_format::FormatStyle;
        FormatStyle style = btree_format::getFormatStyle(os);
-
        switch(style) {
        case FormatStyle::LINEAR:
-               // Linear format: [5, 10, 15, 20, ...]
                os << "[";
                {
                        bool first = true;
@@ -809,35 +576,26 @@ std::ostream& operator<<(std::ostream& os, const BTree<Trait>& bt)
                }
                os << "]";
                break;
-
        case FormatStyle::COMPACT:
-               // Compact format: 5 10 15 20 ...
                bt.ForEach([&os](auto& info, size_t level) {
                        os << info.key << " ";
                });
                break;
-
        case FormatStyle::DETAILED:
-               // Detailed format: key=5(ObjID=0) key=10(ObjID=1) ...
                bt.ForEach([&os](auto& info, size_t level) {
                        os << "key=" << info.key << "(ObjID=" << info.ObjID << ") ";
                });
                break;
-
        case FormatStyle::TREE:
-               // Tree format with indentation showing structure
                os << "BTree(order=" << bt.GetOrder() << ", size=" << bt.size()
                   << ", height=" << bt.height() << ")\n";
                bt.ForEach([&os](auto& info, size_t level) {
-                       // Indentation based on level
                        for(size_t i = 0; i < level; i++)
                                os << "  ";
                        os << "├─ " << info.key << " (ObjID=" << info.ObjID << ")\n";
                });
                break;
-
        case FormatStyle::JSON_LIKE:
-               // JSON-like format
                os << "{\n";
                os << "  \"order\": " << bt.GetOrder() << ",\n";
                os << "  \"size\": " << bt.size() << ",\n";
@@ -866,9 +624,7 @@ std::ostream& operator<<(std::ostream& os, const BTree<Trait>& bt)
                os << "\n  ]\n";
                os << "}";
                break;
-
        case FormatStyle::VERTICAL:
-               // Vertical format: one per line with level
                os << "BTree (order=" << bt.GetOrder() << ", size=" << bt.size() << ")\n";
                os << "─────────────────────────────────\n";
                bt.ForEach([&os](auto& info, size_t level) {
@@ -877,16 +633,12 @@ std::ostream& operator<<(std::ostream& os, const BTree<Trait>& bt)
                });
                os << "─────────────────────────────────";
                break;
-
        default:
-               // Default format (COMPACT)
                bt.ForEach([&os](auto& info, size_t level) {
                        os << info.key << " ";
                });
                break;
        }
-
        return os;
 }
-
 #endif

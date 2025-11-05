@@ -20,7 +20,7 @@ const int BTreeSize = 3;
 int main (int argc, char * argv){
        int result, i;
        // Using Trait with default less<char> comparison (ascending order)
-       BTree< BTreeTrait<char, long> > bt (BTreeSize);
+       BTree < BTreeTrait<char, long> > bt (BTreeSize);
        for (i = 0; keys1[i]; i++)
        {
                //cout<<"Inserting "<<keys1[i]<<endl;

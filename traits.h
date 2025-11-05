@@ -2,7 +2,6 @@
 #define __TRAITS_H__
 #include <functional>
 
-// Traits for LinkedList and DoubleLinkedList
 template <typename T, typename _Func>
 struct ListTrait{
     using value_type = T;
@@ -19,7 +18,6 @@ struct DescendingTrait :
     public ListTrait<T, std::greater<T> >{
 };
 
-// Traits for BTree
 template <typename _keyType, typename _ObjIDType, typename _CompareFn>
 struct BTreeTraitBase
 {
