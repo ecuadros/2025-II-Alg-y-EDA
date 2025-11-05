@@ -54,8 +54,6 @@ class BTree;
  * Permite navegación forward (operator++) y backward (operator--).
  * Realiza in-order traversal del árbol B.
  * 
- * @warning No es thread-safe. El usuario debe asegurar que el árbol
- *          no se modifique durante la iteración.
  * 
  * @tparam Trait Trait que define los tipos del BTree
  */
@@ -164,8 +162,6 @@ public:
  * - Persistencia con serialización a disco
  * 
  * @tparam Trait Trait que define los tipos (keyType, ObjIDType, Compare)
- * 
- * @warning Los iteradores no son thread-safe. El usuario debe asegurar que el árbol no se modifique.
  */
 template <typename Trait>
 class BTree // this is the full version of the BTree
@@ -354,7 +350,6 @@ public:
         * @brief Retorna iterador al elemento más pequeño del árbol
         * @return Iterador apuntando a la clave mínima (leftmost)
         * @note Esta operación es thread-safe (bloqueo compartido)
-        * @warning El iterador NO es thread-safe. No modificar el árbol durante la iteración
         */
        iterator begin()
        {
@@ -384,7 +379,6 @@ public:
         * @brief Retorna iterador al elemento más grande del árbol
         * @return Iterador apuntando a la clave máxima (rightmost)
         * @note Esta operación es thread-safe (bloqueo compartido)
-        * @warning El iterador NO es thread-safe. No modificar el árbol durante la iteración
         */
        iterator rbegin()
        {
