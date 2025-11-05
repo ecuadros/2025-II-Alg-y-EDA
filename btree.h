@@ -22,10 +22,11 @@ class BTree // this is the full version of the BTree
        typedef typename Trait::keyType    keyType;
        typedef typename Trait::ObjIDType    ObjIDType;
        typedef typename Trait::CompareFunction CompareFunction;
-       
        typedef CBTreePage <Trait> BTNode;// useful shorthand
 
+       
 public:
+       // typedef CBTreePage <Trait> BTNode;// decomentar para probar el move test
        //typedef ObjectInfo iterator;
        // typedef typename BTNode::lpfnForEach2    lpfnForEach2;
        // typedef typename BTNode::lpfnForEach3    lpfnForEach3;
@@ -44,6 +45,8 @@ public:
               m_Height = 1;
        }
        ~BTree() {}
+
+
        //int           Open (char * name, int mode);
        //int           Create (char * name, int mode);
        //int           Close ();

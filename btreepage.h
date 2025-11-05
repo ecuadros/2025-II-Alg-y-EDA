@@ -57,7 +57,7 @@ void insert_at(Container& container, ObjType object, int pos)
        size_t size = container.size();
        for(int i = size-2 ; i >= pos ; i--)
                container[i+1] = container[i];
-       container[pos] =  object;	
+       container[pos] =  object;
 }
 
 template <typename Container>
@@ -89,7 +89,7 @@ class CBTreePage //: public SimpleIndex <keyType>
 {
        friend class BTree<Trait>;
        typedef typename Trait::keyType  keyType;
-       typedef typename Trait::ObjIDType  ObjIDType; 
+       typedef typename Trait::ObjIDType  ObjIDType;
        typedef typename Trait::CompareFunction CompareFunction;
 
        typedef CBTreePage<Trait>    BTPage;         // useful shorthand
@@ -103,11 +103,17 @@ class CBTreePage //: public SimpleIndex <keyType>
  public:
        CBTreePage(size_t maxKeys, bool unique = true);
        virtual ~CBTreePage();
+       //move constuctor
+       CBTreePage(CBTreePage &&other);
+       //operator= for move constructor
+       CBTreePage& operator=(CBTreePage &&other);
 
        bt_ErrorCode    Insert (const keyType &key, const ObjIDType ObjID);
        bt_ErrorCode    Remove (const keyType &key, const ObjIDType ObjID);
        bool            Search (const keyType &key, ObjIDType &ObjID);
        void            Print  (ostream &os);
+
+       size_t GetKeyCount();
 
        // TODO: #6 change by Invoke
        // TODO: #7 ForEach must be a template inside this template
@@ -135,7 +141,7 @@ protected:
        //size_t RecAddr; // address of this node in the BTree file
        vector<ObjectInfo> m_Keys;
        vector<BTPage *>m_SubPages;
-       
+
        // TODO: #10 size_t
        size_t  m_KeyCount;
 
@@ -207,6 +213,47 @@ template <typename Trait>
 CBTreePage<Trait>::~CBTreePage()
 {
        Reset();
+}
+
+//move constructor
+template <typename Trait>
+CBTreePage<Trait>::CBTreePage(CBTreePage &&other){
+        std::cout << "CBTreePage MOVE CONSTRUCTOR debug\n";
+
+        m_Keys          = std::move(other.m_Keys);
+        m_SubPages      = std::move(other.m_SubPages);
+        m_KeyCount      = other.m_KeyCount;
+        m_MaxKeys       = other.m_MaxKeys;
+        m_MinKeys       = other.m_MinKeys;
+        m_Unique        = other.m_Unique;
+        m_isRoot        = other.m_isRoot;
+        m_Compare       = other.m_Compare;
+
+        other.m_KeyCount = 0;
+        other.m_MaxKeys  = 0;
+        other.m_MinKeys  = 0;
+}
+
+//move assignment operator
+template <typename Trait>
+CBTreePage<Trait>& CBTreePage<Trait>::operator=(CBTreePage &&other){
+        std::cout << "CBTreePage MOVE ASSIGNMENT OPERATOR debug\n";
+
+        if(this != &other){
+                m_Keys          = std::move(other.m_Keys);
+                m_SubPages      = std::move(other.m_SubPages);
+                m_KeyCount      = other.m_KeyCount;
+                m_MaxKeys       = other.m_MaxKeys;
+                m_MinKeys       = other.m_MinKeys;
+                m_Unique        = other.m_Unique;
+                m_isRoot        = other.m_isRoot;
+                m_Compare       = other.m_Compare;
+
+                other.m_KeyCount = 0;
+                other.m_MaxKeys  = 0;
+                other.m_MinKeys  = 0;
+        }
+        return *this;
 }
 
 template <typename Trait>
@@ -327,7 +374,7 @@ bool CBTreePage<Trait>::RedistributeWith2Brothers(size_t pos)
 }
 
 template <typename Trait>
-void CBTreePage<Trait>::RedistributeR2L(size_t pos)  
+void CBTreePage<Trait>::RedistributeR2L(size_t pos)
 {
        BTPage  *pSource = m_SubPages[ pos ],
                *pTarget = m_SubPages[pos-1];
@@ -844,6 +891,13 @@ void CBTreePage<Trait>::Print(ostream & os)
         os << info.key << "-->" << info.ObjID << "\n";
     }, 0);
 }
+
+//descomentar para usar el test del move cosntructor
+// template <typename Trait>
+// size_t CBTreePage<Trait>::GetKeyCount()
+// {
+//        return m_KeyCount;
+// }
 
 
 template <typename Trait>

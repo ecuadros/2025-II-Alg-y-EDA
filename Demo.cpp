@@ -41,9 +41,42 @@ void DemoOperations(DemoTree &bt)
     std::cout << "\nTamaño reportado: " << bt.size() << "  Altura reportada: " << bt.height() << "\n";
 }
 
+
+// void TestMove() {
+//     std::cout << "\n--- Test para el move constructor ---\n";
+
+//     // Creamos una página A (nodo de árbol B)
+//     DemoTree::BTNode pageA(3, true); // (order, unique)
+//     pageA.Insert('K', 10);
+//     pageA.Insert('M', 20);
+//     std::cout << "Estado Inicial (A): Claves=" << pageA.GetKeyCount() << "\n";
+
+//     // Mover A a B (deberia de llamar al move constructor del btreepage)
+//     std::cout << "Accion: pageB = std::move(pageA); \n";
+//     DemoTree::BTNode pageB = std::move(pageA); // <-- deberia imprimir lo del move constructor
+
+//     std::cout << "Estado Final (B): Claves=" << pageB.GetKeyCount() << "\n";
+//     // pageA debería estar en estado 'movido' (válido pero sin recursos)
+//     std::cout << "Estado Final (A): Claves=" << pageA.GetKeyCount() << "\n";
+    
+//     // Mover C a B (Llamará al OPERADOR DE ASIGNACIÓN DE MOVIMIENTO)
+//     DemoTree::BTNode pageC(3, true);
+//     pageC.Insert('Z', 30);
+//     pageC.Insert('A', 40);
+//     std::cout << "Estado Inicial (C): Claves=" << pageC.GetKeyCount() << "\n";
+
+//     std::cout << "Accion: pageB = std::move(pageC); \n";
+//     pageB = std::move(pageC); // <-- Debería imprimir OPERADOR DE ASIGNACIÓN DE MOVIMIENTO
+
+//     std::cout << "Estado Final (B): Claves=" << pageB.GetKeyCount() << "\n";
+//     std::cout << "Estado Final (C): Claves=" << pageC.GetKeyCount() << "\n";
+
+// }
+
 int main()
 {
     DemoTree bt(3);
     DemoOperations(bt);
+    // TestMove();
     return 0;
 }
