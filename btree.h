@@ -4,6 +4,7 @@
 #include <iostream>
 #include <functional>
 #include "btreepage.h"
+#include "btree_iterator.h"
 #define DEFAULT_BTREE_ORDER 3
 
 const size_t MaxHeight = 5; 
@@ -42,6 +43,8 @@ class BTree // this is the full version of the BTree
        typedef CBTreePage <Trait> BTNode;// useful shorthand
 
 public:
+       typedef btree_iterator<Trait> iterator;
+
        //typedef ObjectInfo iterator;
        typedef typename BTNode::lpfnForEach2    lpfnForEach2;
        typedef typename BTNode::lpfnForEach3    lpfnForEach3;
@@ -95,6 +98,15 @@ public:
        {               return m_Root.FirstThat(std::forward<Func>(func), 0, std::forward<Args>(args)...);}
 
        void            Write(ostream &os) { os << *this;  }
+
+       iterator        begin() {
+              if (m_NumKeys == 0)
+                     return end();
+              BTNode* leftmost = m_Root.GetLeftmostLeaf();
+              return iterator(leftmost, 0);
+       }
+
+       iterator        end() { return iterator(nullptr, 0); }
 
 protected:
        BTNode          m_Root;

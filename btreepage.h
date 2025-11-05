@@ -15,6 +15,9 @@
 template <typename Trait>
 class BTree;
 
+template <typename Trait>
+class btree_iterator;
+
 using namespace std;
 enum bt_ErrorCode {bt_ok, bt_overflow, bt_underflow, bt_duplicate, bt_nofound, bt_rootmerged};
 
@@ -78,6 +81,7 @@ class CBTreePage //: public SimpleIndex <keyType>
 // this is the in-memory version of the CBTreePage
 {
        friend class BTree<Trait>;
+       friend class btree_iterator<Trait>;
        typedef typename Trait::keyType  keyType;
        typedef typename Trait::ObjIDType  ObjIDType; 
        typedef typename Trait::CompareFn  CompareFn;
@@ -140,6 +144,15 @@ protected:
 
        void  UpdateChildrenParentPointers();
        void  SetChildParent(size_t pos, BTPage* child);
+
+       BTPage* GetLeftmostLeaf(){
+                BTPage* current = this;
+                while (current->m_SubPages[0] != nullptr)
+                {
+                        current = current->m_SubPages[0];
+                }
+                return current;
+       }
 
        bool  RedistributeWith1Brother   (size_t &pos);
        bool  RedistributeWith2Brothers   (size_t pos);
