@@ -84,12 +84,9 @@ class CBTreePage //: public SimpleIndex <keyType>
        typedef CBTreePage<Trait>    BTPage;         // useful shorthand
        typedef tagObjectInfo<keyType, ObjIDType> ObjectInfo;
 
-       typedef void (*lpfnForEach2)(ObjectInfo &info, size_t level, void *pExtra1);
-       typedef void (*lpfnForEach3)(ObjectInfo &info, size_t level, void *pExtra1, void *pExtra2);
 
-       typedef ObjectInfo *(*lpfnFirstThat2)(ObjectInfo &info, size_t level, void *pExtra1);
-       typedef ObjectInfo *(*lpfnFirstThat3)(ObjectInfo &info, size_t level, void *pExtra1, void *pExtra2);
  public:
+       CBTreePage(CBTreePage&& other) noexcept; // Move Constructor
        CBTreePage(size_t maxKeys, bool unique = true);
        virtual ~CBTreePage();
 
@@ -219,6 +216,25 @@ bt_ErrorCode CBTreePage<Trait>::Insert(const keyType& key, const ObjIDType ObjID
        if( Overflow() ) // node overflow
                return bt_overflow;
        return bt_ok;
+}
+
+template <typename Trait>
+CBTreePage<Trait>::CBTreePage(CBTreePage&& other) noexcept
+    : m_MinKeys(other.m_MinKeys),
+      m_MaxKeys(other.m_MaxKeys),
+      m_MaxKeysForChilds(other.m_MaxKeysForChilds),
+      m_Unique(other.m_Unique),
+      m_isRoot(other.m_isRoot),
+      m_Keys(std::move(other.m_Keys)),
+      m_SubPages(std::move(other.m_SubPages)),
+      m_Compare(std::move(other.m_Compare)),
+      m_KeyCount(other.m_KeyCount)
+{
+    other.m_KeyCount = 0;
+    // Dejamos el objeto 'other' en un estado seguro y bien definido,
+    // similar a un objeto recién creado, para que se pueda usar o destruir
+    // sin problemas.
+    other.Create();
 }
 
 template <typename Trait>

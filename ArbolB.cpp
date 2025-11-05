@@ -13,21 +13,24 @@ int main (int argc, char ** argv){
     cout << "--- Probando BTree con orden ascendente por defecto ---" << endl;
     // BTree con orden ascendente (std::less por defecto)
     BTree<BTreeTrait<char, int>> bt(BTreeSize);
+    bt.Print(cout);
     for (i = 0; keys1[i]; ++i) {
         result = bt.Insert(keys1[i], i+1);
     }
     bt.Print(cout);
        
+    cout << "------------------------------------------\n" << endl;
+    cout << "\n--- Probando la busqueda ---" << endl;
     for (i = 0; keys2[i]; ++i) {
         cout << "Buscando " << keys2[i] << ": ";
         int ObjID = bt.Search(keys2[i]);
         if (ObjID != -1)
-            cout << "Found " << keys2[i] << ", ID = " << ObjID << endl;
+            cout << "Encontrado " << keys2[i] << ", ID = " << ObjID << endl;
         else
-            cout <<"Not found " << keys2[i] << endl;
+            cout <<"No encontrado " << keys2[i] << endl;
     }
     cout << "------------------------------------------\n" << endl;
-    cout << "\n--- Probando BTree con orden descendente ---" << endl;
+    cout << "\n--- Probando BTree con orden descendente antes de ser movido ---" << endl;
     // BTree con orden descendente (std::greater)
     BTree<BTreeTrait<char, int, std::greater<char>>> bt_desc(BTreeSize);
     for (i = 0; keys1[i]; i++) {
@@ -35,18 +38,23 @@ int main (int argc, char ** argv){
     }
     bt_desc.Print(cout);
 
-    for (i = 0; keys2[i]; i++) {
-        cout << "Searching " << keys2[i] << ": ";
-        int ObjID = bt_desc.Search(keys2[i]);
-        if (ObjID != -1)
-            cout << "Found " << keys2[i] << ", ID = " << ObjID << endl;
-        else
-            cout <<"Not found " << keys2[i] << endl;
+    cout << "\n--- Moviendo el arbol bt_desc a bt_moved ---" << endl;
+    BTree<BTreeTrait<char, int, std::greater<char>>> bt_moved(std::move(bt_desc));
+
+    cout << "Arbol movido (bt_moved):" << endl;
+    bt_moved.Print(cout);
+
+    cout << "Arbol original (bt_desc) despues de mover:" << endl;
+    if (bt_desc.size() == 0) {
+        cout << "(El arbol esta vacio)" << endl;
+    } else {
+        bt_desc.Print(cout); // No deberia llegar aqui
     }
+
     cout << "------------------------------------------\n" << endl;
     cout << "\n--- Probando ForEach con funcion lambda ---" << endl;
     bt.ForEach(0, [](const auto& info, size_t level) {
-        if (info.key > 'M') {
+        if (info.key > 'f') {
                 std::cout << "Clave: " << info.key << " en nivel " << level << std::endl;
         }
     });

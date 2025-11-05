@@ -2,6 +2,7 @@
 #define __BTREE_H__
 
 #include <iostream>
+#include <utility>
 #include "btreepage.h"
 #define DEFAULT_BTREE_ORDER 3
 
@@ -27,13 +28,22 @@ public:
        typedef typename BTNode::ObjectInfo      ObjectInfo;
 public:
        BTree(size_t order = DEFAULT_BTREE_ORDER, bool unique = true)
-              : m_Order(order),
-                m_Root(2 * order  + 1, unique),
-                m_Unique(unique),
-                m_NumKeys(0)
+              : m_Root(2 * order  + 1, unique),
+                m_Order(order),
+                m_NumKeys(0),
+                m_Unique(unique)
        {
               m_Root.SetMaxKeysForChilds(order);
               m_Height = 1;
+       }
+       BTree(BTree&& other) noexcept
+              : m_Root(std::move(other.m_Root)),
+                m_Height(std::exchange(other.m_Height, 0)),
+                m_Order(std::exchange(other.m_Order, 0)),
+                m_NumKeys(std::exchange(other.m_NumKeys, 0)),
+                m_Unique(std::exchange(other.m_Unique, false))
+       {
+              
        }
        ~BTree() {}
        //int           Open (char * name, int mode);
