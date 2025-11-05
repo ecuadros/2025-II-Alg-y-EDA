@@ -2,6 +2,7 @@
 #define __BTREE_H__
 
 #include <iostream>
+#include <iterator>
 #include "btreepage.h"
 #define DEFAULT_BTREE_ORDER 3
 
@@ -30,6 +31,181 @@ public:
        typedef typename BTNode::lpfnFirstThat2  lpfnFirstThat2;
        typedef typename BTNode::lpfnFirstThat3  lpfnFirstThat3;
        typedef typename BTNode::ObjectInfo      ObjectInfo;
+public:
+    // Forward iterator
+    class iterator {
+        friend class BTree;
+    private:
+        BTNode* m_Node;
+        size_t m_Index;
+        BTree* m_Tree;  // Puntero al árbol para navegar desde end()
+        
+        // Encuentra el nodo más a la izquierda desde un nodo dado
+        void goToLeftmost(BTNode* node) {
+            m_Node = node;
+            if(m_Node) {
+                while(m_Node->m_SubPages[0]) {
+                    m_Node = m_Node->m_SubPages[0];
+                }
+                m_Index = 0;
+            }
+        }
+        
+    public:
+        using iterator_category = std::bidirectional_iterator_tag;
+        using value_type = ObjectInfo;
+        using difference_type = std::ptrdiff_t;
+        using pointer = ObjectInfo*;
+        using reference = ObjectInfo&;
+        
+        iterator(BTNode* node = nullptr, size_t index = 0, BTree* tree = nullptr) 
+            : m_Node(node), m_Index(index), m_Tree(tree) {}
+        
+        reference operator*() { return m_Node->m_Keys[m_Index]; }
+        pointer operator->() { return &m_Node->m_Keys[m_Index]; }
+        
+        // Pre-incremento (avanzamos)
+        iterator& operator++() {
+            if(!m_Node) return *this;
+            
+            // Si hay hijo derecho, ir al más izquierdo del hijo derecho
+            if(m_Node->m_SubPages[m_Index + 1]) {
+                m_Node = m_Node->m_SubPages[m_Index + 1];
+                while(m_Node->m_SubPages[0]) {
+                    m_Node = m_Node->m_SubPages[0];
+                }
+                m_Index = 0;
+            }
+            // Si no hay hijo derecho, siguiente key en el mismo nodo
+            else if(m_Index + 1 < m_Node->m_KeyCount) {
+                ++m_Index;
+            }
+            // Subir al padre
+            else {
+                BTNode* child = m_Node;
+                m_Node = m_Node->m_Parent;
+                
+                while(m_Node) {
+                    // Buscar índice del hijo en el padre
+                    for(size_t i = 0; i <= m_Node->m_KeyCount; ++i) {
+                        if(m_Node->m_SubPages[i] == child) {
+                            if(i < m_Node->m_KeyCount) {
+                                m_Index = i;
+                                return *this;
+                            }
+                            break;
+                        }
+                    }
+                    child = m_Node;
+                    m_Node = m_Node->m_Parent;
+                }
+                // Llegamos al final
+                m_Node = nullptr;
+            }
+            return *this;
+        }
+        
+        // Post-incremento
+        iterator operator++(int) {
+            iterator temp = *this;
+            ++(*this);
+            return temp;
+        }
+        
+        // Pre-decremento (retrocedemos)
+        iterator& operator--() {
+            // Si estamos en end(), ir al último elemento
+            if(!m_Node && m_Tree) {
+                m_Node = &m_Tree->m_Root;
+                // Ir al nodo más a la derecha
+                while(m_Node->m_SubPages[m_Node->m_KeyCount]) {
+                    m_Node = m_Node->m_SubPages[m_Node->m_KeyCount];
+                }
+                m_Index = m_Node->m_KeyCount > 0 ? m_Node->m_KeyCount - 1 : 0;
+                return *this;
+            }
+            
+            if(!m_Node) return *this;
+            
+            // Si hay hijo izquierdo, ir al más derecho del hijo izquierdo
+            if(m_Node->m_SubPages[m_Index]) {
+                m_Node = m_Node->m_SubPages[m_Index];
+                while(m_Node->m_SubPages[m_Node->m_KeyCount]) {
+                    m_Node = m_Node->m_SubPages[m_Node->m_KeyCount];
+                }
+                m_Index = m_Node->m_KeyCount - 1;
+            }
+            // Si no hay hijo izquierdo, key anterior en el mismo nodo
+            else if(m_Index > 0) {
+                --m_Index;
+            }
+            // Subir al padre
+            else {
+                BTNode* child = m_Node;
+                m_Node = m_Node->m_Parent;
+                
+                while(m_Node) {
+                    // Buscar índice del hijo en el padre
+                    for(size_t i = 0; i <= m_Node->m_KeyCount; ++i) {
+                        if(m_Node->m_SubPages[i] == child) {
+                            if(i > 0) {
+                                m_Index = i - 1;
+                                return *this;
+                            }
+                            break;
+                        }
+                    }
+                    child = m_Node;
+                    m_Node = m_Node->m_Parent;
+                }
+                // Llegamos al inicio
+                m_Node = nullptr;
+            }
+            return *this;
+        }
+        
+        // Post-decremento
+        iterator operator--(int) {
+            iterator temp = *this;
+            --(*this);
+            return temp;
+        }
+        
+        bool operator==(const iterator& other) const {
+            return m_Node == other.m_Node && 
+                   (m_Node == nullptr || m_Index == other.m_Index);
+        }
+        
+        bool operator!=(const iterator& other) const {
+            return !(*this == other);
+        }
+    };
+    
+    // Métodos begin/end
+    iterator begin() {
+        BTNode* node = &m_Root;
+        // Ir al nodo más a la izquierda
+        while(node->m_SubPages[0]) {
+            node = node->m_SubPages[0];
+        }
+        return iterator(node, 0, this);
+    }
+    
+    iterator end() {
+        return iterator(nullptr, 0, this);
+    }
+    
+    // Backward iterator
+
+    using reverse_iterator = std::reverse_iterator<iterator>;
+    
+    reverse_iterator rbegin() {
+        return reverse_iterator(end());
+    }
+    
+    reverse_iterator rend() {
+        return reverse_iterator(begin());
+    }
 
 public:
        BTree(size_t order = DEFAULT_BTREE_ORDER, bool unique = true)
