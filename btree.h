@@ -79,9 +79,9 @@ public:
        void            ForEach( lpfnForEach3 lpfn, void *pExtra1, void *pExtra2)
        {               m_Root.ForEach(lpfn, 0, pExtra1, pExtra2);     }
 
-       template <typename Function>
-       void ForEach(Function function) {
-              m_Root.ForEach(function,0);
+       template <typename Function, typename... Args>
+       void ForEach(Function function, Args const&... args) {
+              m_Root.ForEach(function,0, args...);
        }
 
        ObjectInfo*     FirstThat( lpfnFirstThat2 lpfn, void *pExtra1 )
@@ -89,6 +89,11 @@ public:
        ObjectInfo*     FirstThat( lpfnFirstThat3 lpfn, void *pExtra1, void *pExtra2)
        {               return m_Root.FirstThat(lpfn, 0, pExtra1, pExtra2);   }
        //typedef               ObjectInfo iterator;
+
+       template <typename Function, typename... Args>
+       ObjectInfo* FirstThat(Function function, Args const&... args){ {
+            return m_Root.FirstThat(function, 0, args...);
+       }
 
 protected:
        BTNode          m_Root;

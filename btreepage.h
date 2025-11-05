@@ -106,20 +106,36 @@ class CBTreePage //: public SimpleIndex <keyType>
        void            ForEach(lpfnForEach2 lpfn, size_t level, void *pExtra1);
        void            ForEach(lpfnForEach3 lpfn, size_t level, void *pExtra1, void *pExtra2);
 
-        template <typename Function>
-        void CBTreePage<Trait>::ForEach(Function function, size_t level){
+        template <typename Function, typename... Args>
+        void CBTreePage<Trait>::ForEach(Function function, size_t level, Args const&... args){
             for(size_t i = 0 ; i < m_KeyCount ; i++){
                 if( m_SubPages[i] )
-                    m_SubPages[i]->ForEach(function, level+1);
-                function(m_Keys[i], level);
+                    m_SubPages[i]->ForEach(function, level+1, args...);
+                std::invoke(f, m_Keys[i], level, args...);
             }
             if( m_SubPages[m_KeyCount] )
-                m_SubPages[m_KeyCount]->ForEach(function, level+1);
+                m_SubPages[m_KeyCount]->ForEach(function, level+1, args...);
         }
 
        // TODO: #8 You may reduce these two function by using Invoke
        ObjectInfo*     FirstThat(lpfnFirstThat2 lpfn, size_t level, void *pExtra1);
        ObjectInfo*     FirstThat(lpfnFirstThat3 lpfn, size_t level, void *pExtra1, void *pExtra2);
+
+        template <typename Function, typename... Args>
+        ObjectInfo* FirstThat(Function function, int level = 0, Args const&... args){ {
+            ObjectInfo *pTmp;
+            for(size_t i = 0 ; i < m_KeyCount ; i++){
+                if( m_SubPages[i] )
+                    if( (pTmp = m_SubPages[i]->FirstThat(function, level+1, args..) ) )
+                        return pTmp;
+                if( std::invoke(pred, m_Keys[i], level, args...) )
+                        return &m_Keys[i];
+            }
+            if( m_SubPages[m_KeyCount] )
+                if( (pTmp = m_SubPages[m_KeyCount]->FirstThat(function, level+1, args...) ) )
+                    return pTmp;
+            return nullptr;
+        }
 
 protected:
        // TODO: #9 change by size_t
