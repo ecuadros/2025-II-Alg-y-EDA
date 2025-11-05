@@ -93,6 +93,9 @@ public:
        template<typename Func, typename... Args>
        ObjectInfo*     FirstThat(Func&& func, Args&&... args)
        {               return m_Root.FirstThat(std::forward<Func>(func), 0, std::forward<Args>(args)...);}
+
+       void            Write(ostream &os) { os << *this;  }
+
 protected:
        BTNode          m_Root;
        size_t          m_Height;  // height of tree
@@ -101,6 +104,13 @@ protected:
        bool            m_Unique;  // Accept the elements only once ?
        CompareFn       m_Compare;
 };     
+
+template <typename Trait>
+ostream & operator<<(std::ostream &os, BTree<Trait> &obj){
+       os << "BTree with order=" << obj.GetOrder() << ", keys=" << obj.size() << ", height=" << obj.height() << std::endl;
+       obj.Print(os);
+       return os;
+}
 
 template <typename Trait>
 bool BTree<Trait>::Insert(const keyType key, const long ObjID){
