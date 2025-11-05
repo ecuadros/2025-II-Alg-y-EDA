@@ -1,5 +1,6 @@
 #include <iostream>
 #include <cstring>
+#include <fstream>
 #include "btree.h"
 
 using DemoTrait = BTreeTrait<char, long>;
@@ -73,10 +74,44 @@ void DemoOperations(DemoTree &bt)
 
 // }
 
+void TestWriteRead(){
+    BTree<BTreeTrait<int, long>> tree1(3, true);
+    tree1.Insert(10, 100);
+    tree1.Insert(20, 200);
+    tree1.Insert(5, 50);
+    
+    std::cout << "Árbol original:\n";
+    tree1.Print(std::cout);
+    
+    // Guardar
+    std::ofstream ofs("test_tree.txt");
+    tree1.Write(ofs);
+    ofs.close();
+    
+    // Cargar
+    BTree<BTreeTrait<int, long>> tree2(3, true);
+    std::ifstream ifs("test_tree.txt");
+    tree2.Read(ifs);
+    ifs.close();
+    
+    std::cout << "\nÁrbol cargado:\n";
+    tree2.Print(std::cout);
+
+
+    BTree<BTreeTrait<int, long>> tree3(3, true);
+std::ifstream ifs_profesor("BT.txt");
+tree3.ReadBinaryTreeFormat(ifs_profesor);  
+ifs_profesor.close();
+
+std::cout << "\nArbol  cargado (formato del archivo BT.txt):\n";
+tree3.Print(std::cout);
+}
+
 int main()
 {
     DemoTree bt(3);
     DemoOperations(bt);
     // TestMove();
+    TestWriteRead();
     return 0;
 }

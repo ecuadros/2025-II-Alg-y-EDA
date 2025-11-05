@@ -129,6 +129,12 @@ class CBTreePage //: public SimpleIndex <keyType>
         template <typename Function>
         ObjectInfo*     FirstThat(Function fn, size_t level);
 
+        //agregamos metodo Write para escribir el contenido de un arbol
+        std::ostream&   Write(ostream &os);
+        //agregamos metodo Read para leer el contenido de un arbol
+        std::istream& Read(istream &is);
+
+
 protected:
        // TODO: #9 change by size_t
        size_t  m_MinKeys; // minimum number of keys in a node
@@ -218,7 +224,7 @@ CBTreePage<Trait>::~CBTreePage()
 //move constructor
 template <typename Trait>
 CBTreePage<Trait>::CBTreePage(CBTreePage &&other){
-        std::cout << "CBTreePage MOVE CONSTRUCTOR debug\n";
+        // std::cout << "CBTreePage MOVE CONSTRUCTOR debug\n";
 
         m_Keys          = std::move(other.m_Keys);
         m_SubPages      = std::move(other.m_SubPages);
@@ -237,7 +243,7 @@ CBTreePage<Trait>::CBTreePage(CBTreePage &&other){
 //move assignment operator
 template <typename Trait>
 CBTreePage<Trait>& CBTreePage<Trait>::operator=(CBTreePage &&other){
-        std::cout << "CBTreePage MOVE ASSIGNMENT OPERATOR debug\n";
+        // std::cout << "CBTreePage MOVE ASSIGNMENT OPERATOR debug\n";
 
         if(this != &other){
                 m_Keys          = std::move(other.m_Keys);
@@ -703,6 +709,68 @@ CBTreePage<Trait>::FirstThat(Function fn, size_t level)
                if( (pTmp = m_SubPages[m_KeyCount]->FirstThat(fn, level+1) ) )
                        return pTmp;
        return 0;
+}
+
+
+//implementamos el metodo write
+template <typename Trait>
+std::ostream& CBTreePage<Trait>::Write(std::ostream& os) {
+    // Cabecera
+    os << "PAGE " << m_KeyCount << "\n";
+    
+    // escribimos las claves y ObjID
+    for(size_t i = 0; i < m_KeyCount; i++) {
+        os << m_Keys[i].key << " " << m_Keys[i].ObjID << "\n";
+    }
+    os << "ENDKEYS\n"; //es importante para saber cuando terminan las claves
+    
+    // Indicamos que subpáginas existen con 1 o 0
+    for(size_t i = 0; i <= m_KeyCount; i++) {
+        os << (m_SubPages[i] ? "1" : "0") << " ";
+    }
+    os << "\n";
+    
+    // ahora escribimos recursivamente las subpaginas si existen
+    for(size_t i = 0; i <= m_KeyCount; i++) {
+        if(m_SubPages[i]) {
+            m_SubPages[i]->Write(os);
+        }
+    }
+    
+    return os;
+}
+
+//implementamos el metodo read
+template <typename Trait>
+std::istream& CBTreePage<Trait>::Read(std::istream& is) {
+    std::string tag;
+    is >> tag; //leemos la cabecera "PAGE"
+    
+    if(tag == "PAGE") {
+        is >> m_KeyCount;
+        
+        // Redimensionar y leer claves
+        m_Keys.resize(m_KeyCount);
+        for(size_t i = 0; i < m_KeyCount; i++) {
+            is >> m_Keys[i].key >> m_Keys[i].ObjID;
+            m_Keys[i].UseCounter = 0;
+        }
+        
+        is >> tag; //leemos "ENDKEYS"
+        
+        // Redimensiona y lee kas subpáginas
+        m_SubPages.resize(m_MaxKeys + 2, nullptr);
+        for(size_t i = 0; i <= m_KeyCount; i++) {
+            std::string childFlag;
+            is >> childFlag;
+            
+            if(childFlag == "1") {
+                m_SubPages[i] = new CBTreePage<Trait>(m_MaxKeysForChilds, m_Unique);
+                m_SubPages[i]->Read(is);
+            }
+        }
+    }
+    return is;
 }
 
 

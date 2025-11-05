@@ -68,6 +68,16 @@ public:
        // void            ForEach( lpfnForEach3 lpfn, void *pExtra1, void *pExtra2)
        // {               m_Root.ForEach(lpfn, 0, pExtra1, pExtra2);     }
 
+
+       //Read y Write
+       std::ostream&  Write(ostream &os);
+       std::istream&  Read(istream &is);
+
+
+       std::ostream&  WriteBinaryTreeFormat(std::ostream& os);
+       std::istream&  ReadBinaryTreeFormat(std::istream& is);
+       
+
        template <typename Function>
        void ForEach( Function fn ){
               m_Root.ForEach(fn, 0);
@@ -110,6 +120,68 @@ bool BTree<Trait>::Remove (const keyType key, const long ObjID)
        if( error == bt_rootmerged )
                m_Height--;
        return true;
+}
+
+
+template <typename Trait>
+std::ostream& BTree<Trait>::Write(std::ostream &os) {
+    // Cabecera del arbol
+    os << "BTree " << m_Order << " " << m_Height << " " << m_NumKeys << " " << m_Unique << "\n";
+    
+    // Escribimos la raiz
+    m_Root.Write(os);
+    
+    return os;
+}
+
+template <typename Trait>
+std::istream& BTree<Trait>::Read(std::istream &is) {
+    std::string tag;
+    is >> tag; //leemos la cabecera 
+    
+    if(tag == "BTree") {
+       is >> m_Order >> m_Height >> m_NumKeys >> m_Unique;
+        
+        // Leemos la raiz
+       m_Root.Read(is);
+    }
+    
+    return is;
+}
+
+
+// Write alternativo usando ForEach
+template <typename Trait>
+std::ostream& BTree<Trait>::WriteBinaryTreeFormat(std::ostream& os) {
+    os << "BTreeSimple " << m_NumKeys << " elements: ";
+    
+    // aca vamos a usar el ForEach como una alternativa a un formato mas simple
+    ForEach([&os](auto& info, size_t level) {
+        os << info.key << " ";
+    });
+    
+    return os;
+}
+
+//implementacion para leer el archivo BT.txt
+template <typename Trait>
+std::istream& BTree<Trait>::ReadBinaryTreeFormat(std::istream& is) {
+    std::string line;
+    std::getline(is, line);
+    
+    m_Root.Reset();
+    m_NumKeys = 0;
+    m_Height = 1;
+    
+    //se va a convertir cada caracter en una clave e insertar en el arbol
+    for (char c : line) {
+        if (std::isdigit(c)) {
+            int key = c - '0';  // Convertir char a int
+            Insert(key, key);
+        }
+    }
+    
+    return is;
 }
 
 #endif
