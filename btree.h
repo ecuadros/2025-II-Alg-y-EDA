@@ -1,3 +1,8 @@
+/**
+ * @file btree.h
+ * @brief Árbol B genérico con concurrencia (shared_mutex), guardado/carga y recorridos.
+ * @details Expone BTreeTrait, BTree, iteradores forward/reverse, y utilidades como Save/Load.
+ */
 #ifndef __BTREE_H__
 #define __BTREE_H__
 
@@ -8,7 +13,11 @@
 #define DEFAULT_BTREE_ORDER 3
 
 const size_t MaxHeight = 5; 
-
+/**
+ * @tparam _keyType   Tipo de clave.
+ * @tparam _ObjIDType Tipo del valor/identificador asociado.
+ * @brief Rasgos para configurar el B-Tree (tipos y comparador).
+ */
 template <typename _keyType, typename _ObjIDType>
 struct BTreeTrait
 {
@@ -22,6 +31,17 @@ struct BTreeTrait
               }
        };
 };
+
+/**
+ * @class BTree
+ * @brief Implementación de un B-Tree con inserción, búsqueda, borrado y concurrencia.
+ * @tparam Trait Debe definir `keyType`, `ObjIDType` y `struct Compare { bool operator()(const keyType&, const keyType&) const; }`.
+ *
+ * @par Características
+ * - Concurrencia: protecciones con std::shared_mutex en operaciones públicas.
+ * - Persistencia: @ref Save y @ref Load para escribir/leer el árbol.
+ * - Recorridos: @ref ForEachT (genérico), @ref Print, e iteradores forward/reverse.
+ */
 
 template <typename Trait>
 class BTree // this is the full version of the BTree
