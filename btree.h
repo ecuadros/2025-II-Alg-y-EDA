@@ -58,6 +58,16 @@ public:
               m_Height = 1;
        }
        ~BTree() {}
+
+       BTree(BTree &&other) {
+	       m_Root = std::move(other.m_Root);
+		m_Height = std::move(other.m_Height);
+		m_Order = std::move(other.m_Order);
+		m_NumKeys = std::move(other.m_NumKeys);
+		m_Unique = std::move(other.m_Unique);
+		m_Compare = std::move(other.m_Compare);
+	}
+
        //int           Open (char * name, int mode);
        //int           Create (char * name, int mode);
        //int           Close ();
