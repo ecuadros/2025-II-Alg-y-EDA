@@ -13,10 +13,12 @@ const char * keys1 = "D1XJ2xTg8zKL9AhijOPQcEowRSp0NbW567BUfCqrs4FdtYZakHIuvGV3eM
 const char * keys2 = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz��";
 const char * keys3 = "�DYZakHIUwxVJ203ejOP9Qc8AdtuEop1XvTRghSNbW567BfiCqrs4FGMyz�KLlmn";
 
+typedef BTreeTrait<char, size_t> CharTrait;
+
 const int BTreeSize = 3;
 int main (int argc, char * argv){
        int result, i;
-       BTree <char> bt (BTreeSize);
+       BTree <CharTrait> bt (BTreeSize);
        for (i = 0; keys1[i]; i++)
        {
                //cout<<"Inserting "<<keys1[i]<<endl;
