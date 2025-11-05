@@ -112,4 +112,11 @@ bool BTree<Trait>::Remove (const keyType key, const long ObjID)
        return true;
 }
 
+template <typename Trait>
+std::ostream& operator<<(std::ostream& os, BTree<Trait>& bt)
+{
+       bt.Print(os);
+       return os;
+}
+
 #endif
