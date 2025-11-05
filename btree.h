@@ -103,7 +103,7 @@ public:
        void Print(ostream &os)
        {
               std::shared_lock<std::shared_mutex> lk(m_mutex);
-              m_Root.Print(os);
+              os << m_Root;
        }
        template <typename F, typename... Args>
        void ForEach(F &&f, Args &&...args)
@@ -144,7 +144,7 @@ protected:
 template <typename Trait>
 std::ostream &operator<<(std::ostream &os, BTree<Trait> &obj)
 {
-       obj.Print(os);
+       os << obj.m_Root;
        return os;
 }
 

@@ -110,7 +110,8 @@ public:
        std::ostream& Write(ostream &os) const;
        std::istream& Read(istream &is);
 
-       friend std::ostream& operator<<(std::ostream& os, CBTreePage<Trait>& page);
+       template <typename T>
+       friend std::ostream& operator<<(std::ostream& os, CBTreePage<T>& page);
 
        bt_ErrorCode    Insert (const keyType &key, const ObjIDType ObjID);
        bt_ErrorCode    Remove (const keyType &key, const ObjIDType ObjID);
