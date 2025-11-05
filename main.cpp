@@ -39,5 +39,11 @@ int main()
 
     tree3.Print(cout);
 
+    tree1.ForEach(
+        [](auto &info, size_t level, std::ostream *out)
+        {
+            *out << std::string(level, '\t') << info.key << '\n';
+        },
+        &std::cout);
     return 0;
 }

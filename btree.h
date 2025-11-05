@@ -107,25 +107,18 @@ public:
               std::shared_lock<std::shared_mutex> lk(m_mutex);
               m_Root.Print(os);
        }
-       void ForEach(lpfnForEach2 lpfn, void *pExtra1)
+       template <typename F, typename... Args>
+       void ForEach(F &&f, Args &&...args)
        {
               std::shared_lock<std::shared_mutex> lk(m_mutex);
-              m_Root.ForEach(lpfn, 0, pExtra1);
+              m_Root.ForEach(std::forward<F>(f), 0, std::forward<Args>(args)...);
        }
-       void ForEach(lpfnForEach3 lpfn, void *pExtra1, void *pExtra2)
+
+       template <typename P, typename... Args>
+       ObjectInfo *FirstThat(P &&pred, Args &&...args)
        {
               std::shared_lock<std::shared_mutex> lk(m_mutex);
-              m_Root.ForEach(lpfn, 0, pExtra1, pExtra2);
-       }
-       ObjectInfo *FirstThat(lpfnFirstThat2 lpfn, void *pExtra1)
-       {
-              std::shared_lock<std::shared_mutex> lk(m_mutex);
-              return m_Root.FirstThat(lpfn, 0, pExtra1);
-       }
-       ObjectInfo *FirstThat(lpfnFirstThat3 lpfn, void *pExtra1, void *pExtra2)
-       {
-              std::shared_lock<std::shared_mutex> lk(m_mutex);
-              return m_Root.FirstThat(lpfn, 0, pExtra1, pExtra2);
+              return m_Root.FirstThat(std::forward<P>(pred), 0, std::forward<Args>(args)...);
        }
        // typedef               ObjectInfo iterator;
 
