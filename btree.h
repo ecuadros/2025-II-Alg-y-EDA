@@ -95,9 +95,9 @@ public:
        void            Print (  ostream &os)
        {               std::shared_lock<std::shared_mutex> lock(m_Mutex); m_Root.Print(os);                              }
        void            ForEach( lpfnForEach2 lpfn, void *pExtra1 )
-       {               std::shared_lock<std::shared_mutex> lock(m_Mutex); m_Root.ForEach(lpfn, 0, pExtra1);              }
+       {               std::lock_guard<std::shared_mutex> lock(m_Mutex); m_Root.ForEach(lpfn, 0, pExtra1);              }
        void            ForEach( lpfnForEach3 lpfn, void *pExtra1, void *pExtra2)
-       {               std::shared_lock<std::shared_mutex> lock(m_Mutex); m_Root.ForEach(lpfn, 0, pExtra1, pExtra2);     }
+       {               std::lock_guard<std::shared_mutex> lock(m_Mutex); m_Root.ForEach(lpfn, 0, pExtra1, pExtra2);     }
        ObjectInfo*     FirstThat( lpfnFirstThat2 lpfn, void *pExtra1 )
        {               std::shared_lock<std::shared_mutex> lock(m_Mutex); return m_Root.FirstThat(lpfn, 0, pExtra1);     }
        ObjectInfo*     FirstThat( lpfnFirstThat3 lpfn, void *pExtra1, void *pExtra2)
