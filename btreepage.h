@@ -139,14 +139,37 @@ class CBTreePage {
 	/// @param os The output stream.
 	void            Print  (ostream &os);
 
-	// TODO: #6 change by Invoke
-	// TODO: #7 ForEach must be a template inside this template
-	void            ForEach(lpfnForEach2 lpfn, size_t level, void *pExtra1);
-	void            ForEach(lpfnForEach3 lpfn, size_t level, void *pExtra1, void *pExtra2);
+	template <typename Trait>
+	template <typename Function, typename... Args>
+	void CBTreePage<Trait>::ForEach(Function&& function, size_t level, Args&&... args){
+		for (size_t i = 0; i < m_KeyCount; ++i) {
+			if (m_SubPages[i]) 
+				m_SubPages[i]->ForEach(std::forward<Function>(function), level + 1, std::forward<Args>(args)...);
+			
+				std::invoke(function, m_Keys[i], level, args...);
+		}
+			if (m_SubPages[m_KeyCount]) 
+				m_SubPages[m_KeyCount]->ForEach(std::forward<Function>(function), level + 1, std::forward<Args>(args)...);
+	}
 
-	// TODO: #8 You may reduce these two function by using Invoke
-	ObjectInfo*     FirstThat(lpfnFirstThat2 lpfn, size_t level, void *pExtra1);
-	ObjectInfo*     FirstThat(lpfnFirstThat3 lpfn, size_t level, void *pExtra1, void *pExtra2);
+	template <typename Trait>
+	template <typename Function, typename... Args>
+	ObjectInfo* FirstThat(Function&& pred, size_t level, Args&&... args){
+		
+		ObjectInfo* found = nullptr;
+		
+		for (size_t i = 0; i < m_KeyCount; ++i) {
+			if (m_SubPages[i]) {
+				found = m_SubPages[i]->FirstThat(std::forward<Function>(pred), level + 1, std::forward<Args>(args)...);
+				if (found) return found;
+			}
+			if (std::invoke(pred, m_Keys[i], level, args...)) 
+				return &m_Keys[i];
+		}
+		if (m_SubPages[m_KeyCount]) 
+			return m_SubPages[m_KeyCount]->FirstThat(std::forward<Function>(pred), level + 1, std::forward<Args>(args)...);
+		return nullptr;
+	}
 
 protected:
 	CompareFn	Compfn;
@@ -631,99 +654,6 @@ bool CBTreePage<Trait>::Search(const keyType &key, ObjIDType &ObjID)
 		if( m_SubPages[pos] )
 			return m_SubPages[pos]->Search(key, ObjID);
 	return false;
-}
-
-/*template <typename keyType, typename ObjIDType>
-void CBTreePage<keyType, ObjIDType>::ForEachReverse(lpfnForEach2 lpfn, size_t level, void *pExtra1)
-{
-	   if( m_SubPages[m_KeyCount] )
-		   m_SubPages[m_KeyCount]->ForEach(lpfn, level+1, pExtra1);
-	   for(size_t i = m_KeyCount-1 ; i >= 0  ; i--)
-	   {
-		   lpfn(m_Keys[i], level, pExtra1);
-		   if( m_SubPages[i] )
-			   m_SubPages[i]->ForEach(lpfn, level+1, pExtra1);
-	   }
-}*/
-
-template <typename Trait>
-void CBTreePage<Trait>::ForEach(lpfnForEach2 lpfn, size_t level, void *pExtra1)
-{
-	for(size_t i = 0 ; i < m_KeyCount ; i++)
-	{
-		if( m_SubPages[i] )
-			m_SubPages[i]->ForEach(lpfn, level+1, pExtra1);
-		lpfn(m_Keys[i], level, pExtra1);
-	}
-	if( m_SubPages[m_KeyCount] )
-		m_SubPages[m_KeyCount]->ForEach(lpfn, level+1, pExtra1);
-}
-
-/*template <typename keyType, typename ObjIDType>
-void CBTreePage<keyType, ObjIDType>::ForEachReverse(lpfnForEach3 lpfn,
-													   size_t level, void *pExtra1, void *pExtra2)
-{
-	   if( m_SubPages[m_KeyCount] )
-		   m_SubPages[m_KeyCount]->ForEach(lpfn, level+1, pExtra1, pExtra2);
-	   for(size_t i = m_KeyCount-1 ; i >= 0  ; i--)
-	   {
-		   lpfn(m_Keys[i], level, pExtra1, pExtra2);
-		   if( m_SubPages[i] )
-			   m_SubPages[i]->ForEach(lpfn, level+1, pExtra1, pExtra2);
-	   }
-}*/
-
-template <typename Trait>
-void CBTreePage<Trait>::ForEach(lpfnForEach3 lpfn, size_t level, void *pExtra1, void *pExtra2)
-{
-	for(size_t i = 0 ; i < m_KeyCount ; i++)
-	{
-		if( m_SubPages[i] )
-			m_SubPages[i]->ForEach(lpfn, level+1, pExtra1, pExtra2);
-		lpfn(m_Keys[i], level, pExtra1, pExtra2);
-	}
-	if( m_SubPages[m_KeyCount] )
-		m_SubPages[m_KeyCount]->ForEach(lpfn, level+1, pExtra1, pExtra2);
-}
-
-// Apicar una funcion hasta encontrar el 1er elemento
-// aque que retorne true ante esta funcion
-template <typename Trait>
-typename CBTreePage<Trait>::ObjectInfo *
-CBTreePage<Trait>::FirstThat(lpfnFirstThat2 lpfn, size_t level, void *pExtra1)
-{
-	ObjectInfo *pTmp;
-	for(size_t i = 0 ; i < m_KeyCount ; i++)
-	{
-		if( m_SubPages[i] )
-			if( (pTmp = m_SubPages[i]->FirstThat(lpfn, level+1, pExtra1)) )
-				return pTmp;
-		if( lpfn(m_Keys[i], level, pExtra1) )
-			return &m_Keys[i];
-	}
-	if( m_SubPages[m_KeyCount] )
-		if( (pTmp = m_SubPages[m_KeyCount]->FirstThat(lpfn, level+1, pExtra1)) )
-			return pTmp;
-	return 0;
-}
-
-template <typename Trait>
-typename CBTreePage<Trait>::ObjectInfo *
-CBTreePage<Trait>::FirstThat(lpfnFirstThat3 lpfn,size_t level, void *pExtra1, void *pExtra2)
-{
-	ObjectInfo *pTmp;
-	for(size_t i = 0 ; i < m_KeyCount ; i++)
-	{
-		if( m_SubPages[i] )
-			if( (pTmp = m_SubPages[i]->FirstThat(lpfn, level+1, pExtra1, pExtra2) ) )
-				return pTmp;
-		if( lpfn(m_Keys[i], level, pExtra1, pExtra2) )
-			return &m_Keys[i];
-	}
-	if( m_SubPages[m_KeyCount] )
-		if( (pTmp = m_SubPages[m_KeyCount]->FirstThat(lpfn, level+1, pExtra1, pExtra2) ) )
-			return pTmp;
-	return 0;
 }
 
 template <typename Trait>
