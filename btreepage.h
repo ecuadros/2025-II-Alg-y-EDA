@@ -130,7 +130,11 @@ class CBTreePage //: public SimpleIndex <keyType>
        bt_ErrorCode    Insert (const keyType &key, const ObjIDType ObjID);
        bt_ErrorCode    Remove (const keyType &key, const ObjIDType ObjID);
        bool            Search (const keyType &key, ObjIDType &ObjID);
-       void            Print  (ostream &os);
+       void            Print  (ostream &os) const;
+
+       // Serialization: preserve exact tree structure
+       std::ostream&   WriteStructure(std::ostream& os) const;  // Write page recursively
+       std::istream&   ReadStructure(std::istream& is);         // Read page recursively
 
        // TODO: #7 ForEach generalized with variadic templates (COMPLETED)
        template <typename Func, typename... Args>
@@ -765,10 +769,10 @@ void Print(tagObjectInfo<keyType, ObjIDType> &info, size_t level, void *pExtra)
 }
 
 template <typename Trait>
-void CBTreePage<Trait>::Print(ostream & os)
+void CBTreePage<Trait>::Print(ostream & os) const
 {
-       // Using the new variadic ForEach with a lambda
-       ForEach([&os](ObjectInfo& info, size_t level) {
+       // Using variadic ForEach with a lambda
+       const_cast<CBTreePage<Trait>*>(this)->ForEach([&os](ObjectInfo& info, size_t level) {
                for(size_t i = 0; i < level; i++)
                        os << "\t";
                os << info.key << "->" << info.ObjID << "\n";
@@ -821,6 +825,67 @@ void CBTreePage<Trait>::MovePage(BTPage *pChildPage, vector<ObjectInfo> &tmpKeys
        }
        tmpSubPages.push_back(pChildPage->m_SubPages[i]);
        pChildPage->clear();
+}
+
+// WriteStructure: Serialize page with complete tree structure (recursive)
+template <typename Trait>
+std::ostream& CBTreePage<Trait>::WriteStructure(std::ostream& os) const
+{
+       // Write number of keys in this page
+       os << m_KeyCount << "\n";
+       
+       // Write all key-value pairs
+       for (size_t i = 0; i < m_KeyCount; ++i) {
+               os << m_Keys[i].key << " " << m_Keys[i].ObjID << "\n";
+       }
+       
+       // Write child pages recursively (m_KeyCount + 1 children possible)
+       for (size_t i = 0; i <= m_KeyCount; ++i) {
+               if (m_SubPages[i]) {
+                       os << "1\n";  // Child exists
+                       m_SubPages[i]->WriteStructure(os);  // Recursive write
+               } else {
+                       os << "0\n";  // No child
+               }
+       }
+       
+       return os;
+}
+
+// ReadStructure: Deserialize page with complete tree structure (recursive)
+template <typename Trait>
+std::istream& CBTreePage<Trait>::ReadStructure(std::istream& is)
+{
+       // Read number of keys
+       size_t keyCount;
+       is >> keyCount;
+       
+       // Read all key-value pairs
+       for (size_t i = 0; i < keyCount; ++i) {
+               typename Trait::keyType key;
+               typename Trait::ObjIDType objID;
+               is >> key >> objID;
+               
+               m_Keys[i] = ObjectInfo(key, objID);
+       }
+       m_KeyCount = keyCount;
+       
+       // Read child pages recursively
+       for (size_t i = 0; i <= keyCount; ++i) {
+               int hasChild;
+               is >> hasChild;
+               
+               if (hasChild) {
+                       // Create new child page and read it recursively
+                       m_SubPages[i] = new BTPage(m_MaxKeysForChilds * 2 + 1, m_Unique);
+                       m_SubPages[i]->SetMaxKeysForChilds(m_MaxKeysForChilds);
+                       m_SubPages[i]->ReadStructure(is);
+               } else {
+                       m_SubPages[i] = nullptr;
+               }
+       }
+       
+       return is;
 }
 
 #endif

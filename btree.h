@@ -4,6 +4,8 @@
 #include <iostream>
 #include <functional>
 #include <utility>
+#include <fstream>
+#include <string>
 #include "btreepage.h"
 #define DEFAULT_BTREE_ORDER 3
 
@@ -92,8 +94,11 @@ public:
        size_t            height() { return m_Height;      }
        size_t            GetOrder() { return m_Order;     }
 
-       void            Print (ostream &os)
+       void            Print (ostream &os) const
        {               m_Root.Print(os);                              }
+       
+       std::ostream&   Write(std::ostream& os) const;   // Save tree to stream
+       std::istream&   Read(std::istream& is);          // Load tree from stream
        
        // Generalized ForEach with variadic templates
        template <typename Func, typename... Args>
@@ -104,6 +109,10 @@ public:
        template <typename Pred, typename... Args>
        ObjectInfo*     FirstThat(Pred&& predicate, Args&&... args)
        {               return m_Root.FirstThat(std::forward<Pred>(predicate), 0, std::forward<Args>(args)...);        }
+       
+       // operator<<
+       friend std::ostream& operator<<(std::ostream& os, const BTree<Trait>& tree)
+       {               tree.Print(os);  return os;              }
        
        //typedef               ObjectInfo iterator;
 
@@ -139,6 +148,37 @@ bool BTree<Trait>::Remove (const keyType key, const long ObjID)
        if( error == bt_rootmerged )
                m_Height--;
        return true;
+}
+
+// Write: Save BTree with complete structure to stream
+template <typename Trait>
+std::ostream& BTree<Trait>::Write(std::ostream& os) const
+{
+       // Write metadata
+       os << m_Order << " " << m_Height << " " << m_NumKeys << " " << m_Unique << "\n";
+       
+       // Write tree structure recursively
+       const_cast<BTNode&>(m_Root).WriteStructure(os);
+       
+       return os;
+}
+
+// Read: Load BTree with complete structure from stream
+template <typename Trait>
+std::istream& BTree<Trait>::Read(std::istream& is)
+{
+       // Read metadata
+       is >> m_Order >> m_Height >> m_NumKeys >> m_Unique;
+       
+       // Reinitialize tree
+       m_Root.Reset();
+       m_Root = BTNode(2 * m_Order + 1, m_Unique);
+       m_Root.SetMaxKeysForChilds(m_Order);
+       
+       // Read tree structure recursively
+       m_Root.ReadStructure(is);
+       
+       return is;
 }
 
 #endif
