@@ -13,6 +13,7 @@ struct BTreeTrait
        using keyType = _keyType;
        using ObjIDType = _ObjIDType;
        // TODO: agregar funcion de comparacion
+       using CompareFunction = std::less<keyType>;
 };
 
 template <typename Trait>
@@ -20,6 +21,7 @@ class BTree // this is the full version of the BTree
 {
        typedef typename Trait::keyType    keyType;
        typedef typename Trait::ObjIDType    ObjIDType;
+       typedef typename Trait::CompareFunction CompareFunction;
        
        typedef CBTreePage <Trait> BTNode;// useful shorthand
 
