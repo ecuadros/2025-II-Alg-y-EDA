@@ -6,6 +6,11 @@
 #include <functional>
 #include <utility>
 
+/**
+ * @file btreepage.h
+ * @brief Implementación de CBTreePage - Nodo de un árbol B
+ */
+
 // TODO: #1 Crear una function para agregarla al demo.cpp ( no trivial )
 // TODO: #2 Agregarle un Trait (prueba git) ( no trivial )
 // DONE: #3 crear un iterator ( no trivial )
@@ -20,8 +25,22 @@ template <typename Trait>
 class BTreeIterator;
 
 using namespace std;
+
+/** @brief Códigos de error para operaciones en el BTree */
 enum bt_ErrorCode {bt_ok, bt_overflow, bt_underflow, bt_duplicate, bt_nofound, bt_rootmerged};
 
+/**
+ * @brief Búsqueda binaria genérica en un contenedor
+ * @tparam Container Tipo del contenedor (debe soportar operator[])
+ * @tparam ObjType Tipo del objeto a buscar
+ * @tparam Compare Función de comparación
+ * @param container Contenedor donde buscar
+ * @param first Índice inicial
+ * @param last Índice final
+ * @param object Objeto a buscar
+ * @param comp Función de comparación
+ * @return Índice donde se encuentra o debería insertarse el objeto
+ */
 template <typename Container, typename ObjType, typename Compare = std::less<ObjType>>
 size_t binary_search(Container& container, size_t first, size_t last, ObjType &object, Compare comp = Compare())
 {
@@ -42,8 +61,14 @@ size_t binary_search(Container& container, size_t first, size_t last, ObjType &o
        return last;
 }
 
-// Error al poner size_t
-// Posible motivo: El i está disminuyendo
+/**
+ * @brief Inserta un elemento en una posición específica del contenedor
+ * @tparam Container Tipo del contenedor
+ * @tparam ObjType Tipo del objeto a insertar
+ * @param container Contenedor donde insertar
+ * @param object Objeto a insertar
+ * @param pos Posición donde insertar
+ */
 template <typename Container, typename ObjType>
 void insert_at(Container& container, ObjType object, int pos)
 {
@@ -54,6 +79,12 @@ void insert_at(Container& container, ObjType object, int pos)
        container[pos] =  object;	
 }
 
+/**
+ * @brief Elimina un elemento de una posición específica del contenedor
+ * @tparam Container Tipo del contenedor
+ * @param container Contenedor donde eliminar
+ * @param pos Posición del elemento a eliminar
+ */
 template <typename Container>
 void remove(Container& container, size_t pos)
 {
@@ -62,18 +93,33 @@ void remove(Container& container, size_t pos)
            container[i-1] = container[i];
 }
 
+/**
+ * @brief Estructura que almacena información de un objeto en el BTree
+ * @tparam keyType Tipo de la clave
+ * @tparam ObjIDType Tipo del identificador del objeto
+ */
 template <typename keyType, typename ObjIDType>
 struct tagObjectInfo
 {
-       keyType                 key;
-       ObjIDType               ObjID;
-       size_t                    UseCounter;
+       keyType                 key;        ///< Clave del objeto
+       ObjIDType               ObjID;      ///< Identificador del objeto
+       size_t                  UseCounter; ///< Contador de uso
+       
+       /** @brief Constructor con clave y ObjID */
        tagObjectInfo(const keyType     &_key, ObjIDType _ObjID)
                : key(_key), ObjID(_ObjID), UseCounter(0) {}
+       
+       /** @brief Constructor de copia */
        tagObjectInfo(const tagObjectInfo &objInfo)
                : key(objInfo.key), ObjID(objInfo.ObjID), UseCounter(0) {}
+       
+       /** @brief Constructor por defecto */
        tagObjectInfo()                          {}
+       
+       /** @brief Conversión implícita a keyType */
        operator keyType                         ()     { return key; }
+       
+       /** @brief Retorna el contador de uso */
        size_t                    GetUseCounter() { return UseCounter;    }
 };
 
@@ -81,6 +127,18 @@ struct tagObjectInfo
 template <typename Trait> class BTree;
 template <typename Trait> class BTreeIterator;
 
+/**
+ * @brief Página (nodo) de un árbol B - versión en memoria
+ * 
+ * Esta clase representa un nodo individual en el árbol B, conteniendo:
+ * - Array de claves ordenadas
+ * - Array de punteros a nodos hijos
+ * - Puntero al nodo padre
+ * - Soporte para duplicados opcionales
+ * 
+ * @tparam Trait Trait que define keyType, ObjIDType y Compare
+ * 
+ */
 template <typename Trait>
 class CBTreePage //: public SimpleIndex <keyType>
 // this is the in-memory version of the CBTreePage
@@ -96,10 +154,20 @@ class CBTreePage //: public SimpleIndex <keyType>
        typedef tagObjectInfo<keyType, ObjIDType> ObjectInfo;
 
  public:
+       /**
+        * @brief Constructor de la página
+        * @param maxKeys Número máximo de claves que puede contener
+        * @param unique Si true, no permite claves duplicadas
+        */
        CBTreePage(size_t maxKeys, bool unique = true);
+       
+       /** @brief Destructor virtual */
        virtual ~CBTreePage();
        
-       // Move constructor: transfers page resources efficiently
+       /**
+        * @brief Constructor de movimiento: transfiere recursos eficientemente
+        * @param other Página a mover (queda en estado válido pero vacío)
+        */
        CBTreePage(CBTreePage&& other) noexcept 
               : m_MinKeys(other.m_MinKeys),
                 m_MaxKeys(other.m_MaxKeys),
@@ -108,15 +176,18 @@ class CBTreePage //: public SimpleIndex <keyType>
                 m_isRoot(other.m_isRoot),
                 m_Keys(std::move(other.m_Keys)),
                 m_SubPages(std::move(other.m_SubPages)),
-                m_Parent(other.m_Parent),
+                m_Parent(std::exchange(other.m_Parent, nullptr)),  // Transfiere y resetea a nullptr
                 m_Compare(std::move(other.m_Compare)),
-                m_KeyCount(other.m_KeyCount)
+                m_KeyCount(std::exchange(other.m_KeyCount, 0))     // Transfiere y resetea a 0
        {
-              other.m_Parent = nullptr; // Leave source in valid state
-              other.m_KeyCount = 0; // Leave source in valid state
+              //
        }
        
-       // Move assignment: transfers to existing page
+       /**
+        * @brief Asignación por movimiento: transfiere a página existente
+        * @param other Página a mover
+        * @return Referencia a esta página
+        */
        CBTreePage& operator=(CBTreePage&& other) noexcept 
        {
               if (this != &other)
@@ -130,12 +201,9 @@ class CBTreePage //: public SimpleIndex <keyType>
                      m_isRoot = other.m_isRoot;
                      m_Keys = std::move(other.m_Keys);
                      m_SubPages = std::move(other.m_SubPages);
-                     m_Parent = other.m_Parent;
+                     m_Parent = std::exchange(other.m_Parent, nullptr);  // Transfiere y resetea
                      m_Compare = std::move(other.m_Compare);
-                     m_KeyCount = other.m_KeyCount;
-                     
-                     other.m_Parent = nullptr; // Leave source in valid state
-                     other.m_KeyCount = 0;
+                     m_KeyCount = std::exchange(other.m_KeyCount, 0);    // Transfiere y resetea
               }
               return *this;
        }
