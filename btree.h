@@ -1,9 +1,11 @@
 #ifndef __BTREE_H__
 #define __BTREE_H__
 
+#include <shared_mutex>
 #include <iostream>
 #include <utility>
-#include <iterator> // Necesario para std::reverse_iterator
+#include <mutex> 
+#include <iterator>
 #include <fstream>
 #include "btreepage.h"
 #define DEFAULT_BTREE_ORDER 3
@@ -161,30 +163,42 @@ public:
        bool            Insert (const keyType key, const ObjIDType ObjID);
        bool            Remove (const keyType key, const ObjIDType ObjID);
        ObjIDType       Search (const keyType key)
-       {      ObjIDType ObjID = -1;
+       {      
+              std::lock_guard<std::shared_mutex> lock(m_Mutex);
+              ObjIDType ObjID = -1;
               m_Root.Search(key, ObjID);
               return ObjID;
        }
-       size_t            size()  { return m_NumKeys; }
-       size_t            height() { return m_Height;      }
-       size_t            GetOrder() { return m_Order;     }
+       size_t            size()  const { std::shared_lock<std::shared_mutex> lock(m_Mutex); return m_NumKeys; }
+       size_t            height() const { std::shared_lock<std::shared_mutex> lock(m_Mutex); return m_Height;      }
+       size_t            GetOrder() const { std::shared_lock<std::shared_mutex> lock(m_Mutex); return m_Order;     }
 
-       void            Print (ostream &os)
-       {               m_Root.Print(os);                              }
+       void            Print (ostream &os) const
+       {               
+              std::shared_lock<std::shared_mutex> lock(m_Mutex);
+              m_Root.Print(os);
+       }
 
        iterator begin() {
+              std::lock_guard<std::shared_mutex> lock(m_Mutex);
               BTNode* pNode = &m_Root;
-              if (pNode->m_KeyCount == 0) { // el arbol esta vacio
+              if (pNode->m_KeyCount == 0) { 
                   return iterator(this, nullptr, 0); // Retorna end()
               }
-              while (pNode->m_SubPages[0] != nullptr) { // Bajo al nodo mas a la izquierda
+              while (pNode->m_SubPages[0] != nullptr) { 
                      pNode = pNode->m_SubPages[0];
               }
               return iterator(this, pNode, 0);
        }
-       iterator end() { return iterator(this, nullptr, 0); }
+       iterator end() { 
+              // iterador "nulo" constante.
+              return iterator(this, nullptr, 0); 
+       }
 
-       reverse_iterator rbegin() { return reverse_iterator(end()); }
+       reverse_iterator rbegin() { 
+              std::lock_guard<std::shared_mutex> lock(m_Mutex);
+              return reverse_iterator(end()); 
+       }
        reverse_iterator rend() { return reverse_iterator(begin()); }
 
 
@@ -203,10 +217,12 @@ protected:
        size_t          m_Order;   // order of tree
        size_t          m_NumKeys; // number of keys
        bool            m_Unique;  // Accept the elements only once ?
+       mutable std::shared_mutex m_Mutex; // Mutex de lectura-escritura
 };     
 
 template <typename Trait>
 bool BTree<Trait>::Insert(const keyType key, const ObjIDType ObjID){
+       std::lock_guard<std::shared_mutex> lock(m_Mutex);
        bt_ErrorCode error = m_Root.Insert(key, ObjID);
        if( error == bt_duplicate )
                return false;
@@ -220,6 +236,7 @@ bool BTree<Trait>::Insert(const keyType key, const ObjIDType ObjID){
 
 template <typename Trait>
 void BTree<Trait>::Write(ostream& os) {
+    std::lock_guard<std::shared_mutex> lock(m_Mutex);
     os << m_Order << "\n";
     os << m_Unique << "\n";
     os << m_NumKeys << "\n";
@@ -229,6 +246,7 @@ void BTree<Trait>::Write(ostream& os) {
 
 template <typename Trait>
 void BTree<Trait>::Read(istream& is) {
+    std::lock_guard<std::shared_mutex> lock(m_Mutex);
     is >> m_Order >> m_Unique >> m_NumKeys >> m_Height;
 
     m_Root.m_MaxKeys = 2 * m_Order + 1;
@@ -241,6 +259,7 @@ void BTree<Trait>::Read(istream& is) {
 template <typename Trait>
 bool BTree<Trait>::Remove (const keyType key, const ObjIDType ObjID)
 {
+       std::lock_guard<std::shared_mutex> lock(m_Mutex);
        bt_ErrorCode error = m_Root.Remove(key, ObjID);
        if( error == bt_duplicate || error == bt_nofound )
                return false;
@@ -252,7 +271,7 @@ bool BTree<Trait>::Remove (const keyType key, const ObjIDType ObjID)
 }
 
 template <typename Trait>
-std::ostream& operator<<(std::ostream& os, BTree<Trait>& tree) {
+std::ostream& operator<<(std::ostream& os, const BTree<Trait>& tree) {
     tree.Print(os);
     return os;
 }

@@ -82,7 +82,6 @@ int main (int argc, char ** argv){
     cout << "------------------------------------------\n" << endl;
     cout << "\n--- Probando iteradores ---" << endl;
     
-    string iterated_keys;
     cout << "Recorriendo el arbol 'bt' con iteradores..." << endl;
     for (auto it = bt.begin(); it != bt.end(); ++it) {
         cout << (*it).key;

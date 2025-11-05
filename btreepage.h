@@ -93,17 +93,17 @@ class CBTreePage //: public SimpleIndex <keyType>
        bt_ErrorCode    Insert (const keyType &key, const ObjIDType ObjID);
        bt_ErrorCode    Remove (const keyType &key, const ObjIDType ObjID);
        bool            Search (const keyType &key, ObjIDType &ObjID);
-       void            Print  (ostream &os);
-       void            Write(ostream& os);
+       void            Print  (ostream &os) const;
+       void            Write(ostream& os) const;
        void            Read(istream& is);
 
        
        // TODO #6, #7, #8: Generalizado con plantillas variádicas y std::invoke (DONE)
        template<typename Func, typename... Args>
-       void ForEach(size_t level, Func&& func, Args&&... args);
+       void ForEach(size_t level, Func&& func, Args&&... args) const;
 
        template<typename Func, typename... Args>
-       ObjectInfo* FirstThat(size_t level, Func&& func, Args&&... args);
+       ObjectInfo* FirstThat(size_t level, Func&& func, Args&&... args) const;
 
 protected:
        // TODO: #9 change by size_t (DONE)
@@ -548,7 +548,7 @@ void CBTreePage<keyType, ObjIDType>::ForEachReverse(lpfnForEach2 lpfn, size_t le
 
 template <typename Trait>
 template<typename Func, typename... Args>
-void CBTreePage<Trait>::ForEach(size_t level, Func&& func, Args&&... args) {
+void CBTreePage<Trait>::ForEach(size_t level, Func&& func, Args&&... args) const {
     for (size_t i = 0; i < m_KeyCount; i++) {
         if (m_SubPages[i]) {
             m_SubPages[i]->ForEach(level + 1, std::forward<Func>(func), std::forward<Args>(args)...);
@@ -564,8 +564,8 @@ void CBTreePage<Trait>::ForEach(size_t level, Func&& func, Args&&... args) {
 // aque que retorne true ante esta funcion
 template <typename Trait>
 template<typename Func, typename... Args>
-typename CBTreePage<Trait>::ObjectInfo*
-CBTreePage<Trait>::FirstThat(size_t level, Func&& func, Args&&... args) {
+typename CBTreePage<Trait>::ObjectInfo* CBTreePage<Trait>::FirstThat(size_t level, Func&& func, Args&&... args) const
+{
     ObjectInfo* pTmp = nullptr;
     for (size_t i = 0; i < m_KeyCount; i++) {
         if (m_SubPages[i]) {
@@ -751,7 +751,7 @@ CBTreePage<Trait>::GetFirstObjectInfo()
 }
 
 template <typename keyType, typename ObjIDType>
-void Print(tagObjectInfo<keyType, ObjIDType> &info, size_t level, void *pExtra)
+void Print(const tagObjectInfo<keyType, ObjIDType> &info, size_t level, void *pExtra)
 {
        ostream &os = *(ostream *)pExtra;
        for(size_t i = 0; i < level ; i++)
@@ -760,7 +760,7 @@ void Print(tagObjectInfo<keyType, ObjIDType> &info, size_t level, void *pExtra)
 }
 
 template <typename Trait>
-void CBTreePage<Trait>::Print(ostream & os)
+void CBTreePage<Trait>::Print(ostream & os) const
 {
        ForEach(0, &::Print<keyType, ObjIDType>, &os);
 }
@@ -814,7 +814,7 @@ void CBTreePage<Trait>::MovePage(BTPage *pChildPage, vector<ObjectInfo> &tmpKeys
 }
 
 template <typename Trait>
-void CBTreePage<Trait>::Write(ostream& os) {
+void CBTreePage<Trait>::Write(ostream& os) const {
     bool is_leaf = (m_SubPages[0] == nullptr);
     os << m_KeyCount << " " << is_leaf << "\n";
 
