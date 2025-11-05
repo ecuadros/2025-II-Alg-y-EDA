@@ -17,14 +17,14 @@ const size_t MaxHeight = 5;
  * @tparam _keyType Tipo de las claves.
  * @tparam _ObjIDType Tipo del identificador de objeto.
  */
-template <typename _keyType, typename _ObjIDType>
+template <typename _keyType, typename _ObjIDType, typename _CompareFunction = std::less<_keyType>>
 struct BTreeTrait
 {
     using keyType = _keyType; ///< Tipo de las claves.
     using ObjIDType = _ObjIDType; ///< Tipo de los identificadores de objeto.
     
     // TODO: agregar función de comparación
-    using CompareFunction = std::less<keyType>; ///< Función de comparación predeterminada (menor que).
+    using CompareFunction = _CompareFunction;
 };
 
 /**
@@ -74,7 +74,7 @@ public:
      * @param ObjID El identificador de objeto asociado con la clave.
      * @return `true` si la inserción fue exitosa, `false` si hubo un error (como duplicados).
      */
-    bool Insert(const keyType key, const long ObjID);
+    bool Insert(const keyType key, const ObjIDType ObjID);
 
     /**
      * @brief Elimina una clave del árbol B.
@@ -85,7 +85,7 @@ public:
      * @param ObjID El identificador de objeto asociado con la clave.
      * @return `true` si la eliminación fue exitosa, `false` si hubo un error (como que la clave no fue encontrada).
      */
-    bool Remove(const keyType key, const long ObjID);
+    bool Remove(const keyType key, const ObjIDType ObjID);
 
     /**
      * @brief Busca una clave en el árbol B.
@@ -97,7 +97,7 @@ public:
      */
     ObjIDType Search(const keyType key)
     {
-        ObjIDType ObjID = -1;
+        ObjIDType ObjID = ObjIDType();
         m_Root.Search(key, ObjID);
         return ObjID;
     }
@@ -199,7 +199,7 @@ protected:
  * @return `true` si la inserción fue exitosa, `false` si hubo un error.
  */
 template <typename Trait>
-bool BTree<Trait>::Insert(const keyType key, const long ObjID)
+bool BTree<Trait>::Insert(const keyType key, const ObjIDType ObjID)
 {
     bt_ErrorCode error = m_Root.Insert(key, ObjID);
     if (error == bt_duplicate)
@@ -222,7 +222,7 @@ bool BTree<Trait>::Insert(const keyType key, const long ObjID)
  * @return `true` si la eliminación fue exitosa, `false` si hubo un error.
  */
 template <typename Trait>
-bool BTree<Trait>::Remove(const keyType key, const long ObjID)
+bool BTree<Trait>::Remove(const keyType key, const ObjIDType ObjID)
 {
     bt_ErrorCode error = m_Root.Remove(key, ObjID);
     if (error == bt_duplicate || error == bt_nofound)
@@ -241,6 +241,34 @@ bool BTree<Trait>::Remove(const keyType key, const long ObjID)
  * @param os El flujo de salida.
  * @return El flujo de salida.
  */
+
+
+ template <typename Trait>
+std::ostream& BTree<Trait>::Write(std::ostream &os) {
+    // Cabecera 
+    os << "BTree " << m_Order << " " << m_Height << " " << m_NumKeys << " " << m_Unique << "\n";
+    
+    // Escribimos la raíz
+    m_Root.Write(os);
+    
+    return os;
+}
+
+template <typename Trait>
+std::istream& BTree<Trait>::Read(std::istream &is) {
+    std::string tag;
+    is >> tag; // leemos la cabecera 
+    
+    if(tag == "BTree") {
+        is >> m_Order >> m_Height >> m_NumKeys >> m_Unique;
+        
+        // Leemos la raíz
+        m_Root.Read(is);
+    }
+    
+    return is;
+}
+
 template <typename Trait>
 std::ostream& BTree<Trait>::WriteBinaryTreeFormat(std::ostream& os)
 {

@@ -338,7 +338,7 @@ private:
 
 template <typename Trait>
 CBTreePage<Trait>:: CBTreePage(size_t maxKeys, bool unique)
-                               : m_MaxKeys(maxKeys), m_Unique(unique), m_KeyCount(0)
+                               : m_MaxKeys(maxKeys), m_Unique(unique), m_KeyCount(0), m_Compare(CompareFunction())
 {
        Create();
        SetMaxKeysForChilds(m_MaxKeys);
