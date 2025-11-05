@@ -28,6 +28,125 @@ class BTree // this is the full version of the BTree
 
 public:
        typedef typename BTNode::ObjectInfo      ObjectInfo;
+
+       class BTreeIterator {
+       public:
+              using iterator_category = std::bidirectional_iterator_tag;
+              using value_type = ObjectInfo;
+              using pointer = ObjectInfo*;
+              using reference = ObjectInfo&;
+
+              BTreeIterator(BTNode* pNode = nullptr, size_t keyIndex = 0)
+                     : m_pNode(pNode), m_keyIndex(keyIndex) {}
+              BTreeIterator(BTree* pTree = nullptr, BTNode* pNode = nullptr, size_t keyIndex = 0)
+                     : m_pTree(pTree), m_pNode(pNode), m_keyIndex(keyIndex) {}
+
+              reference operator*() const { return m_pNode->m_Keys[m_keyIndex]; }
+              pointer operator->() const { return &m_pNode->m_Keys[m_keyIndex]; }
+
+              BTreeIterator& operator++() { // Pre-incremento
+                     // 1. Intentar avanzar al siguiente elemento en el mismo nodo
+                     if (m_keyIndex + 1 < m_pNode->m_KeyCount) {
+                            m_keyIndex++;
+                            return *this;
+                     }
+                     if (!m_pNode) return *this; // Ya estamos en end()
+
+                     // 2. Si no hay más claves, buscar el sucesor en orden
+                     // El sucesor es el elemento más a la izquierda del subárbol derecho
+                     BTNode* pNode = m_pNode->m_SubPages[m_keyIndex + 1];
+                     if (pNode) {
+                            while (pNode->m_SubPages[0]) {
+                                   pNode = pNode->m_SubPages[0];
+                     keyType currentKey = m_pNode->m_Keys[m_keyIndex].key;
+
+                     // Usamos FirstThat para encontrar el siguiente elemento en orden
+                     ObjectInfo* pNextInfo = m_pTree->FirstThat(0, 
+                            [this, &currentKey](const ObjectInfo& info, size_t level) {
+                                   return this->m_pTree->m_Root.m_Compare(currentKey, info.key); // currentKey < info.key
+                            });
+
+                     if (pNextInfo) {
+                            // Encontramos el siguiente. Ahora necesitamos encontrar su nodo y su índice.
+                            // Esta parte es compleja sin un mapa inverso. Por simplicidad,
+                            // por ahora solo actualizamos el puntero. Una implementación más robusta
+                            // necesitaría una forma de localizar el nodo del ObjectInfo.
+                            // Para esta demo, el concepto es lo importante.
+                            // La lógica manual con punteros al padre es más eficiente si se implementa correctamente.
+                            // Pero para demostrar la reutilización, esta es la idea.
+                            // Vamos a revertir a la lógica manual corregida, que es más performante.
+
+                            // Lógica manual correcta:
+                            // 1. Ir al subárbol derecho y encontrar el elemento más a la izquierda
+                            BTNode* pCursor = m_pNode->m_SubPages[m_keyIndex + 1];
+                            if (pCursor) {
+                                   while (pCursor->m_SubPages[0]) {
+                                          pCursor = pCursor->m_SubPages[0];
+                                   }
+                                   m_pNode = pCursor;
+                                   m_keyIndex = 0;
+                            } else {
+                                   // 2. Si no hay subárbol derecho, subir hasta que ya no seamos un hijo derecho
+                                   BTNode* pCurrent = m_pNode;
+                                   m_pNode = m_pNode->m_pParent;
+                                   while (m_pNode && m_pNode->m_SubPages[m_pNode->m_KeyCount] == pCurrent) {
+                                          pCurrent = m_pNode;
+                                          m_pNode = m_pNode->m_pParent;
+                                   }
+                                   if (m_pNode) {
+                                          // Encontrar la clave en el padre que nos corresponde
+                                          m_keyIndex = binary_search(m_pNode->m_Keys, 0, m_pNode->m_KeyCount, pCurrent->m_Keys[0].key, m_pNode->m_Compare);
+                                   }
+                            }
+                            m_pNode = pNode;
+                            m_keyIndex = 0; // El primer elemento del nodo más a la izquierda
+                            return *this;
+                     } else {
+                            m_pNode = nullptr; // No hay más elementos, llegamos a end()
+                     }
+
+                     // 3. Si no hay subárbol derecho, subir hasta encontrar un ancestro
+                     // que no sea un hijo derecho.
+                     BTNode* pCurrent = m_pNode;
+                     BTNode* pParent = pCurrent->m_pParent;
+                     while (pParent && pParent->m_SubPages[pParent->m_KeyCount] == pCurrent) {
+                            pCurrent = pParent;
+                            pParent = pParent->m_pParent;
+                     }
+                     m_pNode = pParent; // Si pParent es null, hemos llegado al final (end())
+                     return *this;
+              }
+
+              BTreeIterator& operator--() { // Pre-decremento
+                     BTNode* prevNode = m_pNode->m_SubPages[m_keyIndex];
+                     if (prevNode) {
+                            while (prevNode->m_SubPages[prevNode->m_KeyCount]) {
+                                   prevNode = prevNode->m_SubPages[prevNode->m_KeyCount];
+                            }
+                            m_pNode = prevNode;
+                            m_keyIndex = prevNode->m_KeyCount - 1;
+                     } else {
+                            BTNode* pCurrent = m_pNode;
+                            BTNode* pParent = pCurrent->m_pParent;
+                            while (pParent && pParent->m_SubPages[0] == pCurrent) {
+                                   pCurrent = pParent;
+                                   pParent = pParent->m_pParent;
+                            }
+                            m_pNode = pParent; // Si es null, es el final (rend)
+                     }
+                     // Lógica para el decremento (similarmente compleja)
+                     return *this;
+              }
+
+              bool operator==(const BTreeIterator& other) const { return m_pNode == other.m_pNode && m_keyIndex == other.m_keyIndex; }
+              bool operator!=(const BTreeIterator& other) const { return !(*this == other); }
+
+       private:
+              BTree*  m_pTree;
+              BTNode* m_pNode;
+              size_t m_keyIndex;
+       };
+
 public:
        BTree(size_t order = DEFAULT_BTREE_ORDER, bool unique = true)
               : m_Root(2 * order  + 1, unique),
@@ -40,12 +159,12 @@ public:
        }
        BTree(BTree&& other) noexcept
               : m_Root(std::move(other.m_Root)),
-                m_Height(std::exchange(other.m_Height, 0)),
+                m_Height(std::exchange(other.m_Height, 1)),
                 m_Order(std::exchange(other.m_Order, 0)),
                 m_NumKeys(std::exchange(other.m_NumKeys, 0)),
                 m_Unique(std::exchange(other.m_Unique, false))
        {
-              
+
        }
        ~BTree() {}
        //int           Open (char * name, int mode);
@@ -67,6 +186,19 @@ public:
 
        void            Print (ostream &os)
        {               m_Root.Print(os);                              }
+
+       BTreeIterator begin() {
+              BTNode* pNode = &m_Root;
+              while (pNode && pNode->m_SubPages[0]) {
+                     pNode = pNode->m_SubPages[0];
+              }
+              return BTreeIterator(pNode, 0);
+       }
+       BTreeIterator end() { return BTreeIterator(nullptr); }
+
+       BTreeIterator rbegin() { /* ... implementación para el iterador reverso ... */ }
+       BTreeIterator rend() { /* ... implementación para el iterador reverso ... */ }
+
 
        template<typename Func, typename... Args>
        void ForEach(size_t level, Func&& func, Args&&... args) {
@@ -100,22 +232,21 @@ bool BTree<Trait>::Insert(const keyType key, const ObjIDType ObjID){
 
 template <typename Trait>
 void BTree<Trait>::Write(ostream& os) {
-    os.write(reinterpret_cast<const char*>(&m_Order), sizeof(m_Order));
-    os.write(reinterpret_cast<const char*>(&m_Unique), sizeof(m_Unique));
-    os.write(reinterpret_cast<const char*>(&m_NumKeys), sizeof(m_NumKeys));
-    os.write(reinterpret_cast<const char*>(&m_Height), sizeof(m_Height));
+    os << m_Order << "\n";
+    os << m_Unique << "\n";
+    os << m_NumKeys << "\n";
+    os << m_Height << "\n";
     m_Root.Write(os);
 }
 
 template <typename Trait>
 void BTree<Trait>::Read(istream& is) {
-    is.read(reinterpret_cast<char*>(&m_Order), sizeof(m_Order));
-    is.read(reinterpret_cast<char*>(&m_Unique), sizeof(m_Unique));
-    is.read(reinterpret_cast<char*>(&m_NumKeys), sizeof(m_NumKeys));
-    is.read(reinterpret_cast<char*>(&m_Height), sizeof(m_Height));
+    is >> m_Order >> m_Unique >> m_NumKeys >> m_Height;
+
     m_Root.m_MaxKeys = 2 * m_Order + 1;
     m_Root.m_Unique = m_Unique;
     m_Root.Create();
+
     m_Root.Read(is);
 }
 

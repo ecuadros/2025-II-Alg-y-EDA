@@ -59,26 +59,33 @@ int main (int argc, char ** argv){
         }
     });
     cout << "\n--- Probando Write y Read ---" << endl;
-    {
-        // Write
-        cout << "Guardando el arbol 'bt' en 'btree.dat'..." << endl;
-        ofstream outFile("btree.dat", ios::binary);
-        if (outFile) {
-            bt.Write(outFile);
-            outFile.close();
-            cout << "Guardado con exito" << endl;
-        }
+    // Write
+    cout << "Guardando el arbol 'bt' en 'btree.dat'..." << endl;
+    ofstream outFile("btree.txt");
+    if (outFile) {
+        bt.Write(outFile);
+        outFile.close();
+        cout << "Guardado con exito" << endl;
+    }
 
-        // Read
-        BTree<BTreeTrait<char, int>> bt_loaded(BTreeSize);
-        cout << "Cargando desde 'btree.dat' a 'bt_loaded' " << endl;
-        ifstream inFile("btree.dat", ios::binary);
-        if (inFile) {
-            bt_loaded.Read(inFile);
-            inFile.close();
-            cout << "Cargado con exito:" << endl;
-            cout << bt_loaded;
-        }
+    // Read
+    BTree<BTreeTrait<char, int>> bt_loaded(BTreeSize);
+    cout << "Cargando desde 'btree.txt' a 'bt_loaded' " << endl;
+    ifstream inFile("btree.txt");
+    if (inFile) {
+        bt_loaded.Read(inFile);
+        inFile.close();
+        cout << "Cargado con exito:" << endl;
+        cout << bt_loaded;
+        
+    }
+    cout << "------------------------------------------\n" << endl;
+    cout << "\n--- Probando iteradores ---" << endl;
+    
+    string iterated_keys;
+    cout << "Recorriendo el arbol 'bt' con iteradores..." << endl;
+    for (auto it = bt.begin(); it != bt.end(); ++it) {
+        iterated_keys += (*it).key;
     }
     cout << "------------------------------------------\n" << endl;
 

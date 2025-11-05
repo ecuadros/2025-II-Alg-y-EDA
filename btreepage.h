@@ -117,6 +117,7 @@ protected:
        //size_t RecAddr; // address of this node in the BTree file
        vector<ObjectInfo> m_Keys;
        vector<BTPage *>m_SubPages;
+       BTPage* m_pParent = nullptr;
        Compare m_Compare;
        
        // TODO: #10 size_t (DONE)
@@ -152,6 +153,7 @@ protected:
        bool IsRoot()  { return m_MaxKeysForChilds != m_MaxKeys; }
        void SetMaxKeysForChilds(size_t orderforchilds)
        {        m_MaxKeysForChilds = orderforchilds;       }
+       void SetParent(BTPage* pParent) { m_pParent = pParent; }
        size_t GetFreeCellsOnLeft(size_t pos)
        {        if( pos > 0 )                                   // there is some page on left ?
                         return m_SubPages[pos-1]->GetFreeCells();
@@ -230,7 +232,8 @@ CBTreePage<Trait>::CBTreePage(CBTreePage&& other) noexcept
       m_Keys(std::move(other.m_Keys)),
       m_SubPages(std::move(other.m_SubPages)),
       m_Compare(std::move(other.m_Compare)),
-      m_KeyCount(other.m_KeyCount)
+      m_KeyCount(other.m_KeyCount),
+      m_pParent(other.m_pParent)
 {
     other.m_KeyCount = 0;
 }
@@ -407,6 +410,7 @@ void CBTreePage<Trait>::SplitChild(size_t pos)
        // copy the first element to the root
        m_Keys    [pos] = oi1;
        m_SubPages[pos] = pChild1;
+       pChild1->SetParent(this);
 
        // copy the second element to the root
        ::insert_at(m_Keys, oi2, pos+1);
@@ -414,6 +418,8 @@ void CBTreePage<Trait>::SplitChild(size_t pos)
        NumberOfKeys()++;
 
        m_SubPages[pos+2] = pChild3;
+       pChild2->SetParent(this);
+       pChild3->SetParent(this);
 }
 
 // Ddivide a large page into 3 pages (2m/3 each one)
@@ -430,6 +436,7 @@ void CBTreePage<Trait>::SplitPageInto3(vector<ObjectInfo>& tmpKeys,
        assert(tmpSubPages.size() >= 9);
        if( !pChild1 )
                pChild1 = new BTPage(m_MaxKeysForChilds, m_Unique);
+       pChild1->SetParent(this);
 
        // Split tmpKeys page into 3 pages
        // copy 1/3 elements to the first child
@@ -449,6 +456,7 @@ void CBTreePage<Trait>::SplitPageInto3(vector<ObjectInfo>& tmpKeys,
 
        if( !pChild2 )
                pChild2 = new BTPage(m_MaxKeysForChilds, m_Unique);
+       pChild2->SetParent(this);
        pChild2->clear();
        // copy 1/3 to the second child
        nKeys += (tmpKeys.size()-2)/3 + 1;
@@ -467,6 +475,7 @@ void CBTreePage<Trait>::SplitPageInto3(vector<ObjectInfo>& tmpKeys,
        // copy 1/3 to the third child
        if( !pChild3 )
                pChild3 = new BTPage(m_MaxKeysForChilds, m_Unique);
+       pChild3->SetParent(this);
        pChild3->clear();
        nKeys = tmpKeys.size();
        for(j = 0; i < nKeys; i++, j++)
@@ -488,14 +497,17 @@ bool CBTreePage<Trait>::SplitRoot(){
        // copy the first element to the root
        m_Keys    [0] = oi1;
        m_SubPages[0] = pChild1;
+       pChild1->SetParent(this);
        NumberOfKeys()++;
 
        // copy the second element to the root
        m_Keys    [1] = oi2;
        m_SubPages[1] = pChild2;
+       pChild2->SetParent(this);
        NumberOfKeys()++;
 
        m_SubPages[2] = pChild3;
+       pChild3->SetParent(this);
        return true;
 }
 
@@ -803,14 +815,13 @@ void CBTreePage<Trait>::MovePage(BTPage *pChildPage, vector<ObjectInfo> &tmpKeys
 
 template <typename Trait>
 void CBTreePage<Trait>::Write(ostream& os) {
-    os.write(reinterpret_cast<const char*>(&m_KeyCount), sizeof(m_KeyCount));
+    bool is_leaf = (m_SubPages[0] == nullptr);
+    os << m_KeyCount << " " << is_leaf << "\n";
 
     for (size_t i = 0; i < m_KeyCount; ++i) {
-        os.write(reinterpret_cast<const char*>(&m_Keys[i]), sizeof(ObjectInfo));
+        os << m_Keys[i].key << " " << m_Keys[i].ObjID << " ";
     }
-
-    bool is_leaf = (m_SubPages[0] == nullptr);
-    os.write(reinterpret_cast<const char*>(&is_leaf), sizeof(is_leaf));
+    os << "\n";
 
     if (!is_leaf) {
         for (size_t i = 0; i <= m_KeyCount; ++i) {
@@ -821,18 +832,17 @@ void CBTreePage<Trait>::Write(ostream& os) {
 
 template <typename Trait>
 void CBTreePage<Trait>::Read(istream& is) {
-    is.read(reinterpret_cast<char*>(&m_KeyCount), sizeof(m_KeyCount));
+    bool is_leaf;
+    is >> m_KeyCount >> is_leaf;
 
     for (size_t i = 0; i < m_KeyCount; ++i) {
-        is.read(reinterpret_cast<char*>(&m_Keys[i]), sizeof(ObjectInfo));
+        is >> m_Keys[i].key >> m_Keys[i].ObjID;
     }
-
-    bool is_leaf;
-    is.read(reinterpret_cast<char*>(&is_leaf), sizeof(is_leaf));
 
     if (!is_leaf) {
         for (size_t i = 0; i <= m_KeyCount; ++i) {
             m_SubPages[i] = new BTPage(m_MaxKeysForChilds, m_Unique);
+            m_SubPages[i]->SetParent(this);
             m_SubPages[i]->Read(is);
         }
     }

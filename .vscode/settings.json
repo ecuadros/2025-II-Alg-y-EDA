@@ -18,6 +18,8 @@
         "list": "cpp",
         "xhash": "cpp",
         "xstring": "cpp",
-        "xutility": "cpp"
+        "xutility": "cpp",
+        "xmemory": "cpp",
+        "iostream": "cpp"
     }
 }
