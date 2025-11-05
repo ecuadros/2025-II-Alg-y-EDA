@@ -2,6 +2,8 @@
 #define __BTREE_H__
 
 #include <iostream>
+#include <mutex>
+#include <shared_mutex>
 #include "btreepage.h"
 #define DEFAULT_BTREE_ORDER 3
 
@@ -93,26 +95,47 @@ public:
        bool            Insert (const keyType key, const long ObjID);
        bool            Remove (const keyType key, const long ObjID);
        ObjIDType       Search (const keyType key)
-       {      ObjIDType ObjID = -1;
+       {
+              std::shared_lock<std::shared_mutex> lock(m_Mutex);
+              ObjIDType ObjID = -1;
               m_Root.Search(key, ObjID);
               return ObjID;
        }
-       size_t            size()  { return m_NumKeys; }
-       size_t            height() { return m_Height;      }
-       size_t            GetOrder() { return m_Order;     }
+       size_t            size()  {
+              std::shared_lock<std::shared_mutex> lock(m_Mutex);
+              return m_NumKeys;
+       }
+       size_t            height() {
+              std::shared_lock<std::shared_mutex> lock(m_Mutex);
+              return m_Height;
+       }
+       size_t            GetOrder() {
+              std::shared_lock<std::shared_mutex> lock(m_Mutex);
+              return m_Order;
+       }
 
        void            Print (ostream &os)
-       {               m_Root.Print(os);                              }
+       {
+              std::shared_lock<std::shared_mutex> lock(m_Mutex);
+              m_Root.Print(os);
+       }
 
        template<typename Function, typename... Args>
        void ForEach(Function func, Args const&... args)
-       {               m_Root.ForEach(func, 0, args...);              }
+       {
+              std::shared_lock<std::shared_mutex> lock(m_Mutex);
+              m_Root.ForEach(func, 0, args...);
+       }
 
        template<typename Predicate, typename... Args>
        ObjectInfo* FirstThat(Predicate pred, Args const&... args)
-       {               return m_Root.FirstThat(pred, 0, args...);     }
+       {
+              std::shared_lock<std::shared_mutex> lock(m_Mutex);
+              return m_Root.FirstThat(pred, 0, args...);
+       }
 
        Iterator begin() {
+              std::shared_lock<std::shared_mutex> lock(m_Mutex);
               collectItems.clear();
               m_Root.ForEach([](ObjectInfo& obj, size_t level, std::vector<ObjectInfo*>* vec) {
                      vec->push_back(&obj);
@@ -125,6 +148,7 @@ public:
        }
 
        Iterator rbegin() {
+              std::shared_lock<std::shared_mutex> lock(m_Mutex);
               collectItems.clear();
               m_Root.ForEach([](ObjectInfo& obj, size_t level, std::vector<ObjectInfo*>* vec) {
                      vec->push_back(&obj);
@@ -139,14 +163,16 @@ public:
 protected:
        std::vector<ObjectInfo*> collectItems;
        BTNode          m_Root;
-       size_t          m_Height;  // height of tree
-       size_t          m_Order;   // order of tree
-       size_t          m_NumKeys; // number of keys
-       bool            m_Unique;  // Accept the elements only once ?
-};     
+       size_t          m_Height;
+       size_t          m_Order;
+       size_t          m_NumKeys;
+       bool            m_Unique;
+       mutable std::shared_mutex m_Mutex;
+};
 
 template <typename Trait>
 bool BTree<Trait>::Insert(const keyType key, const long ObjID){
+       std::unique_lock<std::shared_mutex> lock(m_Mutex);
        bt_ErrorCode error = m_Root.Insert(key, ObjID);
        if( error == bt_duplicate )
                return false;
@@ -161,6 +187,7 @@ bool BTree<Trait>::Insert(const keyType key, const long ObjID){
 template <typename Trait>
 bool BTree<Trait>::Remove (const keyType key, const long ObjID)
 {
+       std::unique_lock<std::shared_mutex> lock(m_Mutex);
        bt_ErrorCode error = m_Root.Remove(key, ObjID);
        if( error == bt_duplicate || error == bt_nofound )
                return false;

@@ -4,6 +4,8 @@
 #include <time.h>
 #include <stdlib.h>
 #include <iostream>
+#include <thread>
+#include <vector>
 
 #include "btree.h"
 #include <string>
@@ -90,6 +92,39 @@ int main (int argc, char * argv[]){
 
 	std::cout << "\nContenido del BTree movido:" << std::endl;
 	std::cout << bt2;
+
+	std::cout << "\n=== Probando Concurrencia ===" << std::endl;
+	BTree<CharTrait> btConcurrent(BTreeSize);
+
+	auto insertWorker = [&](int start, int count) {
+		for(int i = 0; i < count; i++) {
+			int idx = start + i;
+			if(keys1[idx]) {
+				btConcurrent.Insert(keys1[idx], idx * idx);
+			}
+		}
+	};
+
+	auto searchWorker = [&](int count) {
+		for(int i = 0; i < count; i++) {
+			if(keys1[i]) {
+				btConcurrent.Search(keys1[i]);
+			}
+		}
+	};
+
+	std::vector<std::thread> threads;
+	threads.push_back(std::thread(insertWorker, 0, 10));
+	threads.push_back(std::thread(insertWorker, 10, 10));
+	threads.push_back(std::thread(insertWorker, 20, 10));
+	threads.push_back(std::thread(searchWorker, 30));
+
+	for(auto& t : threads) {
+		t.join();
+	}
+
+	std::cout << "BTree concurrente - size: " << btConcurrent.size() << std::endl;
+	std::cout << btConcurrent;
 
 	return 0;
 }
