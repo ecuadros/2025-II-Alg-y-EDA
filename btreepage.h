@@ -157,20 +157,6 @@ class CBTreePage //: public SimpleIndex <keyType>
             ForEach(Print<typename Trait::keyType, typename Trait::ObjIDType>, 0, &os);
         }
 
-        void Read(std::istream &is){
-            //Cantidad de claves - valor
-            size_t n;
-            is >> n;
-
-            clear();
-
-            for (size_t i = 0; i < n; ++i) {
-                keyType key;
-                ObjIDType objID;
-                is >> key >> objID;
-                Insert(key, objID);  
-            }
-        }
 
 protected:
        // TODO: #9 change by size_t
@@ -185,6 +171,7 @@ protected:
        vector<ObjectInfo> m_Keys;
        vector<BTPage *>m_SubPages;
        CompareFn Compfn;
+       std::shared_mutex m_Mutex;
        
        // TODO: #10 size_t
        size_t  m_KeyCount;
@@ -259,6 +246,7 @@ CBTreePage<Trait>::~CBTreePage()
 
 template <typename Trait>
 bt_ErrorCode CBTreePage<Trait>::Insert(const keyType& key, const ObjIDType ObjID){
+       std::unique_lock lock(m_Mutex);
        size_t pos = binary_search(m_Keys, 0, m_KeyCount, key, Compfn);
        bt_ErrorCode error = bt_ok;
 
@@ -670,6 +658,7 @@ CBTreePage<Trait>::FirstThat(lpfnFirstThat3 lpfn,size_t level, void *pExtra1, vo
 template <typename Trait>
 bt_ErrorCode CBTreePage<Trait>::Remove(const keyType &key, const ObjIDType ObjID)
 {
+       std::unique_lock lock(m_Mutex);
        bt_ErrorCode error = bt_ok;
        size_t pos = binary_search(m_Keys, 0, m_KeyCount, key, Compfn);
        if( pos < NumberOfKeys() && key == m_Keys[pos].key /*&& m_Keys[pos].m_ObjID == ObjID*/) // We found it !
@@ -834,7 +823,7 @@ CBTreePage<Trait>::GetFirstObjectInfo()
 
 template <typename keyType, typename ObjIDType>
 void Print(tagObjectInfo<keyType, ObjIDType> &info, size_t level, void *pExtra)
-{
+{      std::shared_lock lock(m_Mutex);
        ostream &os = *(ostream *)pExtra;
        for(size_t i = 0; i < level ; i++)
                os << "\t";
@@ -901,12 +890,5 @@ std::ostream& operator<<(std::ostream &os, const CBTreePage<Trait> &btpage) {
     btpage.Write(os);
     return os;
 }
-
-template <typename Trait>
-std::istream& operator>>(std::istream &is, CBTreePage<Trait> &btpage) {
-    btpage.Read(is);
-    return is;
-}
-
 
 #endif

@@ -2,6 +2,7 @@
 #define __BTREE_H__
 
 #include <iostream>
+#include <shared_mutex>
 #include "btreepage.h"
 #define DEFAULT_BTREE_ORDER 3
 
@@ -76,7 +77,9 @@ public:
        bool            Insert (const keyType key, const ObjIDType ObjID);
        bool            Remove (const keyType key, const ObjIDType ObjID);
        ObjIDType       Search (const keyType key)
-       {      ObjIDType ObjID = -1;
+       {      
+              std::shared_lock lock(m_Mutex);
+              ObjIDType ObjID = -1;
               m_Root.Search(key, ObjID);
               return ObjID;
        }
@@ -85,7 +88,8 @@ public:
        size_t            GetOrder() { return m_Order;     }
 
        void            Print (ostream &os)
-       {               m_Root.Print(os);                              }
+       {               std::shared_lock lock(m_Mutex);   
+                       m_Root.Print(os);                              }
        void            ForEach( lpfnForEach2 lpfn, void *pExtra1 )
        {               m_Root.ForEach(lpfn, 0, pExtra1);              }
        void            ForEach( lpfnForEach3 lpfn, void *pExtra1, void *pExtra2)
@@ -93,6 +97,7 @@ public:
 
        template <typename Function, typename... Args>
        void ForEach(Function function, Args const&... args) {
+              std::shared_lock lock(m_Mutex);
               m_Root.ForEach(function,0, args...);
        }
 
@@ -103,18 +108,33 @@ public:
        //typedef               ObjectInfo iterator;
 
        template <typename Function, typename... Args>
-       ObjectInfo* FirstThat(Function function, Args const&... args){ 
+       ObjectInfo* FirstThat(Function function, Args const&... args){
+            std::shared_lock lock(m_Mutex); 
             return m_Root.FirstThat(function, 0, args...);
        }
 
        void Write(std::ostream &os){
+            std::shared_lock lock(m_Mutex);
+            os << m_Order << m_Height << m_NumKeys << m_Unique;
             m_Root.Write(os);
        }
 
        void Read(std::istream &is){
+            std::unique_lock lock(m_Mutex);
             is >> m_Order >> m_Height >> m_NumKeys >> m_Unique;
-            m_Root.Read(is);
-       }
+            //Cantidad de claves - valor
+            size_t n;
+            is >> n;
+
+            clear();
+
+            for (size_t i = 0; i < n; ++i) {
+                keyType key;
+                ObjIDType objID;
+                is >> key >> objID;
+                Insert(key, objID);  
+            }
+        }
 
 protected:
        BTNode          m_Root;
@@ -122,10 +142,18 @@ protected:
        size_t          m_Order;   // order of tree
        size_t          m_NumKeys; // number of keys
        bool            m_Unique;  // Accept the elements only once ?
+       std::shared_mutex m_Mutex;
+
+       void clear(){
+           m_Root.Reset();
+           m_Height = 1;
+           m_NumKeys = 0;
+       }
 };     
 
 template <typename Trait>
 bool BTree<Trait>::Insert(const keyType key, const ObjIDType ObjID){
+       std::unique_lock lock(m_Mutex);
        bt_ErrorCode error = m_Root.Insert(key, ObjID);
        if( error == bt_duplicate )
                return false;
@@ -139,7 +167,7 @@ bool BTree<Trait>::Insert(const keyType key, const ObjIDType ObjID){
 
 template <typename Trait>
 bool BTree<Trait>::Remove (const keyType key, const ObjIDType ObjID)
-{
+{      std::unique_lock lock(m_Mutex);
        bt_ErrorCode error = m_Root.Remove(key, ObjID);
        if( error == bt_duplicate || error == bt_nofound )
                return false;
