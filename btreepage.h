@@ -15,9 +15,26 @@
 template <typename Trait>
 class BTree;
 
+/**
+ * @enum bt_ErrorCode
+ * @brief Códigos de error utilizados por las operaciones internas del B tree
+ */
 using namespace std;
 enum bt_ErrorCode {bt_ok, bt_overflow, bt_underflow, bt_duplicate, bt_nofound, bt_rootmerged};
 
+
+/**
+ * @brief Búsqueda binaria adaptada a contenedores con función de comparación
+ * @tparam Container Tipo del contenedor
+ * @tparam ObjType Tipo del objeto (clave)
+ * @tparam CompareFn Tipo del comparador
+ * @param container Contenedor de claves
+ * @param first índice inicial
+ * @param last índice final
+ * @param object Objeto a buscar
+ * @param comp Functor comparador
+ * @return La posición donde se encuentra o debería insertarse el objeto
+ */
 template <typename Container, typename ObjType, typename CompareFn>
 size_t binary_search(Container& container, size_t first, size_t last, ObjType &object, CompareFn comp)
 {
@@ -41,6 +58,14 @@ size_t binary_search(Container& container, size_t first, size_t last, ObjType &o
 
 // Error al poner size_t
 // Posible motivo: El i está disminuyendo
+/**
+ * @brief Inserta un elemento en una posición específica del contenedor
+ * @tparam Container Tipo del contenedor
+ * @tparam ObjType Tipo del objeto
+ * @param container Contenedor donde se insertará el objeto
+ * @param object Objeto a insertar
+ * @param pos Posición en la que se insertará
+ */
 template <typename Container, typename ObjType>
 void insert_at(Container& container, ObjType object, int pos)
 {
@@ -51,6 +76,12 @@ void insert_at(Container& container, ObjType object, int pos)
        container[pos] =  object;	
 }
 
+/**
+ * @brief Elimina un elemento del contenedor en una posición dada
+ * @tparam Container Tipo del contenedor
+ * @param container Contenedor del cual se eliminará el elemento
+ * @param pos Posición del elemento a eliminar
+ */
 template <typename Container>
 void remove(Container& container, size_t pos)
 {
@@ -59,6 +90,13 @@ void remove(Container& container, size_t pos)
            container[i-1] = container[i];
 }
 
+
+/**
+ * @struct tagObjectInfo
+ * @brief Estructura auxiliar para almacenar pares (clave, referencia) dentro de una página
+ * @tparam keyType Tipo de la clave
+ * @tparam ObjIDType Tipo de la referencia o identificador asociado
+ */
 template <typename keyType, typename ObjIDType>
 struct tagObjectInfo
 {
@@ -74,6 +112,12 @@ struct tagObjectInfo
        size_t                    GetUseCounter() { return UseCounter;    }
 };
 
+
+/**
+ * @class CBTreePage
+ * @brief Clase plantilla que representa una página (nodo) del B tree
+ * @tparam Trait Estructura Trait que define tipos de clave, referencia y comparador
+ */
 template <typename Trait>
 class CBTreePage //: public SimpleIndex <keyType>
 // this is the in-memory version of the CBTreePage
@@ -92,24 +136,88 @@ class CBTreePage //: public SimpleIndex <keyType>
        typedef ObjectInfo *(*lpfnFirstThat2)(ObjectInfo &info, size_t level, void *pExtra1);
        typedef ObjectInfo *(*lpfnFirstThat3)(ObjectInfo &info, size_t level, void *pExtra1, void *pExtra2);
  public:
+        /**
+         * @brief Constructor de la página
+         * @param maxKeys Número máximo de claves permitidas
+         * @param unique True si no se permiten claves duplicadas
+         */
        CBTreePage(size_t maxKeys, bool unique = true);
+       /** @brief Destructor de la página. */
        virtual ~CBTreePage();
-
+        /**
+         * @brief Inserta una clave y su referencia en la página (de forma recursiva)
+         * @param key Clave a insertar
+         * @param ObjID Referencia asociada a la clave
+         * @return bt_ok si la inserción fue exitosa, bt_duplicate si la clave ya existe, o bt_overflow si requiere división
+         */
        bt_ErrorCode    Insert (const keyType &key, const ObjIDType ObjID);
+        
+        /**
+         * @brief Elimina una clave del nodo
+         * @param key Clave a eliminar
+         * @param ObjID Referencia asociada
+         * @return Código de error indicando el resultado
+         */
        bt_ErrorCode    Remove (const keyType &key, const ObjIDType ObjID);
+        /**
+         * @brief Busca una clave en el nodo (de forma recursiva)
+         * 
+         * @param key Clave a buscar
+         * @param ObjID Referencia asociada
+         * @return true si se encontró la clave, false si no existe
+         */
        bool            Search (const keyType &key, ObjIDType &ObjID);
+        /**
+         * @brief Imprime el contenido de la página y sus subpáginas
+         * 
+         * @param os Flujo de salida donde se mostrará la estructura del Page
+         */
        void            Print  (ostream &os);
 
        // TODO: #6 change by Invoke
        // TODO: #7 ForEach must be a template inside this template
+        /**
+         * @brief Recorre el árbol aplicando una función a cada elemento
+         * 
+         * @param lpfn Función callback que se ejecutará por cada clave
+         * @param level Profundidad actual
+         * @param pExtra1 Parámetro auxiliar opcional
+         */
        void            ForEach(lpfnForEach2 lpfn, size_t level, void *pExtra1);
+        /**
+         * @brief Recorre el árbol aplicando una función a cada elemento con dos parámetros
+         * 
+         * @param lpfn Función callback que se ejecutará por cada clave
+         * @param level Profundidad actual
+         * @param pExtra1 Parámetro auxiliar opcional
+         * @param pExtra1 Parámetro auxiliar opcional
+         */
        void            ForEach(lpfnForEach3 lpfn, size_t level, void *pExtra1, void *pExtra2);
 
        // TODO: #8 You may reduce these two function by using Invoke
+        /**
+         * @brief Busca el primer elemento que cumpla una condición dada
+         * 
+         * @param lpfn Función predicado que retorna true al cumplir la condición
+         * @param level Nivel actual del recorrido
+         * @param pExtra1 Parámetro adicional
+         * @return Puntero al objeto encontrado o nullptr si no se cumple
+         */
        ObjectInfo*     FirstThat(lpfnFirstThat2 lpfn, size_t level, void *pExtra1);
        ObjectInfo*     FirstThat(lpfnFirstThat3 lpfn, size_t level, void *pExtra1, void *pExtra2);
-
+        /**
+         * @brief Escribe la página y sus subpáginas en un flujo de salida (ostream)
+         * 
+         * @param os Flujo de salida
+         * @return Referencia al flujo tras la escritura
+         */
         std::ostream& Write(ostream &os);
+        /**
+         * @brief Lee la estructura de una página desde un flujo (istream)
+         * 
+         * @param is Flujo de entrada
+         * @return Referencia al flujo tras la lectura
+         */
         std::istream& Read(istream &is);
 
 protected:
@@ -132,38 +240,93 @@ protected:
        void  Reset ();
        void  Destroy () {   Reset(); delete this;}
        void  clear ();
-
+        
+        /**
+         * @brief Intenta redistribuir claves con una página cercana
+         * 
+         * @param pos Posición del subnodo afectado
+         * @return true si se logró redistribuir, false si no fue posible
+         */
        bool  RedistributeWith1Brother   (size_t &pos);
+        /**
+         * @brief Redistribuye claves utilizando ambas páginas cercanas
+         * 
+         * @param pos Posición central entre hermanos
+         * @return true si se logró estabilizar, false si se requiere fusión
+         */
        bool  RedistributeWith2Brothers   (size_t pos);
+        /**
+         * @brief Redistribuye una clave desde la página derecha hacia la izquierda
+         * 
+         * @param pos índice de la página derecha en el vector de subpáginas
+         */
        void  RedistributeR2L (size_t pos);
+        /**
+         * @brief Redistribuye una clave desde la página izquierda hacia la derecha
+         * 
+         * @param pos índice de la página izquierda en el vector de subpáginas
+         */
        void  RedistributeL2R (size_t pos);
-
+        /**
+         * @brief Trata underflow en la posición dada.
+         * 
+         * @param pos Referencia a la posición del subnodo afectado
+         * @return true si se resolvió mediante redistribución, false si requiere merge
+         */
        bool    TreatUnderflow  (size_t &pos)
        {       return RedistributeWith1Brother(pos) || RedistributeWith2Brothers(pos);}
-
+        /**
+         * @brief Fusiona tres subpáginas consecutivas en una sola
+         * 
+         * @param pos índice central de la fusión
+         * @return bt_ok o bt_underflow según el resultado
+         */
        bt_ErrorCode    Merge  (size_t pos);
+        /**
+         * @brief Fusiona las tres subpáginas de la raíz tras una eliminación
+         * 
+         * @return bt_rootmerged si la fusión redujo la altura del árbol
+         */
        bt_ErrorCode    MergeRoot ();
+        /**
+         * @brief Divide una subpágina sobrecargada en tres partes equilibradas
+         * 
+         * @param pos Posición del hijo que generó el desbordamiento
+         */
        void  SplitChild (size_t pos);
-
+        /**
+         * @brief Devuelve la primera clave del subárbol (clave más pequeña)
+         * @return Referencia al primer ObjectInfo encontrado
+         */
        ObjectInfo &GetFirstObjectInfo();
 
+       /** @brief Devuelve true si el nodo ha superado su capacidad máxima. */
        bool Overflow()  { return m_KeyCount > m_MaxKeys; }
+       /** @brief Devuelve true si el nodo tiene menos del mínimo de claves. */
        bool Underflow() { return m_KeyCount < MinNumberOfKeys(); }
+       /** @brief Devuelve true si el nodo está lleno. */
        bool IsFull()    { return m_KeyCount >= m_MaxKeys; }
 
-
+       /** @brief Calcula el número mínimo de claves permitido en una página. */
        size_t  MinNumberOfKeys()  { return 2*m_MaxKeys/3.0; }
+       /** @brief Devuelve el número de posiciones disponibles. */
        size_t  GetFreeCells()  { return m_MaxKeys - m_KeyCount; }
+       /** @brief Referencia al número actual de claves. */
        size_t& NumberOfKeys()  { return m_KeyCount; }
+       /** @brief Devuelve el número de claves. */
        size_t  GetNumberOfKeys()  { return m_KeyCount; }
+       /** @brief Indica si la página es la raíz. */
        bool IsRoot()  { return m_MaxKeysForChilds != m_MaxKeys; }
+       /** @brief Establece el número máximo de claves de las páginas hijas. */
        void SetMaxKeysForChilds(size_t orderforchilds)
        {        m_MaxKeysForChilds = orderforchilds;       }
+       /** @brief Devuelve las celdas libres en la página izquierda (si existe). */
        size_t GetFreeCellsOnLeft(size_t pos)
        {        if( pos > 0 )                                   // there is some page on left ?
                         return m_SubPages[pos-1]->GetFreeCells();
                 return 0;
        }
+       /** @brief Devuelve las celdas libres en la página derecha (si existe). */
        size_t GetFreeCellsOnRight(size_t pos)
        {    if( pos < GetNumberOfKeys() )   // there is some page on right ?
                 return m_SubPages[pos+1]->GetFreeCells();
@@ -171,7 +334,21 @@ protected:
        }
 
 private:
+        /**
+         * @brief Divide la raíz en tres subpáginas equilibradas y aumenta la altura del árbol
+         */
        bool SplitRoot();
+        /**
+         * @brief Divide una página grande en tres subpáginas
+         * 
+         * @param tmpKeys Vector temporal de claves
+         * @param tmpSubPages Vector temporal de subpáginas
+         * @param pChild1 Referencia de salida al primer hijo resultante
+         * @param pChild2 Referencia de salida al segundo hijo resultante
+         * @param pChild3 Referencia de salida al tercer hijo resultante
+         * @param oi1 Primer elemento promovido al padre
+         * @param oi2 Segundo elemento promovido al padre
+         */
        void SplitPageInto3(vector<ObjectInfo>   & tmpKeys,
                                                vector<BTPage *>  & SubPages,
                                                BTPage           *& pChild1,
@@ -179,6 +356,13 @@ private:
                                                BTPage           *& pChild3,
                                                ObjectInfo        & oi1,
                                                ObjectInfo        & oi2);
+        /**
+         * @brief Copia todos los elementos de una subpágina a vectores temporales
+         * 
+         * @param pChildPage Página fuente
+         * @param tmpKeys Vector temporal de claves
+         * @param tmpSubPages Vector temporal de subpáginas
+         */
        void MovePage(BTPage *  pChildPage,vector<ObjectInfo> & tmpKeys,vector<BTPage *> & tmpSubPages);
 };
 
