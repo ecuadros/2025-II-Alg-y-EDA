@@ -129,6 +129,9 @@ public:
        {               return m_Root.FirstThat(lpfn, 0, pExtra1, pExtra2);   }
        //typedef               ObjectInfo iterator;
 
+       // Declaración del operador << como friend
+       friend std::ostream& operator<<(std::ostream& os, const BTree<Trait>& tree);
+
 private:
        // Escribe un nodo y sus subárboles recursivamente
        bool WriteNode(std::ostream& os, BTNode* node) {
@@ -220,6 +223,15 @@ bool BTree<Trait>::Remove (const keyType key, const long ObjID)
        if( error == bt_rootmerged )
                m_Height--;
        return true;
+}
+
+// Implementación del operador <<
+template <typename Trait>
+std::ostream& operator<<(std::ostream& os, const BTree<Trait>& tree) {
+    os << "BTree: order=" << tree.m_Order << ", height=" << tree.m_Height 
+       << ", keys=" << tree.m_NumKeys << "\n";
+    tree.m_Root.Print(os);  // Utilizamos el método Print existente
+    return os;
 }
 
 #endif
