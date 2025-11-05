@@ -7,9 +7,10 @@ const char * keys1 = "D1XJ2xTg8zKL9AhijOPQcEowRSp0NbW567BUfCqrs4FdtYZakHIuvGV3eM
 const char * keys2 = "]*[¨{3456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz*";
 const char * keys3 = "DYZakHIUwxVJ203ejOP9Qc8AdtuEop1XvTRghSNbW567BfiCqrs4FGMyzKLlmn";
 
-const int BTreeSize = 4;
+const int BTreeSize = 3;
 int main (int argc, char ** argv){
     int result, i;
+    cout << "--- Probando BTree con orden ascendente por defecto ---" << endl;
     // BTree con orden ascendente (std::less por defecto)
     BTree<BTreeTrait<char, int>> bt(BTreeSize);
     for (i = 0; keys1[i]; ++i) {
@@ -25,7 +26,7 @@ int main (int argc, char ** argv){
         else
             cout <<"Not found " << keys2[i] << endl;
     }
-
+    cout << "------------------------------------------\n" << endl;
     cout << "\n--- Probando BTree con orden descendente ---" << endl;
     // BTree con orden descendente (std::greater)
     BTree<BTreeTrait<char, int, std::greater<char>>> bt_desc(BTreeSize);
@@ -43,7 +44,12 @@ int main (int argc, char ** argv){
             cout <<"Not found " << keys2[i] << endl;
     }
     cout << "------------------------------------------\n" << endl;
-
+    cout << "\n--- Probando ForEach con funcion lambda ---" << endl;
+    bt.ForEach(0, [](const auto& info, size_t level) {
+        if (info.key > 'M') {
+                std::cout << "Clave: " << info.key << " en nivel " << level << std::endl;
+        }
+    });
        /*cout.flush();
 
        for (i = 0; keys3[i]; i++)
