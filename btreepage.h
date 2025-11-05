@@ -38,6 +38,34 @@ size_t binary_search(Container& container, size_t first, size_t last, ObjType &o
        return last;
 }
 
+//comparador 
+
+template <typename K, typename Comp>
+inline bool eq_by_less(const K& a, const K& b, Comp comp) {
+    return !comp(a,b) && !comp(b,a); // a == b si no es a<b ni b<a
+}
+
+template <typename Container, typename Key, typename Comp>
+size_t binary_search_cmp(const Container& c, size_t first, size_t last, const Key& key, Comp comp)
+{
+    if (first >= last) return first;
+    while (first < last) {
+        size_t mid = (first + last) / 2;
+        // const Key midKey = static_cast<Key>(c[mid]); // ObjectInfo -> key
+        const Key midKey = c[mid].key;
+        // igualdad a partir de "less"
+        if (!comp(key, midKey) && !comp(midKey, key))
+            return mid;
+        if (comp(midKey, key))   // midKey < key ?
+            first = mid + 1;
+        else
+            last = mid;
+    }
+    if (!comp(c[first].key, key)) // key <= c[first]
+        return first;
+    return last;
+}
+
 // Error al poner size_t
 // Posible motivo: El i está disminuyendo
 template <typename Container, typename ObjType>
@@ -69,7 +97,7 @@ struct tagObjectInfo
        tagObjectInfo(const tagObjectInfo &objInfo)
                : key(objInfo.key), ObjID(objInfo.ObjID), UseCounter(0) {}
        tagObjectInfo()                          {}
-       operator keyType                         ()     { return key; }
+       operator keyType                         ()   const  { return key; }
        size_t                    GetUseCounter() { return UseCounter;    }
 };
 
@@ -108,6 +136,17 @@ class CBTreePage //: public SimpleIndex <keyType>
        ObjectInfo*     FirstThat(lpfnFirstThat3 lpfn, size_t level, void *pExtra1, void *pExtra2);
 
 protected:
+        // compare 
+        static bool less (const keyType& a, const keyType& b) {
+        return typename Trait::Compare{}(a,b);
+        }
+        static bool equal(const keyType& a, const keyType& b) {
+        auto comp = typename Trait::Compare{};
+        return !comp(a,b) && !comp(b,a);
+        }
+        static bool leq  (const keyType& a, const keyType& b) { return !less(b,a); }
+        static bool greater(const keyType& a, const keyType& b) { return less(b,a); }
+
        // TODO: #9 change by size_t
        size_t  m_MinKeys; // minimum number of keys in a node
        size_t  m_MaxKeys, // maximum number of keys in a node
@@ -192,10 +231,14 @@ CBTreePage<Trait>::~CBTreePage()
 
 template <typename Trait>
 bt_ErrorCode CBTreePage<Trait>::Insert(const keyType& key, const ObjIDType ObjID){
-       size_t pos = binary_search(m_Keys, 0, m_KeyCount, key);
+//        size_t pos = binary_search(m_Keys, 0, m_KeyCount, key);
        bt_ErrorCode error = bt_ok;
+       // creacion de comparador
+       auto comp = typename Trait::Compare{};
+       size_t pos = binary_search_cmp(m_Keys, 0, m_KeyCount, key, comp);
 
-       if( pos < m_KeyCount && (keyType)m_Keys[pos] == key && m_Unique)
+//        if( pos < m_KeyCount && (keyType)m_Keys[pos] == key && m_Unique)
+        if( pos < m_KeyCount && equal(static_cast<keyType>(m_Keys[pos]), key) && m_Unique)
                return bt_duplicate; // this key is duplicate
 
        if( !m_SubPages[pos] ){ // this is a leave
@@ -369,7 +412,7 @@ void CBTreePage<Trait>::SplitChild(size_t pos)
                        pChild1 = m_SubPages[pos];
                        pChild2 = m_SubPages[pos+1];
                }
-       size_t nKeys = pChild1->GetNumberOfKeys() + pChild2->GetNumberOfKeys() + 1;
+//        size_t nKeys = pChild1->GetNumberOfKeys() + pChild2->GetNumberOfKeys() + 1;
 
        // SECOND: copy both pages to a temporal one
        // Create two tmp vector
@@ -488,22 +531,27 @@ bool CBTreePage<Trait>::SplitRoot(){
 template <typename Trait>
 bool CBTreePage<Trait>::Search(const keyType &key, ObjIDType &ObjID)
 {
-       size_t pos = binary_search(m_Keys, 0, m_KeyCount, key);
+//        size_t pos = binary_search(m_Keys, 0, m_KeyCount, key);
+        // creacion de comparador
+       auto comp = typename Trait::Compare{};
+       size_t pos = binary_search_cmp(m_Keys, 0, m_KeyCount, key, comp);
        if( pos >= m_KeyCount )
        {    if( m_SubPages[pos] )
                 return m_SubPages[pos]->Search(key, ObjID);
             else
                 return false;
        }
-       if( key == m_Keys[pos].key )
+       if( equal(key, m_Keys[pos].key) )
        {
                ObjID = m_Keys[pos].ObjID;
-               m_Keys[pos].UseCounter++;
-               return true;
+                m_Keys[pos].UseCounter++;
+                return true;
        }
-       if( key < m_Keys[pos].key )
+       if( less(key, m_Keys[pos].key) )
+       {
                if( m_SubPages[pos] )
                        return m_SubPages[pos]->Search(key, ObjID);
+       }
        return false;
 }
 
@@ -604,8 +652,11 @@ template <typename Trait>
 bt_ErrorCode CBTreePage<Trait>::Remove(const keyType &key, const ObjIDType ObjID)
 {
        bt_ErrorCode error = bt_ok;
-       size_t pos = binary_search(m_Keys, 0, m_KeyCount, key);
-       if( pos < NumberOfKeys() && key == m_Keys[pos].key /*&& m_Keys[pos].m_ObjID == ObjID*/) // We found it !
+//        size_t pos = binary_search(m_Keys, 0, m_KeyCount, key);
+        auto comp = typename Trait::Compare{};
+        size_t pos = binary_search_cmp(m_Keys, 0, m_KeyCount, key, comp);
+//        if( pos < NumberOfKeys() && key == m_Keys[pos].key /*&& m_Keys[pos].m_ObjID == ObjID*/) // We found it !
+        if( pos < NumberOfKeys() && equal(key, m_Keys[pos].key) )
        {
                // This is a leave: First
                if( !m_SubPages[pos+1] )  // This is a leave ? FIRST CASE !
@@ -631,7 +682,7 @@ bt_ErrorCode CBTreePage<Trait>::Remove(const keyType &key, const ObjIDType ObjID
        }
        else if( pos == NumberOfKeys() ) // it is not here, go by the last branch
                error = m_SubPages[pos]->Remove(key, ObjID);
-       else if( key <= m_Keys[pos].key ) // = is because identical keys are inserted on left (see Insert)
+       else if( leq(key, m_Keys[pos].key) ) // = is because identical keys are inserted on left (see Insert)
        {        if( m_SubPages[pos] )
                        error = m_SubPages[pos]->Remove(key, ObjID);
                else

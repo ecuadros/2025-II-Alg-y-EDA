@@ -12,7 +12,13 @@ struct BTreeTrait
 {
        using keyType = _keyType;
        using ObjIDType = _ObjIDType;
-       // TODO: agregar funcion de comparacion
+       // TODO DONE: agregar funcion de comparacion
+
+       struct Compare { 
+              bool operator() (const keyType &a, const keyType &b) const {
+                     return a < b;
+              }
+       };
 };
 
 template <typename Trait>
@@ -33,10 +39,11 @@ public:
 
 public:
        BTree(size_t order = DEFAULT_BTREE_ORDER, bool unique = true)
-              : m_Order(order),
-                m_Root(2 * order  + 1, unique),
-                m_Unique(unique),
-                m_NumKeys(0)
+              : m_Root(2 * order + 1, unique),
+                m_Order(order),
+                m_NumKeys(0),
+                m_Unique(unique)
+                
        {
               m_Root.SetMaxKeysForChilds(order);
               m_Height = 1;
