@@ -7,12 +7,21 @@
 
 const size_t MaxHeight = 5; 
 
-template <typename _keyType, typename _ObjIDType>
+template <typename _keyType, typename _ObjIDType, typename _Compare = std::less<_keyType>>
 struct BTreeTrait
 {
        using keyType = _keyType;
        using ObjIDType = _ObjIDType;
-       // TODO: agregar funcion de comparacion
+       using Compare = _Compare;
+       
+       static bool compare(const keyType& k1, const keyType& k2) {
+           static Compare comp;
+           return comp(k1, k2);
+       }
+       
+       static bool equal(const keyType& k1, const keyType& k2) {
+           return !compare(k1, k2) && !compare(k2, k1);
+       }
 };
 
 template <typename Trait>
