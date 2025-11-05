@@ -3,6 +3,8 @@
 
 #include <iostream>
 #include <fstream>
+#include <mutex>
+#include <shared_mutex>  // Para lecturas concurrentes
 #include "btreepage.h"
 #define DEFAULT_BTREE_ORDER 3
 
@@ -102,13 +104,24 @@ public:
        bool Insert (const keyType key, const long ObjID);
        bool            Remove (const keyType key, const long ObjID);
        ObjIDType       Search (const keyType key)
-       {      ObjIDType ObjID = -1;
+       {      
+              std::shared_lock<std::shared_mutex> lock(m_Mutex);  // Lock compartido para lectura
+              ObjIDType ObjID = -1;
               m_Root.Search(key, ObjID);
               return ObjID;
        }
-       size_t            size()  { return m_NumKeys; }
-       size_t            height() { return m_Height;      }
-       size_t            GetOrder() { return m_Order;     }
+       size_t            size()  { 
+              std::shared_lock<std::shared_mutex> lock(m_Mutex);
+              return m_NumKeys; 
+       }
+       size_t            height() { 
+              std::shared_lock<std::shared_mutex> lock(m_Mutex);
+              return m_Height;      
+       }
+       size_t            GetOrder() { 
+              std::shared_lock<std::shared_mutex> lock(m_Mutex);
+              return m_Order;     
+       }
 
        void            Print (ostream &os)
        {               m_Root.Print(os);                              }
@@ -129,8 +142,9 @@ public:
        {               return m_Root.FirstThat(lpfn, 0, pExtra1, pExtra2);   }
        //typedef               ObjectInfo iterator;
 
-       // Declaración del operador << como friend
-       friend std::ostream& operator<<(std::ostream& os, const BTree<Trait>& tree);
+       // Declaración del operador << como friend template
+       template<typename T>
+       friend std::ostream& operator<<(std::ostream& os, const BTree<T>& tree);
 
 private:
        // Escribe un nodo y sus subárboles recursivamente
@@ -197,10 +211,12 @@ protected:
        size_t          m_Order;   // order of tree
        size_t          m_NumKeys; // number of keys
        bool            m_Unique;  // Accept the elements only once ?
+       mutable std::shared_mutex m_Mutex;  // Mutex para operaciones concurrentes
 };     
 
 template <typename Trait>
 bool BTree<Trait>::Insert(const keyType key, const long ObjID){
+       std::unique_lock<std::shared_mutex> lock(m_Mutex);  // Lock exclusivo para escritura
        bt_ErrorCode error = m_Root.Insert(key, ObjID);
        if( error == bt_duplicate )
                return false;
@@ -215,6 +231,7 @@ bool BTree<Trait>::Insert(const keyType key, const long ObjID){
 template <typename Trait>
 bool BTree<Trait>::Remove (const keyType key, const long ObjID)
 {
+       std::unique_lock<std::shared_mutex> lock(m_Mutex);  
        bt_ErrorCode error = m_Root.Remove(key, ObjID);
        if( error == bt_duplicate || error == bt_nofound )
                return false;
@@ -225,11 +242,11 @@ bool BTree<Trait>::Remove (const keyType key, const long ObjID)
        return true;
 }
 
-// Implementación del operador <<
-template <typename Trait>
-std::ostream& operator<<(std::ostream& os, const BTree<Trait>& tree) {
-    os << "BTree: order=" << tree.m_Order << ", height=" << tree.m_Height 
-       << ", keys=" << tree.m_NumKeys << "\n";
+// Implementación del operador << como template
+template <typename T>
+std::ostream& operator<<(std::ostream& os, const BTree<T>& tree) {
+    os << "BTree(order=" << tree.m_Order << ", height=" << tree.m_Height 
+       << ", keys=" << tree.m_NumKeys << ")\n";
     tree.m_Root.Print(os);  // Utilizamos el método Print existente
     return os;
 }
