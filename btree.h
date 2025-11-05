@@ -7,12 +7,22 @@
 
 const size_t MaxHeight = 5; 
 
-template <typename _keyType, typename _ObjIDType>
+template <typename _keyType>
+struct DefaultCompare {
+       int operator() (const _keyType& a, const _keyType& b) const {
+              if (a < b) return -1;
+              if (b < a) return 1;
+              return 0;
+       }
+};
+
+template <typename _keyType, typename _ObjIDType, typename _Compare = DefaultCompare<_keyType> >
 struct BTreeTrait
 {
        using keyType = _keyType;
        using ObjIDType = _ObjIDType;
        // TODO: agregar funcion de comparacion
+       using Compare = _Compare;
 };
 
 template <typename Trait>
@@ -20,7 +30,7 @@ class BTree // this is the full version of the BTree
 {
        typedef typename Trait::keyType    keyType;
        typedef typename Trait::ObjIDType    ObjIDType;
-       
+       typedef typename Trait::Compare    Compare; // Agrego el comparador
        typedef CBTreePage <Trait> BTNode;// useful shorthand
 
 public:
@@ -34,7 +44,7 @@ public:
 public:
        BTree(size_t order = DEFAULT_BTREE_ORDER, bool unique = true)
               : m_Order(order),
-                m_Root(2 * order  + 1, unique),
+                m_Root(2 * order  + 1, unique, m_Compare), // Agrego el comparador
                 m_Unique(unique),
                 m_NumKeys(0)
        {
@@ -69,13 +79,13 @@ public:
        //typedef               ObjectInfo iterator;
 
 protected:
-       BTNode          m_Root;
-       size_t          m_Height;  // height of tree
        size_t          m_Order;   // order of tree
-       size_t          m_NumKeys; // number of keys
+       BTNode          m_Root;
        bool            m_Unique;  // Accept the elements only once ?
-};     
-
+       size_t          m_NumKeys; // number of keys
+       size_t          m_Height;  // height of tree
+       Compare         m_Compare; // Agrego el comparador
+}; 
 template <typename Trait>
 bool BTree<Trait>::Insert(const keyType key, const long ObjID){
        bt_ErrorCode error = m_Root.Insert(key, ObjID);
