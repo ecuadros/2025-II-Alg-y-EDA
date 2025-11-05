@@ -115,9 +115,6 @@ class CBTreePage //: public SimpleIndex <keyType>
 {
         friend class BTree<Trait>;
         // Allow BTree's nested iterators to access internals for traversal
-        // Grant friendship to the two instantiations of the generalized iterator
-        friend class BTree<Trait>::template iterator_base<false>;
-        friend class BTree<Trait>::template iterator_base<true>;
         typedef typename Trait::keyType keyType;
         typedef typename Trait::ObjIDType ObjIDType;
 

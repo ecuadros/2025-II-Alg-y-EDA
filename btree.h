@@ -3,6 +3,9 @@
 
 #include <iostream>
 #include <fstream>
+#include <memory>
+#include <functional>
+#include <stdexcept>
 #include "btreepage.h"
 #define DEFAULT_BTREE_ORDER 3
 
@@ -13,7 +16,6 @@ struct BTreeTrait
 {
        using keyType = _keyType;
        using ObjIDType = _ObjIDType;
-       // TODO: agregar funcion de comparacion
        struct Compare
        {
               bool operator()(const keyType &a, const keyType &b) const
@@ -24,15 +26,13 @@ struct BTreeTrait
 };
 
 template <typename Trait>
-class BTree // this is the full version of the BTree
+class BTree
 {
        typedef typename Trait::keyType keyType;
        typedef typename Trait::ObjIDType ObjIDType;
-
-       typedef CBTreePage<Trait> BTNode; // useful shorthand
+       typedef CBTreePage<Trait> BTNode;
 
 public:
-       // typedef ObjectInfo iterator;
        typedef typename BTNode::lpfnForEach2 lpfnForEach2;
        typedef typename BTNode::lpfnForEach3 lpfnForEach3;
        typedef typename BTNode::lpfnFirstThat2 lpfnFirstThat2;
@@ -50,233 +50,146 @@ protected:
               using pointer = ObjectInfo *;
               using difference_type = std::ptrdiff_t;
 
-              iterator_base() : m_tree(nullptr), m_node(nullptr), m_idx(0) {}
+              iterator_base() : m_tree(nullptr), m_pos(-1), m_seq(nullptr) {}
 
               reference operator*() const
               {
-                     assert(m_node);
-                     return m_node->m_Keys[m_idx];
+                     if (!valid())
+                            throw std::runtime_error("Invalid iterator");
+                     return m_seq->at(m_pos).first->m_Keys[m_seq->at(m_pos).second];
               }
+
               pointer operator->() const
               {
-                     assert(m_node);
-                     return &m_node->m_Keys[m_idx];
+                     if (!valid())
+                            throw std::runtime_error("Invalid iterator");
+                     return &m_seq->at(m_pos).first->m_Keys[m_seq->at(m_pos).second];
               }
 
               iterator_base &operator++()
               {
-                     advance();
+                     if (!m_seq)
+                            return *this;
+                     if constexpr (!Reverse)
+                     {
+                            if (valid())
+                                   ++m_pos;
+                     }
+                     else
+                     {
+                            --m_pos;
+                     }
                      return *this;
               }
+
               iterator_base operator++(int)
               {
                      iterator_base tmp = *this;
-                     advance();
+                     ++*this;
                      return tmp;
               }
+
               iterator_base &operator--()
               {
-                     retreat();
+                     if (!m_seq)
+                            return *this;
+                     if constexpr (!Reverse)
+                     {
+                            --m_pos;
+                     }
+                     else
+                     {
+                            if (m_pos < (difference_type)m_seq->size())
+                                   ++m_pos;
+                     }
                      return *this;
               }
+
               iterator_base operator--(int)
               {
                      iterator_base tmp = *this;
-                     retreat();
+                     --*this;
                      return tmp;
               }
 
-              bool operator==(const iterator_base &o) const { return m_tree == o.m_tree && m_node == o.m_node && m_idx == o.m_idx; }
-              bool operator!=(const iterator_base &o) const { return !(*this == o); }
+              bool operator==(const iterator_base &other) const
+              {
+                     // Two iterators are equal if they point to the same tree and have the same position
+                     if (m_tree != other.m_tree)
+                            return false;
+                     if (!m_seq && !other.m_seq)
+                            return true;
+                     if (!m_seq || !other.m_seq)
+                            return false;
+                     return m_pos == other.m_pos;
+              }
+
+              bool operator!=(const iterator_base &other) const
+              {
+                     return !(*this == other);
+              }
 
        private:
               friend class BTree;
-              struct Frame
-              {
-                     BTNode *node;
-                     size_t idx;
-              };
+              using Entry = std::pair<BTNode *, size_t>;
 
-              iterator_base(BTree *tree, bool at_begin) : m_tree(tree), m_node(nullptr), m_idx(0)
+              iterator_base(BTree *tree, bool at_begin) : m_tree(tree), m_pos(-1), m_seq(nullptr)
               {
                      if (!tree)
                             return;
+
+                     m_seq = build_sequence(tree);
+                     if (!m_seq || m_seq->empty())
+                            return;
+
                      if constexpr (!Reverse)
                      {
-                            if (at_begin)
-                                   go_begin();
-                            else
-                            {
-                                   m_node = nullptr;
-                                   m_idx = 0;
-                                   m_stack.clear();
-                            }
+                            m_pos = at_begin ? 0 : (difference_type)m_seq->size();
                      }
                      else
                      {
-                            if (at_begin)
-                                   go_rbegin();
-                            else
-                            {
-                                   m_node = nullptr;
-                                   m_idx = 0;
-                                   m_stack.clear();
-                            }
+                            m_pos = at_begin ? ((difference_type)m_seq->size() - 1) : -1;
                      }
               }
 
-              void go_begin()
+              bool valid() const
               {
-                     m_stack.clear();
-                     BTNode *n = &m_tree->m_Root;
-                     while (n && n->m_SubPages[0])
-                     {
-                            m_stack.push_back({n, 0});
-                            n = n->m_SubPages[0];
-                     }
-                     if (!n || n->m_KeyCount == 0)
-                     {
-                            m_node = nullptr;
-                            m_idx = 0;
-                            m_stack.clear();
-                            return;
-                     }
-                     m_node = n;
-                     m_idx = 0;
+                     return m_seq && m_pos >= 0 && m_pos < (difference_type)m_seq->size();
               }
 
-              void go_rbegin()
+              static std::shared_ptr<std::vector<Entry>> build_sequence(BTree *tree)
               {
-                     m_stack.clear();
-                     BTNode *n = &m_tree->m_Root;
-                     while (n && n->m_SubPages[n->m_KeyCount])
-                     {
-                            m_stack.push_back({n, n->m_KeyCount});
-                            n = n->m_SubPages[n->m_KeyCount];
-                     }
-                     if (!n || n->m_KeyCount == 0)
-                     {
-                            m_node = nullptr;
-                            m_idx = 0;
-                            m_stack.clear();
-                            return;
-                     }
-                     m_node = n;
-                     m_idx = n->m_KeyCount - 1;
-              }
-              void advance()
-              {
-                     if constexpr (!Reverse)
-                            next();
-                     else
-                            prev();
-              }
-              void retreat()
-              {
-                     if constexpr (!Reverse)
-                            prev();
-                     else
-                            next();
-              }
+                     auto seq = std::make_shared<std::vector<Entry>>();
+                     if (!tree)
+                            return seq;
 
-              void next()
-              {
-                     if (!m_node)
-                            return;
-                     if (m_node->m_SubPages[m_idx + 1])
+                     std::function<void(BTNode *)> dfs = [&](BTNode *n)
                      {
-                            BTNode *n = m_node->m_SubPages[m_idx + 1];
-                            m_stack.push_back({m_node, m_idx + 1});
-                            while (n->m_SubPages[0])
-                            {
-                                   m_stack.push_back({n, 0});
-                                   n = n->m_SubPages[0];
-                            }
-                            m_node = n;
-                            m_idx = 0;
-                            return;
-                     }
-                     while (!m_stack.empty())
-                     {
-                            Frame fr = m_stack.back();
-                            m_stack.pop_back();
-                            BTNode *parent = fr.node;
-                            size_t pi = fr.idx;
-                            if (pi < parent->m_KeyCount)
-                            {
-                                   m_node = parent;
-                                   m_idx = pi;
-                                   return;
-                            }
-                     }
-                     m_node = nullptr;
-                     m_idx = 0;
-              }
-
-              void prev()
-              {
-                     if (!m_node)
-                     {
-                            m_stack.clear();
-                            BTNode *n = &m_tree->m_Root;
-                            while (n && n->m_SubPages[n->m_KeyCount])
-                            {
-                                   m_stack.push_back({n, n->m_KeyCount});
-                                   n = n->m_SubPages[n->m_KeyCount];
-                            }
                             if (!n || n->m_KeyCount == 0)
-                            {
-                                   m_node = nullptr;
-                                   m_idx = 0;
                                    return;
-                            }
-                            m_node = n;
-                            m_idx = n->m_KeyCount - 1;
-                            return;
-                     }
-                     if (m_node->m_SubPages[m_idx])
-                     {
-                            BTNode *n = m_node->m_SubPages[m_idx];
-                            m_stack.push_back({m_node, m_idx});
-                            while (n->m_SubPages[n->m_KeyCount])
+                            for (size_t i = 0; i < n->m_KeyCount; ++i)
                             {
-                                   m_stack.push_back({n, n->m_KeyCount});
-                                   n = n->m_SubPages[n->m_KeyCount];
+                                   if (n->m_SubPages[i])
+                                          dfs(n->m_SubPages[i]);
+                                   seq->push_back({n, i});
                             }
-                            m_node = n;
-                            m_idx = n->m_KeyCount - 1;
-                            return;
-                     }
-                     if (m_idx > 0)
-                     {
-                            --m_idx;
-                            return;
-                     }
-                     while (!m_stack.empty())
-                     {
-                            Frame fr = m_stack.back();
-                            m_stack.pop_back();
-                            BTNode *parent = fr.node;
-                            size_t pi = fr.idx;
-                            if (pi > 0)
-                            {
-                                   m_node = parent;
-                                   m_idx = pi - 1;
-                                   return;
-                            }
-                     }
-                     m_node = nullptr;
-                     m_idx = 0;
+                            if (n->m_SubPages[n->m_KeyCount])
+                                   dfs(n->m_SubPages[n->m_KeyCount]);
+                     };
+
+                     dfs(&tree->m_Root);
+                     return seq;
               }
 
               BTree *m_tree;
-              BTNode *m_node;
-              size_t m_idx;
-              std::vector<Frame> m_stack;
+              difference_type m_pos;
+              std::shared_ptr<std::vector<Entry>> m_seq;
        };
 
+public:
        using iterator = iterator_base<false>;
        using reverse_iterator = iterator_base<true>;
+
        iterator begin() { return iterator(this, true); }
        iterator end() { return iterator(this, false); }
        reverse_iterator rbegin() { return reverse_iterator(this, true); }
@@ -288,12 +201,13 @@ public:
              m_Order(order),
              m_NumKeys(0),
              m_Unique(unique)
-
        {
               m_Root.SetMaxKeysForChilds(order);
               m_Height = 1;
        }
+
        ~BTree() {}
+
        bool Insert(const keyType key, const long ObjID);
        bool Remove(const keyType key, const long ObjID);
        ObjIDType Search(const keyType key)
@@ -302,6 +216,7 @@ public:
               m_Root.Search(key, ObjID);
               return ObjID;
        }
+
        size_t size() { return m_NumKeys; }
        size_t height() { return m_Height; }
        size_t GetOrder() { return m_Order; }
@@ -310,24 +225,29 @@ public:
        {
               m_Root.Print(os);
        }
+
        template <class Fn, class... Args>
        void ForEachT(Fn &&fn, Args &&...args)
        {
               m_Root.ForEachT(std::forward<Fn>(fn), 0,
                               std::forward<Args>(args)...);
        }
+
        void ForEach(lpfnForEach2 lpfn, void *pExtra1)
        {
               m_Root.ForEach(lpfn, 0, pExtra1);
        }
+
        void ForEach(lpfnForEach3 lpfn, void *pExtra1, void *pExtra2)
        {
               m_Root.ForEach(lpfn, 0, pExtra1, pExtra2);
        }
+
        ObjectInfo *FirstThat(lpfnFirstThat2 lpfn, void *pExtra1)
        {
               return m_Root.FirstThat(lpfn, 0, pExtra1);
        }
+
        ObjectInfo *FirstThat(lpfnFirstThat3 lpfn, void *pExtra1, void *pExtra2)
        {
               return m_Root.FirstThat(lpfn, 0, pExtra1, pExtra2);
@@ -352,10 +272,10 @@ public:
 
 protected:
        BTNode m_Root;
-       size_t m_Height;  // height of tree
-       size_t m_Order;   // order of tree
-       size_t m_NumKeys; // number of keys
-       bool m_Unique;    // Accept the elements only once ?
+       size_t m_Height;
+       size_t m_Order;
+       size_t m_NumKeys;
+       bool m_Unique;
        size_t computeHeight(const BTNode &n) const;
        size_t computeSize(const BTNode &n) const;
 };
@@ -387,6 +307,7 @@ bool BTree<Trait>::Remove(const keyType key, const long ObjID)
               m_Height--;
        return true;
 }
+
 template <typename Trait>
 BTree<Trait>::BTree(BTree &&other) noexcept
     : m_Root(std::move(other.m_Root)),
@@ -415,6 +336,7 @@ BTree<Trait> &BTree<Trait>::operator=(BTree &&other) noexcept
        }
        return *this;
 }
+
 template <typename Trait>
 size_t BTree<Trait>::computeHeight(const BTNode &n) const
 {
@@ -430,6 +352,7 @@ size_t BTree<Trait>::computeHeight(const BTNode &n) const
        }
        return best + 1;
 }
+
 template <typename Trait>
 size_t BTree<Trait>::computeSize(const BTNode &n) const
 {
@@ -450,9 +373,7 @@ bool BTree<Trait>::Save(const std::string &filename) const
               return false;
 
        ofs << m_Order << ' ' << (m_Unique ? 1 : 0) << '\n';
-
        m_Root.Write(ofs);
-
        return true;
 }
 
@@ -471,7 +392,6 @@ bool BTree<Trait>::Load(const std::string &filename)
        m_Unique = (uniq != 0);
 
        m_Root.SetMaxKeysForChilds(m_Order);
-
        m_Root.Reset();
        m_Root.Read(ifs);
 
@@ -480,6 +400,7 @@ bool BTree<Trait>::Load(const std::string &filename)
 
        return true;
 }
+
 template <typename Trait>
 std::ostream &operator<<(std::ostream &os, const BTree<Trait> &t)
 {
