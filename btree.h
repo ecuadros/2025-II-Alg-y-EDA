@@ -29,10 +29,6 @@ class BTree // this is the full version of the BTree
 
 public:
 	//typedef ObjectInfo iterator;
-	typedef typename BTNode::lpfnForEach2    lpfnForEach2;
-	typedef typename BTNode::lpfnForEach3    lpfnForEach3;
-	typedef typename BTNode::lpfnFirstThat2  lpfnFirstThat2;
-	typedef typename BTNode::lpfnFirstThat3  lpfnFirstThat3;
 	typedef typename BTNode::ObjectInfo      ObjectInfo;
 
 protected:
@@ -101,16 +97,22 @@ public:
 		return ObjID;
 	}
 
+	/// @brief Gets the size of the BTree.
+	/// @return The size of the BTree.
 	size_t size()  { 
 		std::shared_lock<std::shared_mutex> lock(m_Mutex);
 		return m_NumKeys; 
 	}
 
+	/// @brief Gets the height of the BTree.
+	/// @return The height of the BTree.
 	size_t height() { 
 		std::shared_lock<std::shared_mutex> lock(m_Mutex); 
 		return m_Height; 
 	}
 
+	/// @brief Gets the order of the BTree.
+	/// @return The order of the BTree.
 	size_t GetOrder() { 
 		std::shared_lock<std::shared_mutex> lock(m_Mutex); 
 		return m_Order; 
@@ -122,27 +124,10 @@ public:
 		std::shared_lock<std::shared_mutex> lock(m_Mutex);
 		m_Root.Print(os); 
 	}
-	
-	void ForEach( lpfnForEach2 lpfn, void *pExtra1 ){ 
-		std::shared_lock<std::shared_mutex> lock(m_Mutex);
-		m_Root.ForEach(lpfn, 0, pExtra1); 
-	}
-	void ForEach( lpfnForEach3 lpfn, void *pExtra1, void *pExtra2){
-		std::shared_lock<std::shared_mutex> lock(m_Mutex);
-		m_Root.ForEach(lpfn, 0, pExtra1, pExtra2);
-	}
-
-	ObjectInfo* FirstThat( lpfnFirstThat2 lpfn, void *pExtra1 ){
-		std::shared_lock<std::shared_mutex> lock(m_Mutex);
-		return m_Root.FirstThat(lpfn, 0, pExtra1);
-	}
-	
-	ObjectInfo* FirstThat( lpfnFirstThat3 lpfn, void *pExtra1, void *pExtra2){ 
-		std::shared_lock<std::shared_mutex> lock(m_Mutex);
-		return m_Root.FirstThat(lpfn, 0, pExtra1, pExtra2);
-	}
 	//typedef               ObjectInfo iterator;
 
+	/// @brief Writes the tree to a stream.
+	/// @param os The stream to write.
 	void Write(ostream &os) { 
 		std::shared_lock<std::shared_mutex> lock(m_Mutex);
 		os << *this; 
@@ -182,7 +167,8 @@ bool BTree<Trait>::Remove (const keyType key, const long ObjID)
 
 template <typename Trait>
 std::ostream& operator<<(std::ostream &os, BTree<Trait> &obj) {
-	os << obj.m_Root.Print();
+	obj.Print(os);
+    return os;
 }
 
 #endif
