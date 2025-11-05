@@ -2,6 +2,8 @@
 #define __BTREE_H__
 
 #include <iostream>
+#include <mutex>
+#include <shared_mutex>
 #include "btreepage.h"
 #define DEFAULT_BTREE_ORDER 3
 
@@ -40,6 +42,8 @@ protected:
 	size_t          m_NumKeys; // number of keys
 	bool            m_Unique;  // Accept the elements only once ?
 	CompareFn		m_Compfn;
+private:
+	std::shared_mutex m_Mutex;
 
 public:
 	/// @brief Constructs a new BTree with a given order and uniqueness policy.
@@ -59,6 +63,7 @@ public:
 	///	 Transfers ownership of the resources from another BTree.
 	/// @param other The BTree instance to move from.
 	BTree(BTree &&other) {
+		std::lock_guard<std::shared_mutex> lock(other.m_Mutex);
 		m_Root = std::move(other.m_Root);
 		m_Height = std::move(other.m_Height);
 		m_Order = std::move(other.m_Order);
@@ -89,35 +94,59 @@ public:
 	/// @param key The key to search for.
 	/// @return The object ID associated with the key, or -1 if not found.
 	ObjIDType       Search (const keyType key)
-	{      ObjIDType ObjID = -1;
+	{      
+		std::shared_lock<std::shared_mutex> lock(m_Mutex);
+		ObjIDType ObjID = -1;
 		m_Root.Search(key, ObjID);
 		return ObjID;
 	}
-	size_t            size()  { return m_NumKeys; }
-	size_t            height() { return m_Height;      }
-	size_t            GetOrder() { return m_Order;     }
+
+	size_t size()  { 
+		std::shared_lock<std::shared_mutex> lock(m_Mutex);
+		return m_NumKeys; 
+	}
+
+	size_t height() { 
+		std::shared_lock<std::shared_mutex> lock(m_Mutex); 
+		return m_Height; 
+	}
+
+	size_t GetOrder() { 
+		std::shared_lock<std::shared_mutex> lock(m_Mutex); 
+		return m_Order; 
+	}
 
 	/// @brief Prints the structure of the tree to an output stream.
 	/// @param os The output stream where the tree will be printed.
-	void Print (ostream &os){ m_Root.Print(os); }
+	void Print (ostream &os){ 
+		std::shared_lock<std::shared_mutex> lock(m_Mutex);
+		m_Root.Print(os); 
+	}
 	
 	void ForEach( lpfnForEach2 lpfn, void *pExtra1 ){ 
+		std::shared_lock<std::shared_mutex> lock(m_Mutex);
 		m_Root.ForEach(lpfn, 0, pExtra1); 
 	}
 	void ForEach( lpfnForEach3 lpfn, void *pExtra1, void *pExtra2){
+		std::shared_lock<std::shared_mutex> lock(m_Mutex);
 		m_Root.ForEach(lpfn, 0, pExtra1, pExtra2);
 	}
 
 	ObjectInfo* FirstThat( lpfnFirstThat2 lpfn, void *pExtra1 ){
+		std::shared_lock<std::shared_mutex> lock(m_Mutex);
 		return m_Root.FirstThat(lpfn, 0, pExtra1);
 	}
 	
 	ObjectInfo* FirstThat( lpfnFirstThat3 lpfn, void *pExtra1, void *pExtra2){ 
+		std::shared_lock<std::shared_mutex> lock(m_Mutex);
 		return m_Root.FirstThat(lpfn, 0, pExtra1, pExtra2);
 	}
 	//typedef               ObjectInfo iterator;
 
-	void Write(ostream &os) { os << *this; }
+	void Write(ostream &os) { 
+		std::shared_lock<std::shared_mutex> lock(m_Mutex);
+		os << *this; 
+	}
 
 	friend std::ostream& operator<<(std::ostream &os, BTree<Trait> &obj);
 
@@ -125,6 +154,7 @@ public:
 
 template <typename Trait>
 bool BTree<Trait>::Insert(const keyType key, const long ObjID){
+	std::shared_lock<std::shared_mutex> lock(m_Mutex);
 	bt_ErrorCode error = m_Root.Insert(key, ObjID);
 	if( error == bt_duplicate )
 		 return false;
@@ -139,6 +169,7 @@ bool BTree<Trait>::Insert(const keyType key, const long ObjID){
 template <typename Trait>
 bool BTree<Trait>::Remove (const keyType key, const long ObjID)
 {
+	std::shared_lock<std::shared_mutex> lock(m_Mutex);
 	bt_ErrorCode error = m_Root.Remove(key, ObjID);
 	if( error == bt_duplicate || error == bt_nofound )
 		 return false;
