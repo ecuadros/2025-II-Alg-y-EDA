@@ -4,6 +4,8 @@
 #include <vector>
 #include <assert.h>
 #include <functional>
+#include <utility>
+
 
 // TODO: #1 Crear una function para agregarla al demo.cpp ( no trivial )
 // TODO: #2 Agregarle un Trait (prueba git) ( no trivial )
@@ -112,12 +114,15 @@ class CBTreePage //: public SimpleIndex <keyType>
 
        // TODO: #6 change by Invoke
        // TODO: #7 ForEach must be a template inside this template
-       void            ForEach(lpfnForEach2 lpfn, size_t level, void *pExtra1);
-       void            ForEach(lpfnForEach3 lpfn, size_t level, void *pExtra1, void *pExtra2);
-
+       // void            ForEach(lpfnForEach2 lpfn, size_t level, void *pExtra1);
+       // void            ForEach(lpfnForEach3 lpfn, size_t level, void *pExtra1, void *pExtra2);
+        template <typename Func, typename... Args>
+        void ForEach(Func& func, size_t level, Args&&... args);
        // TODO: #8 You may reduce these two function by using Invoke
-       ObjectInfo*     FirstThat(lpfnFirstThat2 lpfn, size_t level, void *pExtra1);
-       ObjectInfo*     FirstThat(lpfnFirstThat3 lpfn, size_t level, void *pExtra1, void *pExtra2);
+       // ObjectInfo*     FirstThat(lpfnFirstThat2 lpfn, size_t level, void *pExtra1);
+       // ObjectInfo*     FirstThat(lpfnFirstThat3 lpfn, size_t level, void *pExtra1, void *pExtra2);
+       template <typename Func, typename... Args>
+       ObjectInfo* FirstThat(Func& fun, size_t level, Args&&... args);
 
 protected:
        // TODO: #9 change by size_t
@@ -137,7 +142,8 @@ protected:
        size_t  m_KeyCount;
        void  Create();
        void  Reset ();
-       void  Destroy () {   Reset(); delete this;}
+       // void  Destroy () {   Reset(); delete this;}
+       void Destroy () {    delete this;    }
        void  clear ();
 
        bool  RedistributeWith1Brother   (size_t &pos);
@@ -541,6 +547,7 @@ void CBTreePage<keyType, ObjIDType>::ForEachReverse(lpfnForEach2 lpfn, size_t le
        }
 }*/
 
+#if 0
 template <typename Trait>
 void CBTreePage<Trait>::ForEach(lpfnForEach2 lpfn, size_t level, void *pExtra1)
 {
@@ -620,62 +627,164 @@ CBTreePage<Trait>::FirstThat(lpfnFirstThat3 lpfn,size_t level, void *pExtra1, vo
                        return pTmp;
        return 0;
 }
+#endif
+
+template <typename Trait>
+template <typename Func, typename... Args>
+void CBTreePage<Trait>::ForEach(Func& func, size_t level, Args&&... args)
+{
+        for ( size_t i = 0; i < m_KeyCount; i++ )
+        {
+                if ( m_SubPages[i] )
+                        m_SubPages[i]->ForEach(func, level+1, std::forward<Args>(args)...);
+                std::invoke(func, m_Keys[i], level, std::forward<Args>(args)...);
+        }
+        if( m_SubPages[m_KeyCount] )
+                m_SubPages[m_KeyCount]->ForEach(func, level+1, std::forward<Args>(args)...);
+}
+
+template <typename Trait>
+template <typename Func, typename... Args>
+typename CBTreePage<Trait>::ObjectInfo*
+CBTreePage<Trait>::FirstThat(Func& func, size_t level, Args&&... args)
+{
+        ObjectInfo* pTmp = nullptr;
+        for ( size_t i = 0; i < m_KeyCount; i++ )
+        {
+                if( m_SubPages[i] ) {
+                        if ( (pTmp = m_SubPages[i]->FirstThat(func, level+1, std::forward<Args>(args)...)) )
+                                return pTmp;
+                }
+                if( std::invoke(func, m_Keys[i], level, std::forward<Args>(args)...))
+                        return &m_Keys[i];
+        }
+        if ( m_SubPages[m_KeyCount]) {
+                if( (pTmp = m_SubPages[m_KeyCount]->FirstThat(func, level+1, std::forward<Args>(args)...)) )
+                        return pTmp;
+        }
+        return nullptr; // No me gusta retornar 0
+}
 
 template <typename Trait>
 bt_ErrorCode CBTreePage<Trait>::Remove(const keyType &key, const ObjIDType ObjID)
 {
-       bt_ErrorCode error = bt_ok;
-       // size_t pos = binary_search(m_Keys, 0, m_KeyCount, key);
-       size_t pos = binary_search(m_Keys, 0, m_KeyCount, key, m_Compare);       // Agrego el comparador 
-       // if( pos < NumberOfKeys() && key == m_Keys[pos].key /*&& m_Keys[pos].m_ObjID == ObjID*/) // We found it !
-       if ( pos < NumberOfKeys() && m_Compare(key, m_Keys[pos].key) == 0)
-       {
-               // This is a leave: First
-               if( !m_SubPages[pos+1] )  // This is a leave ? FIRST CASE !
-               {
-                       ::remove(m_Keys, pos);
-                       NumberOfKeys()--;
-                       if( Underflow() )
-                               return bt_underflow;
-                       return bt_ok;
-               }
+    bt_ErrorCode error = bt_ok;
+    size_t pos = binary_search(m_Keys, 0, m_KeyCount, key, m_Compare); // posicion candidata
 
-               // We FOUND IT BUT it is NOT a leave ? SECOND CASE !
-               {
-                       // Get the first element from right branch
-                       ObjectInfo &rFirstFromRight = m_SubPages[pos+1]->GetFirstObjectInfo();
-                       // change with a leave
-                       swap(m_Keys[pos], rFirstFromRight);
-                       // Remove it from this leave
+    // Caso: la clave está exactamente en este nodo (pos < NumberOfKeys() && equality)
+    if (pos < NumberOfKeys() && m_Compare(key, m_Keys[pos].key) == 0)
+    {
+        // Si este nodo es hoja (no tiene hijos), eliminar directamente la clave
+        // Detectar hoja: todos los punteros hijos son nullptr OR el child correspondiente es nullptr.
+        // Aquí basta comprobar un puntero válido para decidir: si no hay subpage a la derecha,
+        // asumimos que es hoja (coherente con resto del código), pero comprobamos ambos para seguridad.
+        bool isLeaf = true;
+        if (pos < m_SubPages.size() && m_SubPages[pos]) isLeaf = false;
+        if (pos + 1 < m_SubPages.size() && m_SubPages[pos+1]) isLeaf = false;
 
-                       //Print(cout);
-                       error = m_SubPages[++pos]->Remove(key, ObjID);
-               }
-       }
-       else if( pos == NumberOfKeys() ) // it is not here, go by the last branch
-               error = m_SubPages[pos]->Remove(key, ObjID);
-       // else if( key <= m_Keys[pos].key ) // = is because identical keys are inserted on left (see Insert)
-       else if ( m_Compare(key, m_Keys[pos].key) <= 0 )         // Agrego el comparador
-       {        if( m_SubPages[pos] )
-                       error = m_SubPages[pos]->Remove(key, ObjID);
-               else
-                       return bt_nofound;
-       }
-       if( error == bt_underflow )
-       {
-               // THIRD CASE: After removing the element we have an underflow
-               // Print(cout);
-               if( TreatUnderflow(pos) )
-                       return bt_ok;
-               // FOURTH CASE: it was not possible to redistribute -> Merge
-               if( IsRoot() && NumberOfKeys() == 2 )
-                       return MergeRoot();
-               return Merge(pos);
-       }
-       if( error == bt_nofound )
-               return bt_nofound;
-       return bt_ok;
+        if (isLeaf)
+        {
+            ::remove(m_Keys, pos);
+            ::remove(m_SubPages, pos + 1); // mantener alineamiento por si alguien depende
+            NumberOfKeys()--;
+            if (Underflow()) return bt_underflow;
+            return bt_ok;
+        }
+
+        // Nodo interno: sustituir la clave por su sucesor (primer elemento del subárbol derecho)
+        size_t rightPos = pos + 1;
+        if (rightPos >= m_SubPages.size() || m_SubPages[rightPos] == nullptr)
+            return bt_nofound; // estructura inconsistente: no hay subárbol derecho
+
+        // obtener referencia al primer elemento del subárbol derecho (debe existir)
+        ObjectInfo &rFirstFromRight = m_SubPages[rightPos]->GetFirstObjectInfo();
+        // intercambiar la clave actual con ese sucesor
+        swap(m_Keys[pos], rFirstFromRight);
+        // eliminar recursivamente la clave en el subárbol derecho
+        error = m_SubPages[rightPos]->Remove(key, ObjID);
+    }
+    else if (pos == NumberOfKeys())
+    {
+        // La posición es la última rama; bajar por el último hijo
+        if (pos >= m_SubPages.size() || m_SubPages[pos] == nullptr)
+            return bt_nofound;
+        error = m_SubPages[pos]->Remove(key, ObjID);
+    }
+    else
+    {
+        // Clave no encontrada en este nodo: decidir rama izquierda (pos) a descender
+        if (pos >= m_SubPages.size() || m_SubPages[pos] == nullptr)
+            return bt_nofound;
+        error = m_SubPages[pos]->Remove(key, ObjID);
+    }
+
+    // Si la eliminación recursiva provocó underflow, intentar redistribuir/merge
+    if (error == bt_underflow)
+    {
+        if (TreatUnderflow(pos))
+            return bt_ok;
+        if (IsRoot() && NumberOfKeys() == 2)
+            return MergeRoot();
+        return Merge(pos);
+    }
+    if (error == bt_nofound) return bt_nofound;
+    return bt_ok;
 }
+// template <typename Trait>
+// bt_ErrorCode CBTreePage<Trait>::Remove(const keyType &key, const ObjIDType ObjID)
+// {
+//        bt_ErrorCode error = bt_ok;
+//        // size_t pos = binary_search(m_Keys, 0, m_KeyCount, key);
+//        size_t pos = binary_search(m_Keys, 0, m_KeyCount, key, m_Compare);       // Agrego el comparador 
+//        // if( pos < NumberOfKeys() && key == m_Keys[pos].key /*&& m_Keys[pos].m_ObjID == ObjID*/) // We found it !
+//        if ( pos < NumberOfKeys() && m_Compare(key, m_Keys[pos].key) == 0)
+//        {
+//                // This is a leave: First
+//                if( !m_SubPages[pos+1] )  // This is a leave ? FIRST CASE !
+//                {
+//                        ::remove(m_Keys, pos);
+//                        NumberOfKeys()--;
+//                        if( Underflow() )
+//                                return bt_underflow;
+//                        return bt_ok;
+//                }
+
+//                // We FOUND IT BUT it is NOT a leave ? SECOND CASE !
+//                {
+//                        // Get the first element from right branch
+//                        ObjectInfo &rFirstFromRight = m_SubPages[pos+1]->GetFirstObjectInfo();
+//                        // change with a leave
+//                        swap(m_Keys[pos], rFirstFromRight);
+//                        // Remove it from this leave
+
+//                        //Print(cout);
+//                        error = m_SubPages[++pos]->Remove(key, ObjID);
+//                }
+//        }
+//        else if( pos == NumberOfKeys() ) // it is not here, go by the last branch
+//                error = m_SubPages[pos]->Remove(key, ObjID);
+//        // else if( key <= m_Keys[pos].key ) // = is because identical keys are inserted on left (see Insert)
+//        else if ( m_Compare(key, m_Keys[pos].key) <= 0 )         // Agrego el comparador
+//        {        if( m_SubPages[pos] )
+//                        error = m_SubPages[pos]->Remove(key, ObjID);
+//                else
+//                        return bt_nofound;
+//        }
+//        if( error == bt_underflow )
+//        {
+//                // THIRD CASE: After removing the element we have an underflow
+//                // Print(cout);
+//                if( TreatUnderflow(pos) )
+//                        return bt_ok;
+//                // FOURTH CASE: it was not possible to redistribute -> Merge
+//                if( IsRoot() && NumberOfKeys() == 2 )
+//                        return MergeRoot();
+//                return Merge(pos);
+//        }
+//        if( error == bt_nofound )
+//                return bt_nofound;
+//        return bt_ok;
+// }
 
 
 template <typename Trait>
@@ -819,9 +928,16 @@ template <typename Trait>
 void CBTreePage<Trait>::Reset()
 {
         // TODO: #35 change int by size_t
-       for( size_t i = 0 ; i < m_KeyCount ; i++ )
-               delete m_SubPages[i];
-       clear();
+//        for( size_t i = 0 ; i < m_KeyCount ; i++ )
+//                delete m_SubPages[i];
+        // for( size_t i = 0; i < m_KeyCount; i++ )
+        //         if ( m_SubPages[i] ) delete m_SubPages[i];
+        for( size_t i = 0; i < m_KeyCount; i++ )
+                if ( m_SubPages[i] ) {
+                        delete m_SubPages[i];
+                        m_SubPages[i] = nullptr;
+                }
+       // clear();
 }
 
 template <typename Trait>
@@ -830,6 +946,8 @@ void CBTreePage<Trait>::clear()
        //m_Keys.clear();
        //m_SubPages.clear();
        m_KeyCount = 0;
+       for (size_t i = 0; i < m_SubPages.size(); ++i )
+                m_SubPages[i] = nullptr;
 }
 
 template <typename Trait>

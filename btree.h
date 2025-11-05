@@ -2,6 +2,7 @@
 #define __BTREE_H__
 
 #include <iostream>
+#include <utility>
 #include "btreepage.h"
 #define DEFAULT_BTREE_ORDER 3
 
@@ -35,10 +36,10 @@ class BTree // this is the full version of the BTree
 
 public:
        //typedef ObjectInfo iterator;
-       typedef typename BTNode::lpfnForEach2    lpfnForEach2;
-       typedef typename BTNode::lpfnForEach3    lpfnForEach3;
-       typedef typename BTNode::lpfnFirstThat2  lpfnFirstThat2;
-       typedef typename BTNode::lpfnFirstThat3  lpfnFirstThat3;
+       // typedef typename BTNode::lpfnForEach2    lpfnForEach2;
+       // typedef typename BTNode::lpfnForEach3    lpfnForEach3;
+       // typedef typename BTNode::lpfnFirstThat2  lpfnFirstThat2;
+       // typedef typename BTNode::lpfnFirstThat3  lpfnFirstThat3;
        typedef typename BTNode::ObjectInfo      ObjectInfo;
 
 public:
@@ -68,15 +69,26 @@ public:
 
        void            Print (ostream &os)
        {               m_Root.Print(os);                              }
-       void            ForEach( lpfnForEach2 lpfn, void *pExtra1 )
-       {               m_Root.ForEach(lpfn, 0, pExtra1);              }
-       void            ForEach( lpfnForEach3 lpfn, void *pExtra1, void *pExtra2)
-       {               m_Root.ForEach(lpfn, 0, pExtra1, pExtra2);     }
-       ObjectInfo*     FirstThat( lpfnFirstThat2 lpfn, void *pExtra1 )
-       {               return m_Root.FirstThat(lpfn, 0, pExtra1);     }
-       ObjectInfo*     FirstThat( lpfnFirstThat3 lpfn, void *pExtra1, void *pExtra2)
-       {               return m_Root.FirstThat(lpfn, 0, pExtra1, pExtra2);   }
-       //typedef               ObjectInfo iterator;
+       // void            ForEach( lpfnForEach2 lpfn, void *pExtra1 )
+       // {               m_Root.ForEach(lpfn, 0, pExtra1);              }
+       // void            ForEach( lpfnForEach3 lpfn, void *pExtra1, void *pExtra2)
+       // {               m_Root.ForEach(lpfn, 0, pExtra1, pExtra2);     }
+       // ObjectInfo*     FirstThat( lpfnFirstThat2 lpfn, void *pExtra1 )
+       // {               return m_Root.FirstThat(lpfn, 0, pExtra1);     }
+       // ObjectInfo*     FirstThat( lpfnFirstThat3 lpfn, void *pExtra1, void *pExtra2)
+       // {               return m_Root.FirstThat(lpfn, 0, pExtra1, pExtra2);   }
+       template <typename Func, typename... Args>
+       void ForEach(Func& func, Args&&... args)
+       {
+              m_Root.ForEach(func, 0, std::forward<Args>(args)...);
+       }
+
+       template <typename Func, typename... Args>
+       ObjectInfo* FirstThat(Func& func, Args&&... args)
+       {
+              return m_Root.FirstThat(func, 0, std::forward<Args>(args)...);
+       }
+       typedef               ObjectInfo iterator;
 
 protected:
        size_t          m_Order;   // order of tree
