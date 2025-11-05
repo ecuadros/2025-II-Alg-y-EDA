@@ -18,6 +18,9 @@ class BTree;
 template <typename Trait>
 class btree_iterator;
 
+template <typename Trait>
+class btree_reverse_iterator;
+
 using namespace std;
 enum bt_ErrorCode {bt_ok, bt_overflow, bt_underflow, bt_duplicate, bt_nofound, bt_rootmerged};
 
@@ -82,6 +85,7 @@ class CBTreePage //: public SimpleIndex <keyType>
 {
        friend class BTree<Trait>;
        friend class btree_iterator<Trait>;
+       friend class btree_reverse_iterator<Trait>;
        typedef typename Trait::keyType  keyType;
        typedef typename Trait::ObjIDType  ObjIDType; 
        typedef typename Trait::CompareFn  CompareFn;
@@ -150,6 +154,15 @@ protected:
                 while (current->m_SubPages[0] != nullptr)
                 {
                         current = current->m_SubPages[0];
+                }
+                return current;
+       }
+
+       BTPage* GetRightmostLeaf(){
+                BTPage* current = this;
+                while (current->m_SubPages[current->m_KeyCount] != nullptr)
+                {
+                        current = current->m_SubPages[current->m_KeyCount];
                 }
                 return current;
        }

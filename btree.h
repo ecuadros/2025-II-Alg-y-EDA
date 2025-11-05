@@ -44,6 +44,7 @@ class BTree // this is the full version of the BTree
 
 public:
        typedef btree_iterator<Trait> iterator;
+       typedef btree_reverse_iterator<Trait> reverse_iterator;
 
        //typedef ObjectInfo iterator;
        typedef typename BTNode::lpfnForEach2    lpfnForEach2;
@@ -107,6 +108,15 @@ public:
        }
 
        iterator        end() { return iterator(nullptr, 0); }
+
+       reverse_iterator rbegin() {
+              if (m_NumKeys == 0)
+                     return rend();
+              BTNode* rightmost = m_Root.GetRightmostLeaf();
+              return reverse_iterator(rightmost, rightmost->m_KeyCount - 1);
+       }
+
+       reverse_iterator rend() { return reverse_iterator(nullptr, 0); }
 
 protected:
        BTNode          m_Root;
