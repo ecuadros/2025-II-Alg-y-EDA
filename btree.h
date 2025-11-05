@@ -74,7 +74,14 @@ public:
        ObjectInfo*     FirstThat( lpfnFirstThat3 lpfn, void *pExtra1, void *pExtra2)
        {               return m_Root.FirstThat(lpfn, 0, pExtra1, pExtra2);   }
        //typedef               ObjectInfo iterator;
+//move constructor 
+public: 
+       BTree(BTree&& other) noexcept;
+       BTree& operator=(BTree&& other) noexcept;
 
+       //deshabilitar copia
+       BTree(const BTree&) = delete;
+       BTree& operator=(const BTree&) = delete;
 protected:
        BTNode          m_Root;
        size_t          m_Height;  // height of tree
@@ -107,6 +114,33 @@ bool BTree<Trait>::Remove (const keyType key, const long ObjID)
        if( error == bt_rootmerged )
                m_Height--;
        return true;
+}
+//insertar template move constructor y move assignment
+template <typename Trait>
+BTree<Trait>::BTree(BTree&& other) noexcept
+    : m_Root(std::move(other.m_Root)),
+      m_Height(other.m_Height),
+      m_Order(other.m_Order),
+      m_NumKeys(other.m_NumKeys),
+      m_Unique(other.m_Unique)
+{
+    other.m_Height = 0;
+    other.m_NumKeys = 0;
+}
+
+template <typename Trait>
+BTree<Trait>& BTree<Trait>::operator=(BTree&& other) noexcept {
+    if (this != &other) {
+        m_Root   = std::move(other.m_Root);  // se usa el move de CBTreePage
+        m_Height = other.m_Height;
+        m_Order  = other.m_Order;
+        m_NumKeys= other.m_NumKeys;
+        m_Unique = other.m_Unique;
+
+        other.m_Height = 0;
+        other.m_NumKeys = 0;
+    }
+    return *this;
 }
 
 #endif

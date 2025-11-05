@@ -144,6 +144,12 @@ class CBTreePage //: public SimpleIndex <keyType>
        ObjectInfo*     FirstThat(lpfnFirstThat2 lpfn, size_t level, void *pExtra1);
        ObjectInfo*     FirstThat(lpfnFirstThat3 lpfn, size_t level, void *pExtra1, void *pExtra2);
 
+       //move constructor 
+        CBTreePage(CBTreePage&& other) noexcept;
+        CBTreePage& operator=(CBTreePage&& other) noexcept;
+        CBTreePage(const CBTreePage&) = delete; //deshabilitar copia
+        CBTreePage& operator=(const CBTreePage&) = delete;
+
 protected:
         // compare 
         static bool less (const keyType& a, const keyType& b) {
@@ -223,6 +229,43 @@ private:
                                                ObjectInfo        & oi2);
        void MovePage(BTPage *  pChildPage,vector<ObjectInfo> & tmpKeys,vector<BTPage *> & tmpSubPages);
 };
+
+//move templates
+template <typename Trait>
+CBTreePage<Trait>::CBTreePage(CBTreePage&& other) noexcept
+    : m_MinKeys(other.m_MinKeys),
+      m_MaxKeys(other.m_MaxKeys),
+      m_MaxKeysForChilds(other.m_MaxKeysForChilds),
+      m_Unique(other.m_Unique),
+      m_isRoot(other.m_isRoot),
+      m_Keys(std::move(other.m_Keys)),
+      m_SubPages(std::move(other.m_SubPages)),
+      m_KeyCount(other.m_KeyCount)
+{
+    other.m_KeyCount = 0;
+}
+template <typename Trait>
+CBTreePage<Trait>& CBTreePage<Trait>::operator=(CBTreePage&& other) noexcept {
+    if (this != &other) {
+        // Libera lo que ya teníamos acumulado
+        Reset(); // borra subpáginas actuales según m_KeyCount
+
+        // Mueve estado
+        m_MinKeys         = other.m_MinKeys;
+        m_MaxKeys         = other.m_MaxKeys;
+        m_MaxKeysForChilds= other.m_MaxKeysForChilds;
+        m_Unique          = other.m_Unique;
+        m_isRoot          = other.m_isRoot;
+        m_Keys            = std::move(other.m_Keys);
+        m_SubPages        = std::move(other.m_SubPages);
+        m_KeyCount        = other.m_KeyCount;
+
+        // Neutraliza el origen para no liberar dos veces
+        other.m_KeyCount = 0;
+    }
+    return *this;
+}
+
 
 template <typename Trait>
 CBTreePage<Trait>:: CBTreePage(size_t maxKeys, bool unique)
