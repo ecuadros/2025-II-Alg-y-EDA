@@ -2,6 +2,7 @@
 #define __BTREE_H__
 
 #include <iostream>
+#include <fstream>
 #include "btreepage.h"
 #define DEFAULT_BTREE_ORDER 3
 
@@ -71,7 +72,7 @@ public:
        // Escribe el árbol a un archivo
        bool Write(const std::string& filename) {
            std::ofstream file(filename, std::ios::binary);
-           if (!file) return false;
+           if (!file.is_open()) return false;
 
            // Escribir el header solo con numKeys y height
            FileHeader header{m_NumKeys, m_Height};
@@ -84,7 +85,7 @@ public:
        // Lee el árbol desde un archivo
        bool Read(const std::string& filename) {
            std::ifstream file(filename, std::ios::binary);
-           if (!file) return false;
+           if (!file.is_open()) return false;
 
            // Leer el header
            FileHeader header;
@@ -115,6 +116,13 @@ public:
        {               m_Root.ForEach(lpfn, 0, pExtra1);              }
        void            ForEach( lpfnForEach3 lpfn, void *pExtra1, void *pExtra2)
        {               m_Root.ForEach(lpfn, 0, pExtra1, pExtra2);     }
+
+       // Template-based FirstThat 
+       template<typename Func>
+       ObjectInfo* FirstThat(Func&& func) {
+           return m_Root.FirstThat(std::forward<Func>(func), 0);
+       }
+   
        ObjectInfo*     FirstThat( lpfnFirstThat2 lpfn, void *pExtra1 )
        {               return m_Root.FirstThat(lpfn, 0, pExtra1);     }
        ObjectInfo*     FirstThat( lpfnFirstThat3 lpfn, void *pExtra1, void *pExtra2)

@@ -86,7 +86,17 @@ struct tagObjectInfo
            other.UseCounter = 0;
        }
        
-       // Operador de asignación 
+       // Copy assignment operator
+       tagObjectInfo& operator=(const tagObjectInfo& other) {
+           if (this != &other) {
+               key = other.key;
+               ObjID = other.ObjID;
+               UseCounter = other.UseCounter;
+           }
+           return *this;
+       }
+
+       // Move assignment operator 
        tagObjectInfo& operator=(tagObjectInfo&& other) noexcept {
            if (this != &other) {
                key = std::move(other.key);
@@ -95,6 +105,21 @@ struct tagObjectInfo
                other.UseCounter = 0;
            }
            return *this;
+       }
+       
+       // File I/O support
+       bool Write(std::ostream& os) const {
+           os.write(reinterpret_cast<const char*>(&key), sizeof(key));
+           os.write(reinterpret_cast<const char*>(&ObjID), sizeof(ObjID));
+           os.write(reinterpret_cast<const char*>(&UseCounter), sizeof(UseCounter));
+           return os.good();
+       }
+
+       bool Read(std::istream& is) {
+           is.read(reinterpret_cast<char*>(&key), sizeof(key));
+           is.read(reinterpret_cast<char*>(&ObjID), sizeof(ObjID));
+           is.read(reinterpret_cast<char*>(&UseCounter), sizeof(UseCounter));
+           return is.good();
        }
        
        operator keyType() const noexcept { return key; }
@@ -666,26 +691,34 @@ template <typename Func, typename... Args>
 typename CBTreePage<Trait>::ObjectInfo* 
 CBTreePage<Trait>::FirstThat(Func&& func, size_t level, Args&&... args)
 {
-        auto func_copy = std::forward<Func>(func);
+    auto func_copy = std::forward<Func>(func);
+    using return_type = decltype(std::invoke(func_copy, std::declval<ObjectInfo&>(), level, args...));
+    static_assert(std::is_convertible_v<return_type, bool> || std::is_same_v<return_type, ObjectInfo*>,
+                 "FirstThat predicate must return bool or ObjectInfo*");
 
-        ObjectInfo *pTmp = nullptr;
-        for(size_t i = 0; i < m_KeyCount; i++)
-        {
-                // Recorre primero el subárbol izquierdo
-                if(m_SubPages[i])
-                        if((pTmp = m_SubPages[i]->FirstThat(func_copy,level+1,std::forward<Args>(args)...)))
-                                return pTmp;
+    ObjectInfo *pTmp = nullptr;
+    for(size_t i = 0; i < m_KeyCount; i++)
+    {
+        // Recorre primero el subárbol izquierdo
+        if(m_SubPages[i])
+            if((pTmp = m_SubPages[i]->FirstThat(func_copy, level+1, std::forward<Args>(args)...)))
+                return pTmp;
 
-                if(std::invoke(func_copy, m_Keys[i], level, std::forward<Args>(args)...))
-                        return &m_Keys[i];
+        if constexpr (std::is_same_v<return_type, ObjectInfo*>) {
+            if((pTmp = std::invoke(func_copy, m_Keys[i], level, std::forward<Args>(args)...)))
+                return pTmp;
+        } else {
+            if(std::invoke(func_copy, m_Keys[i], level, std::forward<Args>(args)...))
+                return &m_Keys[i];
         }
+    }
 
-        // Recorre el subárbol derecho final
-        if(m_SubPages[m_KeyCount])
-                if((pTmp = m_SubPages[m_KeyCount]->FirstThat(func_copy,level+1,std::forward<Args>(args)...)))
-                        return pTmp;
+    // Recorre el subárbol derecho final
+    if(m_SubPages[m_KeyCount])
+        if((pTmp = m_SubPages[m_KeyCount]->FirstThat(func_copy, level+1, std::forward<Args>(args)...)))
+            return pTmp;
 
-        return nullptr;
+    return nullptr;
 }
 
 
