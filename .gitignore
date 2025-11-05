@@ -1,6 +1,5 @@
 main
 *.o
 main.dSYM
-*.txt
 generated-docs/
 a.exe
