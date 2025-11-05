@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <shared_mutex> 
 #include "btreepage.h"
 #define DEFAULT_BTREE_ORDER 3
 
@@ -109,6 +110,7 @@ protected:
        bool            m_Unique;  // Accept the elements only once ?
        size_t computeHeight(const BTNode& n) const;
        size_t computeSize  (const BTNode& n) const;
+       mutable std::shared_mutex m_mtx;
 
 }; 
 
@@ -295,6 +297,7 @@ reverse_iterator rend()   { return reverse_iterator(this, /*to_rbegin=*/false); 
 
 template <typename Trait>
 bool BTree<Trait>::Insert(const keyType key, const long ObjID){
+       std::unique_lock<std::shared_mutex> lk(m_mtx); 
        bt_ErrorCode error = m_Root.Insert(key, ObjID);
        if( error == bt_duplicate )
                return false;
@@ -309,6 +312,7 @@ bool BTree<Trait>::Insert(const keyType key, const long ObjID){
 template <typename Trait>
 bool BTree<Trait>::Remove (const keyType key, const long ObjID)
 {
+       std::unique_lock<std::shared_mutex> lk(m_mtx); 
        bt_ErrorCode error = m_Root.Remove(key, ObjID);
        if( error == bt_duplicate || error == bt_nofound )
                return false;
@@ -369,6 +373,7 @@ size_t BTree<Trait>::computeSize(const BTNode& n) const {
 
 template <typename Trait>
 bool BTree<Trait>::Save(const std::string& filename) const {
+    std::shared_lock<std::shared_mutex> lk(m_mtx);
     std::ofstream ofs(filename);
     if (!ofs) return false;
 
@@ -383,6 +388,7 @@ bool BTree<Trait>::Save(const std::string& filename) const {
 
 template <typename Trait>
 bool BTree<Trait>::Load(const std::string& filename) {
+    std::unique_lock<std::shared_mutex> lk(m_mtx); 
     std::ifstream ifs(filename);
     if (!ifs) return false;
 
