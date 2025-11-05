@@ -32,6 +32,22 @@ class BTree // this is the full version of the BTree
        
        typedef CBTreePage <Trait> BTNode;// useful shorthand
 
+       // Estructura para el header del archivo
+       struct FileHeader {
+           size_t numKeys;      // Número total de claves
+           size_t height;       // Altura del árbol
+
+           bool Write(std::ostream& os) const {
+               os.write(reinterpret_cast<const char*>(this), sizeof(FileHeader));
+               return os.good();
+           }
+
+           bool Read(std::istream& is) {
+               is.read(reinterpret_cast<char*>(this), sizeof(FileHeader));
+               return is.good();
+           }
+       };
+
 public:
        //typedef ObjectInfo iterator;
        typedef typename BTNode::lpfnForEach2    lpfnForEach2;
@@ -51,10 +67,38 @@ public:
               m_Height = 1;
        }
        ~BTree() {}
-       //int           Open (char * name, int mode);
-       //int           Create (char * name, int mode);
-       //int           Close ();
-       bool            Insert (const keyType key, const long ObjID);
+
+       // Escribe el árbol a un archivo
+       bool Write(const std::string& filename) {
+           std::ofstream file(filename, std::ios::binary);
+           if (!file) return false;
+
+           // Escribir el header solo con numKeys y height
+           FileHeader header{m_NumKeys, m_Height};
+           if (!header.Write(file)) return false;
+
+           // Escribir el árbol recursivamente
+           return WriteNode(file, &m_Root);
+       }
+
+       // Lee el árbol desde un archivo
+       bool Read(const std::string& filename) {
+           std::ifstream file(filename, std::ios::binary);
+           if (!file) return false;
+
+           // Leer el header
+           FileHeader header;
+           if (!header.Read(file)) return false;
+
+           // Actualizar solo numKeys y height
+           m_NumKeys = header.numKeys;
+           m_Height = header.height;
+
+           // Leer el árbol recursivamente (m_Root ya está inicializada por el constructor)
+           return ReadNode(file, &m_Root);
+       }
+
+       bool Insert (const keyType key, const long ObjID);
        bool            Remove (const keyType key, const long ObjID);
        ObjIDType       Search (const keyType key)
        {      ObjIDType ObjID = -1;
@@ -76,6 +120,65 @@ public:
        ObjectInfo*     FirstThat( lpfnFirstThat3 lpfn, void *pExtra1, void *pExtra2)
        {               return m_Root.FirstThat(lpfn, 0, pExtra1, pExtra2);   }
        //typedef               ObjectInfo iterator;
+
+private:
+       // Escribe un nodo y sus subárboles recursivamente
+       bool WriteNode(std::ostream& os, BTNode* node) {
+           if (!node) return true;
+
+           // Escribir número de claves
+           size_t count = node->GetNumberOfKeys();
+           os.write(reinterpret_cast<const char*>(&count), sizeof(count));
+           if (!os.good()) return false;
+
+           // Escribir las claves
+           for (size_t i = 0; i < count; i++) {
+               if (!node->m_Keys[i].Write(os)) return false;
+           }
+
+           // Escribir recursivamente los subárboles
+           for (size_t i = 0; i <= count; i++) {
+               bool hasChild = node->m_SubPages[i] != nullptr;
+               os.write(reinterpret_cast<const char*>(&hasChild), sizeof(hasChild));
+               if (hasChild && !WriteNode(os, node->m_SubPages[i])) {
+                   return false;
+               }
+           }
+
+           return true;
+       }
+
+       // Lee un nodo y sus subárboles recursivamente
+       bool ReadNode(std::istream& is, BTNode* node) {
+           if (!node) return false;
+
+           // Leer número de claves
+           size_t count;
+           is.read(reinterpret_cast<char*>(&count), sizeof(count));
+           if (!is.good()) return false;
+
+           // Leer las claves
+           for (size_t i = 0; i < count; i++) {
+               ObjectInfo info;
+               if (!info.Read(is)) return false;
+               node->m_Keys[i] = std::move(info);
+           }
+           node->m_KeyCount = count;
+
+           // Leer recursivamente los subárboles
+           for (size_t i = 0; i <= count; i++) {
+               bool hasChild;
+               is.read(reinterpret_cast<char*>(&hasChild), sizeof(hasChild));
+               if (hasChild) {
+                   node->m_SubPages[i] = new BTNode(node->m_MaxKeysForChilds, node->m_Unique);
+                   if (!ReadNode(is, node->m_SubPages[i])) {
+                       return false;
+                   }
+               }
+           }
+
+           return true;
+       }
 
 protected:
        BTNode          m_Root;
