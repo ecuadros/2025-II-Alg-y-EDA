@@ -153,6 +153,25 @@ class CBTreePage //: public SimpleIndex <keyType>
             return nullptr;
         }
 
+        void Write(std::ostream &os){
+            ForEach(Print<typename Trait::keyType, typename Trait::ObjIDType>, 0, &os);
+        }
+
+        void Read(std::istream &is){
+            //Cantidad de claves - valor
+            size_t n;
+            is >> n;
+
+            clear();
+
+            for (size_t i = 0; i < n; ++i) {
+                keyType key;
+                ObjIDType objID;
+                is >> key >> objID;
+                Insert(key, objID);  
+            }
+        }
+
 protected:
        // TODO: #9 change by size_t
        size_t  m_MinKeys; // minimum number of keys in a node

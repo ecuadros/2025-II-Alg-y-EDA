@@ -107,6 +107,15 @@ public:
             return m_Root.FirstThat(function, 0, args...);
        }
 
+       void Write(std::ostream &os){
+            m_Root.Write(os);
+       }
+
+       void Read(std::istream &is){
+            is >> m_Order >> m_Height >> m_NumKeys >> m_Unique;
+            m_Root.Read(is);
+       }
+
 protected:
        BTNode          m_Root;
        size_t          m_Height;  // height of tree
