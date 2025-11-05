@@ -89,6 +89,7 @@ struct tagObjectInfo
        tagObjectInfo()                          {}
        operator keyType                         ()     { return key; }
        size_t                    GetUseCounter() { return UseCounter;    }
+       
 };
 
 template <typename Trait>

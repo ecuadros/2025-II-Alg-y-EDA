@@ -6,6 +6,7 @@
 #include <string>
 #include <shared_mutex>
 #include <mutex>
+#include <utility>
 #include "btreepage.h"
 #define DEFAULT_BTREE_ORDER 3
 
@@ -46,10 +47,6 @@ class BTree // this is the full version of the BTree
 
 public:
        // typedef ObjectInfo iterator;
-       typedef typename BTNode::lpfnForEach2 lpfnForEach2;
-       typedef typename BTNode::lpfnForEach3 lpfnForEach3;
-       typedef typename BTNode::lpfnFirstThat2 lpfnFirstThat2;
-       typedef typename BTNode::lpfnFirstThat3 lpfnFirstThat3;
        typedef typename BTNode::ObjectInfo ObjectInfo;
 
 public:
@@ -64,16 +61,15 @@ public:
        }
        ~BTree() {}
 
-       template <typename Trait>
-       BTree<Trait>::BTree(BTree &&other) noexcept
+       BTree(BTree &&other) noexcept
        {
               std::shared_lock<std::shared_mutex> lk(other.m_mutex);
-              m_Root(std::move(other.m_Root)),
-              m_Height(std::exchange(other.m_Height, 0)),
-              m_Order(std::exchange(other.m_Order, 0)),
-              m_NumKeys(std::exchange(other.m_NumKeys, 0)),
-              m_Unique(std::exchange(other.m_Unique, true)),
-              m_Compare(std::move(other.m_Compare))
+              m_Root = std::move(other.m_Root);
+              m_Height = std::exchange(other.m_Height, 0);
+              m_Order = std::exchange(other.m_Order, 0);
+              m_NumKeys = std::exchange(other.m_NumKeys, 0);
+              m_Unique = std::exchange(other.m_Unique, true);
+              m_Compare = std::move(other.m_Compare);
        }
 
        // int           Open (char * name, int mode);
