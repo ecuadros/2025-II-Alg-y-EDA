@@ -12,7 +12,11 @@ struct BTreeTrait
 {
        using keyType = _keyType;
        using ObjIDType = _ObjIDType;
-       // TODO: agregar funcion de comparacion
+
+       // Comparison function: returns true if a == b
+       static bool isEqual(const keyType& a, const keyType& b) {
+              return a == b;
+       }
 };
 
 template <typename Trait>

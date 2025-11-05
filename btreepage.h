@@ -5,7 +5,6 @@
 #include <assert.h>
 #include <functional>
 
-// TODO: #1 Crear una function para agregarla al demo.cpp ( no trivial )
 // TODO: #2 Agregarle un Trait (prueba git) ( no trivial )
 // TODO: #3 crear un iterator ( no trivial )
 //       Sugerencia: Tarea1 cada pagina debe tener un puntero al padre primero ( no trivial )
@@ -40,13 +39,14 @@ size_t binary_search(Container& container, size_t first, size_t last, ObjType &o
 
 // Error al poner size_t
 // Posible motivo: El i está disminuyendo
+// FIXED: Usando int en lugar de size_t para evitar underflow
 template <typename Container, typename ObjType>
 void insert_at(Container& container, ObjType object, size_t pos)
 {
-       size_t size = container.size();
-       for(size_t i = size-2 ; i >= pos ; i--)
+       int size = container.size();
+       for(int i = size-2 ; i >= (int)pos ; i--)
                container[i+1] = container[i];
-       container[pos] =  object;	
+       container[pos] =  object;
 }
 
 template <typename Container>
