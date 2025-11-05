@@ -896,4 +896,17 @@ void CBTreePage<Trait>::MovePage(BTPage *pChildPage, vector<ObjectInfo> &tmpKeys
        pChildPage->clear();
 }
 
+template <typename Trait>
+std::ostream& operator<<(std::ostream &os, const CBTreePage<Trait> &btpage) {
+    btpage.Write(os);
+    return os;
+}
+
+template <typename Trait>
+std::istream& operator>>(std::istream &is, CBTreePage<Trait> &btpage) {
+    btpage.Read(is);
+    return is;
+}
+
+
 #endif

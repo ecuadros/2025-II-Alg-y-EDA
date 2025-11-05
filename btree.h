@@ -150,6 +150,16 @@ bool BTree<Trait>::Remove (const keyType key, const ObjIDType ObjID)
        return true;
 }
 
+template <typename Trait>
+std::ostream& operator<<(std::ostream &os, const CBTreePage<Trait> &btree) {
+    btree.Write(os);
+    return os;
+}
 
+template <typename Trait>
+std::istream& operator>>(std::istream &is, CBTreePage<Trait> &btree) {
+    btree.Read(is);
+    return is;
+}
 
 #endif
