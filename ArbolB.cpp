@@ -58,18 +58,29 @@ int main (int argc, char ** argv){
                 std::cout << "Clave: " << info.key << " en nivel " << level << std::endl;
         }
     });
-       /*cout.flush();
+    cout << "\n--- Probando Write y Read ---" << endl;
+    {
+        // Write
+        cout << "Guardando el arbol 'bt' en 'btree.dat'..." << endl;
+        ofstream outFile("btree.dat", ios::binary);
+        if (outFile) {
+            bt.Write(outFile);
+            outFile.close();
+            cout << "Guardado con exito" << endl;
+        }
 
-       for (i = 0; keys3[i]; i++)
-       {
-               cout << "Removing " << keys3[i] << " ";
-               if( bt.Remove(keys3[i], -1) )
-                       cout << keys3[i] << " removido !" << endl;
-               else
-                       cout <<"Nao achei!" << keys3[i] << endl;
-               bt.Print(cout);
-       }
-       bt.Print(cout);
-       cout.flush();*/
+        // Read
+        BTree<BTreeTrait<char, int>> bt_loaded(BTreeSize);
+        cout << "Cargando desde 'btree.dat' a 'bt_loaded' " << endl;
+        ifstream inFile("btree.dat", ios::binary);
+        if (inFile) {
+            bt_loaded.Read(inFile);
+            inFile.close();
+            cout << "Cargado con exito:" << endl;
+            bt_loaded.Print(cout);
+        }
+    }
+    cout << "------------------------------------------\n" << endl;
+
        return 1;
 }

@@ -3,16 +3,18 @@
 
 #include <iostream>
 #include <utility>
+#include <fstream>
 #include "btreepage.h"
 #define DEFAULT_BTREE_ORDER 3
 
 const size_t MaxHeight = 5; 
 
 template <typename _keyType, typename _ObjIDType, typename _Compare = std::less<_keyType>>
-struct BTreeTrait // Modificado para aceptar un comparador personalizado
+struct BTreeTrait
 {
        using keyType = _keyType;
        using ObjIDType = _ObjIDType;
+       // TODO: agregar funcion de comparacion (DONE)
        using Compare = _Compare;
 };
 
@@ -49,6 +51,9 @@ public:
        //int           Open (char * name, int mode);
        //int           Create (char * name, int mode);
        //int           Close ();
+       void            Write(ostream& os);
+       void            Read(istream& is);
+
        bool            Insert (const keyType key, const ObjIDType ObjID);
        bool            Remove (const keyType key, const ObjIDType ObjID);
        ObjIDType       Search (const keyType key)
@@ -91,6 +96,25 @@ bool BTree<Trait>::Insert(const keyType key, const ObjIDType ObjID){
                m_Height++;
        }
        return true;
+}
+
+template <typename Trait>
+void BTree<Trait>::Write(ostream& os) {
+    os.write(reinterpret_cast<const char*>(&m_Order), sizeof(m_Order));
+    os.write(reinterpret_cast<const char*>(&m_Unique), sizeof(m_Unique));
+    os.write(reinterpret_cast<const char*>(&m_NumKeys), sizeof(m_NumKeys));
+    os.write(reinterpret_cast<const char*>(&m_Height), sizeof(m_Height));
+    m_Root.Write(os);
+}
+
+template <typename Trait>
+void BTree<Trait>::Read(istream& is) {
+    is.read(reinterpret_cast<char*>(&m_Order), sizeof(m_Order));
+    is.read(reinterpret_cast<char*>(&m_Unique), sizeof(m_Unique));
+    is.read(reinterpret_cast<char*>(&m_NumKeys), sizeof(m_NumKeys));
+    is.read(reinterpret_cast<char*>(&m_Height), sizeof(m_Height));
+    m_Root = BTNode(2 * m_Order + 1, m_Unique);
+    m_Root.Read(is);
 }
 
 template <typename Trait>

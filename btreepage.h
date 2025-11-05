@@ -88,12 +88,16 @@ class CBTreePage //: public SimpleIndex <keyType>
  public:
        CBTreePage(CBTreePage&& other) noexcept; // Move Constructor
        CBTreePage(size_t maxKeys, bool unique = true);
+       CBTreePage& operator=(CBTreePage&& other) noexcept;
        virtual ~CBTreePage();
 
        bt_ErrorCode    Insert (const keyType &key, const ObjIDType ObjID);
        bt_ErrorCode    Remove (const keyType &key, const ObjIDType ObjID);
        bool            Search (const keyType &key, ObjIDType &ObjID);
        void            Print  (ostream &os);
+       void            Write(ostream& os);
+       void            Read(istream& is);
+
        
        // TODO #6, #7, #8: Generalizado con plantillas variádicas y std::invoke (DONE)
        template<typename Func, typename... Args>
@@ -116,7 +120,7 @@ protected:
        vector<BTPage *>m_SubPages;
        Compare m_Compare;
        
-       // TODO: #10 size_t
+       // TODO: #10 size_t (DONE)
        size_t  m_KeyCount;
        void  Create();
        void  Reset ();
@@ -231,10 +235,29 @@ CBTreePage<Trait>::CBTreePage(CBTreePage&& other) noexcept
       m_KeyCount(other.m_KeyCount)
 {
     other.m_KeyCount = 0;
-    // Dejamos el objeto 'other' en un estado seguro y bien definido,
-    // similar a un objeto recién creado, para que se pueda usar o destruir
-    // sin problemas.
-    other.Create();
+}
+
+template <typename Trait>
+CBTreePage<Trait>& CBTreePage<Trait>::operator=(CBTreePage&& other) noexcept {
+    if (this != &other) { // Proteger contra auto-asignación
+        // Liberar los recursos actuales
+        Reset();
+
+        // Robar los recursos de 'other'
+        m_MinKeys = other.m_MinKeys;
+        m_MaxKeys = other.m_MaxKeys;
+        m_MaxKeysForChilds = other.m_MaxKeysForChilds;
+        m_Unique = other.m_Unique;
+        m_isRoot = other.m_isRoot;
+        m_Keys = std::move(other.m_Keys);
+        m_SubPages = std::move(other.m_SubPages);
+        m_Compare = std::move(other.m_Compare);
+        m_KeyCount = other.m_KeyCount;
+
+        // Dejar 'other' en un estado seguro
+        other.m_KeyCount = 0;
+    }
+    return *this;
 }
 
 template <typename Trait>
@@ -511,7 +534,6 @@ bool CBTreePage<Trait>::Search(const keyType &key, ObjIDType &ObjID)
             else
                 return false;
        }
-       // if( key == m_Keys[pos].key )
        if (!m_Compare(key, m_Keys[pos].key) && !m_Compare(m_Keys[pos].key, key))
        {
                ObjID = m_Keys[pos].ObjID;
@@ -581,7 +603,6 @@ bt_ErrorCode CBTreePage<Trait>::Remove(const keyType &key, const ObjIDType ObjID
 {
        bt_ErrorCode error = bt_ok;
        size_t pos = binary_search(m_Keys, 0, m_KeyCount, key, m_Compare);
-       // if( pos < NumberOfKeys() && key == m_Keys[pos].key /*&& m_Keys[pos].m_ObjID == ObjID*/) // We found it !
        if( pos < NumberOfKeys() && !m_Compare(key, m_Keys[pos].key) && !m_Compare(m_Keys[pos].key, key) /*&& m_Keys[pos].m_ObjID == ObjID*/) // We found it !
        {
                // This is a leave: First
@@ -608,7 +629,6 @@ bt_ErrorCode CBTreePage<Trait>::Remove(const keyType &key, const ObjIDType ObjID
        }
        else if( pos == NumberOfKeys() ) // it is not here, go by the last branch
                error = m_SubPages[pos]->Remove(key, ObjID);
-       // else if( key <= m_Keys[pos].key ) // = is because identical keys are inserted on left (see Insert)
        else if( !m_Compare(m_Keys[pos].key, key) )
        {        if( m_SubPages[pos] )
                        error = m_SubPages[pos]->Remove(key, ObjID);
@@ -675,7 +695,7 @@ bt_ErrorCode CBTreePage<Trait>::Merge(size_t pos)
 
        nKeys = pChild2->GetFreeCells();
 
-       // TODO: #32 change int by size_t
+       // TODO: #32 change int by size_t (DONE)
        size_t j = ++i;
        for(i = 0 ; i < nKeys ; i++, j++ )
        {
@@ -694,7 +714,7 @@ bt_ErrorCode CBTreePage<Trait>::Merge(size_t pos)
 template <typename Trait>
 bt_ErrorCode CBTreePage<Trait>::MergeRoot()
 {
-        // TODO: #33 change int by size_t
+        // TODO: #33 change int by size_t (DONE)
        size_t pos = 1;
        assert( m_SubPages[pos-1]->NumberOfKeys() +
                        m_SubPages[ pos ]->NumberOfKeys() +
@@ -702,7 +722,7 @@ bt_ErrorCode CBTreePage<Trait>::MergeRoot()
                        3*m_SubPages[ pos ]->MinNumberOfKeys() - 1);
 
        BTPage  *pChild1 = m_SubPages[pos-1], *pChild2 = m_SubPages[ pos ], *pChild3 = m_SubPages[pos+1];
-       // TODO: #34 change int by size_t
+       // TODO: #34 change int by size_t (DONE)
        size_t nKeys = pChild1->NumberOfKeys() + pChild2->NumberOfKeys() + pChild3->NumberOfKeys() + 2;
 
        // FIRST: Put all the elements into a vector
@@ -771,7 +791,7 @@ void CBTreePage<Trait>::Create()
 template <typename Trait>
 void CBTreePage<Trait>::Reset()
 {
-        // TODO: #35 change int by size_t
+        // TODO: #35 change int by size_t (DONE)
        for( size_t i = 0 ; i < m_KeyCount ; i++ )
                delete m_SubPages[i];
        clear();
@@ -794,7 +814,7 @@ CBTreePage<Trait> * CreateBTreeNode (size_t maxKeys, bool unique)
 template <typename Trait>
 void CBTreePage<Trait>::MovePage(BTPage *pChildPage, vector<ObjectInfo> &tmpKeys,vector<BTPage *> &tmpSubPages)
 {
-        // TODO: #37 change int by size_t
+        // TODO: #37 change int by size_t (DONE)
        size_t nKeys = pChildPage->GetNumberOfKeys();
        size_t i = 0;
        for(i = 0; i < nKeys; i++ )
@@ -804,6 +824,43 @@ void CBTreePage<Trait>::MovePage(BTPage *pChildPage, vector<ObjectInfo> &tmpKeys
        }
        tmpSubPages.push_back(pChildPage->m_SubPages[i]);
        pChildPage->clear();
+}
+
+template <typename Trait>
+void CBTreePage<Trait>::Write(ostream& os) {
+    os.write(reinterpret_cast<const char*>(&m_KeyCount), sizeof(m_KeyCount));
+
+    for (size_t i = 0; i < m_KeyCount; ++i) {
+        os.write(reinterpret_cast<const char*>(&m_Keys[i]), sizeof(ObjectInfo));
+    }
+
+    bool is_leaf = (m_SubPages[0] == nullptr);
+    os.write(reinterpret_cast<const char*>(&is_leaf), sizeof(is_leaf));
+
+    if (!is_leaf) {
+        for (size_t i = 0; i <= m_KeyCount; ++i) {
+            m_SubPages[i]->Write(os);
+        }
+    }
+}
+
+template <typename Trait>
+void CBTreePage<Trait>::Read(istream& is) {
+    is.read(reinterpret_cast<char*>(&m_KeyCount), sizeof(m_KeyCount));
+
+    for (size_t i = 0; i < m_KeyCount; ++i) {
+        is.read(reinterpret_cast<char*>(&m_Keys[i]), sizeof(ObjectInfo));
+    }
+
+    bool is_leaf;
+    is.read(reinterpret_cast<char*>(&is_leaf), sizeof(is_leaf));
+
+    if (!is_leaf) {
+        for (size_t i = 0; i <= m_KeyCount; ++i) {
+            m_SubPages[i] = new BTPage(m_MaxKeysForChilds, m_Unique);
+            m_SubPages[i]->Read(is);
+        }
+    }
 }
 
 #endif
