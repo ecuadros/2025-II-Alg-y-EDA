@@ -64,14 +64,15 @@ public:
        }
        ~BTree() {}
 
-       BTree(BTree &&other)
+       template <typename Trait>
+       BTree<Trait>::BTree(BTree &&other) noexcept
+           : m_Root(std::move(other.m_Root)),
+             m_Height(std::exchange(other.m_Height, 0)),
+             m_Order(std::exchange(other.m_Order, 0)),
+             m_NumKeys(std::exchange(other.m_NumKeys, 0)),
+             m_Unique(std::exchange(other.m_Unique, true)),
+             m_Compare(std::move(other.m_Compare))
        {
-              m_Root = std::move(other.m_Root);
-              m_Height = std::move(other.m_Height);
-              m_Order = std::move(other.m_Order);
-              m_NumKeys = std::move(other.m_NumKeys);
-              m_Unique = std::move(other.m_Unique);
-              m_Compare = std::move(other.m_Compare);
        }
 
        // int           Open (char * name, int mode);
