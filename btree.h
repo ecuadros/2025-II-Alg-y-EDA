@@ -3,35 +3,21 @@
 
 #include <iostream>
 #include <functional>
+#include <utility>
 #include "btreepage.h"
 #include "btree_iterator.h"
 #define DEFAULT_BTREE_ORDER 3
 
 const size_t MaxHeight = 5; 
 
-template <typename _keyType, typename _ObjIDType>
+template <typename _keyType, typename _ObjIDType, typename _CompareFn = std::less<_keyType>>
 struct BTreeTrait
 {
        using keyType = _keyType;
        using ObjIDType = _ObjIDType;
-       using CompareFn = std::less<_keyType>;
+       using CompareFn = _CompareFn;
 };
 
-template <typename _keyType, typename _ObjIDType>
-struct BTreeAscTrait
-{
-       using keyType = _keyType;
-       using ObjIDType = _ObjIDType;
-       using CompareFn = std::less<_keyType>;
-};
-
-template <typename _keyType, typename _ObjIDType>
-struct BTreeDescTrait
-{
-       using keyType = _keyType;
-       using ObjIDType = _ObjIDType;
-       using CompareFn = std::greater<_keyType>;
-};
 
 template <typename Trait>
 class BTree // this is the full version of the BTree
@@ -63,6 +49,27 @@ public:
               m_Root.SetMaxKeysForChilds(order);
               m_Height = 1;
        }
+
+       BTree(BTree &&other)
+              : m_Root(2 * other.m_Order + 1, other.m_Unique),
+                m_Height(std::exchange(other.m_Height, 0)),
+                m_Order(std::exchange(other.m_Order, 0)),
+                m_NumKeys(std::exchange(other.m_NumKeys, 0)),
+                m_Unique(std::exchange(other.m_Unique, false)),
+                m_Compare(std::move(other.m_Compare))
+       {
+              // using swap from std::vector
+              m_Root.m_Keys.swap(other.m_Root.m_Keys);
+              m_Root.m_SubPages.swap(other.m_Root.m_SubPages);
+              m_Root.m_KeyCount = std::exchange(other.m_Root.m_KeyCount, 0);
+              m_Root.m_MinKeys = std::exchange(other.m_Root.m_MinKeys, 0);
+              m_Root.m_MaxKeys = std::exchange(other.m_Root.m_MaxKeys, 0);
+              m_Root.m_MaxKeysForChilds = std::exchange(other.m_Root.m_MaxKeysForChilds, 0);
+
+              // moved root so update parent pointers
+              m_Root.UpdateChildrenParentPointers();
+       }
+
        ~BTree() {}
        //int           Open (char * name, int mode);
        //int           Create (char * name, int mode);
