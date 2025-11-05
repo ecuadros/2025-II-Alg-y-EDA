@@ -34,16 +34,6 @@ struct CompararPorEdad {
     }
 };
 
-template <typename keyType, typename ObjIDType>
-void PrintPersona(tagObjectInfo<keyType, ObjIDType> &info, size_t level, void *pExtra)
-{
-    ostream &os = *(ostream *)pExtra;
-    for(size_t i = 0; i < level ; i++)
-        os << "\t";
-    Persona* p = (Persona*)&info.key;
-    os << p->nombre << " (edad: " << p->edad << ") -> " << info.ObjID << "\n";
-}
-
 int main() {
     cout << "=== Demo BTree ===" << endl << endl;
 
@@ -195,7 +185,12 @@ int main() {
     }
 
     cout << "\n2. Arbol resultante (ordenado por edad):" << endl;
-    btree_personas.ForEach(&PrintPersona<Persona, long>, &cout);
+    btree_personas.ForEach([](auto& info, size_t level, ostream* pos) {
+        for(size_t i = 0; i < level; i++)
+            (*pos) << "\t";
+        Persona* p = (Persona*)&info.key;
+        (*pos) << p->nombre << " (edad: " << p->edad << ") -> " << info.ObjID << "\n";
+    }, &cout);
 
     cout << "\n3. Informacion del arbol:" << endl;
     cout << "   Tamano: " << btree_personas.size() << endl;
