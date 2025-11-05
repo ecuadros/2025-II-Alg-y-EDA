@@ -27,8 +27,8 @@ class BTree // this is the full version of the BTree
 
 public:
        //typedef ObjectInfo iterator;
-       typedef typename BTNode::lpfnForEach2    lpfnForEach2;
-       typedef typename BTNode::lpfnForEach3    lpfnForEach3;
+       // typedef typename BTNode::lpfnForEach2    lpfnForEach2;
+       // typedef typename BTNode::lpfnForEach3    lpfnForEach3;
        typedef typename BTNode::lpfnFirstThat2  lpfnFirstThat2;
        typedef typename BTNode::lpfnFirstThat3  lpfnFirstThat3;
        typedef typename BTNode::ObjectInfo      ObjectInfo;
@@ -60,10 +60,16 @@ public:
 
        void            Print (ostream &os)
        {               m_Root.Print(os);                              }
-       void            ForEach( lpfnForEach2 lpfn, void *pExtra1 )
-       {               m_Root.ForEach(lpfn, 0, pExtra1);              }
-       void            ForEach( lpfnForEach3 lpfn, void *pExtra1, void *pExtra2)
-       {               m_Root.ForEach(lpfn, 0, pExtra1, pExtra2);     }
+       // void            ForEach( lpfnForEach2 lpfn, void *pExtra1 )
+       // {               m_Root.ForEach(lpfn, 0, pExtra1);              }
+       // void            ForEach( lpfnForEach3 lpfn, void *pExtra1, void *pExtra2)
+       // {               m_Root.ForEach(lpfn, 0, pExtra1, pExtra2);     }
+
+       template <typename Function>
+       void ForEach( Function fn ){
+              m_Root.ForEach(fn, 0);
+       }
+
        ObjectInfo*     FirstThat( lpfnFirstThat2 lpfn, void *pExtra1 )
        {               return m_Root.FirstThat(lpfn, 0, pExtra1);     }
        ObjectInfo*     FirstThat( lpfnFirstThat3 lpfn, void *pExtra1, void *pExtra2)

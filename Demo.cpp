@@ -5,13 +5,6 @@
 using DemoTrait = BTreeTrait<char, long>;
 using DemoTree  = BTree<DemoTrait>;
 
-// Callback compatible con lpfnForEach2 para esta instancia
-static void PrintCallback(typename DemoTree::ObjectInfo &info, size_t level, void *pExtra)
-{
-    std::ostream &os = *static_cast<std::ostream*>(pExtra);
-    for(size_t i = 0; i < level; ++i) os << '\t';
-    os << info.key << " -> " << info.ObjID << '\n';
-}
 
 void DemoOperations(DemoTree &bt)
 {
@@ -36,10 +29,6 @@ void DemoOperations(DemoTree &bt)
         else
             std::cout << "  No encontrado '" << probes[i] << "\n";
     }
-    std::cout << '\n';
-
-    std::cout << "Recorrido (ForEach) usando PrintCallback:\n";
-    bt.ForEach((DemoTree::lpfnForEach2)&PrintCallback, &std::cout);
     std::cout << '\n';
 
     std::cout << "Delete (Demo: Eliminando claves en posiciones pares (ejemplo)...)\n";
