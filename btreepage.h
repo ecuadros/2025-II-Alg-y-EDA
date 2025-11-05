@@ -150,6 +150,10 @@ class CBTreePage //: public SimpleIndex <keyType>
         CBTreePage(const CBTreePage&) = delete; //deshabilitar copia
         CBTreePage& operator=(const CBTreePage&) = delete;
 
+        //read and write 
+        void Write(std::ostream& os) const;
+        void Read (std::istream& is);
+
 protected:
         // compare 
         static bool less (const keyType& a, const keyType& b) {
@@ -229,6 +233,55 @@ private:
                                                ObjectInfo        & oi2);
        void MovePage(BTPage *  pChildPage,vector<ObjectInfo> & tmpKeys,vector<BTPage *> & tmpSubPages);
 };
+
+//wirte and read
+template <typename Trait>
+void CBTreePage<Trait>::Write(std::ostream& os) const {
+    // imprimir cantidad de claves
+    os << m_KeyCount << '\n';
+
+    // imprimir pares (key, ObjID)
+    for (size_t i = 0; i < m_KeyCount; ++i) {
+        os << m_Keys[i].key << ' ' << m_Keys[i].ObjID << '\n';
+    }
+
+    // imprimir flags de hijos y subárboles
+    for (size_t i = 0; i <= m_KeyCount; ++i) {
+        const bool hasChild = (m_SubPages[i] != nullptr);
+        os << (hasChild ? 1 : 0) << '\n';
+        if (hasChild) m_SubPages[i]->Write(os);
+    }
+}
+
+
+template <typename Trait>
+void CBTreePage<Trait>::Read(std::istream& is) {
+    // Limpia lo actual
+    Reset();                      // borra subpáginas existentes
+    clear();                      // m_KeyCount = 0
+
+    size_t count = 0;
+    is >> count;
+    m_KeyCount = count;
+
+    for (size_t i = 0; i < m_KeyCount; ++i) {
+        keyType k; ObjIDType id;
+        is >> k >> id;
+        m_Keys[i] = ObjectInfo(k, id);
+    }
+
+    for (size_t i = 0; i < m_MaxKeys + 2; ++i) m_SubPages[i] = nullptr;
+
+    // Lee flags y subárboles recursivamente
+    for (size_t i = 0; i <= m_KeyCount; ++i) {
+        int hasChild = 0;
+        is >> hasChild;
+        if (hasChild) {
+            m_SubPages[i] = new CBTreePage<Trait>(m_MaxKeysForChilds, m_Unique);
+            m_SubPages[i]->Read(is);
+        }
+    }
+}
 
 //move templates
 template <typename Trait>
