@@ -21,17 +21,17 @@ enum bt_ErrorCode {bt_ok, bt_overflow, bt_underflow, bt_duplicate, bt_nofound, b
 template <typename Container, typename ObjType, typename CompareFunc>
 size_t binary_search(Container& container, size_t first, size_t last, ObjType &object, CompareFunc compare)
 {
-       while (first < last)
+       while( first < last )
        {
-               size_t mid = (first + last)/2;
+               size_t mid = (first+last)/2;
                if (!compare(object, (ObjType)container[mid]) && !compare((ObjType)container[mid], object)) // a == b
                        return mid;
                if (compare((ObjType)container[mid], object)) // a >> b
-                        first = mid+1;
+                       first = mid+1;
                else // a << b
                        last  = mid;
        }
-       if (!compare((ObjType)container[first], object) ) // object <= container[first]
+       if (!compare((ObjType)container[first], object) )
                return first;
        return last;
 }
@@ -88,7 +88,6 @@ class CBTreePage //: public SimpleIndex <keyType>
  public:
        CBTreePage(CBTreePage&& other) noexcept; // Move Constructor
        CBTreePage(size_t maxKeys, bool unique = true);
-       CBTreePage& operator=(CBTreePage&& other) noexcept;
        virtual ~CBTreePage();
 
        bt_ErrorCode    Insert (const keyType &key, const ObjIDType ObjID);
@@ -195,7 +194,6 @@ bt_ErrorCode CBTreePage<Trait>::Insert(const keyType& key, const ObjIDType ObjID
        size_t pos = binary_search(m_Keys, 0, m_KeyCount, key, m_Compare);
        bt_ErrorCode error = bt_ok;
 
-       // if( pos < m_KeyCount && (keyType)m_Keys[pos] == key && m_Unique)
        if( pos < m_KeyCount && !m_Compare(key, (keyType)m_Keys[pos]) && !m_Compare((keyType)m_Keys[pos], key) && m_Unique)
                return bt_duplicate; // this key is duplicate
 
@@ -235,29 +233,6 @@ CBTreePage<Trait>::CBTreePage(CBTreePage&& other) noexcept
       m_KeyCount(other.m_KeyCount)
 {
     other.m_KeyCount = 0;
-}
-
-template <typename Trait>
-CBTreePage<Trait>& CBTreePage<Trait>::operator=(CBTreePage&& other) noexcept {
-    if (this != &other) { // Proteger contra auto-asignación
-        // Liberar los recursos actuales
-        Reset();
-
-        // Robar los recursos de 'other'
-        m_MinKeys = other.m_MinKeys;
-        m_MaxKeys = other.m_MaxKeys;
-        m_MaxKeysForChilds = other.m_MaxKeysForChilds;
-        m_Unique = other.m_Unique;
-        m_isRoot = other.m_isRoot;
-        m_Keys = std::move(other.m_Keys);
-        m_SubPages = std::move(other.m_SubPages);
-        m_Compare = std::move(other.m_Compare);
-        m_KeyCount = other.m_KeyCount;
-
-        // Dejar 'other' en un estado seguro
-        other.m_KeyCount = 0;
-    }
-    return *this;
 }
 
 template <typename Trait>

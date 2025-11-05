@@ -13,11 +13,11 @@ int main (int argc, char ** argv){
     cout << "--- Probando BTree con orden ascendente por defecto ---" << endl;
     // BTree con orden ascendente (std::less por defecto)
     BTree<BTreeTrait<char, int>> bt(BTreeSize);
-    bt.Print(cout);
+    cout << bt;
     for (i = 0; keys1[i]; ++i) {
         result = bt.Insert(keys1[i], i+1);
     }
-    bt.Print(cout);
+    cout << bt;
        
     cout << "------------------------------------------\n" << endl;
     cout << "\n--- Probando la busqueda ---" << endl;
@@ -36,19 +36,19 @@ int main (int argc, char ** argv){
     for (i = 0; keys1[i]; i++) {
         result = bt_desc.Insert(keys1[i], i+1); 
     }
-    bt_desc.Print(cout);
+    cout << bt_desc;
 
     cout << "\n--- Moviendo el arbol bt_desc a bt_moved ---" << endl;
     BTree<BTreeTrait<char, int, std::greater<char>>> bt_moved(std::move(bt_desc));
 
     cout << "Arbol movido (bt_moved):" << endl;
-    bt_moved.Print(cout);
+    cout << bt_moved;
 
     cout << "Arbol original (bt_desc) despues de mover:" << endl;
     if (bt_desc.size() == 0) {
         cout << "(El arbol esta vacio)" << endl;
     } else {
-        bt_desc.Print(cout); // No deberia llegar aqui
+        cout << bt_desc; // No deberia llegar aqui
     }
 
     cout << "------------------------------------------\n" << endl;
@@ -77,7 +77,7 @@ int main (int argc, char ** argv){
             bt_loaded.Read(inFile);
             inFile.close();
             cout << "Cargado con exito:" << endl;
-            bt_loaded.Print(cout);
+            cout << bt_loaded;
         }
     }
     cout << "------------------------------------------\n" << endl;

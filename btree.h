@@ -113,7 +113,9 @@ void BTree<Trait>::Read(istream& is) {
     is.read(reinterpret_cast<char*>(&m_Unique), sizeof(m_Unique));
     is.read(reinterpret_cast<char*>(&m_NumKeys), sizeof(m_NumKeys));
     is.read(reinterpret_cast<char*>(&m_Height), sizeof(m_Height));
-    m_Root = BTNode(2 * m_Order + 1, m_Unique);
+    m_Root.m_MaxKeys = 2 * m_Order + 1;
+    m_Root.m_Unique = m_Unique;
+    m_Root.Create();
     m_Root.Read(is);
 }
 
@@ -128,6 +130,12 @@ bool BTree<Trait>::Remove (const keyType key, const ObjIDType ObjID)
        if( error == bt_rootmerged )
                m_Height--;
        return true;
+}
+
+template <typename Trait>
+std::ostream& operator<<(std::ostream& os, BTree<Trait>& tree) {
+    tree.Print(os);
+    return os;
 }
 
 #endif
