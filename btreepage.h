@@ -130,10 +130,16 @@ protected:
        size_t  m_KeyCount;
        CompareFn m_Compare;
 
+       BTPage* m_Parent;
+       size_t  m_PosInParent;
+
        void  Create();
        void  Reset ();
        void  Destroy () {   Reset(); delete this;}
        void  clear ();
+
+       void  UpdateChildrenParentPointers();
+       void  SetChildParent(size_t pos, BTPage* child);
 
        bool  RedistributeWith1Brother   (size_t &pos);
        bool  RedistributeWith2Brothers   (size_t pos);
@@ -186,7 +192,8 @@ private:
 
 template <typename Trait>
 CBTreePage<Trait>:: CBTreePage(size_t maxKeys, bool unique)
-                               : m_MaxKeys(maxKeys), m_Unique(unique), m_KeyCount(0)
+                               : m_MaxKeys(maxKeys), m_Unique(unique), m_KeyCount(0),
+                                m_Parent(nullptr), m_PosInParent(0)
 {
        Create();
        SetMaxKeysForChilds(m_MaxKeys);
@@ -326,6 +333,7 @@ void CBTreePage<Trait>::RedistributeR2L(size_t pos)
                ::insert_at(pTarget->m_Keys, m_Keys[pos-1], pTarget->NumberOfKeys()++);
                // Move the pointer leftest pointer to the rightest position
                ::insert_at(pTarget->m_SubPages, pSource->m_SubPages[0], pTarget->NumberOfKeys());
+               SetChildParent(pTarget->NumberOfKeys(), pSource->m_SubPages[0]);
 
                // Move the leftest element to the root
                m_Keys[pos-1] = pSource->m_Keys[0];
@@ -334,7 +342,9 @@ void CBTreePage<Trait>::RedistributeR2L(size_t pos)
                ::remove(pSource->m_Keys    , 0);
                ::remove(pSource->m_SubPages, 0);
                pSource->NumberOfKeys()--;
+               pSource->UpdateChildrenParentPointers();
        }
+       pTarget->UpdateChildrenParentPointers();
 }
 
 template <typename Trait>
@@ -349,6 +359,7 @@ void CBTreePage<Trait>::RedistributeL2R(size_t pos)
                ::insert_at(pTarget->m_Keys, m_Keys[pos], 0);
                // Move the pointer rightest pointer to the leftest position
                ::insert_at(pTarget->m_SubPages, pSource->m_SubPages[pSource->NumberOfKeys()], 0);
+               SetChildParent(0, pSource->m_SubPages[pSource->NumberOfKeys()]);
                pTarget->NumberOfKeys()++;
 
                // Move the rightest element to the root
@@ -357,6 +368,7 @@ void CBTreePage<Trait>::RedistributeL2R(size_t pos)
                // Remove the leftest element from rigth page
                // it is not necessary erase because m_KeyCount controls
                pSource->NumberOfKeys()--;
+               pTarget->UpdateChildrenParentPointers();
        }
 }
 
@@ -401,6 +413,7 @@ void CBTreePage<Trait>::SplitChild(size_t pos)
        // copy the first element to the root
        m_Keys    [pos] = oi1;
        m_SubPages[pos] = pChild1;
+       SetChildParent(pos, pChild1);
 
        // copy the second element to the root
        ::insert_at(m_Keys, oi2, pos+1);
@@ -408,6 +421,8 @@ void CBTreePage<Trait>::SplitChild(size_t pos)
        NumberOfKeys()++;
 
        m_SubPages[pos+2] = pChild3;
+       SetChildParent(pos+1, pChild2);
+       SetChildParent(pos+2, pChild3);
 }
 
 // Ddivide a large page into 3 pages (2m/3 each one)
@@ -437,6 +452,7 @@ void CBTreePage<Trait>::SplitPageInto3(vector<ObjectInfo>& tmpKeys,
                pChild1->NumberOfKeys()++;
        }
        pChild1->m_SubPages[i] = tmpSubPages[i];
+       pChild1->UpdateChildrenParentPointers();
 
        // first element to go up !
        oi1 = tmpKeys[i++];
@@ -454,6 +470,7 @@ void CBTreePage<Trait>::SplitPageInto3(vector<ObjectInfo>& tmpKeys,
                pChild2->NumberOfKeys()++;
        }
        pChild2->m_SubPages[j] = tmpSubPages[i];
+       pChild2->UpdateChildrenParentPointers();
 
        // copy the second element to the root
        oi2 = tmpKeys[i++];
@@ -470,6 +487,7 @@ void CBTreePage<Trait>::SplitPageInto3(vector<ObjectInfo>& tmpKeys,
                pChild3->NumberOfKeys()++;
        }
        pChild3->m_SubPages[j] = tmpSubPages[i];
+       pChild3->UpdateChildrenParentPointers();
 }
 
 template <typename Trait>
@@ -482,14 +500,17 @@ bool CBTreePage<Trait>::SplitRoot(){
        // copy the first element to the root
        m_Keys    [0] = oi1;
        m_SubPages[0] = pChild1;
+       SetChildParent(0, pChild1);
        NumberOfKeys()++;
 
        // copy the second element to the root
        m_Keys    [1] = oi2;
        m_SubPages[1] = pChild2;
+       SetChildParent(1, pChild2);
        NumberOfKeys()++;
 
        m_SubPages[2] = pChild3;
+       SetChildParent(2, pChild3);
        return true;
 }
 
@@ -729,9 +750,11 @@ bt_ErrorCode CBTreePage<Trait>::Merge(size_t pos)
                pChild1->NumberOfKeys()++;
        }
        pChild1->m_SubPages[i] = tmpSubPages[i];
+       pChild1->UpdateChildrenParentPointers();
 
        m_Keys    [pos-1] = tmpKeys[i];
        m_SubPages[pos-1] = pChild1;
+       SetChildParent(pos-1, pChild1);
 
        ::remove(m_Keys    , pos);
        ::remove(m_SubPages, pos);
@@ -748,7 +771,9 @@ bt_ErrorCode CBTreePage<Trait>::Merge(size_t pos)
                pChild2->NumberOfKeys()++;
        }
        pChild2->m_SubPages[i] = tmpSubPages[j];
+       pChild2->UpdateChildrenParentPointers();
        m_SubPages[ pos ]          = pChild2;
+       SetChildParent(pos, pChild2);
 
        if( Underflow() )
                return bt_underflow;
@@ -869,6 +894,23 @@ void CBTreePage<Trait>::MovePage(BTPage *pChildPage, vector<ObjectInfo> &tmpKeys
        }
        tmpSubPages.push_back(pChildPage->m_SubPages[i]);
        pChildPage->clear();
+}
+
+template <typename Trait>
+void CBTreePage<Trait>::UpdateChildrenParentPointers()
+{
+        for(size_t i = 0 ; i <= m_KeyCount ; i++ )
+                SetChildParent(i, m_SubPages[i]);
+}
+
+template <typename Trait>
+void CBTreePage<Trait>::SetChildParent(size_t pos, BTPage* child)
+{
+        if( child )
+        {
+                child->m_Parent = this;
+                child->m_PosInParent = pos;
+        }
 }
 
 #endif
