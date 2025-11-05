@@ -132,20 +132,23 @@ class CBTreePage
        CBTreePage(size_t maxKeys, bool unique = true);
        
        /** @brief Move constructor (transfiere recursos sin copiar) */
-       CBTreePage(CBTreePage&& other) noexcept
-                : m_MinKeys(std::exchange(other.m_MinKeys, 0)),
-                m_MaxKeys(std::exchange(other.m_MaxKeys, 0)),
-                m_MaxKeysForChilds(std::exchange(other.m_MaxKeysForChilds, 0)),
-                m_Unique(std::exchange(other.m_Unique, true)),
-                m_isRoot(std::exchange(other.m_isRoot, false)),
-                m_Keys(std::move(other.m_Keys)),
-                m_SubPages(std::move(other.m_SubPages)),
-                m_KeyCount(std::exchange(other.m_KeyCount, 0)),
-                m_Parent(std::exchange(other.m_Parent, nullptr)),
-                m_nodeMutex() {}  // Nuevo mutex, no se puede mover
-       
-       /** @brief Move assignment operator */
-       CBTreePage& operator=(CBTreePage&& other) noexcept {
+        CBTreePage(CBTreePage&& other) noexcept
+        : m_nodeMutex() {  // Inicializamos nuestro mutex
+        std::unique_lock lock(other.m_nodeMutex);  // Se bloquea el mutex de other
+        
+        m_MinKeys = std::exchange(other.m_MinKeys, 0);
+        m_MaxKeys = std::exchange(other.m_MaxKeys, 0);
+        m_MaxKeysForChilds = std::exchange(other.m_MaxKeysForChilds, 0);
+        m_Unique = std::exchange(other.m_Unique, true);
+        m_isRoot = std::exchange(other.m_isRoot, false);
+        m_Keys = std::move(other.m_Keys);
+        m_SubPages = std::move(other.m_SubPages);
+        m_KeyCount = std::exchange(other.m_KeyCount, 0);
+        m_Parent = std::exchange(other.m_Parent, nullptr);
+        }
+
+        /** @brief Move assignment operator */
+        CBTreePage& operator=(CBTreePage&& other) noexcept {
         if (this != &other) {
                 std::unique_lock lock1(m_nodeMutex, std::defer_lock);
                 std::unique_lock lock2(other.m_nodeMutex, std::defer_lock);

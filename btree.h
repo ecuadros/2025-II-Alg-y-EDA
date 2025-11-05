@@ -251,16 +251,19 @@ public:
        }
        
        /** @brief Move constructor (transfiere recursos sin copiar) */
-      BTree(BTree&& other) noexcept
-          : m_Order(std::exchange(other.m_Order, DEFAULT_BTREE_ORDER)),
-          m_Root(std::move(other.m_Root)),
-          m_Height(std::exchange(other.m_Height, 1)),
-          m_NumKeys(std::exchange(other.m_NumKeys, 0)),
-          m_Unique(std::exchange(other.m_Unique, true)),
-          m_Mutex() {}  // Nuevo mutex, no se puede mover
-       
-       /** @brief Move assignment operator */
-       BTree& operator=(BTree&& other) noexcept {
+        BTree(BTree&& other) noexcept
+            : m_Mutex() {  // Inicializamos nuestro mutex
+            std::unique_lock lock(other.m_Mutex);  // Se bloquea el mutex de other
+            
+            m_Order = std::exchange(other.m_Order, DEFAULT_BTREE_ORDER);
+            m_Root = std::move(other.m_Root);
+            m_Height = std::exchange(other.m_Height, 1);
+            m_NumKeys = std::exchange(other.m_NumKeys, 0);
+            m_Unique = std::exchange(other.m_Unique, true);
+        }
+
+        /** @brief Move assignment operator */
+        BTree& operator=(BTree&& other) noexcept {
             if (this != &other) {
                 std::unique_lock lock1(m_Mutex, std::defer_lock);
                 std::unique_lock lock2(other.m_Mutex, std::defer_lock);
