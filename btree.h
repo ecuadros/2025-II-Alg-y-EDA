@@ -68,6 +68,9 @@ public:
        {               return m_Root.FirstThat(lpfn, 0, pExtra1, pExtra2);   }
        //typedef               ObjectInfo iterator;
 
+       template<typename Func, typename... Args>
+       void ForEach(Func&& func, Args&&... args)
+       {               m_Root.ForEach(std::forward<Func>(func), 0, std::forward<Args>(args)...);}
 protected:
        BTNode          m_Root;
        size_t          m_Height;  // height of tree
