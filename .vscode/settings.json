@@ -12,6 +12,7 @@
         "streambuf": "cpp",
         "vector": "cpp",
         "utility": "cpp",
-        "iosfwd": "cpp"
+        "iosfwd": "cpp",
+        "iostream": "cpp"
     }
 }
