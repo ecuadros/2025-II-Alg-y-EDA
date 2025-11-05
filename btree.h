@@ -110,7 +110,188 @@ protected:
        size_t computeHeight(const BTNode& n) const;
        size_t computeSize  (const BTNode& n) const;
 
-};     
+}; 
+
+// Iteradores in-order (forward) y reverse in-order (backward)
+class iterator {
+    using BTNode = typename BTree::BTNode;
+    using ObjectInfo = typename BTree::ObjectInfo;
+public:
+    using value_type = ObjectInfo;
+    using reference = ObjectInfo&;
+    using pointer = ObjectInfo*;
+    using difference_type = std::ptrdiff_t;
+    using iterator_category = std::forward_iterator_tag;
+
+    iterator() : m_tree(nullptr), m_curr(nullptr), m_idx(0) {}
+
+    reference operator*()  const { return m_curr->m_Keys[m_idx]; }
+    pointer   operator->() const { return &m_curr->m_Keys[m_idx]; }
+
+    iterator& operator++() { next(); return *this; }
+    iterator  operator++(int) { iterator tmp=*this; next(); return tmp; }
+
+    bool operator==(const iterator& o) const {
+        return m_curr == o.m_curr && m_idx == o.m_idx && m_tree == o.m_tree;
+    }
+    bool operator!=(const iterator& o) const { return !(*this == o); }
+
+private:
+    friend class BTree;
+    struct Frame { BTNode* node; size_t idx; };
+
+    iterator(BTree* t, bool to_begin) : m_tree(t), m_curr(nullptr), m_idx(0) {
+        if (!t) return;
+        if (to_begin) go_begin();
+        else { // end()
+            m_curr = nullptr; m_idx = 0; m_stack.clear();
+        }
+    }
+
+    void go_begin() {
+        m_stack.clear();
+        BTNode* n = &m_tree->m_Root;
+        // bajar hasta la hoja más a la izquierda
+        while (n && n->m_SubPages[0]) {
+            m_stack.push_back({n, 0});
+            n = n->m_SubPages[0];
+        }
+        if (!n || n->m_KeyCount == 0) {
+            // árbol vacío
+            m_curr = nullptr; m_idx = 0; m_stack.clear();
+            return;
+        }
+        m_curr = n; m_idx = 0;
+    }
+
+    void next() {
+        if (!m_curr) return; // ya en end
+        //si hay hijo derecho del elemento actual, bajamos a su mínimo
+        if (m_curr->m_SubPages[m_idx + 1]) {
+            BTNode* n = m_curr->m_SubPages[m_idx + 1];
+            m_stack.push_back({m_curr, m_idx + 1}); // subiremos desde aquí
+            while (n->m_SubPages[0]) {
+                m_stack.push_back({n, 0});
+                n = n->m_SubPages[0];
+            }
+            m_curr = n; m_idx = 0;
+            return;
+        }
+        // subir hasta poder avanzar en el mismo nodo
+        while (!m_stack.empty()) {
+            auto fr = m_stack.back(); m_stack.pop_back();
+            BTNode* parent = fr.node;
+            size_t  pi     = fr.idx;
+            // venimos de "antes" del key de índice pi; ese key es el siguiente
+            if (pi < parent->m_KeyCount) {
+                m_curr = parent; m_idx = pi;
+                return;
+            }
+            // si pi == m_KeyCount, estábamos después del último key; seguir subiendo
+        }
+        //no hay más
+        m_curr = nullptr; m_idx = 0; // end
+    }
+
+    BTree* m_tree;
+    BTNode* m_curr;
+    size_t m_idx;
+    std::vector<Frame> m_stack;
+};
+
+class reverse_iterator {
+    using BTNode = typename BTree::BTNode;
+    using ObjectInfo = typename BTree::ObjectInfo;
+public:
+    using value_type = ObjectInfo;
+    using reference = ObjectInfo&;
+    using pointer = ObjectInfo*;
+    using difference_type = std::ptrdiff_t;
+    using iterator_category = std::forward_iterator_tag; // ++ avanza hacia atrás lógico
+
+    reverse_iterator() : m_tree(nullptr), m_curr(nullptr), m_idx(0) {}
+
+    reference operator*()  const { return m_curr->m_Keys[m_idx]; }
+    pointer   operator->() const { return &m_curr->m_Keys[m_idx]; }
+
+    // ++ se mueve al "anterior" en orden
+    reverse_iterator& operator++() { prev(); return *this; }
+    reverse_iterator  operator++(int) { auto tmp=*this; prev(); return tmp; }
+
+    bool operator==(const reverse_iterator& o) const {
+        return m_curr == o.m_curr && m_idx == o.m_idx && m_tree == o.m_tree;
+    }
+    bool operator!=(const reverse_iterator& o) const { return !(*this == o); }
+
+private:
+    friend class BTree;
+    struct Frame { BTNode* node; size_t idx; };
+
+    reverse_iterator(BTree* t, bool to_rbegin) : m_tree(t), m_curr(nullptr), m_idx(0) {
+        if (!t) return;
+        if (to_rbegin) go_rbegin();
+        else { // rend()
+            m_curr = nullptr; m_idx = 0; m_stack.clear();
+        }
+    }
+
+    void go_rbegin() {
+        m_stack.clear();
+        BTNode* n = &m_tree->m_Root;
+        // bajar hasta la hoja más a la derecha
+        while (n && n->m_SubPages[n->m_KeyCount]) {
+            m_stack.push_back({n, n->m_KeyCount}); // entramos por "después" del último
+            n = n->m_SubPages[n->m_KeyCount];
+        }
+        if (!n || n->m_KeyCount == 0) {
+            m_curr = nullptr; m_idx = 0; m_stack.clear();
+            return;
+        }
+        m_curr = n; m_idx = n->m_KeyCount - 1;
+    }
+
+    void prev() {
+        if (!m_curr) return; // ya en rend
+        // si hay hijo izquierdo del elemento actual, bajar a su máximo
+        if (m_curr->m_SubPages[m_idx]) {
+            BTNode* n = m_curr->m_SubPages[m_idx];
+            m_stack.push_back({m_curr, m_idx}); // subiremos desde aquí
+            while (n->m_SubPages[n->m_KeyCount]) {
+                m_stack.push_back({n, n->m_KeyCount});
+                n = n->m_SubPages[n->m_KeyCount];
+            }
+            m_curr = n; m_idx = n->m_KeyCount - 1;
+            return;
+        }
+        // moverse al elemento anterior en el mismo nodo si existe
+        if (m_idx > 0) { --m_idx; return; }
+        // subir hasta poder tomar un "índice anterior" del padre
+        while (!m_stack.empty()) {
+            auto fr = m_stack.back(); m_stack.pop_back();
+            BTNode* parent = fr.node;
+            size_t  pi     = fr.idx;
+            if (pi > 0) { // el anterior en el padre
+                m_curr = parent; m_idx = pi - 1;
+                return;
+            }
+            // si pi == 0, seguir subiendo
+        }
+        //no hay más
+        m_curr = nullptr; m_idx = 0; // rend
+    }
+
+    BTree* m_tree;
+    BTNode* m_curr;
+    size_t m_idx;
+    std::vector<Frame> m_stack;
+};
+
+// Factories
+iterator begin()  { return iterator(this, /*to_begin=*/true); }
+iterator end()    { return iterator(this, /*to_begin=*/false); }
+reverse_iterator rbegin() { return reverse_iterator(this, /*to_rbegin=*/true); }
+reverse_iterator rend()   { return reverse_iterator(this, /*to_rbegin=*/false); }
+
 
 template <typename Trait>
 bool BTree<Trait>::Insert(const keyType key, const long ObjID){
