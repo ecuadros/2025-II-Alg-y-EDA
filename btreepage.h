@@ -5,7 +5,6 @@
 #include <assert.h>
 #include <functional>
 #include <utility>
-#include <type_traits>
 
 // TODO: #1 Crear una function para agregarla al demo.cpp ( no trivial )
 // TODO: #2 Agregarle un Trait (prueba git) ( no trivial )
@@ -66,13 +65,40 @@ struct tagObjectInfo
        keyType                 key;
        ObjIDType               ObjID;
        size_t                    UseCounter;
-       tagObjectInfo(const keyType     &_key, ObjIDType _ObjID)
+       
+       // Constructor por defecto
+       tagObjectInfo() noexcept : UseCounter(0) {}
+       
+       // Constructor con key y ObjID
+       tagObjectInfo(const keyType &_key, ObjIDType _ObjID)
                : key(_key), ObjID(_ObjID), UseCounter(0) {}
+       
+       // Constructor por copia
        tagObjectInfo(const tagObjectInfo &objInfo)
                : key(objInfo.key), ObjID(objInfo.ObjID), UseCounter(0) {}
-       tagObjectInfo()                          {}
-       operator keyType                         ()     { return key; }
-       size_t                    GetUseCounter() { return UseCounter;    }
+               
+       // Move constructor
+       tagObjectInfo(tagObjectInfo&& other) noexcept
+               : key(std::move(other.key))
+               , ObjID(std::move(other.ObjID))
+               , UseCounter(other.UseCounter)
+       {
+           other.UseCounter = 0;
+       }
+       
+       // Operador de asignación 
+       tagObjectInfo& operator=(tagObjectInfo&& other) noexcept {
+           if (this != &other) {
+               key = std::move(other.key);
+               ObjID = std::move(other.ObjID);
+               UseCounter = other.UseCounter;
+               other.UseCounter = 0;
+           }
+           return *this;
+       }
+       
+       operator keyType() const noexcept { return key; }
+       size_t GetUseCounter() const noexcept { return UseCounter; }
 };
 
 template <typename Trait>
