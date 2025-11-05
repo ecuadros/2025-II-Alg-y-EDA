@@ -1,73 +1,58 @@
 #include <iostream>
+#include <vector>
 #include "btree.h"
 
-using namespace std;
-// Forma 1 de Compilar: 
-// g++ -std=c++17 -Wall -g -pthread -o main main.cpp
-// Forma #2 de Compilar (requiere el archivo Makefile)
-// make
 using Trait = BTreeTrait<int, long>;
-static void Line() { std::cout << "--------------------------------------\n"; }
+static void Line(){ std::cout << "--------------------------------------\n"; }
 
+static void print_vec(const std::vector<int>& v){
+    for (auto x : v) std::cout << x << ' ';
+    std::cout << '\n';
+}
 
 int main() {
-   std::cout << "Demo B-tree\n";
+    BTree<Trait> t(3, true);
 
-    // Construcción del árbol
-    BTree<Trait> t(/*order=*/3, /*unique=*/true);
+    // casos borde: árbol vacío
+    assert(t.begin()  == t.end());
+    assert(t.rbegin() == t.rend());
 
-    // Inserciones
+    // inserta elementos
     int keys[] = {40,70,10,20,30,50,60,80,90};
     long id = 1;
     for (int k : keys) t.Insert(k, id++);
 
-    Line();
-    std::cout << "size=" << t.size() << ", height=" << t.height() << "\n";
-    t.Print(std::cout);
+    // forward iteration (in-order)
+    std::vector<int> fwd;
+    for (auto it = t.begin(); it != t.end(); ++it)
+        fwd.push_back(it->key);
+
+    std::cout << "Forward:  "; print_vec(fwd);
+    assert(std::is_sorted(fwd.begin(), fwd.end()));
+
+    //reverse iteration (reverse in-order)
+    std::vector<int> rev;
+    for (auto it = t.rbegin(); it != t.rend(); ++it)
+        rev.push_back(it->key);
+
+    std::cout << "Reverse:  "; print_vec(rev);
+    std::vector<int> fwd_reversed = fwd;
+    std::reverse(fwd_reversed.begin(), fwd_reversed.end());
+    assert(rev == fwd_reversed);
+
+    BTree<Trait> one(3, true);
+    one.Insert(42, 1);
+    auto it1 = one.begin();
+    assert(it1 != one.end() && it1->key == 42);
+    ++it1;
+    assert(it1 == one.end());
+
+    auto rit1 = one.rbegin();
+    assert(rit1 != one.rend() && rit1->key == 42);
+    ++rit1;
+    assert(rit1 == one.rend());
 
     Line();
-    std::cout << "Search(60) -> " << t.Search(60) << "\n";
-    std::cout << "Search(25) -> " << t.Search(25) << "\n";
-
-    Line();
-    std::cout << "Delete(10)\n";
-    t.Remove(10, 0);
-    std::cout << "size=" << t.size() << ", height=" << t.height() << "\n";
-    t.Print(std::cout);
-
-    // --- Ejemplo de ForEachT (opcional) ---
-    // Recorre e imprime (key->ObjID) con indentación por nivel.
-    Line();
-    std::cout << "[ForEachT demo]\n";
-    t.ForEachT([](BTree<Trait>::ObjectInfo& info, size_t lvl, std::ostream* pos){
-        auto& os = *pos;
-        for (size_t i = 0; i < lvl; ++i) os << '\t';
-        os << info.key << "->" << info.ObjID << "\n";
-    }, &std::cout);
-
-    // --- Guardar a archivo ---
-    Line();
-    std::cout << "Saving to btree.txt\n";
-    if (!t.Save("btree.txt")) {
-        std::cerr << "Error: no se pudo guardar btree.txt\n";
-        return 1;
-    }
-
-    // --- Cargar en otro árbol ---
-    Line();
-    std::cout << "Loading from btree.txt\n";
-    BTree<Trait> u(/*order=*/3, /*unique=*/true);
-    if (!u.Load("btree.txt")) {
-        std::cerr << "Error: no se pudo cargar btree.txt\n";
-        return 1;
-    }
-
-    std::cout << "size=" << u.size() << ", height=" << u.height() << "\n";
-    u.Print(std::cout);
-
-    // Fin
-    Line();
-    std::cout << "Done.\n";
+    std::cout << "OK: iteradores forward/reverse verificados.\n";
     return 0;
-
 }
