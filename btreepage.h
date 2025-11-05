@@ -789,14 +789,13 @@ CBTreePage<Trait>::GetFirstObjectInfo()
 template <typename keyType, typename ObjIDType>
 void Print(tagObjectInfo<keyType, ObjIDType> &info, size_t level, void *pExtra)
 {
-       ostream &os = *(ostream *)pExtra;
-       for(size_t i = 0; i < level ; i++)
-               os << "\t";
-       os << info.key << "->" << info.ObjID << "\n";
+       ostream &os = *static_cast<ostream*>(pExtra);
+
+        os << std::string(level, '\t') << info.key << "->" << info.ObjID << '\n';
 }
 
 template <typename Trait>
-void CBTreePage<Trait>::Print(ostream & os)
+void CBTreePage<Trait>::Print(ostream& os)
 {
        lpfnForEach2 lpfn = &::Print<keyType, ObjIDType>;
        ForEach(lpfn, 0, &os);

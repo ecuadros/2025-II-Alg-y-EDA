@@ -94,6 +94,9 @@ public:
        {               return m_Root.FirstThat(lpfn, 0, pExtra1, pExtra2);   }
        //typedef               ObjectInfo iterator;
 
+       template <typename T>
+       friend std::ostream& operator<<(std::ostream &os, BTree<Trait> &obj);
+
 protected:
        BTNode          m_Root;
        size_t          m_Height;  // height of tree
@@ -102,6 +105,12 @@ protected:
        bool            m_Unique;  // Accept the elements only once ?
        Compare         m_Compare;
 };     
+
+template <typename Trait>
+std::ostream& operator<<(std::ostream &os, BTree<Trait> &obj) {
+	obj.Print(os);
+	return os;
+}
 
 template <typename Trait>
 bool BTree<Trait>::Insert(const keyType key, const long ObjID){
