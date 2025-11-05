@@ -78,6 +78,12 @@ public:
        {               m_Root.ForEach(lpfn, 0, pExtra1);              }
        void            ForEach( lpfnForEach3 lpfn, void *pExtra1, void *pExtra2)
        {               m_Root.ForEach(lpfn, 0, pExtra1, pExtra2);     }
+
+       template <typename Function>
+       void ForEach(Function function) {
+              m_Root.ForEach(function,0);
+       }
+
        ObjectInfo*     FirstThat( lpfnFirstThat2 lpfn, void *pExtra1 )
        {               return m_Root.FirstThat(lpfn, 0, pExtra1);     }
        ObjectInfo*     FirstThat( lpfnFirstThat3 lpfn, void *pExtra1, void *pExtra2)
@@ -117,5 +123,7 @@ bool BTree<Trait>::Remove (const keyType key, const ObjIDType ObjID)
                m_Height--;
        return true;
 }
+
+
 
 #endif

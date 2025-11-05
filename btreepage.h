@@ -106,6 +106,17 @@ class CBTreePage //: public SimpleIndex <keyType>
        void            ForEach(lpfnForEach2 lpfn, size_t level, void *pExtra1);
        void            ForEach(lpfnForEach3 lpfn, size_t level, void *pExtra1, void *pExtra2);
 
+        template <typename Function>
+        void CBTreePage<Trait>::ForEach(Function function, size_t level){
+            for(size_t i = 0 ; i < m_KeyCount ; i++){
+                if( m_SubPages[i] )
+                    m_SubPages[i]->ForEach(function, level+1);
+                function(m_Keys[i], level);
+            }
+            if( m_SubPages[m_KeyCount] )
+                m_SubPages[m_KeyCount]->ForEach(function, level+1);
+        }
+
        // TODO: #8 You may reduce these two function by using Invoke
        ObjectInfo*     FirstThat(lpfnFirstThat2 lpfn, size_t level, void *pExtra1);
        ObjectInfo*     FirstThat(lpfnFirstThat3 lpfn, size_t level, void *pExtra1, void *pExtra2);
