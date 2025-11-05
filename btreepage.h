@@ -21,19 +21,17 @@ enum bt_ErrorCode {bt_ok, bt_overflow, bt_underflow, bt_duplicate, bt_nofound, b
 template <typename Container, typename ObjType, typename CompareFunc>
 size_t binary_search(Container& container, size_t first, size_t last, ObjType &object, CompareFunc compare)
 {
-       while( first < last )
+       while (first < last)
        {
-               size_t mid = (first+last)/2;
-               // if( object == (ObjType)container[mid ] )
+               size_t mid = (first + last)/2;
                if (!compare(object, (ObjType)container[mid]) && !compare((ObjType)container[mid], object)) // a == b
                        return mid;
-               // if( object > (ObjType)container[mid ] )
-               if( compare((ObjType)container[mid], object) ) // a < b
-                       first = mid+1;
-               else
+               if (compare((ObjType)container[mid], object)) // a >> b
+                        first = mid+1;
+               else // a << b
                        last  = mid;
        }
-       if( !compare((ObjType)container[first], object) ) // object <= container[first]
+       if (!compare((ObjType)container[first], object) ) // object <= container[first]
                return first;
        return last;
 }
@@ -41,20 +39,21 @@ size_t binary_search(Container& container, size_t first, size_t last, ObjType &o
 // Error al poner size_t
 // Posible motivo: El i está disminuyendo
 template <typename Container, typename ObjType>
-void insert_at(Container& container, ObjType object, int pos)
+void insert_at(Container& container, ObjType object, size_t pos)
 {
-        // TODO: #5 replace int, long by types such as size_t
-       size_t size = container.size();
-       for(int i = size-2 ; i >= pos ; i--)
-               container[i+1] = container[i];
-       container[pos] =  object;	
+        // TODO: #5 replace int, long by types such as size_t (DONE)
+        size_t i = container.size() - 1;
+        for (i ; i > pos ; i--) 
+               container[i] = container[i-1];
+        
+        container[pos] =  object;	
 }
 
 template <typename Container>
 void remove(Container& container, size_t pos)
 {
        size_t size = container.size();
-       for(auto i = pos+1 ; i < size ; i++)
+       for(size_t i = pos + 1 ; i < size ; i++)
            container[i-1] = container[i];
 }
 
