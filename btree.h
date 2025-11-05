@@ -60,7 +60,86 @@ public:
        typedef typename BTNode::lpfnFirstThat3  lpfnFirstThat3;
        typedef typename BTNode::ObjectInfo      ObjectInfo;
 
-       
+       // Iterator class
+       class iterator {
+       public:
+           using iterator_category = std::forward_iterator_tag;
+           using value_type = ObjectInfo;
+           using difference_type = std::ptrdiff_t;
+           using pointer = ObjectInfo*;
+           using reference = ObjectInfo&;
+
+           iterator() : node(nullptr), index(0) {}
+
+           reference operator*() { return node->m_Keys[index]; }
+           pointer operator->() { return &(node->m_Keys[index]); }
+
+           // Pre-increment (inorder traversal)
+           iterator& operator++() {
+               if (!node) return *this;
+               
+               // Si hay un subárbol derecho, ir al elemento más a la izquierda de ese subárbol
+               if (node->m_SubPages[index + 1]) {
+                   node = node->m_SubPages[index + 1];
+                   while (node->m_SubPages[0]) {
+                       node = node->m_SubPages[0];
+                   }
+                   index = 0;
+                   return *this;
+               }
+               
+               // Si hay más elementos en el nodo actual
+               if (index + 1 < node->m_KeyCount) {
+                   ++index;
+                   return *this;
+               }
+               
+               // Si no hay más elementos en el nodo actual y no hay subárbol derecho,
+               // necesitamos subir hasta encontrar un ancestro no visitado
+               BTNode* child = node;
+               node = node->m_Parent;  // Necesitaríamos agregar m_Parent a BTNode
+               while (node && child == node->m_SubPages[node->m_KeyCount]) {
+                   child = node;
+                   node = node->m_Parent;
+               }
+               
+               if (!node) {
+                   // Hemos terminado el recorrido
+                   index = 0;
+                   return *this;
+               }
+               
+               // Encontrar el índice del hijo en el padre
+               for (index = 0; index < node->m_KeyCount; ++index) {
+                   if (node->m_SubPages[index] == child) break;
+               }
+               
+               return *this;
+           }
+
+           // Post-increment
+           iterator operator++(int) {
+               iterator tmp = *this;
+               ++(*this);
+               return tmp;
+           }
+
+           bool operator==(const iterator& other) const {
+               return node == other.node && index == other.index;
+           }
+
+           bool operator!=(const iterator& other) const {
+               return !(*this == other);
+           }
+
+       private:
+           friend class BTree;
+           BTNode* node;
+           size_t index;
+
+           iterator(BTNode* n, size_t i) : node(n), index(i) {}
+       };
+
 public:
        BTree(size_t order = DEFAULT_BTREE_ORDER, bool unique = true)
               : m_Order(order),
@@ -69,6 +148,7 @@ public:
                 m_NumKeys(0)
        {
               m_Root.SetMaxKeysForChilds(order);
+              m_Root.m_Parent = nullptr;  // Root has no parent
               m_Height = 1; 
        }
 
@@ -89,6 +169,20 @@ public:
        BTree(const BTree&) = delete;
        BTree& operator=(const BTree&) = delete;
        ~BTree() {} //
+
+       // Iterator methods
+       iterator begin() {
+           if (m_NumKeys == 0) return end();
+           BTNode* current = &m_Root;
+           while (current->m_SubPages[0]) {
+               current = current->m_SubPages[0];
+           }
+           return iterator(current, 0);
+       }
+
+       iterator end() {
+           return iterator(nullptr, 0);
+       }
 
        // Escribe el árbol a un archivo
        bool Write(const std::string& filename) {

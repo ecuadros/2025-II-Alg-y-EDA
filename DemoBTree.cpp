@@ -76,6 +76,12 @@ void DemoBTree() {
     // Verify the moved tree works correctly
     objId = movedTree.Search(20);
     cout << "Search in moved tree for key 20 returned ObjID: " << objId << endl;
+
+    // Test iterator
+    cout << "\nTesting iterator - traversing all elements in order:" << endl;
+    for (auto it = movedTree.begin(); it != movedTree.end(); ++it) {
+        cout << "Key: " << it->key << ", Value: " << it->ObjID << endl;
+    }
     
     // Original tree should be empty or in valid state after move
     objId = tree.Search(20);

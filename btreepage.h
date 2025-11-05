@@ -177,6 +177,7 @@ protected:
        //size_t RecAddr; // address of this node in the BTree file
        vector<ObjectInfo> m_Keys;
        vector<BTPage *>m_SubPages;
+       BTPage* m_Parent;  // Pointer to parent node for iterator traversal
        
        // TODO: #10 size_t
        size_t  m_KeyCount;
@@ -451,13 +452,16 @@ void CBTreePage<Trait>::SplitChild(size_t pos)
        // copy the first element to the root
        m_Keys    [pos] = oi1;
        m_SubPages[pos] = pChild1;
+       if (pChild1) pChild1->m_Parent = this;
 
        // copy the second element to the root
        ::insert_at(m_Keys, oi2, pos+1);
        ::insert_at(m_SubPages, pChild2, pos+1);
+       if (pChild2) pChild2->m_Parent = this;
        NumberOfKeys()++;
 
        m_SubPages[pos+2] = pChild3;
+       if (pChild3) pChild3->m_Parent = this;
 }
 
 // Ddivide a large page into 3 pages (2m/3 each one)
@@ -532,11 +536,13 @@ bool CBTreePage<Trait>::SplitRoot(){
        // copy the first element to the root
        m_Keys    [0] = oi1;
        m_SubPages[0] = pChild1;
+       if (pChild1) pChild1->m_Parent = this;
        NumberOfKeys()++;
 
        // copy the second element to the root
        m_Keys    [1] = oi2;
        m_SubPages[1] = pChild2;
+       if (pChild2) pChild2->m_Parent = this;
        NumberOfKeys()++;
 
        m_SubPages[2] = pChild3;
@@ -912,6 +918,7 @@ void CBTreePage<Trait>::Create()
        m_SubPages.resize(m_MaxKeys+2, NULL);
        m_KeyCount = 0;
        m_MinKeys  = 2 * m_MaxKeys/3;
+       m_Parent = nullptr;  // Initialize parent pointer
 }
 
 template <typename Trait>
