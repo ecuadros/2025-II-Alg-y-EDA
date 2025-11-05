@@ -110,6 +110,9 @@ class CBTreePage //: public SimpleIndex <keyType>
 
        template<typename Func, typename... Args>
        void            ForEach(Func&& func, size_t level, Args&&... args);
+
+       template<typename Func, typename... Args>
+       ObjectInfo*     FirstThat(Func&& func, size_t level, Args&&... args);
 protected:
        // TODO: #9 change by size_t
        size_t  m_MinKeys; // minimum number of keys in a node
@@ -615,6 +618,26 @@ CBTreePage<Trait>::FirstThat(lpfnFirstThat3 lpfn,size_t level, void *pExtra1, vo
        }
        if( m_SubPages[m_KeyCount] )
                if( (pTmp = m_SubPages[m_KeyCount]->FirstThat(lpfn, level+1, pExtra1, pExtra2) ) )
+                       return pTmp;
+       return 0;
+}
+
+template <typename Trait>
+template<typename Func, typename... Args>
+typename CBTreePage<Trait>::ObjectInfo *
+CBTreePage<Trait>::FirstThat(Func&& func, size_t level, Args&&... args)
+{
+       ObjectInfo *pTmp;
+       for(size_t i = 0 ; i < m_KeyCount ; i++)
+       {
+               if( m_SubPages[i] )
+                       if( (pTmp = m_SubPages[i]->FirstThat(std::forward<Func>(func), level+1, std::forward<Args>(args)...)) )
+                               return pTmp;
+               if( func(m_Keys[i], level, std::forward<Args>(args)...) )
+                       return &m_Keys[i];
+       }
+       if( m_SubPages[m_KeyCount] )
+               if( (pTmp = m_SubPages[m_KeyCount]->FirstThat(std::forward<Func>(func), level+1, std::forward<Args>(args)...)) )
                        return pTmp;
        return 0;
 }
