@@ -57,6 +57,8 @@ void DemoBTree(){
         tree1.Remove(par.first, par.second);
 
     tree1.Print(std::cout);
+
+    std::cout << tree1 << std::endl;
 }
 
 // int main() {

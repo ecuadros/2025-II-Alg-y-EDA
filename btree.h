@@ -63,6 +63,15 @@ public:
               m_Root.SetMaxKeysForChilds(order);
        }
 
+       BTree(BTree &&other) {
+		m_Root = std::move(other.m_Root);
+		m_Height = std::move(other.m_Height);
+		m_Order = std::move(other.m_Order);
+		m_NumKeys = std::move(other.m_NumKeys);
+		m_Unique = std::move(other.m_Unique);
+		m_Comp = std::move(other.m_Comp);
+	}
+
        ~BTree() {}
        //int           Open (char * name, int mode);
        //int           Create (char * name, int mode);
@@ -124,6 +133,14 @@ bool BTree<Trait>::Remove (const keyType key, const long ObjID)
                m_Height--;
        return true;
 }
+
+template <typename Trait>
+ostream& operator<<(ostream& os, BTree<Trait>& tree)
+{
+    tree.Print(os);
+    return os;
+}
+
 
 void DemoBTree();
 
