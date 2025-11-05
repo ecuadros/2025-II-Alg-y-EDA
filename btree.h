@@ -8,29 +8,14 @@
 
 const size_t MaxHeight = 5; 
 
-template <typename _keyType, typename _ObjIDType>
+template <typename _keyType, typename _ObjIDType, typename _CompareFn = std::less<_keyType>>
 struct BTreeTrait
 {
        using keyType = _keyType;
        using ObjIDType = _ObjIDType;
-       using CompareFn = std::less<_keyType>;
+       using CompareFn = _CompareFn;
 };
 
-template <typename _keyType, typename _ObjIDType>
-struct BTreeAscTrait
-{
-       using keyType = _keyType;
-       using ObjIDType = _ObjIDType;
-       using CompareFn = std::less<_keyType>;
-};
-
-template <typename _keyType, typename _ObjIDType>
-struct BTreeDescTrait
-{
-       using keyType = _keyType;
-       using ObjIDType = _ObjIDType;
-       using CompareFn = std::greater<_keyType>;
-};
 
 template <typename Trait>
 class BTree // this is the full version of the BTree
