@@ -382,6 +382,7 @@ CBTreePage<Trait>::CBTreePage(CBTreePage &&other){
         m_Unique        = other.m_Unique;
         m_isRoot        = other.m_isRoot;
         m_Compare       = other.m_Compare;
+        //EXCHANGE //LOCK GUARD
 
         other.m_KeyCount = 0;
         other.m_MaxKeys  = 0;
@@ -984,7 +985,7 @@ void CBTreePage<keyType, ObjIDType>::ForEachReverse(lpfnForEach2 lpfn, size_t le
  */
 template <typename Trait>
 template <typename Function>
-void CBTreePage<Trait>::ForEach(Function fn, size_t level){
+void CBTreePage<Trait>::ForEach(Function fn, size_t level){     //variadic templates
        for(size_t i = 0 ; i < m_KeyCount ; i++)
        {
                if( m_SubPages[i] )
