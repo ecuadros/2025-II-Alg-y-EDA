@@ -107,6 +107,8 @@ class CBTreePage //: public SimpleIndex <keyType>
        ObjectInfo*     FirstThat(lpfnFirstThat2 lpfn, size_t level, void *pExtra1);
        ObjectInfo*     FirstThat(lpfnFirstThat3 lpfn, size_t level, void *pExtra1, void *pExtra2);
 
+       template<typename Func, typename... Args>
+       void            ForEach(Func&& func, size_t level, Args&&... args);
 protected:
        // TODO: #9 change by size_t
        size_t  m_MinKeys; // minimum number of keys in a node
@@ -558,6 +560,20 @@ void CBTreePage<Trait>::ForEach(lpfnForEach3 lpfn, size_t level, void *pExtra1, 
        }
        if( m_SubPages[m_KeyCount] )
                m_SubPages[m_KeyCount]->ForEach(lpfn, level+1, pExtra1, pExtra2);
+}
+
+template <typename Trait>
+template<typename Func, typename... Args>
+void CBTreePage<Trait>::ForEach(Func&& func, size_t level, Args&&... args)
+{
+       for(size_t i = 0 ; i < m_KeyCount ; i++)
+       {
+               if( m_SubPages[i] )
+                       m_SubPages[i]->ForEach(std::forward<Func>(func), level+1, std::forward<Args>(args)...);
+               func(m_Keys[i], level, std::forward<Args>(args)...);
+       }
+       if( m_SubPages[m_KeyCount] )
+               m_SubPages[m_KeyCount]->ForEach(std::forward<Func>(func), level+1, std::forward<Args>(args)...);
 }
 
 // Apicar una funcion hasta encontrar el 1er elemento

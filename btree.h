@@ -69,7 +69,7 @@ public:
        //typedef               ObjectInfo iterator;
 
        template<typename Func, typename... Args>
-       void ForEach(Func&& func, Args&&... args)
+       void            ForEach(Func&& func, Args&&... args)
        {               m_Root.ForEach(std::forward<Func>(func), 0, std::forward<Args>(args)...);}
 protected:
        BTNode          m_Root;
