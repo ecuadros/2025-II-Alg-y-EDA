@@ -68,6 +68,8 @@ public:
        // void            ForEach( lpfnForEach3 lpfn, void *pExtra1, void *pExtra2)
        // {               m_Root.ForEach(lpfn, 0, pExtra1, pExtra2);     }
 
+       template <typename T>
+       friend std::ostream& operator<<(std::ostream& os, BTree<T>& tree);
 
        //Read y Write
        std::ostream&  Write(ostream &os);
@@ -182,6 +184,13 @@ std::istream& BTree<Trait>::ReadBinaryTreeFormat(std::istream& is) {
     }
     
     return is;
+}
+
+
+template <typename Trait>
+std::ostream& operator<<(std::ostream& os, BTree<Trait>& tree) {
+    tree.Print(os); 
+    return os;
 }
 
 #endif

@@ -99,12 +99,16 @@ void TestWriteRead(){
 
 
     BTree<BTreeTrait<int, long>> tree3(3, true);
-std::ifstream ifs_profesor("BT.txt");
-tree3.ReadBinaryTreeFormat(ifs_profesor);  
-ifs_profesor.close();
+    std::ifstream ifs_profesor("BT.txt");
+    tree3.ReadBinaryTreeFormat(ifs_profesor);  
+    ifs_profesor.close();
 
-std::cout << "\nArbol  cargado (formato del archivo BT.txt):\n";
-tree3.Print(std::cout);
+    std::cout << "\nArbol  cargado (formato del archivo BT.txt):\n";
+    tree3.Print(std::cout);
+
+    //probemos si el operador << funciona
+    std::cout << "\nUsando operador << sobrecargado:\n";
+    std::cout << tree3;
 }
 
 int main()

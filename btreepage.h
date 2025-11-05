@@ -95,18 +95,16 @@ class CBTreePage //: public SimpleIndex <keyType>
        typedef CBTreePage<Trait>    BTPage;         // useful shorthand
        typedef tagObjectInfo<keyType, ObjIDType> ObjectInfo;
 
-//        typedef void (*lpfnForEach2)(ObjectInfo &info, size_t level, void *pExtra1);
-//        typedef void (*lpfnForEach3)(ObjectInfo &info, size_t level, void *pExtra1, void *pExtra2);
-
-       typedef ObjectInfo *(*lpfnFirstThat2)(ObjectInfo &info, size_t level, void *pExtra1);
-       typedef ObjectInfo *(*lpfnFirstThat3)(ObjectInfo &info, size_t level, void *pExtra1, void *pExtra2);
- public:
+public:
        CBTreePage(size_t maxKeys, bool unique = true);
        virtual ~CBTreePage();
        //move constuctor
        CBTreePage(CBTreePage &&other);
        //operator= for move constructor
        CBTreePage& operator=(CBTreePage &&other);
+
+       template <typename T>
+       friend std::ostream& operator<<(std::ostream& os, CBTreePage<T>& page);
 
        bt_ErrorCode    Insert (const keyType &key, const ObjIDType ObjID);
        bt_ErrorCode    Remove (const keyType &key, const ObjIDType ObjID);
@@ -773,6 +771,13 @@ std::istream& CBTreePage<Trait>::Read(std::istream& is) {
     return is;
 }
 
+
+//operador <<
+template <typename Trait>
+std::ostream& operator<<(std::ostream& os, CBTreePage<Trait>& page) {
+    page.Print(os);
+    return os;
+}
 
 template <typename Trait>
 bt_ErrorCode CBTreePage<Trait>::Remove(const keyType &key, const ObjIDType ObjID)
