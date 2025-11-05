@@ -2,18 +2,27 @@
 #define __BTREE_H__
 
 #include <iostream>
+#include <functional>
 #include "btreepage.h"
 #define DEFAULT_BTREE_ORDER 3
 
 const size_t MaxHeight = 5; 
 
-template <typename _keyType, typename _ObjIDType>
+template <typename _keyType, typename _ObjIDType, typename _Compare>
 struct BTreeTrait
 {
        using keyType = _keyType;
        using ObjIDType = _ObjIDType;
-       // TODO: agregar funcion de comparacion
+       // TODO (completado): agregar funcion de comparacion       
+       using Compare = _Compare;
 };
+
+// Convenience aliases for common use cases
+template <typename Key, typename Value>
+using BTreeAscTrait = BTreeTrait<Key, Value, std::less<Key>>;
+
+template <typename Key, typename Value>
+using BTreeDescTrait = BTreeTrait<Key, Value, std::greater<Key>>;
 
 template <typename Trait>
 class BTree // this is the full version of the BTree
