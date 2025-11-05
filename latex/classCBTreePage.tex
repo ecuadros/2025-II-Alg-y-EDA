@@ -1,0 +1,589 @@
+\doxysection{CBTree\+Page\texorpdfstring{$<$}{<} Trait \texorpdfstring{$>$}{>} Class Template Reference}
+\hypertarget{classCBTreePage}{}\label{classCBTreePage}\index{CBTreePage$<$ Trait $>$@{CBTreePage$<$ Trait $>$}}
+
+
+Representa una página dentro de un árbol B en memoria.  
+
+
+
+
+{\ttfamily \#include $<$btreepage.\+h$>$}
+
+\doxysubsubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classCBTreePage_aa17709f6e98fa6bce72dad865fbd8bfd}{CBTree\+Page}} (size\+\_\+t max\+Keys, bool unique=true)
+\begin{DoxyCompactList}\small\item\em Constructor para crear una página del árbol B. \end{DoxyCompactList}\item 
+virtual \mbox{\hyperlink{classCBTreePage_a403eb737c46b58de931e2dc17400d5f5}{\texorpdfstring{$\sim$}{\string~}\+CBTree\+Page}} ()
+\begin{DoxyCompactList}\small\item\em Destructor de la clase {\ttfamily \doxylink{classCBTreePage}{CBTree\+Page}}. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classCBTreePage_a75f8deec911db3f3ae29f4aad9c38e94}{CBTree\+Page}} (\mbox{\hyperlink{classCBTreePage}{CBTree\+Page}} \&\&other)
+\begin{DoxyCompactList}\small\item\em Constructor de movimiento para transferir los recursos de otra página al nuevo objeto. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classCBTreePage}{CBTree\+Page}} \& \mbox{\hyperlink{classCBTreePage_a2e3957696acbc50a3f09b90e4c19c51f}{operator=}} (\mbox{\hyperlink{classCBTreePage}{CBTree\+Page}} \&\&other)
+\begin{DoxyCompactList}\small\item\em Operador de asignación por movimiento para transferir los recursos de otra página al objeto actual. \end{DoxyCompactList}\item 
+bt\+\_\+\+Error\+Code \mbox{\hyperlink{classCBTreePage_ad686759227acd1a1ca896978dfe565ac}{Insert}} (const key\+Type \&key, const Obj\+IDType Obj\+ID)
+\begin{DoxyCompactList}\small\item\em Inserta una clave y su identificador de objeto en la página del árbol B. \end{DoxyCompactList}\item 
+\Hypertarget{classCBTreePage_af81d245adfaabedcf75c3810c8ea0b3d}\label{classCBTreePage_af81d245adfaabedcf75c3810c8ea0b3d} 
+bt\+\_\+\+Error\+Code {\bfseries Remove} (const key\+Type \&key, const Obj\+IDType Obj\+ID)
+\item 
+bool \mbox{\hyperlink{classCBTreePage_a517371a189939644cf4400dd69de4d8b}{Search}} (const key\+Type \&key, Obj\+IDType \&Obj\+ID)
+\begin{DoxyCompactList}\small\item\em Busca una clave en la página del árbol B y obtiene su identificador de objeto. \end{DoxyCompactList}\item 
+\Hypertarget{classCBTreePage_a49bed32b53a03b2c23399be6401dbf36}\label{classCBTreePage_a49bed32b53a03b2c23399be6401dbf36} 
+void {\bfseries Print} (ostream \&os)
+\item 
+\Hypertarget{classCBTreePage_a1b629880d110fda4e15eb303285074af}\label{classCBTreePage_a1b629880d110fda4e15eb303285074af} 
+size\+\_\+t {\bfseries Get\+Key\+Count} ()
+\item 
+\Hypertarget{classCBTreePage_a9e5e467cc28ee20d381b22cc633ea955}\label{classCBTreePage_a9e5e467cc28ee20d381b22cc633ea955} 
+{\footnotesize template$<$typename Function $>$ }\\void {\bfseries For\+Each} (Function fn, size\+\_\+t level)
+\item 
+{\footnotesize template$<$typename Function $>$ }\\\mbox{\hyperlink{structtagObjectInfo}{Object\+Info}} \texorpdfstring{$\ast$}{*} \mbox{\hyperlink{classCBTreePage_a3d83f3f22912ed44976fa602f7ae29fd}{First\+That}} (Function fn, size\+\_\+t level)
+\begin{DoxyCompactList}\small\item\em Busca el primer objeto que cumple con una condición. \end{DoxyCompactList}\item 
+std\+::ostream \& \mbox{\hyperlink{classCBTreePage_a29f3a7111dbe71e7306221bc91e487be}{Write}} (ostream \&os)
+\begin{DoxyCompactList}\small\item\em Escribe la página del árbol B en un flujo de salida. \end{DoxyCompactList}\item 
+std\+::istream \& \mbox{\hyperlink{classCBTreePage_a71d0430e68c4a9f36a5aac6f18460d24}{Read}} (istream \&is)
+\begin{DoxyCompactList}\small\item\em Lee los datos de una página del árbol B desde un flujo de entrada. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsubsection*{Protected Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\Hypertarget{classCBTreePage_a14b81b6d653971f23a92a0234010aa55}\label{classCBTreePage_a14b81b6d653971f23a92a0234010aa55} 
+void {\bfseries Create} ()
+\item 
+\Hypertarget{classCBTreePage_a4db48c49a1b2fcee702b8b0e4cd44479}\label{classCBTreePage_a4db48c49a1b2fcee702b8b0e4cd44479} 
+void {\bfseries Reset} ()
+\item 
+\Hypertarget{classCBTreePage_ae36d2b87b7aec5bfed2283abd8c7706c}\label{classCBTreePage_ae36d2b87b7aec5bfed2283abd8c7706c} 
+void {\bfseries Destroy} ()
+\item 
+\Hypertarget{classCBTreePage_a9c2e23f655df759e7321994795193d1f}\label{classCBTreePage_a9c2e23f655df759e7321994795193d1f} 
+void {\bfseries clear} ()
+\item 
+bool \mbox{\hyperlink{classCBTreePage_ad2d5711b8cc6d980cb3718670649d862}{Redistribute\+With1\+Brother}} (size\+\_\+t \&pos)
+\begin{DoxyCompactList}\small\item\em Redistribuye las claves de un nodo B-\/\+Tree con uno de sus hermanos. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{classCBTreePage_ac2084083de43832e0a723624c2956836}{Redistribute\+With2\+Brothers}} (size\+\_\+t pos)
+\begin{DoxyCompactList}\small\item\em Redistribuye las claves entre tres nodos hermanos en un árbol B cuando dos de ellos están en subfluyo. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classCBTreePage_ab581f5c827c5b8edec5e79737ad12d32}{Redistribute\+R2L}} (size\+\_\+t pos)
+\begin{DoxyCompactList}\small\item\em Redistribuye claves y subpáginas de derecha a izquierda entre dos nodos hijos. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classCBTreePage_a6f63f587ea032d81cc4359ff0f4662e8}{Redistribute\+L2R}} (size\+\_\+t pos)
+\begin{DoxyCompactList}\small\item\em Redistribuye claves y subpáginas de izquierda a derecha entre dos nodos hijos. \end{DoxyCompactList}\item 
+\Hypertarget{classCBTreePage_a025a25cde873b963c696cad430882be5}\label{classCBTreePage_a025a25cde873b963c696cad430882be5} 
+bool {\bfseries Treat\+Underflow} (size\+\_\+t \&pos)
+\item 
+\Hypertarget{classCBTreePage_a9e9fb952d0e648270e00cd0d7770f577}\label{classCBTreePage_a9e9fb952d0e648270e00cd0d7770f577} 
+bt\+\_\+\+Error\+Code {\bfseries Merge} (size\+\_\+t pos)
+\item 
+\Hypertarget{classCBTreePage_a26653de87a8f832ee353f4166d084783}\label{classCBTreePage_a26653de87a8f832ee353f4166d084783} 
+bt\+\_\+\+Error\+Code {\bfseries Merge\+Root} ()
+\item 
+void \mbox{\hyperlink{classCBTreePage_a6a5a3cc493d12bb0d53c8e191ce88d01}{Split\+Child}} (size\+\_\+t pos)
+\begin{DoxyCompactList}\small\item\em Divide un nodo hijo lleno en tres nodos. \end{DoxyCompactList}\item 
+\Hypertarget{classCBTreePage_aa72a8967506c4cd4bd020c703ad2d6e1}\label{classCBTreePage_aa72a8967506c4cd4bd020c703ad2d6e1} 
+\mbox{\hyperlink{structtagObjectInfo}{Object\+Info}} \& {\bfseries Get\+First\+Object\+Info} ()
+\item 
+\Hypertarget{classCBTreePage_a15d3be7a316ab5d7b7bcab870a14a041}\label{classCBTreePage_a15d3be7a316ab5d7b7bcab870a14a041} 
+bool {\bfseries Overflow} ()
+\item 
+\Hypertarget{classCBTreePage_a65393eed8e0fcfd5158bb809c63c8ef9}\label{classCBTreePage_a65393eed8e0fcfd5158bb809c63c8ef9} 
+bool {\bfseries Underflow} ()
+\item 
+\Hypertarget{classCBTreePage_a6598f4dd8049884fed115e14560bc3c4}\label{classCBTreePage_a6598f4dd8049884fed115e14560bc3c4} 
+bool {\bfseries Is\+Full} ()
+\item 
+\Hypertarget{classCBTreePage_ac5f6553391c41a4dc535e7b5c3cc99f9}\label{classCBTreePage_ac5f6553391c41a4dc535e7b5c3cc99f9} 
+size\+\_\+t {\bfseries Min\+Number\+Of\+Keys} ()
+\item 
+\Hypertarget{classCBTreePage_a39964a33f415ef7b29e735cbd0a156e3}\label{classCBTreePage_a39964a33f415ef7b29e735cbd0a156e3} 
+size\+\_\+t {\bfseries Get\+Free\+Cells} ()
+\item 
+\Hypertarget{classCBTreePage_a8aebfa5eb7e60d12806e274fa22edb5b}\label{classCBTreePage_a8aebfa5eb7e60d12806e274fa22edb5b} 
+size\+\_\+t \& {\bfseries Number\+Of\+Keys} ()
+\item 
+\Hypertarget{classCBTreePage_a54fe772cf2630e6411d7b57e68658a3b}\label{classCBTreePage_a54fe772cf2630e6411d7b57e68658a3b} 
+size\+\_\+t {\bfseries Get\+Number\+Of\+Keys} ()
+\item 
+\Hypertarget{classCBTreePage_acca2017ad63e02d2af9236b2e4325f5e}\label{classCBTreePage_acca2017ad63e02d2af9236b2e4325f5e} 
+bool {\bfseries Is\+Root} ()
+\item 
+\Hypertarget{classCBTreePage_a9ab00bd39add92eb106b5ea05d13b378}\label{classCBTreePage_a9ab00bd39add92eb106b5ea05d13b378} 
+void {\bfseries Set\+Max\+Keys\+For\+Childs} (size\+\_\+t orderforchilds)
+\item 
+\Hypertarget{classCBTreePage_a2b7a804a457af27ee20c7062fca9e60a}\label{classCBTreePage_a2b7a804a457af27ee20c7062fca9e60a} 
+size\+\_\+t {\bfseries Get\+Free\+Cells\+On\+Left} (size\+\_\+t pos)
+\item 
+\Hypertarget{classCBTreePage_afc53d94f69cbdba286b83fe08da52dba}\label{classCBTreePage_afc53d94f69cbdba286b83fe08da52dba} 
+size\+\_\+t {\bfseries Get\+Free\+Cells\+On\+Right} (size\+\_\+t pos)
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Protected Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\Hypertarget{classCBTreePage_a2ab773177aaf1110e597b2762b8ac9a3}\label{classCBTreePage_a2ab773177aaf1110e597b2762b8ac9a3} 
+size\+\_\+t {\bfseries m\+\_\+\+Min\+Keys}
+\item 
+\Hypertarget{classCBTreePage_a6468597d482900ff6f9d2d85198e8640}\label{classCBTreePage_a6468597d482900ff6f9d2d85198e8640} 
+size\+\_\+t {\bfseries m\+\_\+\+Max\+Keys}
+\item 
+\Hypertarget{classCBTreePage_ae40b035cf6d7cefd242486fd89ef5839}\label{classCBTreePage_ae40b035cf6d7cefd242486fd89ef5839} 
+size\+\_\+t {\bfseries m\+\_\+\+Max\+Keys\+For\+Childs}
+\item 
+\Hypertarget{classCBTreePage_a42cb5e68a8d9859d95c6de203ee5c133}\label{classCBTreePage_a42cb5e68a8d9859d95c6de203ee5c133} 
+bool {\bfseries m\+\_\+\+Unique}
+\item 
+\Hypertarget{classCBTreePage_aa23a57421fac8ae6490ff17d5391d16a}\label{classCBTreePage_aa23a57421fac8ae6490ff17d5391d16a} 
+bool {\bfseries m\+\_\+is\+Root}
+\item 
+\Hypertarget{classCBTreePage_a7ae1da19323c9465b4eceab8418d30ea}\label{classCBTreePage_a7ae1da19323c9465b4eceab8418d30ea} 
+vector$<$ \mbox{\hyperlink{structtagObjectInfo}{Object\+Info}} $>$ {\bfseries m\+\_\+\+Keys}
+\item 
+\Hypertarget{classCBTreePage_a957d4ead790d8cbffed02ddaf3e43384}\label{classCBTreePage_a957d4ead790d8cbffed02ddaf3e43384} 
+vector$<$ \mbox{\hyperlink{classCBTreePage}{BTPage}} \texorpdfstring{$\ast$}{*} $>$ {\bfseries m\+\_\+\+Sub\+Pages}
+\item 
+\Hypertarget{classCBTreePage_af152ea718d31fc6b7fe15b57a4f2e313}\label{classCBTreePage_af152ea718d31fc6b7fe15b57a4f2e313} 
+size\+\_\+t {\bfseries m\+\_\+\+Key\+Count}
+\item 
+\Hypertarget{classCBTreePage_a2cf88ee235a542ba409688e462cd0b3e}\label{classCBTreePage_a2cf88ee235a542ba409688e462cd0b3e} 
+Compare\+Function {\bfseries m\+\_\+\+Compare}
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Friends}
+\begin{DoxyCompactItemize}
+\item 
+\Hypertarget{classCBTreePage_a3f53ad1e234eda170d804edc536a46d8}\label{classCBTreePage_a3f53ad1e234eda170d804edc536a46d8} 
+class {\bfseries BTree$<$ Trait $>$}
+\item 
+\Hypertarget{classCBTreePage_af623d1316adacf3f78f76f77f59e06ff}\label{classCBTreePage_af623d1316adacf3f78f76f77f59e06ff} 
+{\footnotesize template$<$typename T $>$ }\\std\+::ostream \& {\bfseries operator$<$$<$} (std\+::ostream \&os, \mbox{\hyperlink{classCBTreePage}{CBTree\+Page}}$<$ T $>$ \&page)
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+\subsubsection*{template$<$typename Trait$>$\newline
+class CBTree\+Page$<$ Trait $>$}
+Representa una página dentro de un árbol B en memoria. 
+
+La clase {\ttfamily \doxylink{classCBTreePage}{CBTree\+Page}} es una implementación en memoria de una página del árbol B. Cada página contiene un conjunto de claves y referencias a otras páginas (subpáginas). Esta clase es responsable de manejar la inserción, eliminación, búsqueda, y otras operaciones dentro de una página del árbol B.
+
+
+\begin{DoxyTemplParams}{Template Parameters}
+{\em Trait} & El tipo de traits que define las propiedades del árbol B, como el tipo de clave y el tipo de comparación. \\
+\hline
+\end{DoxyTemplParams}
+
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\Hypertarget{classCBTreePage_aa17709f6e98fa6bce72dad865fbd8bfd}\index{CBTreePage$<$ Trait $>$@{CBTreePage$<$ Trait $>$}!CBTreePage@{CBTreePage}}
+\index{CBTreePage@{CBTreePage}!CBTreePage$<$ Trait $>$@{CBTreePage$<$ Trait $>$}}
+\doxysubsubsection{\texorpdfstring{CBTreePage()}{CBTreePage()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily \label{classCBTreePage_aa17709f6e98fa6bce72dad865fbd8bfd} 
+template$<$typename Trait $>$ \\
+\mbox{\hyperlink{classCBTreePage}{CBTree\+Page}}$<$ Trait $>$\mbox{\hyperlink{classCBTreePage}{\+::\+CBTree\+Page}} (\begin{DoxyParamCaption}\item[{size\+\_\+t}]{max\+Keys}{, }\item[{bool}]{unique}{ = {\ttfamily true}}\end{DoxyParamCaption})}
+
+
+
+Constructor para crear una página del árbol B. 
+
+Este constructor inicializa una nueva página en el árbol B con un número máximo de claves ({\ttfamily max\+Keys}) y la opción de hacer las claves únicas ({\ttfamily unique}). El número de claves es inicializado a cero. Luego, se llaman a los métodos {\ttfamily Create()} y {\ttfamily Set\+Max\+Keys\+For\+Childs()} para completar la configuración de la página.
+
+
+\begin{DoxyTemplParams}{Template Parameters}
+{\em Trait} & El tipo de los traits que define las propiedades del árbol B.\\
+\hline
+\end{DoxyTemplParams}
+
+\begin{DoxyParams}{Parameters}
+{\em max\+Keys} & El número máximo de claves que esta página puede contener. \\
+\hline
+{\em unique} & Indica si las claves deben ser únicas en esta página (por defecto es {\ttfamily true}). \\
+\hline
+\end{DoxyParams}
+\Hypertarget{classCBTreePage_a403eb737c46b58de931e2dc17400d5f5}\index{CBTreePage$<$ Trait $>$@{CBTreePage$<$ Trait $>$}!````~CBTreePage@{\texorpdfstring{$\sim$}{\string~}CBTreePage}}
+\index{````~CBTreePage@{\texorpdfstring{$\sim$}{\string~}CBTreePage}!CBTreePage$<$ Trait $>$@{CBTreePage$<$ Trait $>$}}
+\doxysubsubsection{\texorpdfstring{\texorpdfstring{$\sim$}{\string~}CBTreePage()}{\string~CBTreePage()}}
+{\footnotesize\ttfamily \label{classCBTreePage_a403eb737c46b58de931e2dc17400d5f5} 
+template$<$typename Trait $>$ \\
+\mbox{\hyperlink{classCBTreePage}{CBTree\+Page}}$<$ Trait $>$\+::\texorpdfstring{$\sim$}{\string~}\mbox{\hyperlink{classCBTreePage}{CBTree\+Page}} (\begin{DoxyParamCaption}{}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Destructor de la clase {\ttfamily \doxylink{classCBTreePage}{CBTree\+Page}}. 
+
+El destructor de la página del árbol B llama al método {\ttfamily Reset()} para liberar los recursos asociados a esta página. \Hypertarget{classCBTreePage_a75f8deec911db3f3ae29f4aad9c38e94}\index{CBTreePage$<$ Trait $>$@{CBTreePage$<$ Trait $>$}!CBTreePage@{CBTreePage}}
+\index{CBTreePage@{CBTreePage}!CBTreePage$<$ Trait $>$@{CBTreePage$<$ Trait $>$}}
+\doxysubsubsection{\texorpdfstring{CBTreePage()}{CBTreePage()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily \label{classCBTreePage_a75f8deec911db3f3ae29f4aad9c38e94} 
+template$<$typename Trait $>$ \\
+\mbox{\hyperlink{classCBTreePage}{CBTree\+Page}}$<$ Trait $>$\mbox{\hyperlink{classCBTreePage}{\+::\+CBTree\+Page}} (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classCBTreePage}{CBTree\+Page}}$<$ Trait $>$ \&\&}]{other}{}\end{DoxyParamCaption})}
+
+
+
+Constructor de movimiento para transferir los recursos de otra página al nuevo objeto. 
+
+Este constructor toma una página existente (pasada como {\ttfamily other}) y transfiere sus recursos (como claves, subpáginas y configuraciones) al nuevo objeto. Después de la transferencia, los atributos de {\ttfamily other} se restablecen a sus valores predeterminados.
+
+
+\begin{DoxyTemplParams}{Template Parameters}
+{\em Trait} & El tipo de los traits que define las propiedades del árbol B.\\
+\hline
+\end{DoxyTemplParams}
+
+\begin{DoxyParams}{Parameters}
+{\em other} & La página de la cual se moverán los recursos al nuevo objeto.\\
+\hline
+\end{DoxyParams}
+\begin{DoxyNote}{Note}
+Este constructor permite la transferencia eficiente de recursos, evitando copias innecesarias. 
+\end{DoxyNote}
+
+
+\doxysubsection{Member Function Documentation}
+\Hypertarget{classCBTreePage_a3d83f3f22912ed44976fa602f7ae29fd}\index{CBTreePage$<$ Trait $>$@{CBTreePage$<$ Trait $>$}!FirstThat@{FirstThat}}
+\index{FirstThat@{FirstThat}!CBTreePage$<$ Trait $>$@{CBTreePage$<$ Trait $>$}}
+\doxysubsubsection{\texorpdfstring{FirstThat()}{FirstThat()}}
+{\footnotesize\ttfamily \label{classCBTreePage_a3d83f3f22912ed44976fa602f7ae29fd} 
+template$<$typename Trait $>$ \\
+template$<$typename Function $>$ \\
+\mbox{\hyperlink{classCBTreePage}{CBTree\+Page}}$<$ Trait $>$\+::\+Object\+Info \texorpdfstring{$\ast$}{*} \mbox{\hyperlink{classCBTreePage}{CBTree\+Page}}$<$ Trait $>$\+::\+First\+That (\begin{DoxyParamCaption}\item[{Function}]{fn}{, }\item[{size\+\_\+t}]{level}{}\end{DoxyParamCaption})}
+
+
+
+Busca el primer objeto que cumple con una condición. 
+
+Este método recursivo busca en las claves de la página actual (y sus subpáginas) el primer objeto que cumpla con una condición definida por una función. La búsqueda se realiza de forma descendente en las subpáginas y se detiene tan pronto como se encuentra un objeto que cumple la condición.
+
+
+\begin{DoxyTemplParams}{Template Parameters}
+{\em Function} & Tipo de la función que define la condición de búsqueda. La función debe ser invocable con una clave y un nivel como parámetros y debe devolver un valor booleano.\\
+\hline
+\end{DoxyTemplParams}
+
+\begin{DoxyParams}{Parameters}
+{\em fn} & Función que define la condición de búsqueda. Esta función debe aceptar una clave y el nivel de profundidad actual y debe devolver {\ttfamily true} si la clave cumple con la condición, o {\ttfamily false} en caso contrario. \\
+\hline
+{\em level} & Nivel actual de profundidad en el árbol. Se utiliza para la recursión en las subpáginas.\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Puntero al primer objeto que cumple con la condición, o {\ttfamily nullptr} si no se encuentra ninguno.
+\end{DoxyReturn}
+Este método recursivo realiza una búsqueda en las claves del nodo actual. Para cada clave, invoca la función {\ttfamily fn} con la clave y el nivel actual. Si la función devuelve {\ttfamily true}, devuelve un puntero al objeto correspondiente. Si la clave no cumple con la condición, el método continúa buscando en las subpáginas del nodo, descendiendo recursivamente. Si no se encuentra ningún objeto que cumpla con la condición, el método devuelve {\ttfamily nullptr}.
+
+\begin{DoxyNote}{Note}
+Este método es útil para realizar búsquedas complejas en un árbol B donde la condición de búsqueda no puede ser fácilmente representada mediante comparaciones simples. 
+\end{DoxyNote}
+\Hypertarget{classCBTreePage_ad686759227acd1a1ca896978dfe565ac}\index{CBTreePage$<$ Trait $>$@{CBTreePage$<$ Trait $>$}!Insert@{Insert}}
+\index{Insert@{Insert}!CBTreePage$<$ Trait $>$@{CBTreePage$<$ Trait $>$}}
+\doxysubsubsection{\texorpdfstring{Insert()}{Insert()}}
+{\footnotesize\ttfamily \label{classCBTreePage_ad686759227acd1a1ca896978dfe565ac} 
+template$<$typename Trait $>$ \\
+bt\+\_\+\+Error\+Code \mbox{\hyperlink{classCBTreePage}{CBTree\+Page}}$<$ Trait $>$\+::\+Insert (\begin{DoxyParamCaption}\item[{const key\+Type \&}]{key}{, }\item[{const Obj\+IDType}]{Obj\+ID}{}\end{DoxyParamCaption})}
+
+
+
+Inserta una clave y su identificador de objeto en la página del árbol B. 
+
+Este método realiza la inserción de una clave en la página del árbol B. Si la clave ya existe y no se permiten claves duplicadas, el método retorna un error de tipo {\ttfamily bt\+\_\+duplicate}. Si la página es una hoja, la clave se inserta directamente; si no, la inserción se realiza de manera recursiva en las subpáginas correspondientes.
+
+Si se produce un desbordamiento en la página (es decir, el número de claves excede el máximo permitido), se intenta redistribuir los elementos con los hermanos adyacentes, o bien se divide la página en dos. Si el desbordamiento persiste, se propaga hacia arriba.
+
+
+\begin{DoxyTemplParams}{Template Parameters}
+{\em Trait} & El tipo de los traits que define las propiedades del árbol B.\\
+\hline
+\end{DoxyTemplParams}
+
+\begin{DoxyParams}{Parameters}
+{\em key} & La clave que se desea insertar. \\
+\hline
+{\em Obj\+ID} & El identificador del objeto asociado a la clave.\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Un código de error {\ttfamily bt\+\_\+\+Error\+Code}, que puede ser\+:
+\begin{DoxyItemize}
+\item {\ttfamily bt\+\_\+ok}\+: Inserción exitosa.
+\item {\ttfamily bt\+\_\+duplicate}\+: La clave ya existe en la página y no se permiten duplicados.
+\item {\ttfamily bt\+\_\+overflow}\+: La página ha desbordado.
+\end{DoxyItemize}
+\end{DoxyReturn}
+\begin{DoxyNote}{Note}
+Este método maneja la inserción tanto en páginas hoja como en subpáginas, y gestiona los desbordamientos mediante redistribución o división de páginas. 
+\end{DoxyNote}
+\Hypertarget{classCBTreePage_a2e3957696acbc50a3f09b90e4c19c51f}\index{CBTreePage$<$ Trait $>$@{CBTreePage$<$ Trait $>$}!operator=@{operator=}}
+\index{operator=@{operator=}!CBTreePage$<$ Trait $>$@{CBTreePage$<$ Trait $>$}}
+\doxysubsubsection{\texorpdfstring{operator=()}{operator=()}}
+{\footnotesize\ttfamily \label{classCBTreePage_a2e3957696acbc50a3f09b90e4c19c51f} 
+template$<$typename Trait $>$ \\
+\mbox{\hyperlink{classCBTreePage}{CBTree\+Page}}$<$ Trait $>$ \& \mbox{\hyperlink{classCBTreePage}{CBTree\+Page}}$<$ Trait $>$\+::operator= (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classCBTreePage}{CBTree\+Page}}$<$ Trait $>$ \&\&}]{other}{}\end{DoxyParamCaption})}
+
+
+
+Operador de asignación por movimiento para transferir los recursos de otra página al objeto actual. 
+
+Este operador permite asignar una página existente (pasada como {\ttfamily other}) al objeto actual, moviendo sus recursos (como claves, subpáginas y configuraciones) en lugar de copiarlos. Después de la transferencia, los atributos de {\ttfamily other} se restablecen a sus valores predeterminados. Este método es eficiente y evita la duplicación innecesaria de recursos.
+
+
+\begin{DoxyTemplParams}{Template Parameters}
+{\em Trait} & El tipo de los traits que define las propiedades del árbol B.\\
+\hline
+\end{DoxyTemplParams}
+
+\begin{DoxyParams}{Parameters}
+{\em other} & La página de la cual se moverán los recursos al objeto actual.\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Una referencia al objeto actual ({\ttfamily \texorpdfstring{$\ast$}{*}this}) después de la asignación.
+\end{DoxyReturn}
+\begin{DoxyNote}{Note}
+Si el objeto actual es el mismo que {\ttfamily other}, no se realiza ninguna operación. 
+\end{DoxyNote}
+\Hypertarget{classCBTreePage_a71d0430e68c4a9f36a5aac6f18460d24}\index{CBTreePage$<$ Trait $>$@{CBTreePage$<$ Trait $>$}!Read@{Read}}
+\index{Read@{Read}!CBTreePage$<$ Trait $>$@{CBTreePage$<$ Trait $>$}}
+\doxysubsubsection{\texorpdfstring{Read()}{Read()}}
+{\footnotesize\ttfamily \label{classCBTreePage_a71d0430e68c4a9f36a5aac6f18460d24} 
+template$<$typename Trait $>$ \\
+std\+::istream \& \mbox{\hyperlink{classCBTreePage}{CBTree\+Page}}$<$ Trait $>$\+::\+Read (\begin{DoxyParamCaption}\item[{istream \&}]{is}{}\end{DoxyParamCaption})}
+
+
+
+Lee los datos de una página del árbol B desde un flujo de entrada. 
+
+Este método deserializa una página del árbol B desde un flujo de entrada, como {\ttfamily std\+::ifstream}. Los datos leídos incluyen\+:
+\begin{DoxyItemize}
+\item La cantidad de claves en la página.
+\item Las claves y sus respectivos {\ttfamily Obj\+ID}.
+\item El marcador {\ttfamily ENDKEYS} que indica el fin de las claves.
+\item La existencia de las subpáginas.
+\end{DoxyItemize}
+
+Si existen subpáginas, las deserializa recursivamente.
+
+
+\begin{DoxyParams}{Parameters}
+{\em is} & Flujo de entrada desde el cual se deserializará la página. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+El flujo de entrada {\ttfamily is} para permitir encadenamiento de operaciones de entrada.
+\end{DoxyReturn}
+La función comienza leyendo la cabecera y el número de claves. Luego, deserializa las claves y sus respectivos {\ttfamily Obj\+ID}. Después, lee las subpáginas, creando nuevas páginas y deserializándolas recursivamente si es necesario.
+
+\begin{DoxyNote}{Note}
+Este método es útil para cargar una página previamente serializada desde un archivo o flujo de entrada. 
+\end{DoxyNote}
+\Hypertarget{classCBTreePage_a6f63f587ea032d81cc4359ff0f4662e8}\index{CBTreePage$<$ Trait $>$@{CBTreePage$<$ Trait $>$}!RedistributeL2R@{RedistributeL2R}}
+\index{RedistributeL2R@{RedistributeL2R}!CBTreePage$<$ Trait $>$@{CBTreePage$<$ Trait $>$}}
+\doxysubsubsection{\texorpdfstring{RedistributeL2R()}{RedistributeL2R()}}
+{\footnotesize\ttfamily \label{classCBTreePage_a6f63f587ea032d81cc4359ff0f4662e8} 
+template$<$typename Trait $>$ \\
+void \mbox{\hyperlink{classCBTreePage}{CBTree\+Page}}$<$ Trait $>$\+::\+Redistribute\+L2R (\begin{DoxyParamCaption}\item[{size\+\_\+t}]{pos}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Redistribuye claves y subpáginas de izquierda a derecha entre dos nodos hijos. 
+
+Este método toma claves y punteros desde el nodo hijo en la posición {\ttfamily pos} (nodo izquierdo) y los inserta en su hermano derecho ({\ttfamily pos+1}). La clave correspondiente en el nodo padre también se ajusta para mantener las propiedades del árbol B.
+
+
+\begin{DoxyParams}{Parameters}
+{\em pos} & Posición del nodo hijo izquierdo en el vector {\ttfamily m\+\_\+\+Sub\+Pages}. El hermano derecho está en {\ttfamily pos+1}.\\
+\hline
+\end{DoxyParams}
+La redistribución ocurre mientras el nodo izquierdo (source) tenga más claves que su mínimo permitido ({\ttfamily Min\+Number\+Of\+Keys}) y el nodo derecho (target) tenga menos claves que el nodo izquierdo. En cada iteración\+:
+\begin{DoxyItemize}
+\item Se mueve la clave del nodo padre {\ttfamily m\+\_\+\+Keys\mbox{[}pos\mbox{]}} al principio del nodo derecho.
+\item Se mueve el último puntero del nodo izquierdo al principio del nodo derecho.
+\item La última clave del nodo izquierdo se mueve al nodo padre ({\ttfamily m\+\_\+\+Keys\mbox{[}pos\mbox{]}}).
+\item Se elimina la última clave del nodo izquierdo y se decrementa su contador de claves.
+\end{DoxyItemize}
+
+\begin{DoxyNote}{Note}
+Este método es útil para resolver underflow (subfluyo) en árboles B sin necesidad de hacer split o merge, redistribuyendo claves entre hermanos adyacentes. 
+\end{DoxyNote}
+\Hypertarget{classCBTreePage_ab581f5c827c5b8edec5e79737ad12d32}\index{CBTreePage$<$ Trait $>$@{CBTreePage$<$ Trait $>$}!RedistributeR2L@{RedistributeR2L}}
+\index{RedistributeR2L@{RedistributeR2L}!CBTreePage$<$ Trait $>$@{CBTreePage$<$ Trait $>$}}
+\doxysubsubsection{\texorpdfstring{RedistributeR2L()}{RedistributeR2L()}}
+{\footnotesize\ttfamily \label{classCBTreePage_ab581f5c827c5b8edec5e79737ad12d32} 
+template$<$typename Trait $>$ \\
+void \mbox{\hyperlink{classCBTreePage}{CBTree\+Page}}$<$ Trait $>$\+::\+Redistribute\+R2L (\begin{DoxyParamCaption}\item[{size\+\_\+t}]{pos}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Redistribuye claves y subpáginas de derecha a izquierda entre dos nodos hijos. 
+
+Este método toma claves y punteros desde el nodo hijo en la posición {\ttfamily pos} (nodo derecho) y los inserta en su hermano izquierdo ({\ttfamily pos-\/1}). La clave correspondiente en el nodo padre también se ajusta para mantener las propiedades del árbol B.
+
+
+\begin{DoxyParams}{Parameters}
+{\em pos} & Posición del nodo hijo derecho en el vector {\ttfamily m\+\_\+\+Sub\+Pages}. El hermano izquierdo está en {\ttfamily pos-\/1}.\\
+\hline
+\end{DoxyParams}
+La redistribución ocurre mientras el nodo derecho (source) tenga más claves que su mínimo permitido ({\ttfamily Min\+Number\+Of\+Keys}) y el nodo izquierdo (target) tenga menos claves que el nodo derecho. En cada iteración\+:
+\begin{DoxyItemize}
+\item Se mueve la clave del nodo padre {\ttfamily m\+\_\+\+Keys\mbox{[}pos-\/1\mbox{]}} al final del nodo izquierdo.
+\item Se mueve el primer puntero del nodo derecho al nodo izquierdo.
+\item La primera clave del nodo derecho se mueve al nodo padre ({\ttfamily m\+\_\+\+Keys\mbox{[}pos-\/1\mbox{]}}).
+\item Se elimina la primera clave y puntero del nodo derecho y se decrementa su contador de claves.
+\end{DoxyItemize}
+
+\begin{DoxyNote}{Note}
+Este método es útil para resolver underflow (subfluyo) en árboles B sin necesidad de hacer split o merge, redistribuyendo claves entre hermanos adyacentes. 
+\end{DoxyNote}
+\Hypertarget{classCBTreePage_ad2d5711b8cc6d980cb3718670649d862}\index{CBTreePage$<$ Trait $>$@{CBTreePage$<$ Trait $>$}!RedistributeWith1Brother@{RedistributeWith1Brother}}
+\index{RedistributeWith1Brother@{RedistributeWith1Brother}!CBTreePage$<$ Trait $>$@{CBTreePage$<$ Trait $>$}}
+\doxysubsubsection{\texorpdfstring{RedistributeWith1Brother()}{RedistributeWith1Brother()}}
+{\footnotesize\ttfamily \label{classCBTreePage_ad2d5711b8cc6d980cb3718670649d862} 
+template$<$typename Trait $>$ \\
+bool \mbox{\hyperlink{classCBTreePage}{CBTree\+Page}}$<$ Trait $>$\+::\+Redistribute\+With1\+Brother (\begin{DoxyParamCaption}\item[{size\+\_\+t \&}]{pos}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Redistribuye las claves de un nodo B-\/\+Tree con uno de sus hermanos. 
+
+Este método maneja tanto los casos de subfluyo (cuando un nodo tiene menos claves de las necesarias) como los casos de desbordamiento (cuando un nodo tiene más claves de las que puede manejar). Dependiendo de la situación, se redistribuirán las claves con el hermano izquierdo o derecho del nodo, o se realizará una fusión si no es posible la redistribución.
+
+
+\begin{DoxyParams}{Parameters}
+{\em pos} & La posición del nodo en el arreglo de subpáginas. Se pasa como referencia ya que puede modificarse durante el proceso de redistribución.\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+{\ttfamily true} si la redistribución fue exitosa; de lo contrario, {\ttfamily false} si no es posible realizar la redistribución debido a la falta de espacio o las condiciones del árbol.
+\end{DoxyReturn}
+Este método primero verifica si el nodo en la posición indicada está en un estado de "{}subfluyo"{} (es decir, tiene menos claves de las necesarias). Si es así, el algoritmo intenta redistribuir las claves con el hermano izquierdo o derecho. Si el nodo está en estado de "{}desbordamiento"{}, se intentará hacer espacio en el nodo redistribuyendo claves con sus hermanos.
+
+\begin{DoxyNote}{Note}
+Este método es crítico para mantener el equilibrio del árbol B al garantizar que los nodos no se desborden o queden en un estado subfluyente sin ser manejados adecuadamente. 
+\end{DoxyNote}
+\Hypertarget{classCBTreePage_ac2084083de43832e0a723624c2956836}\index{CBTreePage$<$ Trait $>$@{CBTreePage$<$ Trait $>$}!RedistributeWith2Brothers@{RedistributeWith2Brothers}}
+\index{RedistributeWith2Brothers@{RedistributeWith2Brothers}!CBTreePage$<$ Trait $>$@{CBTreePage$<$ Trait $>$}}
+\doxysubsubsection{\texorpdfstring{RedistributeWith2Brothers()}{RedistributeWith2Brothers()}}
+{\footnotesize\ttfamily \label{classCBTreePage_ac2084083de43832e0a723624c2956836} 
+template$<$typename Trait $>$ \\
+bool \mbox{\hyperlink{classCBTreePage}{CBTree\+Page}}$<$ Trait $>$\+::\+Redistribute\+With2\+Brothers (\begin{DoxyParamCaption}\item[{size\+\_\+t}]{pos}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Redistribuye las claves entre tres nodos hermanos en un árbol B cuando dos de ellos están en subfluyo. 
+
+Redistribute\+With2\+Brothers function it considers two brothers m\+\_\+\+Sub\+Pages\mbox{[}pos-\/1\mbox{]} \&\& m\+\_\+\+Sub\+Pages\mbox{[}pos+1\mbox{]} if it fails the only way is merge ! 
+
+Este método maneja una situación en la que el nodo actual y al menos uno de sus hermanos (izquierdo o derecho) están en estado de subfluyo, es decir, contienen menos claves de las necesarias para cumplir con las condiciones del árbol B. El método redistribuye las claves entre los tres nodos (el nodo actual y sus dos hermanos) para equilibrar la cantidad de claves.
+
+
+\begin{DoxyParams}{Parameters}
+{\em pos} & La posición del nodo en el arreglo de subpáginas, que se pasa como referencia. El nodo actual está en la posición {\ttfamily pos}, con un hermano a la izquierda ({\ttfamily pos-\/1}) y uno a la derecha ({\ttfamily pos+1}).\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+{\ttfamily true} si la redistribución se ha realizado correctamente. Si no es posible realizar la redistribución debido a que el estado de subfluyo persiste en alguno de los nodos, se retorna {\ttfamily false}.
+\end{DoxyReturn}
+Este método intenta redistribuir las claves de los nodos vecinos de la siguiente manera\+:
+
+
+\begin{DoxyItemize}
+\item Si el hermano izquierdo está en subfluyo, las claves se redistribuyen hacia el nodo actual y el hermano izquierdo mediante una rotación de derecha a izquierda ({\ttfamily R2L}).
+\item Si el hermano derecho está en subfluyo, las claves se redistribuyen hacia el nodo actual y el hermano derecho mediante una rotación de izquierda a derecha ({\ttfamily L2R}).
+\item Si ambos hermanos están en subfluyo, se realiza primero una rotación de izquierda a derecha en el hermano izquierdo, seguida de una rotación de derecha a izquierda en el hermano derecho.
+\end{DoxyItemize}
+
+\begin{DoxyNote}{Note}
+Este método es fundamental para mantener el equilibrio del árbol B y garantizar que los nodos no se queden en un estado de subfluyo durante las operaciones de inserción y eliminación de claves. 
+\end{DoxyNote}
+\Hypertarget{classCBTreePage_a517371a189939644cf4400dd69de4d8b}\index{CBTreePage$<$ Trait $>$@{CBTreePage$<$ Trait $>$}!Search@{Search}}
+\index{Search@{Search}!CBTreePage$<$ Trait $>$@{CBTreePage$<$ Trait $>$}}
+\doxysubsubsection{\texorpdfstring{Search()}{Search()}}
+{\footnotesize\ttfamily \label{classCBTreePage_a517371a189939644cf4400dd69de4d8b} 
+template$<$typename Trait $>$ \\
+bool \mbox{\hyperlink{classCBTreePage}{CBTree\+Page}}$<$ Trait $>$\+::\+Search (\begin{DoxyParamCaption}\item[{const key\+Type \&}]{key}{, }\item[{Obj\+IDType \&}]{Obj\+ID}{}\end{DoxyParamCaption})}
+
+
+
+Busca una clave en la página del árbol B y obtiene su identificador de objeto. 
+
+Este método realiza una búsqueda binaria para localizar una clave específica en la página del árbol B. Si la clave se encuentra, se devuelve el identificador de objeto asociado. Si la clave no está presente en la página actual, la búsqueda se realiza recursivamente en las subpáginas correspondientes.
+
+
+\begin{DoxyTemplParams}{Template Parameters}
+{\em Trait} & El tipo de los traits que define las propiedades del árbol B.\\
+\hline
+\end{DoxyTemplParams}
+
+\begin{DoxyParams}{Parameters}
+{\em key} & La clave que se desea buscar. \\
+\hline
+{\em Obj\+ID} & Referencia donde se almacenará el identificador del objeto si la clave es encontrada.\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+{\ttfamily true} si la clave fue encontrada y {\ttfamily Obj\+ID} fue actualizado; {\ttfamily false} si la clave no está presente.
+\end{DoxyReturn}
+\begin{DoxyNote}{Note}
+Este método utiliza una comparación personalizada definida por {\ttfamily m\+\_\+\+Compare} para determinar el orden de las claves. 
+\end{DoxyNote}
+\Hypertarget{classCBTreePage_a6a5a3cc493d12bb0d53c8e191ce88d01}\index{CBTreePage$<$ Trait $>$@{CBTreePage$<$ Trait $>$}!SplitChild@{SplitChild}}
+\index{SplitChild@{SplitChild}!CBTreePage$<$ Trait $>$@{CBTreePage$<$ Trait $>$}}
+\doxysubsubsection{\texorpdfstring{SplitChild()}{SplitChild()}}
+{\footnotesize\ttfamily \label{classCBTreePage_a6a5a3cc493d12bb0d53c8e191ce88d01} 
+template$<$typename Trait $>$ \\
+void \mbox{\hyperlink{classCBTreePage}{CBTree\+Page}}$<$ Trait $>$\+::\+Split\+Child (\begin{DoxyParamCaption}\item[{size\+\_\+t}]{pos}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Divide un nodo hijo lleno en tres nodos. 
+
+Este método maneja la división de un nodo hijo que se encuentra lleno. La división implica tomar dos nodos hijos, combinarlos temporalmente, y luego dividirlos en tres nodos distintos. El nodo padre se actualiza con las claves correspondientes, y los nodos hijos se reorganizan.
+
+
+\begin{DoxyParams}{Parameters}
+{\em pos} & Posición del nodo hijo en el vector {\ttfamily m\+\_\+\+Sub\+Pages}. El nodo hijo en {\ttfamily pos} se divide, y el nodo adyacente izquierdo o derecho también se involucra en la división si está lleno.\\
+\hline
+\end{DoxyParams}
+El proceso de división consta de los siguientes pasos\+:
+\begin{DoxyEnumerate}
+\item Se identifican los nodos hijos a dividir (izquierdo y derecho) según su posición en el vector {\ttfamily m\+\_\+\+Sub\+Pages}.
+\item Se crea un vector temporal para almacenar las claves y los punteros de los nodos hijos.
+\item Las claves y los punteros de los nodos hijos izquierdo y derecho se copian al vector temporal.
+\item El nodo padre se actualiza con dos nuevas claves (una de cada nodo hijo).
+\item Los nodos hijos resultantes se reorganizan y se asignan a las posiciones correspondientes.
+\end{DoxyEnumerate}
+
+\begin{DoxyNote}{Note}
+Este método se llama cuando un nodo hijo se llena y necesita ser dividido para mantener las propiedades del árbol B. 
+\end{DoxyNote}
+\Hypertarget{classCBTreePage_a29f3a7111dbe71e7306221bc91e487be}\index{CBTreePage$<$ Trait $>$@{CBTreePage$<$ Trait $>$}!Write@{Write}}
+\index{Write@{Write}!CBTreePage$<$ Trait $>$@{CBTreePage$<$ Trait $>$}}
+\doxysubsubsection{\texorpdfstring{Write()}{Write()}}
+{\footnotesize\ttfamily \label{classCBTreePage_a29f3a7111dbe71e7306221bc91e487be} 
+template$<$typename Trait $>$ \\
+std\+::ostream \& \mbox{\hyperlink{classCBTreePage}{CBTree\+Page}}$<$ Trait $>$\+::\+Write (\begin{DoxyParamCaption}\item[{ostream \&}]{os}{}\end{DoxyParamCaption})}
+
+
+
+Escribe la página del árbol B en un flujo de salida. 
+
+Este método serializa la información contenida en la página del árbol B a un flujo de salida, como {\ttfamily std\+::ofstream} o {\ttfamily std\+::cout}. La serialización incluye\+:
+\begin{DoxyItemize}
+\item La cantidad de claves en la página.
+\item Las claves y sus respectivos {\ttfamily Obj\+ID}.
+\item Un marcador {\ttfamily ENDKEYS} que indica el final de las claves.
+\item Las subpáginas de la página, indicadas por "{}1"{} (si existen) o "{}0"{} (si no existen).
+\end{DoxyItemize}
+
+Además, si existen subpáginas, el método las serializa recursivamente.
+
+
+\begin{DoxyParams}{Parameters}
+{\em os} & Flujo de salida donde se serializará la página. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+El flujo de salida {\ttfamily os} para permitir encadenamiento de operaciones de salida.
+\end{DoxyReturn}
+La función escribe la cabecera con el número de claves en la página, luego escribe cada clave y su respectivo {\ttfamily Obj\+ID}. Después, indica la existencia de las subpáginas y recursivamente escribe cada subpágina si es necesario.
+
+\begin{DoxyNote}{Note}
+Este método es útil para guardar el estado de una página del árbol B en un archivo o para depuración. 
+\end{DoxyNote}
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+btreepage.\+h\end{DoxyCompactItemize}

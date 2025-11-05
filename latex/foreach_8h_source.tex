@@ -1,0 +1,57 @@
+\doxysection{foreach.\+h}
+\hypertarget{foreach_8h_source}{}\label{foreach_8h_source}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001\ \textcolor{preprocessor}{\#ifndef\ \_\_FOREACH\_H\_\_}}
+\DoxyCodeLine{00002\ \textcolor{preprocessor}{\#define\ \_\_FOREACH\_H\_\_}}
+\DoxyCodeLine{00003\ \textcolor{preprocessor}{\#include\ <iostream>}}
+\DoxyCodeLine{00004\ }
+\DoxyCodeLine{00005\ \textcolor{keyword}{template}\ <\textcolor{keyword}{typename}\ Iterator,\ \textcolor{keyword}{typename}\ Function\ >}
+\DoxyCodeLine{00006\ \textcolor{keywordtype}{void}\ \textcolor{keywordflow}{foreach}(Iterator\ begin,\ Iterator\ end,\ Function\ func)\{}
+\DoxyCodeLine{00007\ \ \ \ \ \textcolor{keyword}{auto}\ iter\ =\ begin;}
+\DoxyCodeLine{00008\ \ \ \ \ \textcolor{keywordflow}{for}(;\ iter\ !=\ end\ ;\ ++iter\ )}
+\DoxyCodeLine{00009\ \ \ \ \ \ \ \ \ func(\ *iter\ );}
+\DoxyCodeLine{00010\ \}}
+\DoxyCodeLine{00011\ }
+\DoxyCodeLine{00012\ \textcolor{comment}{//\ V1.0}}
+\DoxyCodeLine{00013\ \textcolor{comment}{//\ template\ <typename\ Container,\ typename\ Func>}}
+\DoxyCodeLine{00014\ \textcolor{comment}{//\ void\ foreach(Container\ \&container,\ Func\ fn)\{}}
+\DoxyCodeLine{00015\ \textcolor{comment}{//\ \ \ \ \ //\ typename\ Container::iterator\ iter\ =\ container.begin();}}
+\DoxyCodeLine{00016\ \textcolor{comment}{//\ \ \ \ \ auto\ iter\ =\ container.begin();}}
+\DoxyCodeLine{00017\ \textcolor{comment}{//\ \ \ \ \ for(;\ iter\ !=\ container.end()\ ;\ iter++\ )}}
+\DoxyCodeLine{00018\ \textcolor{comment}{//\ \ \ \ \ \ \ \ \ fn(\ *iter\ );}}
+\DoxyCodeLine{00019\ \textcolor{comment}{//\ \}}}
+\DoxyCodeLine{00020\ }
+\DoxyCodeLine{00021\ \textcolor{comment}{//\ V1.1}}
+\DoxyCodeLine{00022\ \textcolor{keyword}{template}\ <\textcolor{keyword}{typename}\ Container,\ \textcolor{keyword}{typename}\ Function>}
+\DoxyCodeLine{00023\ \textcolor{keywordtype}{void}\ \textcolor{keywordflow}{foreach}(Container\ \&container,\ Function\ func)\{}
+\DoxyCodeLine{00024\ \ \ \ \ \textcolor{keywordflow}{foreach}(container.begin(),\ container.end(),\ func);}
+\DoxyCodeLine{00025\ \}}
+\DoxyCodeLine{00026\ }
+\DoxyCodeLine{00027\ \textcolor{comment}{//\ Variadic\ templates}}
+\DoxyCodeLine{00028\ \textcolor{keyword}{template}<\textcolor{keyword}{typename}\ Iterator,\ \textcolor{keyword}{typename}\ Function,\ \textcolor{keyword}{typename}...\ Args>}
+\DoxyCodeLine{00029\ \textcolor{keywordtype}{void}\ \textcolor{keywordflow}{foreach}\ (Iterator\ begin,\ Iterator\ end,}
+\DoxyCodeLine{00030\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ Function\ func,\ Args\ \textcolor{keyword}{const}\&...\ args)\{\ \ \ }
+\DoxyCodeLine{00031\ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keyword}{auto}\ iter\ =\ begin;\ begin\ !=\ end;\ ++iter)}
+\DoxyCodeLine{00032\ \ \ \ \ \ \ \ \ std::invoke(func,\ *iter,\ args...);}
+\DoxyCodeLine{00033\ \}}
+\DoxyCodeLine{00034\ }
+\DoxyCodeLine{00035\ \textcolor{comment}{//\ template<typename\ Callable,\ typename...\ Args>}}
+\DoxyCodeLine{00036\ \textcolor{comment}{//\ decltype(auto)\ call(Callable\ op,\ Args\&\&...\ args)}}
+\DoxyCodeLine{00037\ \textcolor{comment}{//\ \{}}
+\DoxyCodeLine{00038\ \textcolor{comment}{//\ \ \ \ \ if\ constexpr(is\_void\_v<invoke\_result\_t<Callable,\ Args...>>)}}
+\DoxyCodeLine{00039\ \textcolor{comment}{//\ \ \ \ \ \{\ std::cout\ <<\ "{}Function\ is\ returning:\ void!"{}\ <<\ std::endl;}}
+\DoxyCodeLine{00040\ \textcolor{comment}{//\ \ \ \ \ \ \ invoke(forward<Callable>(op),\ forward<Args>(args)...);}}
+\DoxyCodeLine{00041\ \textcolor{comment}{//\ \ \ \ \ \ \ //...\ \ //\ do\ something\ before\ we\ return}}
+\DoxyCodeLine{00042\ \textcolor{comment}{//\ \ \ \ \ \ \ return;}}
+\DoxyCodeLine{00043\ \textcolor{comment}{//\ \ \ \ \ \}}}
+\DoxyCodeLine{00044\ \textcolor{comment}{//\ \ \ \ \ else\ //\ return\ type\ is\ not\ void:}}
+\DoxyCodeLine{00045\ \textcolor{comment}{//\ \ \ \ \ \{\ auto\ ret\ =\ invoke(forward<Callable>(op),\ forward<Args>(args)...);}}
+\DoxyCodeLine{00046\ \textcolor{comment}{//\ \ \ \ \ \ \ std::cout\ <<\ "{}Function\ is\ returning:\ "{}\ <<\ type\_name<decltype(ret)>()\ <<\ std::endl;}}
+\DoxyCodeLine{00047\ \textcolor{comment}{//\ \ \ \ \ \ \ //...\ \ //\ do\ something\ (with\ ret)\ before\ we\ return}}
+\DoxyCodeLine{00048\ \textcolor{comment}{//\ \ \ \ \ \ \ return\ ret;}}
+\DoxyCodeLine{00049\ \textcolor{comment}{//\ \ \ \ \ \}}}
+\DoxyCodeLine{00050\ \textcolor{comment}{//\ \}}}
+\DoxyCodeLine{00051\ }
+\DoxyCodeLine{00052\ \textcolor{preprocessor}{\#endif\ }\textcolor{comment}{//\ \_\_FOREACH\_H\_\_}}
+
+\end{DoxyCode}

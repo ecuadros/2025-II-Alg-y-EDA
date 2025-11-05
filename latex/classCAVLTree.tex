@@ -1,0 +1,113 @@
+\doxysection{CAVLTree\texorpdfstring{$<$}{<} Traits \texorpdfstring{$>$}{>} Class Template Reference}
+\hypertarget{classCAVLTree}{}\label{classCAVLTree}\index{CAVLTree$<$ Traits $>$@{CAVLTree$<$ Traits $>$}}
+Inheritance diagram for CAVLTree\texorpdfstring{$<$}{<} Traits \texorpdfstring{$>$}{>}\+:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=2.000000cm]{classCAVLTree}
+\end{center}
+\end{figure}
+\doxysubsubsection*{Public Types}
+\begin{DoxyCompactItemize}
+\item 
+\Hypertarget{classCAVLTree_aaa4796592a3afe5c501a1e6c139caa36}\label{classCAVLTree_aaa4796592a3afe5c501a1e6c139caa36} 
+using {\bfseries Base} = \mbox{\hyperlink{classCBinaryTree}{CBinary\+Tree}}$<$Traits$>$
+\item 
+\Hypertarget{classCAVLTree_a369bbb0c381f11223eb95501a4413903}\label{classCAVLTree_a369bbb0c381f11223eb95501a4413903} 
+using {\bfseries Node} = typename Traits\+::\+Node
+\item 
+\Hypertarget{classCAVLTree_ac9b2f6de0db60e0ff13f382ba5714903}\label{classCAVLTree_ac9b2f6de0db60e0ff13f382ba5714903} 
+using {\bfseries value\+\_\+type} = typename Traits\+::value\+\_\+type
+\item 
+\Hypertarget{classCAVLTree_a4281e2438e56598605fcf59c17e3434f}\label{classCAVLTree_a4281e2438e56598605fcf59c17e3434f} 
+using {\bfseries Compare\+Fn} = typename Traits\+::\+Compare\+Fn
+\item 
+\Hypertarget{classCAVLTree_a122dc938ed64b589212acfa24423b9f7}\label{classCAVLTree_a122dc938ed64b589212acfa24423b9f7} 
+using {\bfseries Container} = \mbox{\hyperlink{classCAVLTree}{CAVLTree}}$<$Traits$>$
+\item 
+\Hypertarget{classCAVLTree_a691f4a0d3e143f0b02c55efd22d7f989}\label{classCAVLTree_a691f4a0d3e143f0b02c55efd22d7f989} 
+using {\bfseries iterator} = \mbox{\hyperlink{classbinary__tree__iterator}{binary\+\_\+tree\+\_\+iterator}}$<$\mbox{\hyperlink{classCAVLTree}{Container}}$>$
+\end{DoxyCompactItemize}
+\doxysubsection*{Public Types inherited from \mbox{\hyperlink{classCBinaryTree}{CBinary\+Tree$<$ Traits $>$}}}
+\begin{DoxyCompactItemize}
+\item 
+using {\bfseries value\+\_\+type} = typename Traits\+::T
+\item 
+using {\bfseries Node} = typename Traits\+::\+Node
+\item 
+using {\bfseries Compare\+Fn} = typename Traits\+::\+Compare\+Fn
+\item 
+using {\bfseries Container} = \mbox{\hyperlink{classCBinaryTree}{CBinary\+Tree}}$<$Traits$>$
+\item 
+using {\bfseries iterator} = \mbox{\hyperlink{classbinary__tree__iterator}{binary\+\_\+tree\+\_\+iterator}}$<$\mbox{\hyperlink{classCBinaryTree}{Container}}$>$
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Protected Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\Hypertarget{classCAVLTree_a761b75a755be6284a08fd0804389c58f}\label{classCAVLTree_a761b75a755be6284a08fd0804389c58f} 
+Node \texorpdfstring{$\ast$}{*} {\bfseries internal\+\_\+insert} (value\+\_\+type \&elem, Ref ref, Node \texorpdfstring{$\ast$}{*}p\+Parent, Node \texorpdfstring{$\ast$}{*}\&rp\+Origin) override
+\end{DoxyCompactItemize}
+\doxysubsection*{Protected Member Functions inherited from \mbox{\hyperlink{classCBinaryTree}{CBinary\+Tree$<$ Traits $>$}}}
+\begin{DoxyCompactItemize}
+\item 
+Node \texorpdfstring{$\ast$}{*} {\bfseries Create\+Node} (Node \texorpdfstring{$\ast$}{*}p\+Parent, value\+\_\+type elem, Ref ref)
+\item 
+virtual Node \texorpdfstring{$\ast$}{*} {\bfseries internal\+\_\+insert} (value\+\_\+type \&elem, Ref ref, Node \texorpdfstring{$\ast$}{*}p\+Parent, Node \texorpdfstring{$\ast$}{*}\&rp\+Origin)
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Additional Inherited Members}
+\doxysubsection*{Public Member Functions inherited from \mbox{\hyperlink{classCBinaryTree}{CBinary\+Tree$<$ Traits $>$}}}
+\begin{DoxyCompactItemize}
+\item 
+size\+\_\+t {\bfseries size} () const
+\item 
+bool {\bfseries empty} () const
+\item 
+void {\bfseries insert} (value\+\_\+type elem, Ref ref)
+\item 
+Node \texorpdfstring{$\ast$}{*} {\bfseries get\+Extreme\+Node} (Node \texorpdfstring{$\ast$}{*}start\+Node, int direction) const
+\item 
+{\bfseries CBinary\+Tree} (Binary \&other)
+\item 
+{\bfseries CBinary\+Tree} (Binary \&\&other)
+\item 
+\mbox{\hyperlink{classbinary__tree__iterator}{iterator}} {\bfseries begin} ()
+\item 
+\mbox{\hyperlink{classbinary__tree__iterator}{iterator}} {\bfseries end} ()
+\item 
+{\footnotesize template$<$typename Function , typename... Args$>$ }\\void {\bfseries inorder} (Function func, Args const \&... args)
+\item 
+{\footnotesize template$<$typename Function , typename... Args$>$ }\\void {\bfseries inorder} (Node \texorpdfstring{$\ast$}{*}p\+Node, size\+\_\+t level, Function func, Args const \&... args)
+\item 
+void {\bfseries inorder} (Node \texorpdfstring{$\ast$}{*}p\+Node, void(\texorpdfstring{$\ast$}{*}visit)(value\+\_\+type \&item))
+\item 
+{\footnotesize template$<$typename Function , typename... Args$>$ }\\void {\bfseries postorder} (Function func, Args const \&\&... args)
+\item 
+{\footnotesize template$<$typename Function , typename... Args$>$ }\\void {\bfseries postorder} (Node \texorpdfstring{$\ast$}{*}p\+Node, size\+\_\+t level, Function func, Args const \&\&... args)
+\item 
+void {\bfseries postorder} (Node \texorpdfstring{$\ast$}{*}p\+Node, size\+\_\+t level, ostream \&os)
+\item 
+{\footnotesize template$<$typename Function , typename... Args$>$ }\\void {\bfseries preorder} (Function func, Args const \&... args)
+\item 
+{\footnotesize template$<$typename Function , typename... Args$>$ }\\void {\bfseries preorder} (Node \texorpdfstring{$\ast$}{*}p\+Node, size\+\_\+t level, Function func, Args const \&... args)
+\item 
+void {\bfseries print} (ostream \&os)
+\item 
+void {\bfseries print} (Node \texorpdfstring{$\ast$}{*}p\+Node, size\+\_\+t level, ostream \&os)
+\item 
+void {\bfseries Write} (ostream \&os)
+\item 
+void {\bfseries Read} (istream \&is)
+\end{DoxyCompactItemize}
+\doxysubsection*{Protected Attributes inherited from \mbox{\hyperlink{classCBinaryTree}{CBinary\+Tree$<$ Traits $>$}}}
+\begin{DoxyCompactItemize}
+\item 
+Node \texorpdfstring{$\ast$}{*} {\bfseries m\+\_\+p\+Root} = nullptr
+\item 
+size\+\_\+t {\bfseries m\+\_\+size} = 0
+\item 
+Compare\+Fn {\bfseries Compfn}
+\end{DoxyCompactItemize}
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+avl.\+h\end{DoxyCompactItemize}

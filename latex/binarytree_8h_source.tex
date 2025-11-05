@@ -1,0 +1,261 @@
+\doxysection{binarytree.\+h}
+\hypertarget{binarytree_8h_source}{}\label{binarytree_8h_source}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001\ \textcolor{preprocessor}{\#ifndef\ \_\_BINARY\_TREE\_H\_\_\ \ }}
+\DoxyCodeLine{00002\ \textcolor{preprocessor}{\#define\ \_\_BINARY\_TREE\_H\_\_\ }}
+\DoxyCodeLine{00003\ \textcolor{comment}{//\#include\ <utility>}}
+\DoxyCodeLine{00004\ \textcolor{comment}{//\#include\ <algorithm>}}
+\DoxyCodeLine{00005\ \textcolor{preprocessor}{\#include\ <cassert>}}
+\DoxyCodeLine{00006\ \textcolor{preprocessor}{\#include\ <fstream>}}
+\DoxyCodeLine{00007\ \textcolor{preprocessor}{\#include\ "{}types.h"{}}}
+\DoxyCodeLine{00008\ \textcolor{comment}{//\#include\ "{}util.h"{}}}
+\DoxyCodeLine{00009\ \textcolor{keyword}{using\ namespace\ }std;}
+\DoxyCodeLine{00010\ }
+\DoxyCodeLine{00011\ \textcolor{keyword}{template}\ <\textcolor{keyword}{typename}\ Traits>}
+\DoxyCodeLine{00012\ \textcolor{keyword}{class\ }\mbox{\hyperlink{classCBinaryTreeNode}{CBinaryTreeNode}}\{}
+\DoxyCodeLine{00013\ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00014\ \ \ \textcolor{keyword}{using\ }value\_type\ =\ \textcolor{keyword}{typename}\ Traits::T;}
+\DoxyCodeLine{00015\ \ \ \textcolor{keyword}{using\ }\mbox{\hyperlink{classCBinaryTreeNode}{Node}}\ \ \ \ \ \ \ =\ \mbox{\hyperlink{classCBinaryTreeNode}{CBinaryTreeNode<T>}};}
+\DoxyCodeLine{00016\ }
+\DoxyCodeLine{00017\ \textcolor{keyword}{protected}:}
+\DoxyCodeLine{00018\ \ \ \ \ value\_type\ \ \ \ \ m\_data;}
+\DoxyCodeLine{00019\ \ \ \ \ \mbox{\hyperlink{classCBinaryTreeNode}{Node}}\ \ \ \ \ \ \ \ \ \ *m\_pParent\ =\ \textcolor{keyword}{nullptr};}
+\DoxyCodeLine{00020\ \ \ \ \ Ref\ \ \ \ \ \ \ \ \ \ \ \ m\_ref;}
+\DoxyCodeLine{00021\ \ \ \ \ vector<Node\ *>\ m\_pChild\ \ =\ \{\textcolor{keyword}{nullptr},\ \textcolor{keyword}{nullptr}\};\ \textcolor{comment}{//\ 2\ hijos\ inicializados\ en\ nullptr}}
+\DoxyCodeLine{00022\ }
+\DoxyCodeLine{00023\ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00024\ \ \ \ \ \mbox{\hyperlink{classCBinaryTreeNode}{CBinaryTreeNode}}(\mbox{\hyperlink{classCBinaryTreeNode}{Node}}*\ pParent,\ value\_type\ data,\ Ref\ ref,\ \mbox{\hyperlink{classCBinaryTreeNode}{Node}}*\ p0\ =\ \textcolor{keyword}{nullptr},\ \mbox{\hyperlink{classCBinaryTreeNode}{Node}}*\ p1\ =\ \textcolor{keyword}{nullptr})}
+\DoxyCodeLine{00025\ \ \ \ \ \ \ \ \ :\ m\_pParent(pParent),\ m\_data(data),\ m\_ref(ref)}
+\DoxyCodeLine{00026\ \ \ \ \ \{}
+\DoxyCodeLine{00027\ \ \ \ \ \ \ \ \ m\_pChild[0]\ =\ p0;}
+\DoxyCodeLine{00028\ \ \ \ \ \ \ \ \ m\_pChild[1]\ =\ p1;}
+\DoxyCodeLine{00029\ \ \ \ \ \}}
+\DoxyCodeLine{00030\ \ \ \ \ \mbox{\hyperlink{classCBinaryTreeNode}{\string~CBinaryTreeNode}}()\{}
+\DoxyCodeLine{00031\ \ \ \ \ \ \ \ \ \textcolor{keyword}{delete}\ m\_pChild[0];\ m\_pChild[0]\ =\ \textcolor{keyword}{nullptr};}
+\DoxyCodeLine{00032\ \ \ \ \ \ \ \ \ \textcolor{keyword}{delete}\ m\_pChild[1];\ m\_pChild[1]\ =\ \textcolor{keyword}{nullptr};}
+\DoxyCodeLine{00033\ \ \ \ \ \}}
+\DoxyCodeLine{00034\ }
+\DoxyCodeLine{00035\ \ \ \ \ value\_type\ \ getData()\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \{\ \ \ \textcolor{keywordflow}{return}\ m\_data;\ \ \ \ \}}
+\DoxyCodeLine{00036\ \ \ \ \ value\_type\ \&getDataRef()\ \ \ \ \ \ \ \ \ \ \ \ \ \{\ \ \ \textcolor{keywordflow}{return}\ m\_data;\ \ \ \ \}}
+\DoxyCodeLine{00037\ \ }
+\DoxyCodeLine{00038\ \textcolor{keyword}{protected}:\ \textcolor{comment}{//\ TODO:\ Add\ this\ class\ as\ friend\ of\ the\ BinaryTree}}
+\DoxyCodeLine{00039\ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ and\ make\ these\ methods\ private}}
+\DoxyCodeLine{00040\ \ \ \ \ \textcolor{keywordtype}{void}\ \ \ \ \ \ setpChild(\textcolor{keyword}{const}\ \mbox{\hyperlink{classCBinaryTreeNode}{Node}}\ *pChild,\ \textcolor{keywordtype}{size\_t}\ pos)\ \ \{\ \ \ m\_pChild[pos]\ =\ pChild;\ \ \}}
+\DoxyCodeLine{00041\ \ \ \ \ \mbox{\hyperlink{classCBinaryTreeNode}{Node}}\ \ \ \ *\ getChild(\textcolor{keywordtype}{size\_t}\ branch)\{\ \textcolor{keywordflow}{return}\ m\_pChild[branch];\ \ \}}
+\DoxyCodeLine{00042\ \ \ \ \ \mbox{\hyperlink{classCBinaryTreeNode}{Node}}\ \ \ \ *\&getChildRef(\textcolor{keywordtype}{size\_t}\ branch)\{\ \textcolor{keywordflow}{return}\ m\_pChild[branch];\ \ \}}
+\DoxyCodeLine{00043\ \ \ \ \ \mbox{\hyperlink{classCBinaryTreeNode}{Node}}\ \ \ \ *\ getParent()\ \{\ \textcolor{keywordflow}{return}\ m\_pParent;\ \ \ \}}
+\DoxyCodeLine{00044\ \};}
+\DoxyCodeLine{00045\ }
+\DoxyCodeLine{00046\ \textcolor{keyword}{template}\ <\textcolor{keyword}{typename}\ Container>}
+\DoxyCodeLine{00047\ \textcolor{keyword}{class\ }\mbox{\hyperlink{classbinary__tree__iterator}{binary\_tree\_iterator}}\ :\ \textcolor{keyword}{public}\ general\_iterator<Container,\ \ class\ binary\_tree\_iterator<Container>\ >\ \textcolor{comment}{//\ }}
+\DoxyCodeLine{00048\ \{\ \ }
+\DoxyCodeLine{00049\ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00050\ \ \ \ \ \textcolor{keyword}{using\ }Parent\ \ \ \ =\ \textcolor{keyword}{class\ }general\_iterator<\mbox{\hyperlink{classbinary__tree__iterator}{Container}},\ \mbox{\hyperlink{classbinary__tree__iterator}{binary\_tree\_iterator}}<\mbox{\hyperlink{classbinary__tree__iterator}{Container}}>\ >;\ \ \ \ \ \(\backslash\)}
+\DoxyCodeLine{00051\ \ \ \ \ \textcolor{keyword}{using\ }Node\ \ \ \ \ \ =\ \textcolor{keyword}{typename}\ Container::Node;}
+\DoxyCodeLine{00052\ \ \ \ \ \textcolor{keyword}{using\ }\mbox{\hyperlink{classbinary__tree__iterator}{Container}}\ =\ \mbox{\hyperlink{classbinary__tree__iterator}{binary\_tree\_iterator<Container>}};}
+\DoxyCodeLine{00053\ }
+\DoxyCodeLine{00054\ \ \ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00055\ \ \ \ \ \mbox{\hyperlink{classbinary__tree__iterator}{binary\_tree\_iterator}}(\mbox{\hyperlink{classbinary__tree__iterator}{Container}}\ *pContainer,\ Node\ *pNode)\ :\ Parent\ (pContainer,pNode)\ \{\}}
+\DoxyCodeLine{00056\ \ \ \ \ \mbox{\hyperlink{classbinary__tree__iterator}{binary\_tree\_iterator}}(\mbox{\hyperlink{classbinary__tree__iterator}{Container}}\ \&other)\ \ :\ Parent\ (other)\ \{\}}
+\DoxyCodeLine{00057\ \ \ \ \ \mbox{\hyperlink{classbinary__tree__iterator}{binary\_tree\_iterator}}(\mbox{\hyperlink{classbinary__tree__iterator}{Container}}\ \&\&other)\ :\ Parent(other)\ \{\}\ \textcolor{comment}{//\ Move\ constructor\ C++11\ en\ adelante}}
+\DoxyCodeLine{00058\ }
+\DoxyCodeLine{00059\ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00060\ \ \ \ \ \textcolor{comment}{//\ TODO:\ Revisar\ el\ avance\ de\ un\ iterator}}
+\DoxyCodeLine{00061\ \ \ \ \ \mbox{\hyperlink{classbinary__tree__iterator}{binary\_tree\_iterator}}\ operator++()\ \{}
+\DoxyCodeLine{00062\ \ \ \ \ \ \ \ \ Parent::m\_pNode\ =\ Parent::m\_pNode\ ?\ (Node*)Parent::m\_pNode-\/>getpNext()\ :\ \textcolor{keyword}{nullptr};}
+\DoxyCodeLine{00063\ \ \ \ \ \ \ \ \ }
+\DoxyCodeLine{00064\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ *\textcolor{keyword}{this};}
+\DoxyCodeLine{00065\ \ \ \ \ \}}
+\DoxyCodeLine{00066\ \};}
+\DoxyCodeLine{00067\ }
+\DoxyCodeLine{00068\ \textcolor{keyword}{template}\ <\textcolor{keyword}{typename}\ \_T>}
+\DoxyCodeLine{00069\ \textcolor{keyword}{struct\ }\mbox{\hyperlink{structBinaryTreeAscTraits}{BinaryTreeAscTraits}}\{}
+\DoxyCodeLine{00070\ \ \ \ \ \textcolor{keyword}{using\ \ }T\ \ \ \ \ \ \ \ \ =\ \_T;}
+\DoxyCodeLine{00071\ \ \ \ \ \textcolor{keyword}{using\ \ }\mbox{\hyperlink{classCBinaryTreeNode}{Node}}\ \ \ \ \ \ =\ \mbox{\hyperlink{classCBinaryTreeNode}{CBinaryTreeNode<T>}};}
+\DoxyCodeLine{00072\ \ \ \ \ \textcolor{keyword}{using\ \ }CompareFn\ =\ less<T>;}
+\DoxyCodeLine{00073\ \};}
+\DoxyCodeLine{00074\ }
+\DoxyCodeLine{00075\ \textcolor{keyword}{template}\ <\textcolor{keyword}{typename}\ \_T>}
+\DoxyCodeLine{00076\ \textcolor{keyword}{struct\ }\mbox{\hyperlink{structBinaryTreeDescTraits}{BinaryTreeDescTraits}}}
+\DoxyCodeLine{00077\ \{}
+\DoxyCodeLine{00078\ \ \ \ \ \textcolor{keyword}{using\ \ }T\ \ \ \ \ \ \ \ \ =\ \_T;}
+\DoxyCodeLine{00079\ \ \ \ \ \textcolor{keyword}{using\ \ }\mbox{\hyperlink{classCBinaryTreeNode}{Node}}\ \ \ \ \ \ =\ \mbox{\hyperlink{classCBinaryTreeNode}{CBinaryTreeNode<T>}};}
+\DoxyCodeLine{00080\ \ \ \ \ \textcolor{keyword}{using\ \ }CompareFn\ =\ greater<T>;}
+\DoxyCodeLine{00081\ \};}
+\DoxyCodeLine{00082\ }
+\DoxyCodeLine{00083\ \textcolor{keyword}{template}\ <\textcolor{keyword}{typename}\ Traits>}
+\DoxyCodeLine{00084\ \textcolor{keyword}{class\ }\mbox{\hyperlink{classCBinaryTree}{CBinaryTree}}\{}
+\DoxyCodeLine{00085\ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00086\ \ \ \ \ \textcolor{keyword}{using\ }value\_type\ \ \ \ =\ \textcolor{keyword}{typename}\ Traits::T;}
+\DoxyCodeLine{00087\ \ \ \ \ \textcolor{keyword}{using\ }Node\ \ \ \ \ \ \ \ \ \ =\ \textcolor{keyword}{typename}\ Traits::Node;}
+\DoxyCodeLine{00088\ \ \ \ \ }
+\DoxyCodeLine{00089\ \ \ \ \ \textcolor{keyword}{using\ }CompareFn\ \ \ \ \ =\ \textcolor{keyword}{typename}\ Traits::CompareFn;}
+\DoxyCodeLine{00090\ \ \ \ \ \textcolor{keyword}{using\ }\mbox{\hyperlink{classCBinaryTree}{Container}}\ \ \ \ \ =\ \mbox{\hyperlink{classCBinaryTree}{CBinaryTree<Traits>}};}
+\DoxyCodeLine{00091\ \ \ \ \ \textcolor{keyword}{using\ }\mbox{\hyperlink{classbinary__tree__iterator}{iterator}}\ \ \ \ \ \ =\ \mbox{\hyperlink{classbinary__tree__iterator}{binary\_tree\_iterator<Container>}};}
+\DoxyCodeLine{00092\ }
+\DoxyCodeLine{00093\ \textcolor{keyword}{protected}:}
+\DoxyCodeLine{00094\ \ \ \ \ Node\ \ \ \ *m\_pRoot\ =\ \textcolor{keyword}{nullptr};}
+\DoxyCodeLine{00095\ \ \ \ \ \textcolor{keywordtype}{size\_t}\ \ \ m\_size\ \ =\ 0;}
+\DoxyCodeLine{00096\ \ \ \ \ CompareFn\ Compfn;}
+\DoxyCodeLine{00097\ \textcolor{keyword}{public}:\ }
+\DoxyCodeLine{00098\ \ \ \ \ \textcolor{keywordtype}{size\_t}\ \ size()\textcolor{keyword}{\ \ const\ \ \ \ \ \ \ }\{\ \textcolor{keywordflow}{return}\ m\_size;\ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00099\ \ \ \ \ \textcolor{keywordtype}{bool}\ \ \ \ empty()\textcolor{keyword}{\ const\ \ \ \ \ \ \ }\{\ \textcolor{keywordflow}{return}\ size()\ ==\ 0;\ \ \}}
+\DoxyCodeLine{00100\ }
+\DoxyCodeLine{00101\ \ \ \ \ \textcolor{keywordtype}{void}\ insert(value\_type\ elem,\ Ref\ ref)\ \{}
+\DoxyCodeLine{00102\ \ \ \ \ \ \ \ \ m\_pRoot\ =\ internal\_insert(elem,\ ref,\ \textcolor{keyword}{nullptr},\ \textcolor{keyword}{nullptr},\ m\_pRoot);}
+\DoxyCodeLine{00103\ \ \ \ \ \}}
+\DoxyCodeLine{00104\ }
+\DoxyCodeLine{00105\ \ \ \ \ \ Node*\ getExtremeNode(Node*\ startNode,\ \textcolor{keywordtype}{int}\ direction)\textcolor{keyword}{\ const\ }\{}
+\DoxyCodeLine{00106\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (!startNode)\ \textcolor{keywordflow}{return}\ \textcolor{keyword}{nullptr};}
+\DoxyCodeLine{00107\ \ \ \ \ \ \ \ \ }
+\DoxyCodeLine{00108\ \ \ \ \ \ \ \ \ Node*\ pNode\ =\ startNode;}
+\DoxyCodeLine{00109\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{while}\ (pNode-\/>getChild(direction))\ \{}
+\DoxyCodeLine{00110\ \ \ \ \ \ \ \ \ \ \ \ \ pNode\ =\ pNode-\/>getChild(direction);}
+\DoxyCodeLine{00111\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00112\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ pNode;}
+\DoxyCodeLine{00113\ \ \ \ \ \}}
+\DoxyCodeLine{00114\ }
+\DoxyCodeLine{00115\ \textcolor{keyword}{protected}:}
+\DoxyCodeLine{00116\ \ \ \ \ Node*\ CreateNode(Node*\ pParent,\ value\_type\ elem,\ Ref\ ref)\ \{}
+\DoxyCodeLine{00117\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{new}\ Node(pParent,\ elem,\ ref);}
+\DoxyCodeLine{00118\ \ \ \ \ \}}
+\DoxyCodeLine{00119\ \ \ \ \ \textcolor{keyword}{virtual}\ Node*\ internal\_insert(value\_type\ \&elem,\ Ref\ ref,}
+\DoxyCodeLine{00120\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ Node*\ pParent,\ Node*\&\ rpOrigin)}
+\DoxyCodeLine{00121\ \ \ \ \ \{}
+\DoxyCodeLine{00122\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (!rpOrigin)\ \{}
+\DoxyCodeLine{00123\ \ \ \ \ \ \ \ \ \ \ \ \ ++m\_size;}
+\DoxyCodeLine{00124\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ (rpOrigin\ =\ CreateNode(pParent,\ elem,\ ref));}
+\DoxyCodeLine{00125\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00126\ }
+\DoxyCodeLine{00127\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{size\_t}\ branch\ =\ Compfn(elem,\ rpOrigin-\/>getDataRef())\ ?\ 0\ :\ 1;}
+\DoxyCodeLine{00128\ \ \ \ \ \ \ \ \ Node\ *pNode\ =\ internal\_insert(elem,\ ref,\ \textcolor{keyword}{nullptr},\ rpOrigin,\ rpOrigin-\/>getChildRef(branch));}
+\DoxyCodeLine{00129\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ pNode;}
+\DoxyCodeLine{00130\ \ \ \ \ \}}
+\DoxyCodeLine{00131\ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00132\ \ \ \ \ \mbox{\hyperlink{classCBinaryTree}{CBinaryTree}}()\{\}\ \textcolor{comment}{//\ Empty\ tree}}
+\DoxyCodeLine{00133\ \ \ \ \ }
+\DoxyCodeLine{00134\ \ \ \ \ \textcolor{comment}{//\ TODO:\ Copy\ Constructor.\ We\ have\ duplicate\ each\ node}}
+\DoxyCodeLine{00135\ \ \ \ \ \mbox{\hyperlink{classCBinaryTree}{CBinaryTree}}(Binary\ \&other);}
+\DoxyCodeLine{00136\ \ \ \ \ }
+\DoxyCodeLine{00137\ \ \ \ \ \textcolor{comment}{//\ TODO:\ Done:\ Move\ Constructor}}
+\DoxyCodeLine{00138\ \ \ \ \ \mbox{\hyperlink{classCBinaryTree}{CBinaryTree}}(Binary\ \&\&other)}
+\DoxyCodeLine{00139\ \ \ \ \ \ \ \ \ :\ m\_pRoot(std::exchange(other.m\_pRoot,\ \textcolor{keyword}{nullptr})),\ }
+\DoxyCodeLine{00140\ \ \ \ \ \ \ \ \ \ \ m\_size\ (std::exchange(other.m\_size,\ 0)),\ }
+\DoxyCodeLine{00141\ \ \ \ \ \ \ \ \ \ \ Compfn\ (std::exchange(other.Compfn,\ \textcolor{keyword}{nullptr}))}
+\DoxyCodeLine{00142\ \ \ \ \ \{\ \}}
+\DoxyCodeLine{00143\ }
+\DoxyCodeLine{00144\ \ \ \ \ \textcolor{comment}{//\ TODO:\ Recursivo\ y\ seguro.\ Destruir\ Nodes\ recursivamente}}
+\DoxyCodeLine{00145\ \ \ \ \ \textcolor{keyword}{virtual}\ \mbox{\hyperlink{classCBinaryTree}{\string~CBinaryTree}}()\{\ \ \}\ }
+\DoxyCodeLine{00146\ \ \ \ \ }
+\DoxyCodeLine{00147\ \ \ \ \ \textcolor{comment}{//\ TODO:\ begin\ dede\ comenzar\ el\ el\ nodo\ mas\ a\ la\ izquierda\ (0)}}
+\DoxyCodeLine{00148\ \ \ \ \ \mbox{\hyperlink{classbinary__tree__iterator}{iterator}}\ begin()\ \{\ }
+\DoxyCodeLine{00149\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (!m\_pRoot)\ \textcolor{keywordflow}{return}\ end();}
+\DoxyCodeLine{00150\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ \mbox{\hyperlink{classbinary__tree__iterator}{iterator}}(\textcolor{keyword}{this},\ getExtremeNode(m\_pRoot,\ 0));}
+\DoxyCodeLine{00151\ \ \ \ \ \}}
+\DoxyCodeLine{00152\ \ \ \ \ \mbox{\hyperlink{classbinary__tree__iterator}{iterator}}\ end()\ \ \ \{\ \textcolor{keywordflow}{return}\ \mbox{\hyperlink{classbinary__tree__iterator}{iterator}}(\textcolor{keyword}{this},\ \textcolor{keyword}{nullptr});\ \}}
+\DoxyCodeLine{00153\ }
+\DoxyCodeLine{00154\ \ \ \ \ \textcolor{comment}{//\ TODO:\ begin\ debe\ comenzar\ el\ el\ nodo\ mas\ a\ la\ derecha\ (1)}}
+\DoxyCodeLine{00155\ \ \ \ \ \textcolor{comment}{//\ riterator\ rbegin()\{\ }}
+\DoxyCodeLine{00156\ \ \ \ \ \textcolor{comment}{//\ \ \ \ \ if\ (!m\_pRoot)\ return\ rend();}}
+\DoxyCodeLine{00157\ \ \ \ \ \textcolor{comment}{//\ \ \ \ \ return\ iterator(this,\ getExtremeNode(m\_pRoot,\ 1));}}
+\DoxyCodeLine{00158\ \ \ \ \ \textcolor{comment}{//\ \ \}}}
+\DoxyCodeLine{00159\ \ \ \ \ \textcolor{comment}{//\ riterator\ rend()\ \ \{\ return\ iterator(this,\ nullptr);\ \}}}
+\DoxyCodeLine{00160\ }
+\DoxyCodeLine{00161\ \ \ \ \ \textcolor{keyword}{template}\ <\textcolor{keyword}{typename}\ Function,\ \textcolor{keyword}{typename}...\ Args>}
+\DoxyCodeLine{00162\ \ \ \ \ \textcolor{keywordtype}{void}\ inorder(Function\ func,\ Args\ \textcolor{keyword}{const}\&...\ args)\ \{}
+\DoxyCodeLine{00163\ \ \ \ \ \ \ \ \ inorder(m\_pRoot,\ 0,\ func,\ args...);}
+\DoxyCodeLine{00164\ \ \ \ \ \}}
+\DoxyCodeLine{00165\ }
+\DoxyCodeLine{00166\ \ \ \ \ \textcolor{keyword}{template}\ <\textcolor{keyword}{typename}\ Function,\ \textcolor{keyword}{typename}...\ Args>}
+\DoxyCodeLine{00167\ \ \ \ \ \textcolor{keywordtype}{void}\ inorder(Node*\ pNode,\ \textcolor{keywordtype}{size\_t}\ level,\ Function\ func,\ Args\ \textcolor{keyword}{const}\&...\ args)\ \{}
+\DoxyCodeLine{00168\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (pNode)\ \{}
+\DoxyCodeLine{00169\ \ \ \ \ \ \ \ \ \ \ \ \ inorder(pNode-\/>getChild(0),\ level\ +\ 1,\ func,\ args...);}
+\DoxyCodeLine{00170\ \ \ \ \ \ \ \ \ \ \ \ \ func(pNode,\ level,\ args...);}
+\DoxyCodeLine{00171\ \ \ \ \ \ \ \ \ \ \ \ \ inorder(pNode-\/>getChild(1),\ level\ +\ 1,\ func,\ args...);}
+\DoxyCodeLine{00172\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00173\ \ \ \ \ \}}
+\DoxyCodeLine{00174\ }
+\DoxyCodeLine{00175\ \ \ \ \ \textcolor{comment}{//\ TODO:\ Generalize\ this\ function\ by\ using\ iterators\ and\ apply\ any\ function}}
+\DoxyCodeLine{00176\ \ \ \ \ \textcolor{keywordtype}{void}\ inorder(Node\ \ *pNode,\ \textcolor{keywordtype}{void}\ (*visit)\ (value\_type\&\ item))\{}
+\DoxyCodeLine{00177\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}(\ pNode\ )\{\ \ \ }
+\DoxyCodeLine{00178\ \ \ \ \ \ \ \ \ \ \ \ \ inorder(pNode-\/>getChild(0),\ *visit);}
+\DoxyCodeLine{00179\ \ \ \ \ \ \ \ \ \ \ \ \ (*visit)(pNode-\/>getDataRef());}
+\DoxyCodeLine{00180\ \ \ \ \ \ \ \ \ \ \ \ \ inorder(pNode-\/>getChild(1),\ *visit);}
+\DoxyCodeLine{00181\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00182\ \ \ \ \ \}}
+\DoxyCodeLine{00183\ }
+\DoxyCodeLine{00184\ \ \ \ \ \textcolor{comment}{//\ Variadic\ templates\ (See\ foreach.h)}}
+\DoxyCodeLine{00185\ \ \ \ \ \textcolor{keyword}{template}\ <\textcolor{keyword}{typename}\ Function,\ \textcolor{keyword}{typename}...\ Args>}
+\DoxyCodeLine{00186\ \ \ \ \ \textcolor{keywordtype}{void}\ postorder(Function\ func,\ Args\ \textcolor{keyword}{const}\&\&...\ args)}
+\DoxyCodeLine{00187\ \ \ \ \ \{\ \ \ \ postorder(m\_pRoot,\ 0,\ func,\ std::forward<Args>(args)...);\}}
+\DoxyCodeLine{00188\ }
+\DoxyCodeLine{00189\ \ \ \ \ \textcolor{keyword}{template}\ <\textcolor{keyword}{typename}\ Function,\textcolor{keyword}{typename}...\ Args>}
+\DoxyCodeLine{00190\ \ \ \ \ \textcolor{keywordtype}{void}\ postorder(Node*\ pNode,\ \textcolor{keywordtype}{size\_t}\ level,\ }
+\DoxyCodeLine{00191\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ Function\ func,\ Args\ \textcolor{keyword}{const}\&\&...\ args)\ \{}
+\DoxyCodeLine{00192\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (pNode)\ \{}
+\DoxyCodeLine{00193\ \ \ \ \ \ \ \ \ \ \ \ \ postorder(pNode-\/>getChild(0),\ func,\ std::forward<Args>(args)...);}
+\DoxyCodeLine{00194\ \ \ \ \ \ \ \ \ \ \ \ \ postorder(pNode-\/>getChild(1),\ func,\ std::forward<Args>(args)...);}
+\DoxyCodeLine{00195\ \ \ \ \ \ \ \ \ \ \ \ \ func(pNode,\ std::forward<Args>(args)...);}
+\DoxyCodeLine{00196\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00197\ \ \ \ \ \}}
+\DoxyCodeLine{00198\ \ \ \ \ \textcolor{comment}{//\ TODO:\ generalize\ this\ function\ to\ apply\ any\ function}}
+\DoxyCodeLine{00199\ \ \ \ \ \textcolor{keywordtype}{void}\ postorder(Node\ \ *pNode,\ \textcolor{keywordtype}{size\_t}\ level,\ ostream\ \&os)\{}
+\DoxyCodeLine{00200\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}(\ pNode\ )\{\ \ \ }
+\DoxyCodeLine{00201\ \ \ \ \ \ \ \ \ \ \ \ \ postorder(pNode-\/>getChild(0),\ level+1,\ os);}
+\DoxyCodeLine{00202\ \ \ \ \ \ \ \ \ \ \ \ \ postorder(pNode-\/>getChild(1),\ level+1,\ os);}
+\DoxyCodeLine{00203\ \ \ \ \ \ \ \ \ \ \ \ \ os\ <<\ \textcolor{stringliteral}{"{}\ -\/-\/>\ "{}}\ <<\ pNode-\/>getDataRef();}
+\DoxyCodeLine{00204\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00205\ \ \ \ \ \}}
+\DoxyCodeLine{00206\ }
+\DoxyCodeLine{00207\ \ \ \ \ \textcolor{keyword}{template}\ <\textcolor{keyword}{typename}\ Function,\ \textcolor{keyword}{typename}...\ Args>}
+\DoxyCodeLine{00208\ \ \ \ \ \textcolor{keywordtype}{void}\ preorder(Function\ func,\ Args\ \textcolor{keyword}{const}\&...\ args)\ \{}
+\DoxyCodeLine{00209\ \ \ \ \ \ \ \ \ preorder(m\_pRoot,\ 0,\ func,\ args...);}
+\DoxyCodeLine{00210\ \ \ \ \ \}}
+\DoxyCodeLine{00211\ }
+\DoxyCodeLine{00212\ \ \ \ \ \textcolor{keyword}{template}\ <\textcolor{keyword}{typename}\ Function,\ \textcolor{keyword}{typename}...\ Args>}
+\DoxyCodeLine{00213\ \ \ \ \ \textcolor{keywordtype}{void}\ preorder(Node*\ pNode,\ \textcolor{keywordtype}{size\_t}\ level,\ Function\ func,\ Args\ \textcolor{keyword}{const}\&...\ args)\ \{}
+\DoxyCodeLine{00214\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (pNode)\ \{}
+\DoxyCodeLine{00215\ \ \ \ \ \ \ \ \ \ \ \ \ func(pNode,\ level,\ args...);}
+\DoxyCodeLine{00216\ \ \ \ \ \ \ \ \ \ \ \ \ preorder(pNode-\/>getChild(0),\ level\ +\ 1,\ func,\ args...);}
+\DoxyCodeLine{00217\ \ \ \ \ \ \ \ \ \ \ \ \ preorder(pNode-\/>getChild(1),\ level\ +\ 1,\ func,\ args...);}
+\DoxyCodeLine{00218\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00219\ \ \ \ \ \}}
+\DoxyCodeLine{00220\ }
+\DoxyCodeLine{00221\ \ \ \ \ \textcolor{keywordtype}{void}\ print\ \ \ \ (ostream\ \&os)\ \ \ \ \{\ \ \ print\ \ \ \ (m\_pRoot,\ 0,\ os);\ \ \}}
+\DoxyCodeLine{00222\ \ \ \ \ \textcolor{comment}{//\ TODO:\ generalize\ this\ function\ to\ apply\ any\ function}}
+\DoxyCodeLine{00223\ \ \ \ \ \textcolor{comment}{//\ Google:\ C++\ parameter\ packs\ cplusplus}}
+\DoxyCodeLine{00224\ \ \ \ \ \textcolor{keywordtype}{void}\ print(Node\ \ *pNode,\ \textcolor{keywordtype}{size\_t}\ level,\ ostream\ \&os)\{}
+\DoxyCodeLine{00225\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}(\ pNode\ )\{}
+\DoxyCodeLine{00226\ \ \ \ \ \ \ \ \ \ \ \ \ Node\ *pParent\ =\ pNode-\/>getParent();}
+\DoxyCodeLine{00227\ \ \ \ \ \ \ \ \ \ \ \ \ print(pNode-\/>getChild(1),\ level+1,\ os);}
+\DoxyCodeLine{00228\ \ \ \ \ \ \ \ \ \ \ \ \ os\ <<\ string(\textcolor{stringliteral}{"{}\ |\ "{}})\ *\ level\ <<\ pNode-\/>getDataRef()\ <<\ \textcolor{stringliteral}{"{}("{}}\ <<\ (pParent?to\_string(pParent-\/>getData()):\textcolor{stringliteral}{"{}Root"{}})\ <<\ \textcolor{stringliteral}{"{})"{}}\ <<endl;}
+\DoxyCodeLine{00229\ \ \ \ \ \ \ \ \ \ \ \ \ print(pNode-\/>getChild(0),\ level+1,\ os);}
+\DoxyCodeLine{00230\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00231\ \ \ \ \ \}}
+\DoxyCodeLine{00232\ }
+\DoxyCodeLine{00233\ \ \ \ \ \textcolor{comment}{//\ TODO:\ Tip:\ recorrer\ el\ arbol\ en\ preorden}}
+\DoxyCodeLine{00234\ \ \ \ \ \textcolor{keywordtype}{void}\ Write(ostream\ \&os)\ \{\ os\ <<\ *\textcolor{keyword}{this};\ \ \}}
+\DoxyCodeLine{00235\ }
+\DoxyCodeLine{00236\ \ \ \ \ \textcolor{comment}{//\ TODO:\ Leer\ en\ el\ arbol\ desde\ un\ stream\ asumiendo\ que\ esta\ en\ preorden}}
+\DoxyCodeLine{00237\ \ \ \ \ \textcolor{keywordtype}{void}\ Read(istream\ \&is)\ \ \{\ \textcolor{comment}{/*\ TODO\ */}\ \ \}}
+\DoxyCodeLine{00238\ \};}
+\DoxyCodeLine{00239\ }
+\DoxyCodeLine{00240\ \textcolor{comment}{//\ TODO:\ este\ operator\ <<\ debe\ seguir\ estando\ fuera\ de\ la\ clase}}
+\DoxyCodeLine{00241\ \textcolor{keyword}{template}\ <\textcolor{keyword}{typename}\ Traits>}
+\DoxyCodeLine{00242\ ostream\ \&\ operator<<(std::ostream\ \&os,\ \mbox{\hyperlink{classCBinaryTree}{CBinaryTree<Traits>}}\ \&obj)\{}
+\DoxyCodeLine{00243\ \ \ \ \ os\ <<\ \textcolor{stringliteral}{"{}CBinaryTree\ with\ "{}}\ <<\ obj.size()\ <<\ \textcolor{stringliteral}{"{}\ elements."{}};}
+\DoxyCodeLine{00244\ \ \ \ \ obj.inorder(os);}
+\DoxyCodeLine{00245\ \ \ \ \ \textcolor{keywordflow}{return}\ os;}
+\DoxyCodeLine{00246\ \}}
+\DoxyCodeLine{00247\ }
+\DoxyCodeLine{00248\ \textcolor{keyword}{template}\ <\textcolor{keyword}{typename}\ Traits>}
+\DoxyCodeLine{00249\ istream\ \&\ operator>>(istream\ \&is,\ \mbox{\hyperlink{classCBinaryTree}{CBinaryTree<Traits>}}\ \&obj)\{}
+\DoxyCodeLine{00250\ \ \ \ \ \textcolor{comment}{//\ Leer\ el\ arbol}}
+\DoxyCodeLine{00251\ \ \ \ \ \textcolor{keywordflow}{return}\ is;}
+\DoxyCodeLine{00252\ \}}
+\DoxyCodeLine{00253\ }
+\DoxyCodeLine{00254\ \textcolor{keywordtype}{void}\ DemoBinaryTree();}
+\DoxyCodeLine{00255\ }
+\DoxyCodeLine{00256\ \textcolor{preprocessor}{\#endif\ }\textcolor{comment}{//\ \_\_BINARY\_TREE\_H\_\_}}
+
+\end{DoxyCode}

@@ -1,0 +1,128 @@
+\doxysection{tag\+Object\+Info\texorpdfstring{$<$}{<} key\+Type, Obj\+IDType \texorpdfstring{$>$}{>} Struct Template Reference}
+\hypertarget{structtagObjectInfo}{}\label{structtagObjectInfo}\index{tagObjectInfo$<$ keyType, ObjIDType $>$@{tagObjectInfo$<$ keyType, ObjIDType $>$}}
+
+
+Estructura que contiene la información de un objeto en el árbol B.  
+
+
+
+
+{\ttfamily \#include $<$btreepage.\+h$>$}
+
+\doxysubsubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{structtagObjectInfo_aeb6479ebf0348b12ae55f2db8f6e73a3}{tag\+Object\+Info}} (const key\+Type \&\+\_\+key, Obj\+IDType \+\_\+\+Obj\+ID)
+\begin{DoxyCompactList}\small\item\em Constructor que inicializa la clave y el identificador del objeto. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{structtagObjectInfo_a9d8527903439c1641022a9a6f547b555}{tag\+Object\+Info}} (const \mbox{\hyperlink{structtagObjectInfo}{tag\+Object\+Info}} \&obj\+Info)
+\begin{DoxyCompactList}\small\item\em Constructor de copia para crear un nuevo objeto a partir de otro. \end{DoxyCompactList}\item 
+\Hypertarget{structtagObjectInfo_a444e676616f18959ac837d17aefb5408}\label{structtagObjectInfo_a444e676616f18959ac837d17aefb5408} 
+{\bfseries tag\+Object\+Info} ()
+\begin{DoxyCompactList}\small\item\em Constructor por defecto. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{structtagObjectInfo_ac28c135ed572e941e3807656e7f3dd16}{operator key\+Type}} ()
+\begin{DoxyCompactList}\small\item\em Conversión implícita a tipo {\ttfamily key\+Type}. \end{DoxyCompactList}\item 
+size\+\_\+t \mbox{\hyperlink{structtagObjectInfo_aca6658234adc02de632beefc102557a1}{Get\+Use\+Counter}} ()
+\begin{DoxyCompactList}\small\item\em Obtiene el contador de uso del objeto. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\Hypertarget{structtagObjectInfo_a2c4b73e533d1e35ec68a535d3f03edd9}\label{structtagObjectInfo_a2c4b73e533d1e35ec68a535d3f03edd9} 
+key\+Type {\bfseries key}
+\begin{DoxyCompactList}\small\item\em La clave asociada con el objeto. \end{DoxyCompactList}\item 
+\Hypertarget{structtagObjectInfo_a975c98fabb090b795e59d498462c2ed2}\label{structtagObjectInfo_a975c98fabb090b795e59d498462c2ed2} 
+Obj\+IDType {\bfseries Obj\+ID}
+\begin{DoxyCompactList}\small\item\em El identificador único del objeto. \end{DoxyCompactList}\item 
+\Hypertarget{structtagObjectInfo_aa855db3201cf2b284327db79d8038c46}\label{structtagObjectInfo_aa855db3201cf2b284327db79d8038c46} 
+size\+\_\+t {\bfseries Use\+Counter}
+\begin{DoxyCompactList}\small\item\em El contador de uso del objeto. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+\subsubsection*{template$<$typename key\+Type, typename Obj\+IDType$>$\newline
+struct tag\+Object\+Info$<$ key\+Type, Obj\+IDType $>$}
+Estructura que contiene la información de un objeto en el árbol B. 
+
+Esta estructura almacena información relacionada con las claves de los objetos y su identificación dentro del árbol B. Además, incluye un contador de uso para realizar un seguimiento de la cantidad de veces que un objeto ha sido accedido o utilizado.
+
+
+\begin{DoxyTemplParams}{Template Parameters}
+{\em key\+Type} & El tipo de clave asociado con el objeto. \\
+\hline
+{\em Obj\+IDType} & El tipo de identificación asociado con el objeto. \\
+\hline
+\end{DoxyTemplParams}
+
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\Hypertarget{structtagObjectInfo_aeb6479ebf0348b12ae55f2db8f6e73a3}\index{tagObjectInfo$<$ keyType, ObjIDType $>$@{tagObjectInfo$<$ keyType, ObjIDType $>$}!tagObjectInfo@{tagObjectInfo}}
+\index{tagObjectInfo@{tagObjectInfo}!tagObjectInfo$<$ keyType, ObjIDType $>$@{tagObjectInfo$<$ keyType, ObjIDType $>$}}
+\doxysubsubsection{\texorpdfstring{tagObjectInfo()}{tagObjectInfo()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily \label{structtagObjectInfo_aeb6479ebf0348b12ae55f2db8f6e73a3} 
+template$<$typename key\+Type , typename Obj\+IDType $>$ \\
+\mbox{\hyperlink{structtagObjectInfo}{tag\+Object\+Info}}$<$ key\+Type, Obj\+IDType $>$\mbox{\hyperlink{structtagObjectInfo}{\+::tag\+Object\+Info}} (\begin{DoxyParamCaption}\item[{const key\+Type \&}]{\+\_\+key}{, }\item[{Obj\+IDType}]{\+\_\+\+Obj\+ID}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Constructor que inicializa la clave y el identificador del objeto. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em \+\_\+key} & La clave del objeto. \\
+\hline
+{\em \+\_\+\+Obj\+ID} & El identificador único del objeto. \\
+\hline
+\end{DoxyParams}
+\Hypertarget{structtagObjectInfo_a9d8527903439c1641022a9a6f547b555}\index{tagObjectInfo$<$ keyType, ObjIDType $>$@{tagObjectInfo$<$ keyType, ObjIDType $>$}!tagObjectInfo@{tagObjectInfo}}
+\index{tagObjectInfo@{tagObjectInfo}!tagObjectInfo$<$ keyType, ObjIDType $>$@{tagObjectInfo$<$ keyType, ObjIDType $>$}}
+\doxysubsubsection{\texorpdfstring{tagObjectInfo()}{tagObjectInfo()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily \label{structtagObjectInfo_a9d8527903439c1641022a9a6f547b555} 
+template$<$typename key\+Type , typename Obj\+IDType $>$ \\
+\mbox{\hyperlink{structtagObjectInfo}{tag\+Object\+Info}}$<$ key\+Type, Obj\+IDType $>$\mbox{\hyperlink{structtagObjectInfo}{\+::tag\+Object\+Info}} (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{structtagObjectInfo}{tag\+Object\+Info}}$<$ key\+Type, Obj\+IDType $>$ \&}]{obj\+Info}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Constructor de copia para crear un nuevo objeto a partir de otro. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em obj\+Info} & El objeto a copiar. \\
+\hline
+\end{DoxyParams}
+
+
+\doxysubsection{Member Function Documentation}
+\Hypertarget{structtagObjectInfo_aca6658234adc02de632beefc102557a1}\index{tagObjectInfo$<$ keyType, ObjIDType $>$@{tagObjectInfo$<$ keyType, ObjIDType $>$}!GetUseCounter@{GetUseCounter}}
+\index{GetUseCounter@{GetUseCounter}!tagObjectInfo$<$ keyType, ObjIDType $>$@{tagObjectInfo$<$ keyType, ObjIDType $>$}}
+\doxysubsubsection{\texorpdfstring{GetUseCounter()}{GetUseCounter()}}
+{\footnotesize\ttfamily \label{structtagObjectInfo_aca6658234adc02de632beefc102557a1} 
+template$<$typename key\+Type , typename Obj\+IDType $>$ \\
+size\+\_\+t \mbox{\hyperlink{structtagObjectInfo}{tag\+Object\+Info}}$<$ key\+Type, Obj\+IDType $>$\+::\+Get\+Use\+Counter (\begin{DoxyParamCaption}{}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Obtiene el contador de uso del objeto. 
+
+\begin{DoxyReturn}{Returns}
+El contador de uso. 
+\end{DoxyReturn}
+\Hypertarget{structtagObjectInfo_ac28c135ed572e941e3807656e7f3dd16}\index{tagObjectInfo$<$ keyType, ObjIDType $>$@{tagObjectInfo$<$ keyType, ObjIDType $>$}!operator keyType@{operator keyType}}
+\index{operator keyType@{operator keyType}!tagObjectInfo$<$ keyType, ObjIDType $>$@{tagObjectInfo$<$ keyType, ObjIDType $>$}}
+\doxysubsubsection{\texorpdfstring{operator keyType()}{operator keyType()}}
+{\footnotesize\ttfamily \label{structtagObjectInfo_ac28c135ed572e941e3807656e7f3dd16} 
+template$<$typename key\+Type , typename Obj\+IDType $>$ \\
+\mbox{\hyperlink{structtagObjectInfo}{tag\+Object\+Info}}$<$ key\+Type, Obj\+IDType $>$\+::operator key\+Type (\begin{DoxyParamCaption}{}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Conversión implícita a tipo {\ttfamily key\+Type}. 
+
+Permite usar un objeto {\ttfamily \doxylink{structtagObjectInfo}{tag\+Object\+Info}} como una clave en otras estructuras de datos.
+
+\begin{DoxyReturn}{Returns}
+La clave del objeto. 
+\end{DoxyReturn}
+
+
+The documentation for this struct was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+btreepage.\+h\end{DoxyCompactItemize}

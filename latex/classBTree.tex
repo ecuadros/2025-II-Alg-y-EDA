@@ -1,0 +1,407 @@
+\doxysection{BTree\texorpdfstring{$<$}{<} Trait \texorpdfstring{$>$}{>} Class Template Reference}
+\hypertarget{classBTree}{}\label{classBTree}\index{BTree$<$ Trait $>$@{BTree$<$ Trait $>$}}
+
+
+Implementación de un árbol B genérico.  
+
+
+
+
+{\ttfamily \#include $<$btree.\+h$>$}
+
+\doxysubsubsection*{Public Types}
+\begin{DoxyCompactItemize}
+\item 
+\Hypertarget{classBTree_a588b5247cf41eb4224324087c808cf9a}\label{classBTree_a588b5247cf41eb4224324087c808cf9a} 
+typedef \mbox{\hyperlink{structtagObjectInfo}{BTNode\+::\+Object\+Info}} {\bfseries Object\+Info}
+\begin{DoxyCompactList}\small\item\em Información del objeto almacenado en el nodo. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classBTree_a1e3b7342aad0e975ba456c7dbe283c8e}{BTree}} (size\+\_\+t order=DEFAULT\+\_\+\+BTREE\+\_\+\+ORDER, bool unique=true)
+\begin{DoxyCompactList}\small\item\em Constructor del árbol B. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{classBTree_ad5ffe3a38e4f178748cd79f051e8c73c}{Insert}} (const key\+Type key, const long Obj\+ID)
+\begin{DoxyCompactList}\small\item\em Inserta una nueva clave en el árbol B. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{classBTree_a05ef25bf978ab76ee01b21f76cb3dbdd}{Remove}} (const key\+Type key, const long Obj\+ID)
+\begin{DoxyCompactList}\small\item\em Elimina una clave del árbol B. \end{DoxyCompactList}\item 
+Obj\+IDType \mbox{\hyperlink{classBTree_aa3bf9151bd0fad63517dacb83dcb2546}{Search}} (const key\+Type key)
+\begin{DoxyCompactList}\small\item\em Busca una clave en el árbol B. \end{DoxyCompactList}\item 
+size\+\_\+t \mbox{\hyperlink{classBTree_a2759e80ecb12915459e89022519eea76}{size}} ()
+\begin{DoxyCompactList}\small\item\em Obtiene el número de claves almacenadas en el árbol B. \end{DoxyCompactList}\item 
+size\+\_\+t \mbox{\hyperlink{classBTree_ae30d9e14af1ae6373a3de2f654a71c78}{height}} ()
+\begin{DoxyCompactList}\small\item\em Obtiene la altura del árbol B. \end{DoxyCompactList}\item 
+size\+\_\+t \mbox{\hyperlink{classBTree_a8d141f656d802da5a0e8c392ff5933d5}{Get\+Order}} ()
+\begin{DoxyCompactList}\small\item\em Obtiene el orden del árbol B. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classBTree_aa11b906dd677dc8720ad052a3b65b9bd}{Print}} (std\+::ostream \&os)
+\begin{DoxyCompactList}\small\item\em Imprime el árbol B en un flujo de salida. \end{DoxyCompactList}\item 
+std\+::ostream \& \mbox{\hyperlink{classBTree_a7e13bacac188d2ae5f9bf76d4ab536bc}{Write}} (std\+::ostream \&os)
+\begin{DoxyCompactList}\small\item\em Escribe el árbol B en un flujo de salida en formato textual. \end{DoxyCompactList}\item 
+std\+::istream \& \mbox{\hyperlink{classBTree_ad95b9561fb341abbb6c4d14fa42137d8}{Read}} (std\+::istream \&is)
+\begin{DoxyCompactList}\small\item\em Lee un árbol B desde un flujo de entrada en formato textual. \end{DoxyCompactList}\item 
+std\+::ostream \& \mbox{\hyperlink{classBTree_a31f441d330ea110460c03d61c58762b9}{Write\+Binary\+Tree\+Format}} (std\+::ostream \&os)
+\begin{DoxyCompactList}\small\item\em Escribe el árbol B en un flujo de salida en formato simple. \end{DoxyCompactList}\item 
+std\+::istream \& \mbox{\hyperlink{classBTree_a9cdad4de3bf14ff1f0896d44b2760c51}{Read\+Binary\+Tree\+Format}} (std\+::istream \&is)
+\begin{DoxyCompactList}\small\item\em Lee un árbol B desde un flujo de entrada en formato simple. \end{DoxyCompactList}\item 
+{\footnotesize template$<$typename Function $>$ }\\void \mbox{\hyperlink{classBTree_a7f233b9790031f96cd0fc44dadf2c573}{For\+Each}} (Function fn)
+\begin{DoxyCompactList}\small\item\em Realiza una acción sobre cada elemento del árbol B. \end{DoxyCompactList}\item 
+{\footnotesize template$<$typename Function $>$ }\\\mbox{\hyperlink{classBTree_a588b5247cf41eb4224324087c808cf9a}{Object\+Info}} \texorpdfstring{$\ast$}{*} \mbox{\hyperlink{classBTree_ae155a1c01209f2185396aeb93fc03f50}{First\+That}} (Function fn)
+\begin{DoxyCompactList}\small\item\em Busca el primer objeto que cumpla con una condición. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsubsection*{Protected Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\Hypertarget{classBTree_a9fbd884223128fd26c1a6be85723513f}\label{classBTree_a9fbd884223128fd26c1a6be85723513f} 
+\mbox{\hyperlink{classCBTreePage}{BTNode}} {\bfseries m\+\_\+\+Root}
+\begin{DoxyCompactList}\small\item\em Nodo raíz del árbol B. \end{DoxyCompactList}\item 
+\Hypertarget{classBTree_a1504cab6e7beca8015cea353a027a482}\label{classBTree_a1504cab6e7beca8015cea353a027a482} 
+size\+\_\+t {\bfseries m\+\_\+\+Height}
+\begin{DoxyCompactList}\small\item\em Altura del árbol. \end{DoxyCompactList}\item 
+\Hypertarget{classBTree_a76f49f2945440f7beabe81a3e46bd395}\label{classBTree_a76f49f2945440f7beabe81a3e46bd395} 
+size\+\_\+t {\bfseries m\+\_\+\+Order}
+\begin{DoxyCompactList}\small\item\em Orden del árbol (máximo número de hijos por nodo). \end{DoxyCompactList}\item 
+\Hypertarget{classBTree_aba4d5cef8807fbff163e6d3911038956}\label{classBTree_aba4d5cef8807fbff163e6d3911038956} 
+size\+\_\+t {\bfseries m\+\_\+\+Num\+Keys}
+\begin{DoxyCompactList}\small\item\em Número de claves en el árbol. \end{DoxyCompactList}\item 
+\Hypertarget{classBTree_ab24ff96b219d5ddd0c53ddc5086abb33}\label{classBTree_ab24ff96b219d5ddd0c53ddc5086abb33} 
+bool {\bfseries m\+\_\+\+Unique}
+\begin{DoxyCompactList}\small\item\em Si es {\ttfamily true}, los elementos deben ser únicos. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+\subsubsection*{template$<$typename Trait$>$\newline
+class BTree$<$ Trait $>$}
+Implementación de un árbol B genérico. 
+
+Esta clase implementa un árbol B (\doxylink{classBTree}{BTree}) con soporte para inserción, eliminación, búsqueda y serialización en formato binario. Es una implementación flexible que permite especificar el orden del árbol y si los elementos deben ser únicos.
+
+
+\begin{DoxyTemplParams}{Template Parameters}
+{\em Trait} & Tipo de la estructura \doxylink{structBTreeTrait}{BTree\+Trait} que define los parámetros del árbol. \\
+\hline
+\end{DoxyTemplParams}
+
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\Hypertarget{classBTree_a1e3b7342aad0e975ba456c7dbe283c8e}\index{BTree$<$ Trait $>$@{BTree$<$ Trait $>$}!BTree@{BTree}}
+\index{BTree@{BTree}!BTree$<$ Trait $>$@{BTree$<$ Trait $>$}}
+\doxysubsubsection{\texorpdfstring{BTree()}{BTree()}}
+{\footnotesize\ttfamily \label{classBTree_a1e3b7342aad0e975ba456c7dbe283c8e} 
+template$<$typename Trait $>$ \\
+\mbox{\hyperlink{classBTree}{BTree}}$<$ Trait $>$\mbox{\hyperlink{classBTree}{\+::\+BTree}} (\begin{DoxyParamCaption}\item[{size\+\_\+t}]{order}{ = {\ttfamily DEFAULT\+\_\+BTREE\+\_\+ORDER}, }\item[{bool}]{unique}{ = {\ttfamily true}}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Constructor del árbol B. 
+
+Crea un árbol B con el orden especificado y la opción de elementos únicos.
+
+
+\begin{DoxyParams}{Parameters}
+{\em order} & Orden del árbol B (número máximo de hijos por nodo). \\
+\hline
+{\em unique} & Si es verdadero, los elementos deben ser únicos. \\
+\hline
+\end{DoxyParams}
+
+
+\doxysubsection{Member Function Documentation}
+\Hypertarget{classBTree_ae155a1c01209f2185396aeb93fc03f50}\index{BTree$<$ Trait $>$@{BTree$<$ Trait $>$}!FirstThat@{FirstThat}}
+\index{FirstThat@{FirstThat}!BTree$<$ Trait $>$@{BTree$<$ Trait $>$}}
+\doxysubsubsection{\texorpdfstring{FirstThat()}{FirstThat()}}
+{\footnotesize\ttfamily \label{classBTree_ae155a1c01209f2185396aeb93fc03f50} 
+template$<$typename Trait $>$ \\
+template$<$typename Function $>$ \\
+\mbox{\hyperlink{classBTree_a588b5247cf41eb4224324087c808cf9a}{Object\+Info}} \texorpdfstring{$\ast$}{*} \mbox{\hyperlink{classBTree}{BTree}}$<$ Trait $>$\+::\+First\+That (\begin{DoxyParamCaption}\item[{Function}]{fn}{}\end{DoxyParamCaption})}
+
+
+
+Busca el primer objeto que cumpla con una condición. 
+
+
+\begin{DoxyTemplParams}{Template Parameters}
+{\em Function} & Tipo de la función de condición. \\
+\hline
+\end{DoxyTemplParams}
+
+\begin{DoxyParams}{Parameters}
+{\em fn} & La función de condición. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+El objeto que cumple la condición, o {\ttfamily nullptr} si no se encuentra. 
+\end{DoxyReturn}
+\Hypertarget{classBTree_a7f233b9790031f96cd0fc44dadf2c573}\index{BTree$<$ Trait $>$@{BTree$<$ Trait $>$}!ForEach@{ForEach}}
+\index{ForEach@{ForEach}!BTree$<$ Trait $>$@{BTree$<$ Trait $>$}}
+\doxysubsubsection{\texorpdfstring{ForEach()}{ForEach()}}
+{\footnotesize\ttfamily \label{classBTree_a7f233b9790031f96cd0fc44dadf2c573} 
+template$<$typename Trait $>$ \\
+template$<$typename Function $>$ \\
+void \mbox{\hyperlink{classBTree}{BTree}}$<$ Trait $>$\+::\+For\+Each (\begin{DoxyParamCaption}\item[{Function}]{fn}{}\end{DoxyParamCaption})}
+
+
+
+Realiza una acción sobre cada elemento del árbol B. 
+
+
+\begin{DoxyTemplParams}{Template Parameters}
+{\em Function} & Tipo de la función que se aplicará a cada elemento. \\
+\hline
+\end{DoxyTemplParams}
+
+\begin{DoxyParams}{Parameters}
+{\em fn} & La función a aplicar. \\
+\hline
+\end{DoxyParams}
+\Hypertarget{classBTree_a8d141f656d802da5a0e8c392ff5933d5}\index{BTree$<$ Trait $>$@{BTree$<$ Trait $>$}!GetOrder@{GetOrder}}
+\index{GetOrder@{GetOrder}!BTree$<$ Trait $>$@{BTree$<$ Trait $>$}}
+\doxysubsubsection{\texorpdfstring{GetOrder()}{GetOrder()}}
+{\footnotesize\ttfamily \label{classBTree_a8d141f656d802da5a0e8c392ff5933d5} 
+template$<$typename Trait $>$ \\
+size\+\_\+t \mbox{\hyperlink{classBTree}{BTree}}$<$ Trait $>$\+::\+Get\+Order (\begin{DoxyParamCaption}{}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Obtiene el orden del árbol B. 
+
+\begin{DoxyReturn}{Returns}
+El orden del árbol. 
+\end{DoxyReturn}
+\Hypertarget{classBTree_ae30d9e14af1ae6373a3de2f654a71c78}\index{BTree$<$ Trait $>$@{BTree$<$ Trait $>$}!height@{height}}
+\index{height@{height}!BTree$<$ Trait $>$@{BTree$<$ Trait $>$}}
+\doxysubsubsection{\texorpdfstring{height()}{height()}}
+{\footnotesize\ttfamily \label{classBTree_ae30d9e14af1ae6373a3de2f654a71c78} 
+template$<$typename Trait $>$ \\
+size\+\_\+t \mbox{\hyperlink{classBTree}{BTree}}$<$ Trait $>$\+::height (\begin{DoxyParamCaption}{}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Obtiene la altura del árbol B. 
+
+\begin{DoxyReturn}{Returns}
+La altura del árbol. 
+\end{DoxyReturn}
+\Hypertarget{classBTree_ad5ffe3a38e4f178748cd79f051e8c73c}\index{BTree$<$ Trait $>$@{BTree$<$ Trait $>$}!Insert@{Insert}}
+\index{Insert@{Insert}!BTree$<$ Trait $>$@{BTree$<$ Trait $>$}}
+\doxysubsubsection{\texorpdfstring{Insert()}{Insert()}}
+{\footnotesize\ttfamily \label{classBTree_ad5ffe3a38e4f178748cd79f051e8c73c} 
+template$<$typename Trait $>$ \\
+bool \mbox{\hyperlink{classBTree}{BTree}}$<$ Trait $>$\+::\+Insert (\begin{DoxyParamCaption}\item[{const key\+Type}]{key}{, }\item[{const long}]{Obj\+ID}{}\end{DoxyParamCaption})}
+
+
+
+Inserta una nueva clave en el árbol B. 
+
+Si la clave ya existe y se permite duplicados, no se realiza ninguna acción.
+
+
+\begin{DoxyParams}{Parameters}
+{\em key} & La clave a insertar. \\
+\hline
+{\em Obj\+ID} & El identificador de objeto asociado con la clave. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+{\ttfamily true} si la inserción fue exitosa, {\ttfamily false} si hubo un error (como duplicados).
+\end{DoxyReturn}
+Esta es la implementación del método Insert.
+
+
+\begin{DoxyParams}{Parameters}
+{\em key} & La clave a insertar. \\
+\hline
+{\em Obj\+ID} & El identificador de objeto asociado con la clave. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+{\ttfamily true} si la inserción fue exitosa, {\ttfamily false} si hubo un error. 
+\end{DoxyReturn}
+\Hypertarget{classBTree_aa11b906dd677dc8720ad052a3b65b9bd}\index{BTree$<$ Trait $>$@{BTree$<$ Trait $>$}!Print@{Print}}
+\index{Print@{Print}!BTree$<$ Trait $>$@{BTree$<$ Trait $>$}}
+\doxysubsubsection{\texorpdfstring{Print()}{Print()}}
+{\footnotesize\ttfamily \label{classBTree_aa11b906dd677dc8720ad052a3b65b9bd} 
+template$<$typename Trait $>$ \\
+void \mbox{\hyperlink{classBTree}{BTree}}$<$ Trait $>$\+::\+Print (\begin{DoxyParamCaption}\item[{std\+::ostream \&}]{os}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Imprime el árbol B en un flujo de salida. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em os} & El flujo de salida. \\
+\hline
+\end{DoxyParams}
+\Hypertarget{classBTree_ad95b9561fb341abbb6c4d14fa42137d8}\index{BTree$<$ Trait $>$@{BTree$<$ Trait $>$}!Read@{Read}}
+\index{Read@{Read}!BTree$<$ Trait $>$@{BTree$<$ Trait $>$}}
+\doxysubsubsection{\texorpdfstring{Read()}{Read()}}
+{\footnotesize\ttfamily \label{classBTree_ad95b9561fb341abbb6c4d14fa42137d8} 
+template$<$typename Trait $>$ \\
+std\+::istream \& \mbox{\hyperlink{classBTree}{BTree}}$<$ Trait $>$\+::\+Read (\begin{DoxyParamCaption}\item[{std\+::istream \&}]{is}{}\end{DoxyParamCaption})}
+
+
+
+Lee un árbol B desde un flujo de entrada en formato textual. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em is} & El flujo de entrada. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+El flujo de entrada. 
+\end{DoxyReturn}
+\Hypertarget{classBTree_a9cdad4de3bf14ff1f0896d44b2760c51}\index{BTree$<$ Trait $>$@{BTree$<$ Trait $>$}!ReadBinaryTreeFormat@{ReadBinaryTreeFormat}}
+\index{ReadBinaryTreeFormat@{ReadBinaryTreeFormat}!BTree$<$ Trait $>$@{BTree$<$ Trait $>$}}
+\doxysubsubsection{\texorpdfstring{ReadBinaryTreeFormat()}{ReadBinaryTreeFormat()}}
+{\footnotesize\ttfamily \label{classBTree_a9cdad4de3bf14ff1f0896d44b2760c51} 
+template$<$typename Trait $>$ \\
+std\+::istream \& \mbox{\hyperlink{classBTree}{BTree}}$<$ Trait $>$\+::\+Read\+Binary\+Tree\+Format (\begin{DoxyParamCaption}\item[{std\+::istream \&}]{is}{}\end{DoxyParamCaption})}
+
+
+
+Lee un árbol B desde un flujo de entrada en formato simple. 
+
+Lee el árbol B desde un flujo de entrada en formato simple.
+
+
+\begin{DoxyParams}{Parameters}
+{\em is} & El flujo de entrada. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+El flujo de entrada.
+\end{DoxyReturn}
+Esta es la implementación del método {\ttfamily Read\+Binary\+Tree\+Format}. Lee una secuencia de caracteres desde el flujo de entrada y usa cada uno para insertar claves en el árbol B. Asume que las claves están representadas como dígitos en una línea de texto.
+
+
+\begin{DoxyParams}{Parameters}
+{\em is} & El flujo de entrada desde donde se lee la representación del árbol B. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+El flujo de entrada. 
+\end{DoxyReturn}
+\Hypertarget{classBTree_a05ef25bf978ab76ee01b21f76cb3dbdd}\index{BTree$<$ Trait $>$@{BTree$<$ Trait $>$}!Remove@{Remove}}
+\index{Remove@{Remove}!BTree$<$ Trait $>$@{BTree$<$ Trait $>$}}
+\doxysubsubsection{\texorpdfstring{Remove()}{Remove()}}
+{\footnotesize\ttfamily \label{classBTree_a05ef25bf978ab76ee01b21f76cb3dbdd} 
+template$<$typename Trait $>$ \\
+bool \mbox{\hyperlink{classBTree}{BTree}}$<$ Trait $>$\+::\+Remove (\begin{DoxyParamCaption}\item[{const key\+Type}]{key}{, }\item[{const long}]{Obj\+ID}{}\end{DoxyParamCaption})}
+
+
+
+Elimina una clave del árbol B. 
+
+Si la clave no existe o hay algún error, no se realiza ninguna acción.
+
+
+\begin{DoxyParams}{Parameters}
+{\em key} & La clave a eliminar. \\
+\hline
+{\em Obj\+ID} & El identificador de objeto asociado con la clave. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+{\ttfamily true} si la eliminación fue exitosa, {\ttfamily false} si hubo un error (como que la clave no fue encontrada).
+\end{DoxyReturn}
+Esta es la implementación del método Remove.
+
+
+\begin{DoxyParams}{Parameters}
+{\em key} & La clave a eliminar. \\
+\hline
+{\em Obj\+ID} & El identificador de objeto asociado con la clave. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+{\ttfamily true} si la eliminación fue exitosa, {\ttfamily false} si hubo un error. 
+\end{DoxyReturn}
+\Hypertarget{classBTree_aa3bf9151bd0fad63517dacb83dcb2546}\index{BTree$<$ Trait $>$@{BTree$<$ Trait $>$}!Search@{Search}}
+\index{Search@{Search}!BTree$<$ Trait $>$@{BTree$<$ Trait $>$}}
+\doxysubsubsection{\texorpdfstring{Search()}{Search()}}
+{\footnotesize\ttfamily \label{classBTree_aa3bf9151bd0fad63517dacb83dcb2546} 
+template$<$typename Trait $>$ \\
+Obj\+IDType \mbox{\hyperlink{classBTree}{BTree}}$<$ Trait $>$\+::\+Search (\begin{DoxyParamCaption}\item[{const key\+Type}]{key}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Busca una clave en el árbol B. 
+
+Realiza una búsqueda para encontrar el identificador de objeto asociado a una clave.
+
+
+\begin{DoxyParams}{Parameters}
+{\em key} & La clave a buscar. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+El identificador de objeto asociado con la clave, o {\ttfamily -\/1} si no se encuentra. 
+\end{DoxyReturn}
+\Hypertarget{classBTree_a2759e80ecb12915459e89022519eea76}\index{BTree$<$ Trait $>$@{BTree$<$ Trait $>$}!size@{size}}
+\index{size@{size}!BTree$<$ Trait $>$@{BTree$<$ Trait $>$}}
+\doxysubsubsection{\texorpdfstring{size()}{size()}}
+{\footnotesize\ttfamily \label{classBTree_a2759e80ecb12915459e89022519eea76} 
+template$<$typename Trait $>$ \\
+size\+\_\+t \mbox{\hyperlink{classBTree}{BTree}}$<$ Trait $>$\+::size (\begin{DoxyParamCaption}{}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Obtiene el número de claves almacenadas en el árbol B. 
+
+\begin{DoxyReturn}{Returns}
+El número de claves en el árbol. 
+\end{DoxyReturn}
+\Hypertarget{classBTree_a7e13bacac188d2ae5f9bf76d4ab536bc}\index{BTree$<$ Trait $>$@{BTree$<$ Trait $>$}!Write@{Write}}
+\index{Write@{Write}!BTree$<$ Trait $>$@{BTree$<$ Trait $>$}}
+\doxysubsubsection{\texorpdfstring{Write()}{Write()}}
+{\footnotesize\ttfamily \label{classBTree_a7e13bacac188d2ae5f9bf76d4ab536bc} 
+template$<$typename Trait $>$ \\
+std\+::ostream \& \mbox{\hyperlink{classBTree}{BTree}}$<$ Trait $>$\+::\+Write (\begin{DoxyParamCaption}\item[{std\+::ostream \&}]{os}{}\end{DoxyParamCaption})}
+
+
+
+Escribe el árbol B en un flujo de salida en formato textual. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em os} & El flujo de salida. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+El flujo de salida. 
+\end{DoxyReturn}
+\Hypertarget{classBTree_a31f441d330ea110460c03d61c58762b9}\index{BTree$<$ Trait $>$@{BTree$<$ Trait $>$}!WriteBinaryTreeFormat@{WriteBinaryTreeFormat}}
+\index{WriteBinaryTreeFormat@{WriteBinaryTreeFormat}!BTree$<$ Trait $>$@{BTree$<$ Trait $>$}}
+\doxysubsubsection{\texorpdfstring{WriteBinaryTreeFormat()}{WriteBinaryTreeFormat()}}
+{\footnotesize\ttfamily \label{classBTree_a31f441d330ea110460c03d61c58762b9} 
+template$<$typename Trait $>$ \\
+std\+::ostream \& \mbox{\hyperlink{classBTree}{BTree}}$<$ Trait $>$\+::\+Write\+Binary\+Tree\+Format (\begin{DoxyParamCaption}\item[{std\+::ostream \&}]{os}{}\end{DoxyParamCaption})}
+
+
+
+Escribe el árbol B en un flujo de salida en formato simple. 
+
+Escribe el árbol B en un formato binario.
+
+
+\begin{DoxyParams}{Parameters}
+{\em os} & El flujo de salida. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+El flujo de salida.
+\end{DoxyReturn}
+Esta es la implementación del método Write\+Binary\+Tree\+Format.
+
+
+\begin{DoxyParams}{Parameters}
+{\em os} & El flujo de salida. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+El flujo de salida. 
+\end{DoxyReturn}
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+btree.\+h\end{DoxyCompactItemize}

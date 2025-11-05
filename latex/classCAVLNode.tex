@@ -1,0 +1,67 @@
+\doxysection{CAVLNode\texorpdfstring{$<$}{<} Traits \texorpdfstring{$>$}{>} Class Template Reference}
+\hypertarget{classCAVLNode}{}\label{classCAVLNode}\index{CAVLNode$<$ Traits $>$@{CAVLNode$<$ Traits $>$}}
+Inheritance diagram for CAVLNode\texorpdfstring{$<$}{<} Traits \texorpdfstring{$>$}{>}\+:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=2.000000cm]{classCAVLNode}
+\end{center}
+\end{figure}
+\doxysubsubsection*{Public Types}
+\begin{DoxyCompactItemize}
+\item 
+\Hypertarget{classCAVLNode_a62531f96c18cff4b2ee6f36472ace234}\label{classCAVLNode_a62531f96c18cff4b2ee6f36472ace234} 
+using {\bfseries value\+\_\+type} = typename Traits\+::T
+\item 
+\Hypertarget{classCAVLNode_ab1a79f77e76287eccc988400292f73d8}\label{classCAVLNode_ab1a79f77e76287eccc988400292f73d8} 
+using {\bfseries Node} = \mbox{\hyperlink{classCBinaryTreeNode}{CBinary\+Tree\+Node}}$<$value\+\_\+type$>$
+\end{DoxyCompactItemize}
+\doxysubsection*{Public Types inherited from \mbox{\hyperlink{classCBinaryTreeNode}{CBinary\+Tree\+Node$<$ value\+\_\+type $>$}}}
+\begin{DoxyCompactItemize}
+\item 
+using {\bfseries value\+\_\+type}
+\item 
+using {\bfseries Node}
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Protected Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\Hypertarget{classCAVLNode_a8ba39fb49728537f32a9ee4c706e4350}\label{classCAVLNode_a8ba39fb49728537f32a9ee4c706e4350} 
+int {\bfseries m\+\_\+balance\+Factor} = 0
+\end{DoxyCompactItemize}
+\doxysubsection*{Protected Attributes inherited from \mbox{\hyperlink{classCBinaryTreeNode}{CBinary\+Tree\+Node$<$ value\+\_\+type $>$}}}
+\begin{DoxyCompactItemize}
+\item 
+value\+\_\+type {\bfseries m\+\_\+data}
+\item 
+\mbox{\hyperlink{classCBinaryTreeNode}{Node}} \texorpdfstring{$\ast$}{*} {\bfseries m\+\_\+p\+Parent}
+\item 
+Ref {\bfseries m\+\_\+ref}
+\item 
+vector$<$ \mbox{\hyperlink{classCBinaryTreeNode}{Node}} \texorpdfstring{$\ast$}{*} $>$ {\bfseries m\+\_\+p\+Child}
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Additional Inherited Members}
+\doxysubsection*{Public Member Functions inherited from \mbox{\hyperlink{classCBinaryTreeNode}{CBinary\+Tree\+Node$<$ value\+\_\+type $>$}}}
+\begin{DoxyCompactItemize}
+\item 
+{\bfseries CBinary\+Tree\+Node} (\mbox{\hyperlink{classCBinaryTreeNode}{Node}} \texorpdfstring{$\ast$}{*}p\+Parent, value\+\_\+type data, Ref ref, \mbox{\hyperlink{classCBinaryTreeNode}{Node}} \texorpdfstring{$\ast$}{*}p0=nullptr, \mbox{\hyperlink{classCBinaryTreeNode}{Node}} \texorpdfstring{$\ast$}{*}p1=nullptr)
+\item 
+value\+\_\+type {\bfseries get\+Data} ()
+\item 
+value\+\_\+type \& {\bfseries get\+Data\+Ref} ()
+\end{DoxyCompactItemize}
+\doxysubsection*{Protected Member Functions inherited from \mbox{\hyperlink{classCBinaryTreeNode}{CBinary\+Tree\+Node$<$ value\+\_\+type $>$}}}
+\begin{DoxyCompactItemize}
+\item 
+void {\bfseries setp\+Child} (const \mbox{\hyperlink{classCBinaryTreeNode}{Node}} \texorpdfstring{$\ast$}{*}p\+Child, size\+\_\+t pos)
+\item 
+\mbox{\hyperlink{classCBinaryTreeNode}{Node}} \texorpdfstring{$\ast$}{*} {\bfseries get\+Child} (size\+\_\+t branch)
+\item 
+\mbox{\hyperlink{classCBinaryTreeNode}{Node}} \texorpdfstring{$\ast$}{*}\& {\bfseries get\+Child\+Ref} (size\+\_\+t branch)
+\item 
+\mbox{\hyperlink{classCBinaryTreeNode}{Node}} \texorpdfstring{$\ast$}{*} {\bfseries get\+Parent} ()
+\end{DoxyCompactItemize}
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+avl.\+h\end{DoxyCompactItemize}

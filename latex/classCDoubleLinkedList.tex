@@ -1,0 +1,67 @@
+\doxysection{CDouble\+Linked\+List\texorpdfstring{$<$}{<} Traits \texorpdfstring{$>$}{>} Class Template Reference}
+\hypertarget{classCDoubleLinkedList}{}\label{classCDoubleLinkedList}\index{CDoubleLinkedList$<$ Traits $>$@{CDoubleLinkedList$<$ Traits $>$}}
+\doxysubsubsection*{Public Types}
+\begin{DoxyCompactItemize}
+\item 
+\Hypertarget{classCDoubleLinkedList_a376eb3686bfdb6b48bd2b16f398ce7dc}\label{classCDoubleLinkedList_a376eb3686bfdb6b48bd2b16f398ce7dc} 
+using {\bfseries value\+\_\+type} = typename Traits\+::value\+\_\+type
+\item 
+\Hypertarget{classCDoubleLinkedList_aa131b5ed7f40ea4fe94a21c9aad67ac5}\label{classCDoubleLinkedList_aa131b5ed7f40ea4fe94a21c9aad67ac5} 
+using {\bfseries Func} = typename Traits\+::\+Func
+\item 
+\Hypertarget{classCDoubleLinkedList_a204ce8deee3c79c339b72e89cb2c0b1e}\label{classCDoubleLinkedList_a204ce8deee3c79c339b72e89cb2c0b1e} 
+using {\bfseries Node} = \mbox{\hyperlink{classDLLNode}{DLLNode}}$<$Traits$>$
+\item 
+\Hypertarget{classCDoubleLinkedList_aed019d4159e63a49d9f47588d43aac49}\label{classCDoubleLinkedList_aed019d4159e63a49d9f47588d43aac49} 
+using {\bfseries Container} = \mbox{\hyperlink{classCDoubleLinkedList}{CDouble\+Linked\+List}}$<$Traits$>$
+\item 
+\Hypertarget{classCDoubleLinkedList_a4c66d392d06dee8bbc977729ff8e5ea5}\label{classCDoubleLinkedList_a4c66d392d06dee8bbc977729ff8e5ea5} 
+using {\bfseries forward\+\_\+iterator} = \mbox{\hyperlink{classforward__double__linkedlist__iterator}{forward\+\_\+double\+\_\+linkedlist\+\_\+iterator}}$<$\mbox{\hyperlink{classCDoubleLinkedList}{Container}}$>$
+\item 
+\Hypertarget{classCDoubleLinkedList_a0c4c03acffa61ea8c95bb9a1b55b8102}\label{classCDoubleLinkedList_a0c4c03acffa61ea8c95bb9a1b55b8102} 
+using {\bfseries backward\+\_\+iterator} = \mbox{\hyperlink{classbackward__double__linkedlist__iterator}{backward\+\_\+double\+\_\+linkedlist\+\_\+iterator}}$<$\mbox{\hyperlink{classCDoubleLinkedList}{Container}}$>$
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\Hypertarget{classCDoubleLinkedList_aff9b50522cbb72aedd01772a6b938173}\label{classCDoubleLinkedList_aff9b50522cbb72aedd01772a6b938173} 
+{\bfseries CDouble\+Linked\+List} (\mbox{\hyperlink{classCDoubleLinkedList}{CDouble\+Linked\+List}} \&other)
+\item 
+\Hypertarget{classCDoubleLinkedList_a896ffeec6e3f06a0d96de06467a60502}\label{classCDoubleLinkedList_a896ffeec6e3f06a0d96de06467a60502} 
+{\bfseries CDouble\+Linked\+List} (\mbox{\hyperlink{classCDoubleLinkedList}{CDouble\+Linked\+List}} \&\&other)
+\item 
+\Hypertarget{classCDoubleLinkedList_ab3ed523ed72ebf32fbf208c5c2262039}\label{classCDoubleLinkedList_ab3ed523ed72ebf32fbf208c5c2262039} 
+void {\bfseries Insert} (value\+\_\+type \&elem, Ref ref)
+\item 
+\Hypertarget{classCDoubleLinkedList_a9d87ceb182822f5470814feb64d06946}\label{classCDoubleLinkedList_a9d87ceb182822f5470814feb64d06946} 
+\mbox{\hyperlink{classforward__double__linkedlist__iterator}{forward\+\_\+iterator}} {\bfseries begin} ()
+\item 
+\Hypertarget{classCDoubleLinkedList_a13bbc605fd386813af7714bdea41631a}\label{classCDoubleLinkedList_a13bbc605fd386813af7714bdea41631a} 
+\mbox{\hyperlink{classforward__double__linkedlist__iterator}{forward\+\_\+iterator}} {\bfseries end} ()
+\item 
+\Hypertarget{classCDoubleLinkedList_aa2925dbc51bb020917357d5b7640eb10}\label{classCDoubleLinkedList_aa2925dbc51bb020917357d5b7640eb10} 
+\mbox{\hyperlink{classbackward__double__linkedlist__iterator}{backward\+\_\+iterator}} {\bfseries rbegin} ()
+\item 
+\Hypertarget{classCDoubleLinkedList_a000437446081b80ca29f4518b3dfb7d0}\label{classCDoubleLinkedList_a000437446081b80ca29f4518b3dfb7d0} 
+\mbox{\hyperlink{classbackward__double__linkedlist__iterator}{backward\+\_\+iterator}} {\bfseries rend} ()
+\item 
+\Hypertarget{classCDoubleLinkedList_ac6649aa16c71abe4426e5e3d54abc71c}\label{classCDoubleLinkedList_ac6649aa16c71abe4426e5e3d54abc71c} 
+std\+::ostream \& {\bfseries Write} (std\+::ostream \&os)
+\item 
+\Hypertarget{classCDoubleLinkedList_abaa561840b908ffc8cde7ef34454ec56}\label{classCDoubleLinkedList_abaa561840b908ffc8cde7ef34454ec56} 
+std\+::istream \& {\bfseries Read} (std\+::istream \&is)
+\item 
+\Hypertarget{classCDoubleLinkedList_a3aa8fa744225c5d393798ef1daf78b6c}\label{classCDoubleLinkedList_a3aa8fa744225c5d393798ef1daf78b6c} 
+{\footnotesize template$<$typename Function , typename... Args$>$ }\\void {\bfseries foreach} (Function func, Args const \&... args)
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Friends}
+\begin{DoxyCompactItemize}
+\item 
+\Hypertarget{classCDoubleLinkedList_a35f831f78c28186ea94bea350137c518}\label{classCDoubleLinkedList_a35f831f78c28186ea94bea350137c518} 
+std\+::ostream \& {\bfseries operator$<$$<$} (std\+::ostream \&os, \mbox{\hyperlink{classCDoubleLinkedList}{CDouble\+Linked\+List}}$<$ Traits $>$ \&obj)
+\end{DoxyCompactItemize}
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+doublelinkedlist.\+h\end{DoxyCompactItemize}

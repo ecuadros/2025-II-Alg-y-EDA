@@ -1,0 +1,150 @@
+\doxysection{btree.\+h}
+\hypertarget{btree_8h_source}{}\label{btree_8h_source}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001\ \textcolor{preprocessor}{\#ifndef\ \_\_BTREE\_H\_\_}}
+\DoxyCodeLine{00002\ \textcolor{preprocessor}{\#define\ \_\_BTREE\_H\_\_}}
+\DoxyCodeLine{00003\ }
+\DoxyCodeLine{00004\ \textcolor{preprocessor}{\#include\ <iostream>}}
+\DoxyCodeLine{00005\ \textcolor{preprocessor}{\#include\ "{}btreepage.h"{}}}
+\DoxyCodeLine{00006\ \textcolor{preprocessor}{\#define\ DEFAULT\_BTREE\_ORDER\ 3}}
+\DoxyCodeLine{00007\ }
+\DoxyCodeLine{00008\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{size\_t}\ MaxHeight\ =\ 5;\ }
+\DoxyCodeLine{00009\ }
+\DoxyCodeLine{00020\ \textcolor{keyword}{template}\ <\textcolor{keyword}{typename}\ \_keyType,\ \textcolor{keyword}{typename}\ \_ObjIDType>}
+\DoxyCodeLine{00021\ \textcolor{keyword}{struct\ }\mbox{\hyperlink{structBTreeTrait}{BTreeTrait}}}
+\DoxyCodeLine{00022\ \{}
+\DoxyCodeLine{00023\ \ \ \ \ \textcolor{keyword}{using\ }\mbox{\hyperlink{structBTreeTrait_abb539da0526461fed78976d049708c2f}{keyType}}\ =\ \_keyType;\ }
+\DoxyCodeLine{00024\ \ \ \ \ \textcolor{keyword}{using\ }\mbox{\hyperlink{structBTreeTrait_a0caf7e757d90dc8ec4bee342b720b860}{ObjIDType}}\ =\ \_ObjIDType;\ }
+\DoxyCodeLine{00025\ \ \ \ \ }
+\DoxyCodeLine{00026\ \ \ \ \ \textcolor{comment}{//\ TODO:\ agregar\ función\ de\ comparación}}
+\DoxyCodeLine{00027\ \ \ \ \ \textcolor{keyword}{using\ }\mbox{\hyperlink{structBTreeTrait_adb8a8562253bd87edab2136bcba4c7cb}{CompareFunction}}\ =\ std::less<keyType>;\ }
+\DoxyCodeLine{00028\ \};}
+\DoxyCodeLine{00029\ }
+\DoxyCodeLine{00040\ \textcolor{keyword}{template}\ <\textcolor{keyword}{typename}\ Trait>}
+\DoxyCodeLine{00041\ \textcolor{keyword}{class\ }\mbox{\hyperlink{classBTree}{BTree}}}
+\DoxyCodeLine{00042\ \{}
+\DoxyCodeLine{00043\ \ \ \ \ \textcolor{keyword}{typedef}\ \textcolor{keyword}{typename}\ Trait::keyType\ keyType;\ }
+\DoxyCodeLine{00044\ \ \ \ \ \textcolor{keyword}{typedef}\ \textcolor{keyword}{typename}\ Trait::ObjIDType\ ObjIDType;\ }
+\DoxyCodeLine{00045\ \ \ \ \ \textcolor{keyword}{typedef}\ \textcolor{keyword}{typename}\ Trait::CompareFunction\ CompareFunction;\ }
+\DoxyCodeLine{00046\ \ \ \ \ \textcolor{keyword}{typedef}\ \mbox{\hyperlink{classCBTreePage}{CBTreePage<Trait>}}\ \mbox{\hyperlink{classCBTreePage}{BTNode}};\ }
+\DoxyCodeLine{00047\ \ \ \ \ }
+\DoxyCodeLine{00048\ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00049\ \ \ \ \ \textcolor{keyword}{typedef}\ \textcolor{keyword}{typename}\ \mbox{\hyperlink{structtagObjectInfo}{BTNode::ObjectInfo}}\ \mbox{\hyperlink{classBTree_a588b5247cf41eb4224324087c808cf9a}{ObjectInfo}};\ }
+\DoxyCodeLine{00050\ }
+\DoxyCodeLine{00059\ \ \ \ \ \mbox{\hyperlink{classBTree_a1e3b7342aad0e975ba456c7dbe283c8e}{BTree}}(\textcolor{keywordtype}{size\_t}\ order\ =\ DEFAULT\_BTREE\_ORDER,\ \textcolor{keywordtype}{bool}\ unique\ =\ \textcolor{keyword}{true})}
+\DoxyCodeLine{00060\ \ \ \ \ \ \ \ \ :\ \mbox{\hyperlink{classBTree_a76f49f2945440f7beabe81a3e46bd395}{m\_Order}}(order),\ \mbox{\hyperlink{classBTree_a9fbd884223128fd26c1a6be85723513f}{m\_Root}}(2\ *\ order\ +\ 1,\ unique),\ \mbox{\hyperlink{classBTree_ab24ff96b219d5ddd0c53ddc5086abb33}{m\_Unique}}(unique),\ \mbox{\hyperlink{classBTree_aba4d5cef8807fbff163e6d3911038956}{m\_NumKeys}}(0)}
+\DoxyCodeLine{00061\ \ \ \ \ \{}
+\DoxyCodeLine{00062\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classBTree_a9fbd884223128fd26c1a6be85723513f}{m\_Root}}.SetMaxKeysForChilds(order);}
+\DoxyCodeLine{00063\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classBTree_a1504cab6e7beca8015cea353a027a482}{m\_Height}}\ =\ 1;}
+\DoxyCodeLine{00064\ \ \ \ \ \}}
+\DoxyCodeLine{00065\ }
+\DoxyCodeLine{00066\ \ \ \ \ \mbox{\hyperlink{classBTree}{\string~BTree}}()\ \{\}}
+\DoxyCodeLine{00067\ }
+\DoxyCodeLine{00077\ \ \ \ \ \textcolor{keywordtype}{bool}\ \mbox{\hyperlink{classBTree_ad5ffe3a38e4f178748cd79f051e8c73c}{Insert}}(\textcolor{keyword}{const}\ keyType\ key,\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{long}\ ObjID);}
+\DoxyCodeLine{00078\ }
+\DoxyCodeLine{00088\ \ \ \ \ \textcolor{keywordtype}{bool}\ \mbox{\hyperlink{classBTree_a05ef25bf978ab76ee01b21f76cb3dbdd}{Remove}}(\textcolor{keyword}{const}\ keyType\ key,\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{long}\ ObjID);}
+\DoxyCodeLine{00089\ }
+\DoxyCodeLine{00098\ \ \ \ \ ObjIDType\ \mbox{\hyperlink{classBTree_aa3bf9151bd0fad63517dacb83dcb2546}{Search}}(\textcolor{keyword}{const}\ keyType\ key)}
+\DoxyCodeLine{00099\ \ \ \ \ \{}
+\DoxyCodeLine{00100\ \ \ \ \ \ \ \ \ ObjIDType\ ObjID\ =\ -\/1;}
+\DoxyCodeLine{00101\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classBTree_a9fbd884223128fd26c1a6be85723513f}{m\_Root}}.\mbox{\hyperlink{classCBTreePage_a517371a189939644cf4400dd69de4d8b}{Search}}(key,\ ObjID);}
+\DoxyCodeLine{00102\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ ObjID;}
+\DoxyCodeLine{00103\ \ \ \ \ \}}
+\DoxyCodeLine{00104\ }
+\DoxyCodeLine{00110\ \ \ \ \ \textcolor{keywordtype}{size\_t}\ \mbox{\hyperlink{classBTree_a2759e80ecb12915459e89022519eea76}{size}}()\ \{\ \textcolor{keywordflow}{return}\ \mbox{\hyperlink{classBTree_aba4d5cef8807fbff163e6d3911038956}{m\_NumKeys}};\ \}}
+\DoxyCodeLine{00111\ }
+\DoxyCodeLine{00117\ \ \ \ \ \textcolor{keywordtype}{size\_t}\ \mbox{\hyperlink{classBTree_ae30d9e14af1ae6373a3de2f654a71c78}{height}}()\ \{\ \textcolor{keywordflow}{return}\ \mbox{\hyperlink{classBTree_a1504cab6e7beca8015cea353a027a482}{m\_Height}};\ \}}
+\DoxyCodeLine{00118\ }
+\DoxyCodeLine{00124\ \ \ \ \ \textcolor{keywordtype}{size\_t}\ \mbox{\hyperlink{classBTree_a8d141f656d802da5a0e8c392ff5933d5}{GetOrder}}()\ \{\ \textcolor{keywordflow}{return}\ \mbox{\hyperlink{classBTree_a76f49f2945440f7beabe81a3e46bd395}{m\_Order}};\ \}}
+\DoxyCodeLine{00125\ }
+\DoxyCodeLine{00131\ \ \ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{classBTree_aa11b906dd677dc8720ad052a3b65b9bd}{Print}}(std::ostream\ \&os)\ \{\ \mbox{\hyperlink{classBTree_a9fbd884223128fd26c1a6be85723513f}{m\_Root}}.Print(os);\ \}}
+\DoxyCodeLine{00132\ }
+\DoxyCodeLine{00139\ \ \ \ \ std::ostream\&\ \mbox{\hyperlink{classBTree_a7e13bacac188d2ae5f9bf76d4ab536bc}{Write}}(std::ostream\ \&os);}
+\DoxyCodeLine{00140\ }
+\DoxyCodeLine{00147\ \ \ \ \ std::istream\&\ \mbox{\hyperlink{classBTree_ad95b9561fb341abbb6c4d14fa42137d8}{Read}}(std::istream\ \&is);}
+\DoxyCodeLine{00148\ }
+\DoxyCodeLine{00155\ \ \ \ \ std::ostream\&\ \mbox{\hyperlink{classBTree_a31f441d330ea110460c03d61c58762b9}{WriteBinaryTreeFormat}}(std::ostream\&\ os);}
+\DoxyCodeLine{00156\ }
+\DoxyCodeLine{00163\ \ \ \ \ std::istream\&\ \mbox{\hyperlink{classBTree_a9cdad4de3bf14ff1f0896d44b2760c51}{ReadBinaryTreeFormat}}(std::istream\&\ is);}
+\DoxyCodeLine{00164\ }
+\DoxyCodeLine{00171\ \ \ \ \ \textcolor{keyword}{template}\ <\textcolor{keyword}{typename}\ Function>}
+\DoxyCodeLine{00172\ \ \ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{classBTree_a7f233b9790031f96cd0fc44dadf2c573}{ForEach}}(Function\ fn);}
+\DoxyCodeLine{00173\ }
+\DoxyCodeLine{00181\ \ \ \ \ \textcolor{keyword}{template}\ <\textcolor{keyword}{typename}\ Function>}
+\DoxyCodeLine{00182\ \ \ \ \ \mbox{\hyperlink{structtagObjectInfo}{ObjectInfo}}*\ \mbox{\hyperlink{classBTree_ae155a1c01209f2185396aeb93fc03f50}{FirstThat}}(Function\ fn);}
+\DoxyCodeLine{00183\ }
+\DoxyCodeLine{00184\ \textcolor{keyword}{protected}:}
+\DoxyCodeLine{00185\ \ \ \ \ \mbox{\hyperlink{classCBTreePage}{BTNode}}\ \mbox{\hyperlink{classBTree_a9fbd884223128fd26c1a6be85723513f}{m\_Root}};\ }
+\DoxyCodeLine{00186\ \ \ \ \ \textcolor{keywordtype}{size\_t}\ \mbox{\hyperlink{classBTree_a1504cab6e7beca8015cea353a027a482}{m\_Height}};\ }
+\DoxyCodeLine{00187\ \ \ \ \ \textcolor{keywordtype}{size\_t}\ \mbox{\hyperlink{classBTree_a76f49f2945440f7beabe81a3e46bd395}{m\_Order}};\ }
+\DoxyCodeLine{00188\ \ \ \ \ \textcolor{keywordtype}{size\_t}\ \mbox{\hyperlink{classBTree_aba4d5cef8807fbff163e6d3911038956}{m\_NumKeys}};\ }
+\DoxyCodeLine{00189\ \ \ \ \ \textcolor{keywordtype}{bool}\ \mbox{\hyperlink{classBTree_ab24ff96b219d5ddd0c53ddc5086abb33}{m\_Unique}};\ }
+\DoxyCodeLine{00190\ \};}
+\DoxyCodeLine{00191\ }
+\DoxyCodeLine{00201\ \textcolor{keyword}{template}\ <\textcolor{keyword}{typename}\ Trait>}
+\DoxyCodeLine{00202\ \textcolor{keywordtype}{bool}\ \mbox{\hyperlink{classBTree_ad5ffe3a38e4f178748cd79f051e8c73c}{BTree<Trait>::Insert}}(\textcolor{keyword}{const}\ keyType\ key,\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{long}\ ObjID)}
+\DoxyCodeLine{00203\ \{}
+\DoxyCodeLine{00204\ \ \ \ \ bt\_ErrorCode\ error\ =\ m\_Root.Insert(key,\ ObjID);}
+\DoxyCodeLine{00205\ \ \ \ \ \textcolor{keywordflow}{if}\ (error\ ==\ bt\_duplicate)}
+\DoxyCodeLine{00206\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{false};}
+\DoxyCodeLine{00207\ \ \ \ \ m\_NumKeys++;}
+\DoxyCodeLine{00208\ \ \ \ \ \textcolor{keywordflow}{if}\ (error\ ==\ bt\_overflow)\ \{}
+\DoxyCodeLine{00209\ \ \ \ \ \ \ \ \ m\_Root.SplitRoot();}
+\DoxyCodeLine{00210\ \ \ \ \ \ \ \ \ m\_Height++;}
+\DoxyCodeLine{00211\ \ \ \ \ \}}
+\DoxyCodeLine{00212\ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{true};}
+\DoxyCodeLine{00213\ \}}
+\DoxyCodeLine{00214\ }
+\DoxyCodeLine{00224\ \textcolor{keyword}{template}\ <\textcolor{keyword}{typename}\ Trait>}
+\DoxyCodeLine{00225\ \textcolor{keywordtype}{bool}\ \mbox{\hyperlink{classBTree_a05ef25bf978ab76ee01b21f76cb3dbdd}{BTree<Trait>::Remove}}(\textcolor{keyword}{const}\ keyType\ key,\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{long}\ ObjID)}
+\DoxyCodeLine{00226\ \{}
+\DoxyCodeLine{00227\ \ \ \ \ bt\_ErrorCode\ error\ =\ m\_Root.Remove(key,\ ObjID);}
+\DoxyCodeLine{00228\ \ \ \ \ \textcolor{keywordflow}{if}\ (error\ ==\ bt\_duplicate\ ||\ error\ ==\ bt\_nofound)}
+\DoxyCodeLine{00229\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{false};}
+\DoxyCodeLine{00230\ \ \ \ \ m\_NumKeys-\/-\/;}
+\DoxyCodeLine{00231\ \ \ \ \ \textcolor{keywordflow}{if}\ (error\ ==\ bt\_rootmerged)}
+\DoxyCodeLine{00232\ \ \ \ \ \ \ \ \ m\_Height-\/-\/;}
+\DoxyCodeLine{00233\ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{true};}
+\DoxyCodeLine{00234\ \}}
+\DoxyCodeLine{00235\ }
+\DoxyCodeLine{00244\ \textcolor{keyword}{template}\ <\textcolor{keyword}{typename}\ Trait>}
+\DoxyCodeLine{00245\ std::ostream\&\ \mbox{\hyperlink{classBTree_a31f441d330ea110460c03d61c58762b9}{BTree<Trait>::WriteBinaryTreeFormat}}(std::ostream\&\ os)}
+\DoxyCodeLine{00246\ \{}
+\DoxyCodeLine{00247\ \ \ \ \ os\ <<\ \textcolor{stringliteral}{"{}BTreeSimple\ "{}}\ <<\ m\_NumKeys\ <<\ \textcolor{stringliteral}{"{}\ elements:\ "{}};}
+\DoxyCodeLine{00248\ \ \ \ \ ForEach([\&os](\textcolor{keyword}{auto}\&\ info,\ \textcolor{keywordtype}{size\_t}\ level)\ \{}
+\DoxyCodeLine{00249\ \ \ \ \ \ \ \ \ os\ <<\ info.key\ <<\ \textcolor{stringliteral}{"{}\ "{}};}
+\DoxyCodeLine{00250\ \ \ \ \ \});}
+\DoxyCodeLine{00251\ \ \ \ \ \textcolor{keywordflow}{return}\ os;}
+\DoxyCodeLine{00252\ \}}
+\DoxyCodeLine{00253\ }
+\DoxyCodeLine{00264\ \textcolor{keyword}{template}\ <\textcolor{keyword}{typename}\ Trait>}
+\DoxyCodeLine{00265\ std::istream\&\ \mbox{\hyperlink{classBTree_a9cdad4de3bf14ff1f0896d44b2760c51}{BTree<Trait>::ReadBinaryTreeFormat}}(std::istream\&\ is)}
+\DoxyCodeLine{00266\ \{}
+\DoxyCodeLine{00267\ \ \ \ \ std::string\ line;}
+\DoxyCodeLine{00268\ \ \ \ \ std::getline(is,\ line);\ \textcolor{comment}{//\ Leemos\ la\ primera\ línea}}
+\DoxyCodeLine{00269\ }
+\DoxyCodeLine{00270\ \ \ \ \ m\_Root.Reset();\ \textcolor{comment}{//\ Reseteamos\ el\ árbol.}}
+\DoxyCodeLine{00271\ \ \ \ \ m\_NumKeys\ =\ 0;}
+\DoxyCodeLine{00272\ \ \ \ \ m\_Height\ =\ 1;}
+\DoxyCodeLine{00273\ }
+\DoxyCodeLine{00274\ \ \ \ \ \textcolor{comment}{//\ Convertimos\ cada\ carácter\ de\ la\ línea\ a\ una\ clave\ numérica\ y\ la\ insertamos\ en\ el\ árbol}}
+\DoxyCodeLine{00275\ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keywordtype}{char}\ c\ :\ line)\ \{}
+\DoxyCodeLine{00276\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (std::isdigit(c))\ \{}
+\DoxyCodeLine{00277\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{int}\ key\ =\ c\ -\/\ \textcolor{charliteral}{'0'};\ \ \textcolor{comment}{//\ Convertir\ char\ a\ int}}
+\DoxyCodeLine{00278\ \ \ \ \ \ \ \ \ \ \ \ \ Insert(key,\ key);}
+\DoxyCodeLine{00279\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00280\ \ \ \ \ \}}
+\DoxyCodeLine{00281\ }
+\DoxyCodeLine{00282\ \ \ \ \ \textcolor{keywordflow}{return}\ is;}
+\DoxyCodeLine{00283\ \}}
+\DoxyCodeLine{00284\ }
+\DoxyCodeLine{00296\ \textcolor{keyword}{template}\ <\textcolor{keyword}{typename}\ Trait>}
+\DoxyCodeLine{00297\ std::ostream\&\ operator<<(std::ostream\&\ os,\ \mbox{\hyperlink{classBTree}{BTree<Trait>}}\&\ tree)}
+\DoxyCodeLine{00298\ \{}
+\DoxyCodeLine{00299\ \ \ \ \ tree.\mbox{\hyperlink{classBTree_aa11b906dd677dc8720ad052a3b65b9bd}{Print}}(os);\ \ \textcolor{comment}{//\ Llama\ al\ método\ Print\ de\ la\ clase\ BTree\ para\ generar\ la\ salida}}
+\DoxyCodeLine{00300\ \ \ \ \ \textcolor{keywordflow}{return}\ os;}
+\DoxyCodeLine{00301\ \}}
+\DoxyCodeLine{00302\ }
+\DoxyCodeLine{00303\ \textcolor{preprocessor}{\#endif\ }\textcolor{comment}{//\ \_\_BTREE\_H\_\_}}
+
+\end{DoxyCode}

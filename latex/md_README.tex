@@ -1,0 +1,186 @@
+\chapter{2025-\/II-\/\+Alg-\/y-\/\+EDA}
+\hypertarget{md_README}{}\label{md_README}\index{2025-\/II-\/Alg-\/y-\/EDA@{2025-\/II-\/Alg-\/y-\/EDA}}
+\label{md_README_autotoc_md0}%
+\Hypertarget{md_README_autotoc_md0}%
+\hypertarget{md_README_autotoc_md1}{}\doxysection{\texorpdfstring{PC1}{PC1}}\label{md_README_autotoc_md1}
+\begin{DoxyRemark}{Remarks}
+Recomendaciones para manejar flujo de revisión\+: ~\newline
+~\newline
+
+\begin{DoxyItemize}
+\item Manejar todo el código del docente en una rama principal (usar carpetas en vez de ramas)
+\item Cada alumno tiene su propia rama en donde haria sus PRs a la rama main (rama del profesor)
+\item Implementar un formateador de código para evitar confusion en la lectura de cambios del PR ~\newline
+~\newline
+ ✅ Ventajas\+:
+\item Cada estudiante trabaja en su espacio sin interferir con otros (no habría conflictos)
+\item El profesor puede rastrear el progreso individual de cada alumno
+\item Los PRs muestran solo los cambios específicos del estudiante
+\item Cuando el profesor haga un cambio en main, los alumnos solo harian un merge a su rama
+\end{DoxyItemize}
+\end{DoxyRemark}
+\hypertarget{md_README_autotoc_md2}{}\doxysection{\texorpdfstring{Nivel 1}{Nivel 1}}\label{md_README_autotoc_md2}
+\hypertarget{md_README_autotoc_md3}{}\doxysubsection{\texorpdfstring{a) Habilitar el uso de \mbox{[}\mbox{]}}{a) Habilitar el uso de \mbox{[}\mbox{]}}}\label{md_README_autotoc_md3}
+Primero declaramos el modificador del operador \mbox{[}\mbox{]}. Este debe recibir un size\+\_\+t y retornar una referencia a T.
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{T\&\ operator[](\textcolor{keywordtype}{size\_t}\ index);}
+
+\end{DoxyCode}
+
+
+Luego implementamos la funcionalidad
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{\textcolor{keyword}{template}\ <\textcolor{keyword}{typename}\ T>}
+\DoxyCodeLine{T\&\ \mbox{\hyperlink{classCVector_adbf20043ee2534ecc5ffcc757fc6e7f6}{CVector<T>::operator[]}}(\textcolor{keywordtype}{size\_t}\ index)\ \{}
+\DoxyCodeLine{\ \ \ \ \textcolor{keywordflow}{if}\ (index\ >=\ m\_count)\ \{}
+\DoxyCodeLine{\ \ \ \ \ \ \ \ \textcolor{keywordflow}{throw}\ std::out\_of\_range(\textcolor{stringliteral}{"{}Index\ out\ of\ range"{}});}
+\DoxyCodeLine{\ \ \ \ \}}
+\DoxyCodeLine{\ \ \ \ \textcolor{keywordflow}{return}\ m\_pVect[index];}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+\hypertarget{md_README_autotoc_md4}{}\doxysubsection{\texorpdfstring{b) Agregar un constructor por copia}{b) Agregar un constructor por copia}}\label{md_README_autotoc_md4}
+Declaramos la funcion que va a recibir como parametro una referencia a otro \doxylink{classCVector}{CVector}
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{\mbox{\hyperlink{classCVector}{CVector}}(\mbox{\hyperlink{classCVector}{CVector}}\ \&v);}
+
+\end{DoxyCode}
+
+
+Implementamos la funcionalidad, donde copiamos los atributos de v para crear una copia nueva.
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{\textcolor{keyword}{template}\ <\textcolor{keyword}{typename}\ T>}
+\DoxyCodeLine{\mbox{\hyperlink{classCVector_a212925e149bd8cd7cd447c1b4efbbfba}{CVector<T>::CVector}}(\mbox{\hyperlink{classCVector}{CVector}}\ \&v)\ :\ m\_max(v.m\_max),\ m\_count(v.m\_count)\ \{}
+\DoxyCodeLine{\ \ \ \ \textcolor{keywordflow}{if}\ (m\_max\ >\ 0)\ \{}
+\DoxyCodeLine{\ \ \ \ \ \ \ \ m\_pVect\ =\ \textcolor{keyword}{new}\ T[m\_max];}
+\DoxyCodeLine{\ \ \ \ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keywordtype}{size\_t}\ i\ =\ 0;\ i\ <\ m\_count;\ ++i)\ \{}
+\DoxyCodeLine{\ \ \ \ \ \ \ \ \ \ \ \ m\_pVect[i]\ =\ v.m\_pVect[i];}
+\DoxyCodeLine{\ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{\ \ \ \ \}\ \textcolor{keywordflow}{else}\ \{}
+\DoxyCodeLine{\ \ \ \ \ \ \ \ m\_pVect\ =\ \textcolor{keyword}{nullptr};}
+\DoxyCodeLine{\ \ \ \ \}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+\hypertarget{md_README_autotoc_md5}{}\doxysubsection{\texorpdfstring{c) Implementar el destructor de forma segura}{c) Implementar el destructor de forma segura}}\label{md_README_autotoc_md5}
+Declaramos el destructor
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{\mbox{\hyperlink{classCVector}{\string~CVector}}();}
+
+\end{DoxyCode}
+
+
+Implementamos la funcionalidad, donde liberamos la memoria dinámica y ponemos los atributos a 0 / nulo.
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{\textcolor{keyword}{template}\ <\textcolor{keyword}{typename}\ T>}
+\DoxyCodeLine{\mbox{\hyperlink{classCVector_a7bc8a00177ad80cc75e3491fa8b128f0}{CVector<T>::\string~CVector}}()\{}
+\DoxyCodeLine{\ \ \ \ \textcolor{keyword}{delete}[]\ m\_pVect;}
+\DoxyCodeLine{\ \ \ \ m\_pVect\ =\ \textcolor{keyword}{nullptr};}
+\DoxyCodeLine{\ \ \ \ m\_count\ =\ 0;}
+\DoxyCodeLine{\ \ \ \ m\_max\ =\ 0;}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+\hypertarget{md_README_autotoc_md6}{}\doxysection{\texorpdfstring{Nivel 2}{Nivel 2}}\label{md_README_autotoc_md6}
+\hypertarget{md_README_autotoc_md7}{}\doxysubsection{\texorpdfstring{a) Habilitar que el vector pueda ser escrito con cout \texorpdfstring{$<$}{<}\texorpdfstring{$<$}{<}}{a) Habilitar que el vector pueda ser escrito con cout \texorpdfstring{$<$}{<}\texorpdfstring{$<$}{<}}}\label{md_README_autotoc_md7}
+Implementamos la funcion amiga inline, que recibe como parametro un std\+::ostream y una constante referencia a \doxylink{classCVector}{CVector}.
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{\textcolor{keyword}{friend}\ std::ostream\&\ operator<<(std::ostream\&\ os,\ \textcolor{keyword}{const}\ \mbox{\hyperlink{classCVector}{CVector}}\&\ vec)\ \{}
+\DoxyCodeLine{\ \ \ \ \ \ \ \ os\ <<\ \textcolor{stringliteral}{"{}["{}};}
+\DoxyCodeLine{\ \ \ \ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keywordtype}{size\_t}\ i\ =\ 0;\ i\ <\ vec.m\_count;\ ++i)\ \{}
+\DoxyCodeLine{\ \ \ \ \ \ \ \ \ \ \ \ os\ <<\ vec.m\_pVect[i];}
+\DoxyCodeLine{\ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (i\ <\ vec.m\_count\ -\/\ 1)\ \{}
+\DoxyCodeLine{\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ os\ <<\ \textcolor{stringliteral}{"{},\ "{}};}
+\DoxyCodeLine{\ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{\ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{\ \ \ \ \ \ \ \ os\ <<\ \textcolor{stringliteral}{"{}]"{}};}
+\DoxyCodeLine{\ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ os;}
+\DoxyCodeLine{\ \ \ \ \}}
+
+\end{DoxyCode}
+\hypertarget{md_README_autotoc_md8}{}\doxysubsection{\texorpdfstring{b) Agregar un move constructor}{b) Agregar un move constructor}}\label{md_README_autotoc_md8}
+Declaramos la funcion que va a recibir como parametro un \doxylink{classCVector}{CVector} por r-\/value reference.
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{\mbox{\hyperlink{classCVector}{CVector}}(\mbox{\hyperlink{classCVector}{CVector}}\ \&\&v)\ \textcolor{keyword}{noexcept};}
+
+\end{DoxyCode}
+
+
+Implementamos el move constructor, donde movemos los atributos de v a nuestro nuevo \doxylink{classCVector}{CVector}, y ponemos los atributos de v a 0 / nulo.
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{\textcolor{keyword}{template}\ <\textcolor{keyword}{typename}\ T>}
+\DoxyCodeLine{\mbox{\hyperlink{classCVector_a212925e149bd8cd7cd447c1b4efbbfba}{CVector<T>::CVector}}(\mbox{\hyperlink{classCVector}{CVector}}\ \&\&v)\ noexcept}
+\DoxyCodeLine{:\ m\_pVect(v.m\_pVect),\ m\_max(v.m\_max),\ m\_count(v.m\_count)\ \{}
+\DoxyCodeLine{\ \ \ \ v.m\_pVect\ =\ \textcolor{keyword}{nullptr};\ }
+\DoxyCodeLine{\ \ \ \ v.m\_max\ =\ 0;}
+\DoxyCodeLine{\ \ \ \ v.m\_count\ =\ 0;}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+\hypertarget{md_README_autotoc_md9}{}\doxysection{\texorpdfstring{Ejemplo de uso}{Ejemplo de uso}}\label{md_README_autotoc_md9}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{\textcolor{preprocessor}{\#include\ <iostream>}}
+\DoxyCodeLine{\textcolor{preprocessor}{\#include\ "{}DemoVector.h"{}}}
+\DoxyCodeLine{\textcolor{preprocessor}{\#include\ "{}\mbox{\hyperlink{vector_8h}{vector.h}}"{}}}
+\DoxyCodeLine{}
+\DoxyCodeLine{\textcolor{keyword}{using\ namespace\ }std;}
+\DoxyCodeLine{}
+\DoxyCodeLine{\textcolor{keywordtype}{void}\ DemoVector()\{}
+\DoxyCodeLine{\ \ \ \ \textcolor{keywordtype}{int}\ valueToInsert\ =\ 5;}
+\DoxyCodeLine{}
+\DoxyCodeLine{\ \ \ \ \mbox{\hyperlink{classCVector}{CVector<int>}}\ vector(1);}
+\DoxyCodeLine{}
+\DoxyCodeLine{\ \ \ \ vector.insert(valueToInsert);}
+\DoxyCodeLine{}
+\DoxyCodeLine{\ \ \ \ \textcolor{comment}{//\ TODO\ \ (Nivel\ 1)\ habilitar\ el\ uso\ de\ []}}
+\DoxyCodeLine{}
+\DoxyCodeLine{\ \ \ \ vector[0]\ =\ 7;}
+\DoxyCodeLine{\ \ \ \ vector.insert(valueToInsert);}
+\DoxyCodeLine{}
+\DoxyCodeLine{\ \ \ \ \textcolor{comment}{//\ TODO\ \ (Nivel\ 2)\ habilitar\ que\ el\ vector\ pueda\ ser\ escrito\ con\ cout\ <<}}
+\DoxyCodeLine{\ \ \ \ cout\ <<\ \textcolor{stringliteral}{"{}Vector\ inicial:\ "{}}\ <<\ vector\ <<\ endl;}
+\DoxyCodeLine{}
+\DoxyCodeLine{\ \ \ \ \textcolor{keyword}{const}\ \mbox{\hyperlink{classCVector}{CVector<int>}}\ vector2\ =\ vector;}
+\DoxyCodeLine{}
+\DoxyCodeLine{\ \ \ \ cout\ <<\textcolor{stringliteral}{"{}Vector\ 2\ copia\ del\ 1:\ "{}}\ <<\ vector2\ <<\ endl;}
+\DoxyCodeLine{}
+\DoxyCodeLine{\ \ \ \ \textcolor{keyword}{const}\ \mbox{\hyperlink{classCVector}{CVector<int>}}\ vector3\ =\ std::move(vector);}
+\DoxyCodeLine{}
+\DoxyCodeLine{\ \ \ \ cout\ <<\ \textcolor{stringliteral}{"{}Vector\ 3\ movido\ del\ 1:\ \ "{}}\ <<\ \ vector3\ <<\ endl;}
+\DoxyCodeLine{\ \ \ \ cout\ <<\ \textcolor{stringliteral}{"{}Vector\ 1\ muerto:\ "{}}\ <<\ vector\ <<\ endl;}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+
+
+Esto nos da como output
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{Hello\ Alg\ y\ EDA-\/UNI}
+\DoxyCodeLine{Vector\ inicial:\ [7,\ 5]}
+\DoxyCodeLine{Vector\ 2\ copia\ del\ 1:\ [7,\ 5]}
+\DoxyCodeLine{Vector\ 3\ movido\ del\ 1:\ \ [7,\ 5]}
+\DoxyCodeLine{Vector\ 1\ muerto:\ []}
+
+\end{DoxyCode}
+ 

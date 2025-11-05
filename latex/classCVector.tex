@@ -1,0 +1,122 @@
+\doxysection{CVector\texorpdfstring{$<$}{<} Traits \texorpdfstring{$>$}{>} Class Template Reference}
+\hypertarget{classCVector}{}\label{classCVector}\index{CVector$<$ Traits $>$@{CVector$<$ Traits $>$}}
+\doxysubsubsection*{Public Types}
+\begin{DoxyCompactItemize}
+\item 
+\Hypertarget{classCVector_a27ecac38f7adca367f0943e6af3af6a4}\label{classCVector_a27ecac38f7adca367f0943e6af3af6a4} 
+using {\bfseries value\+\_\+type} = typename Traits\+::value\+\_\+type
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\Hypertarget{classCVector_a212925e149bd8cd7cd447c1b4efbbfba}\label{classCVector_a212925e149bd8cd7cd447c1b4efbbfba} 
+{\bfseries CVector} (\mbox{\hyperlink{classCVector}{CVector}} \&v)
+\begin{DoxyCompactList}\small\item\em Copy constructor. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classCVector_ab0a2517c44d468fddea1fd2e8918fbd5}{CVector}} (size\+\_\+t n)
+\begin{DoxyCompactList}\small\item\em Constructor, initializes vector with given size. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classCVector_ab113fac13fedaedc476a1d5901668ea9}{CVector}} (\mbox{\hyperlink{classCVector}{CVector}} \&\&v)
+\begin{DoxyCompactList}\small\item\em Constructor por movimiento. \end{DoxyCompactList}\item 
+\Hypertarget{classCVector_a7bc8a00177ad80cc75e3491fa8b128f0}\label{classCVector_a7bc8a00177ad80cc75e3491fa8b128f0} 
+virtual {\bfseries \texorpdfstring{$\sim$}{\string~}\+CVector} ()
+\begin{DoxyCompactList}\small\item\em Destructor, frees allocated memory. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classCVector_a2aa24aa1a887210288807bbdce3cc343}{insert}} (value\+\_\+type \&elem)
+\begin{DoxyCompactList}\small\item\em Insert a new element at the end of the vector. \end{DoxyCompactList}\item 
+value\+\_\+type \& \mbox{\hyperlink{classCVector_adbf20043ee2534ecc5ffcc757fc6e7f6}{operator\mbox{[}$\,$\mbox{]}}} (size\+\_\+t index)
+\begin{DoxyCompactList}\small\item\em Overload operator \mbox{[}\mbox{]} to access elements in the vector. \end{DoxyCompactList}\item 
+size\+\_\+t \mbox{\hyperlink{classCVector_aefa112a5b6c6acab865f44adb6241410}{size}} () const
+\begin{DoxyCompactList}\small\item\em Get the current size of the vector. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\Hypertarget{classCVector_ab0a2517c44d468fddea1fd2e8918fbd5}\index{CVector$<$ Traits $>$@{CVector$<$ Traits $>$}!CVector@{CVector}}
+\index{CVector@{CVector}!CVector$<$ Traits $>$@{CVector$<$ Traits $>$}}
+\doxysubsubsection{\texorpdfstring{CVector()}{CVector()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily \label{classCVector_ab0a2517c44d468fddea1fd2e8918fbd5} 
+template$<$typename Traits $>$ \\
+\mbox{\hyperlink{classCVector}{CVector}}$<$ Traits $>$\mbox{\hyperlink{classCVector}{\+::\+CVector}} (\begin{DoxyParamCaption}\item[{size\+\_\+t}]{n}{}\end{DoxyParamCaption})}
+
+
+
+Constructor, initializes vector with given size. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em n} & initial size of the vector, n \texorpdfstring{$>$}{>} 0 \\
+\hline
+\end{DoxyParams}
+\Hypertarget{classCVector_ab113fac13fedaedc476a1d5901668ea9}\index{CVector$<$ Traits $>$@{CVector$<$ Traits $>$}!CVector@{CVector}}
+\index{CVector@{CVector}!CVector$<$ Traits $>$@{CVector$<$ Traits $>$}}
+\doxysubsubsection{\texorpdfstring{CVector()}{CVector()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily \label{classCVector_ab113fac13fedaedc476a1d5901668ea9} 
+template$<$typename Traits $>$ \\
+\mbox{\hyperlink{classCVector}{CVector}}$<$ Traits $>$\mbox{\hyperlink{classCVector}{\+::\+CVector}} (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classCVector}{CVector}}$<$ Traits $>$ \&\&}]{v}{}\end{DoxyParamCaption})}
+
+
+
+Constructor por movimiento. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em v} & Vector origen; tras el movimiento queda vacío/seguro. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyPostcond}{Postcondition}
+{\ttfamily v.\+size()==0} 
+\end{DoxyPostcond}
+
+
+\doxysubsection{Member Function Documentation}
+\Hypertarget{classCVector_a2aa24aa1a887210288807bbdce3cc343}\index{CVector$<$ Traits $>$@{CVector$<$ Traits $>$}!insert@{insert}}
+\index{insert@{insert}!CVector$<$ Traits $>$@{CVector$<$ Traits $>$}}
+\doxysubsubsection{\texorpdfstring{insert()}{insert()}}
+{\footnotesize\ttfamily \label{classCVector_a2aa24aa1a887210288807bbdce3cc343} 
+template$<$typename Traits $>$ \\
+void \mbox{\hyperlink{classCVector}{CVector}}$<$ Traits $>$\+::insert (\begin{DoxyParamCaption}\item[{value\+\_\+type \&}]{elem}{}\end{DoxyParamCaption})}
+
+
+
+Insert a new element at the end of the vector. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em elem} & element to insert \\
+\hline
+\end{DoxyParams}
+\Hypertarget{classCVector_adbf20043ee2534ecc5ffcc757fc6e7f6}\index{CVector$<$ Traits $>$@{CVector$<$ Traits $>$}!operator\mbox{[}\mbox{]}@{operator[]}}
+\index{operator\mbox{[}\mbox{]}@{operator[]}!CVector$<$ Traits $>$@{CVector$<$ Traits $>$}}
+\doxysubsubsection{\texorpdfstring{operator[]()}{operator[]()}}
+{\footnotesize\ttfamily \label{classCVector_adbf20043ee2534ecc5ffcc757fc6e7f6} 
+template$<$typename Traits $>$ \\
+\mbox{\hyperlink{classCVector}{CVector}}$<$ Traits $>$\+::value\+\_\+type \& \mbox{\hyperlink{classCVector}{CVector}}$<$ Traits $>$\+::operator\mbox{[}$\,$\mbox{]} (\begin{DoxyParamCaption}\item[{size\+\_\+t}]{index}{}\end{DoxyParamCaption})}
+
+
+
+Overload operator \mbox{[}\mbox{]} to access elements in the vector. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em index} & position of the element to access \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+reference to the element at the given index 
+\end{DoxyReturn}
+\Hypertarget{classCVector_aefa112a5b6c6acab865f44adb6241410}\index{CVector$<$ Traits $>$@{CVector$<$ Traits $>$}!size@{size}}
+\index{size@{size}!CVector$<$ Traits $>$@{CVector$<$ Traits $>$}}
+\doxysubsubsection{\texorpdfstring{size()}{size()}}
+{\footnotesize\ttfamily \label{classCVector_aefa112a5b6c6acab865f44adb6241410} 
+template$<$typename Traits $>$ \\
+size\+\_\+t \mbox{\hyperlink{classCVector}{CVector}}$<$ Traits $>$\+::size (\begin{DoxyParamCaption}{}{}\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Get the current size of the vector. 
+
+\begin{DoxyReturn}{Returns}
+number of elements 
+\end{DoxyReturn}
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{vector_8h}{vector.\+h}}\end{DoxyCompactItemize}

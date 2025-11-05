@@ -1,0 +1,58 @@
+\doxysection{CBinary\+Tree\+Node\texorpdfstring{$<$}{<} Traits \texorpdfstring{$>$}{>} Class Template Reference}
+\hypertarget{classCBinaryTreeNode}{}\label{classCBinaryTreeNode}\index{CBinaryTreeNode$<$ Traits $>$@{CBinaryTreeNode$<$ Traits $>$}}
+\doxysubsubsection*{Public Types}
+\begin{DoxyCompactItemize}
+\item 
+\Hypertarget{classCBinaryTreeNode_a5f5e9fe6a5b032d98ef4033fda96411d}\label{classCBinaryTreeNode_a5f5e9fe6a5b032d98ef4033fda96411d} 
+using {\bfseries value\+\_\+type} = typename Traits\+::T
+\item 
+\Hypertarget{classCBinaryTreeNode_a90cfa08402b04d0695cfbfc3887fbb38}\label{classCBinaryTreeNode_a90cfa08402b04d0695cfbfc3887fbb38} 
+using {\bfseries Node} = \mbox{\hyperlink{classCBinaryTreeNode}{CBinary\+Tree\+Node}}$<$T$>$
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\Hypertarget{classCBinaryTreeNode_a6f9c2777839e446fe2ad1987fe1843be}\label{classCBinaryTreeNode_a6f9c2777839e446fe2ad1987fe1843be} 
+{\bfseries CBinary\+Tree\+Node} (\mbox{\hyperlink{classCBinaryTreeNode}{Node}} \texorpdfstring{$\ast$}{*}p\+Parent, value\+\_\+type data, Ref ref, \mbox{\hyperlink{classCBinaryTreeNode}{Node}} \texorpdfstring{$\ast$}{*}p0=nullptr, \mbox{\hyperlink{classCBinaryTreeNode}{Node}} \texorpdfstring{$\ast$}{*}p1=nullptr)
+\item 
+\Hypertarget{classCBinaryTreeNode_a3933a9ecad8cc2f2e43989baaad1fc59}\label{classCBinaryTreeNode_a3933a9ecad8cc2f2e43989baaad1fc59} 
+value\+\_\+type {\bfseries get\+Data} ()
+\item 
+\Hypertarget{classCBinaryTreeNode_a093b8756a019c20394a3b810ff1d1748}\label{classCBinaryTreeNode_a093b8756a019c20394a3b810ff1d1748} 
+value\+\_\+type \& {\bfseries get\+Data\+Ref} ()
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Protected Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\Hypertarget{classCBinaryTreeNode_af8a8fd7dbcccbd6954bc022d913a5eb7}\label{classCBinaryTreeNode_af8a8fd7dbcccbd6954bc022d913a5eb7} 
+void {\bfseries setp\+Child} (const \mbox{\hyperlink{classCBinaryTreeNode}{Node}} \texorpdfstring{$\ast$}{*}p\+Child, size\+\_\+t pos)
+\item 
+\Hypertarget{classCBinaryTreeNode_aae2f8aba59526a892133f7d7b74f967f}\label{classCBinaryTreeNode_aae2f8aba59526a892133f7d7b74f967f} 
+\mbox{\hyperlink{classCBinaryTreeNode}{Node}} \texorpdfstring{$\ast$}{*} {\bfseries get\+Child} (size\+\_\+t branch)
+\item 
+\Hypertarget{classCBinaryTreeNode_aa42898541e3b2f8e7e267e90d3a4deec}\label{classCBinaryTreeNode_aa42898541e3b2f8e7e267e90d3a4deec} 
+\mbox{\hyperlink{classCBinaryTreeNode}{Node}} \texorpdfstring{$\ast$}{*}\& {\bfseries get\+Child\+Ref} (size\+\_\+t branch)
+\item 
+\Hypertarget{classCBinaryTreeNode_a134ed92b7bd09e6be121714bd8bebae1}\label{classCBinaryTreeNode_a134ed92b7bd09e6be121714bd8bebae1} 
+\mbox{\hyperlink{classCBinaryTreeNode}{Node}} \texorpdfstring{$\ast$}{*} {\bfseries get\+Parent} ()
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Protected Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\Hypertarget{classCBinaryTreeNode_af198aeceb024394ab972e2a8ed4b6476}\label{classCBinaryTreeNode_af198aeceb024394ab972e2a8ed4b6476} 
+value\+\_\+type {\bfseries m\+\_\+data}
+\item 
+\Hypertarget{classCBinaryTreeNode_a72e0fcc75c9fa152cf70e2fe70f1a251}\label{classCBinaryTreeNode_a72e0fcc75c9fa152cf70e2fe70f1a251} 
+\mbox{\hyperlink{classCBinaryTreeNode}{Node}} \texorpdfstring{$\ast$}{*} {\bfseries m\+\_\+p\+Parent} = nullptr
+\item 
+\Hypertarget{classCBinaryTreeNode_a65661de46a55f67de408d9972c6777f4}\label{classCBinaryTreeNode_a65661de46a55f67de408d9972c6777f4} 
+Ref {\bfseries m\+\_\+ref}
+\item 
+\Hypertarget{classCBinaryTreeNode_acc912b89645cf679c7acf3264f727622}\label{classCBinaryTreeNode_acc912b89645cf679c7acf3264f727622} 
+vector$<$ \mbox{\hyperlink{classCBinaryTreeNode}{Node}} \texorpdfstring{$\ast$}{*} $>$ {\bfseries m\+\_\+p\+Child} = \{nullptr, nullptr\}
+\end{DoxyCompactItemize}
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+binarytree.\+h\end{DoxyCompactItemize}

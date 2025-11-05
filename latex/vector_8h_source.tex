@@ -1,0 +1,130 @@
+\doxysection{vector.\+h}
+\hypertarget{vector_8h_source}{}\label{vector_8h_source}\mbox{\hyperlink{vector_8h}{Go to the documentation of this file.}}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001\ \textcolor{preprocessor}{\#ifndef\ \_\_VECTOR\_H\_\_}}
+\DoxyCodeLine{00002\ \textcolor{preprocessor}{\#define\ \_\_VECTOR\_H\_\_}}
+\DoxyCodeLine{00003\ }
+\DoxyCodeLine{00004\ \textcolor{comment}{//\ PC1:\ deben\ hacer:}}
+\DoxyCodeLine{00005\ \textcolor{comment}{//\ \ \ \ \ \ 2\ problemas\ de\ nivel\ 2}}
+\DoxyCodeLine{00006\ \textcolor{comment}{//\ \ \ \ \ \ 3\ problemas\ de\ nivel\ 1}}
+\DoxyCodeLine{00007\ \textcolor{comment}{//\ Cada\ solucion\ enviarla\ como\ un\ Pull\ request}}
+\DoxyCodeLine{00008\ }
+\DoxyCodeLine{00009\ \textcolor{comment}{//\ TODO\ (Nivel\ 2):\ Agregar\ Traits}}
+\DoxyCodeLine{00010\ }
+\DoxyCodeLine{00011\ \textcolor{comment}{//\ TODO\ (Nivel\ 2):\ Agregar\ Iterators\ (forward,\ backward)}}
+\DoxyCodeLine{00012\ }
+\DoxyCodeLine{00013\ \textcolor{comment}{//\ TODO\ (Nivel\ 1):\ Agregar\ Documentacion\ para\ generar\ con\ doxygen}}
+\DoxyCodeLine{00014\ }
+\DoxyCodeLine{00015\ \textcolor{comment}{//\ TODO\ \ (Nivel\ 2):\ Agregar\ control\ de\ concurrencia\ en\ todo\ el\ vector}}
+\DoxyCodeLine{00016\ }
+\DoxyCodeLine{00022\ \textcolor{keyword}{template}\ <\textcolor{keyword}{typename}\ Traits>}
+\DoxyCodeLine{00023\ \textcolor{keyword}{class\ }\mbox{\hyperlink{classCVector}{CVector}}\{}
+\DoxyCodeLine{00024\ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00025\ \ \ \ \ \textcolor{keyword}{using\ }value\_type\ =\ \textcolor{keyword}{typename}\ Traits::value\_type;}
+\DoxyCodeLine{00026\ }
+\DoxyCodeLine{00027\ \textcolor{keyword}{private}:}
+\DoxyCodeLine{00031\ \ \ \ \ value\_type\ \ \ \ \ \ *m\_pVect\ =\ \textcolor{keyword}{nullptr};}
+\DoxyCodeLine{00032\ }
+\DoxyCodeLine{00036\ \ \ \ \ \textcolor{keywordtype}{size\_t}\ \ m\_count\ =\ 0;\ \textcolor{comment}{//\ How\ many\ elements\ we\ have\ now?}}
+\DoxyCodeLine{00037\ }
+\DoxyCodeLine{00041\ \ \ \ \ \textcolor{keywordtype}{size\_t}\ \ m\_max\ \ \ =\ 0;\ \textcolor{comment}{//\ Max\ capacity}}
+\DoxyCodeLine{00042\ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00043\ \ \ \ \ \textcolor{comment}{//\ TODO\ \ (Nivel\ 1)\ Agregar\ un\ constructor\ por\ copia}}
+\DoxyCodeLine{00047\ \ \ \ \ \mbox{\hyperlink{classCVector_a212925e149bd8cd7cd447c1b4efbbfba}{CVector}}(\mbox{\hyperlink{classCVector}{CVector}}\ \&v);}
+\DoxyCodeLine{00048\ }
+\DoxyCodeLine{00053\ \ \ \ \ \mbox{\hyperlink{classCVector_a212925e149bd8cd7cd447c1b4efbbfba}{CVector}}(\textcolor{keywordtype}{size\_t}\ n);}
+\DoxyCodeLine{00054\ \ \ \ \ \textcolor{comment}{//\ TODO\ \ (Nivel\ 2):\ Agregar\ un\ move\ constructor}}
+\DoxyCodeLine{00055\ }
+\DoxyCodeLine{00061\ \ \ \ \ \mbox{\hyperlink{classCVector_ab113fac13fedaedc476a1d5901668ea9}{CVector}}(\mbox{\hyperlink{classCVector}{CVector}}\ \&\&v);}
+\DoxyCodeLine{00062\ }
+\DoxyCodeLine{00063\ \ \ \ \ \textcolor{comment}{//\ TODO:\ (Nivel\ 1)\ implementar\ el\ destructor\ de\ forma\ segura}}
+\DoxyCodeLine{00064\ }
+\DoxyCodeLine{00068\ \ \ \ \ \textcolor{keyword}{virtual}\ \mbox{\hyperlink{classCVector_a7bc8a00177ad80cc75e3491fa8b128f0}{\string~CVector}}();}
+\DoxyCodeLine{00069\ }
+\DoxyCodeLine{00074\ \ \ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{classCVector_a2aa24aa1a887210288807bbdce3cc343}{insert}}(value\_type\ \&elem);}
+\DoxyCodeLine{00075\ }
+\DoxyCodeLine{00081\ \ \ \ \ value\_type\&\ \ \ \mbox{\hyperlink{classCVector_adbf20043ee2534ecc5ffcc757fc6e7f6}{operator[]}}(\textcolor{keywordtype}{size\_t}\ index);}
+\DoxyCodeLine{00082\ }
+\DoxyCodeLine{00087\ \ \ \ \ \textcolor{keywordtype}{size\_t}\ \mbox{\hyperlink{classCVector_aefa112a5b6c6acab865f44adb6241410}{size}}()\textcolor{keyword}{\ const\ }\{\ \textcolor{keywordflow}{return}\ m\_count;\ \}}
+\DoxyCodeLine{00088\ \textcolor{keyword}{private}:}
+\DoxyCodeLine{00092\ \ \ \ \ \textcolor{keywordtype}{void}\ resize();}
+\DoxyCodeLine{00093\ }
+\DoxyCodeLine{00098\ \ \ \ \ \textcolor{keywordtype}{void}\ Init(\textcolor{keywordtype}{size\_t}\ n);}
+\DoxyCodeLine{00099\ }
+\DoxyCodeLine{00103\ \ \ \ \ \textcolor{keywordtype}{void}\ Destroy();}
+\DoxyCodeLine{00104\ \};}
+\DoxyCodeLine{00105\ }
+\DoxyCodeLine{00106\ \textcolor{keyword}{template}\ <\textcolor{keyword}{typename}\ Traits>}
+\DoxyCodeLine{00107\ \mbox{\hyperlink{classCVector_a212925e149bd8cd7cd447c1b4efbbfba}{CVector<Traits>::CVector}}(\textcolor{keywordtype}{size\_t}\ n)\{}
+\DoxyCodeLine{00108\ \ \ \ \ Init(n);}
+\DoxyCodeLine{00109\ \}}
+\DoxyCodeLine{00110\ }
+\DoxyCodeLine{00111\ \textcolor{keyword}{template}\ <\textcolor{keyword}{typename}\ Traits>}
+\DoxyCodeLine{00112\ \mbox{\hyperlink{classCVector_a212925e149bd8cd7cd447c1b4efbbfba}{CVector<Traits>::CVector}}(\mbox{\hyperlink{classCVector}{CVector}}\ \&v)\ }
+\DoxyCodeLine{00113\ \ \ \ \ \ \ \ \ \ \ :\ m\_max(v.m\_max),\ }
+\DoxyCodeLine{00114\ \ \ \ \ \ \ \ \ \ \ \ \ m\_count(v.m\_count)\ \{}
+\DoxyCodeLine{00115\ \ \ \ \ \textcolor{keywordflow}{if}\ (m\_max\ >\ 0)}
+\DoxyCodeLine{00116\ \ \ \ \ \ \ \ \ m\_pVect\ =\ \textcolor{keyword}{new}\ value\_type[m\_max];}
+\DoxyCodeLine{00117\ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keywordtype}{size\_t}\ i\ =\ 0;\ i\ <\ m\_count;\ ++i)}
+\DoxyCodeLine{00118\ \ \ \ \ \ \ \ \ m\_pVect[i]\ =\ v[i];\ \ \ \ \ \ \ }
+\DoxyCodeLine{00119\ \}}
+\DoxyCodeLine{00120\ }
+\DoxyCodeLine{00121\ \textcolor{comment}{//\ TODO\ (Nivel\ 1):\ hacer\ dinamico\ el\ delta\ de\ crecimiento}}
+\DoxyCodeLine{00122\ \textcolor{keyword}{template}\ <\textcolor{keyword}{typename}\ Traits>}
+\DoxyCodeLine{00123\ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{classCVector}{CVector<Traits>::resize}}()\{}
+\DoxyCodeLine{00124\ \ \ \ \ value\_type\ *pTmp\ =\ \textcolor{keyword}{new}\ value\_type[m\_max+10];}
+\DoxyCodeLine{00125\ \ \ \ \ \textcolor{keywordflow}{for}(\textcolor{keyword}{auto}\ i=0;\ i\ <\ m\_max\ ;\ ++i)}
+\DoxyCodeLine{00126\ \ \ \ \ \ \ \ \ pTmp[i]\ =\ m\_pVect[i];}
+\DoxyCodeLine{00127\ \ \ \ \ \textcolor{keyword}{delete}\ []\ m\_pVect;}
+\DoxyCodeLine{00128\ \ \ \ \ m\_max\ +=\ 10;}
+\DoxyCodeLine{00129\ \ \ \ \ m\_pVect\ =\ pTmp;}
+\DoxyCodeLine{00130\ \}}
+\DoxyCodeLine{00131\ }
+\DoxyCodeLine{00132\ \textcolor{keyword}{template}\ <\textcolor{keyword}{typename}\ Traits>}
+\DoxyCodeLine{00133\ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{classCVector}{CVector<Traits>::Init}}(\textcolor{keywordtype}{size\_t}\ n)\{}
+\DoxyCodeLine{00134\ \ \ \ \ Destroy();}
+\DoxyCodeLine{00135\ \ \ \ \ resize();}
+\DoxyCodeLine{00136\ \}}
+\DoxyCodeLine{00137\ }
+\DoxyCodeLine{00138\ \textcolor{keyword}{template}\ <\textcolor{keyword}{typename}\ Traits>}
+\DoxyCodeLine{00139\ \mbox{\hyperlink{classCVector_a7bc8a00177ad80cc75e3491fa8b128f0}{CVector<Traits>::\string~CVector}}()\{}
+\DoxyCodeLine{00140\ \ \ \ \ Destroy();}
+\DoxyCodeLine{00141\ \}}
+\DoxyCodeLine{00142\ }
+\DoxyCodeLine{00143\ \textcolor{keyword}{template}\ <\textcolor{keyword}{typename}\ Traits>}
+\DoxyCodeLine{00144\ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{classCVector}{CVector<Traits>::Destroy}}()\{}
+\DoxyCodeLine{00145\ \ \ \ \ m\_count\ =\ 0;\ }
+\DoxyCodeLine{00146\ \ \ \ \ m\_max\ \ \ =\ 0;}
+\DoxyCodeLine{00147\ \ \ \ \ \textcolor{keyword}{delete}\ []\ m\_pVect;}
+\DoxyCodeLine{00148\ \ \ \ \ m\_pVect\ =\ \textcolor{keyword}{nullptr};}
+\DoxyCodeLine{00149\ \}}
+\DoxyCodeLine{00150\ }
+\DoxyCodeLine{00151\ \textcolor{comment}{//\ TODO\ (ya\ está\ hecha):\ la\ funcion\ insert\ debe\ permitir\ que\ el\ vector\ crezca\ si\ ha\ desbordado}}
+\DoxyCodeLine{00152\ \textcolor{keyword}{template}\ <\textcolor{keyword}{typename}\ Traits>}
+\DoxyCodeLine{00153\ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{classCVector_a2aa24aa1a887210288807bbdce3cc343}{CVector<Traits>::insert}}(value\_type\ \&elem)\{}
+\DoxyCodeLine{00154\ \ \ \ \ \textcolor{keywordflow}{if}(m\_count\ ==\ m\_max)}
+\DoxyCodeLine{00155\ \ \ \ \ \ \ \ \ resize();}
+\DoxyCodeLine{00156\ \ \ \ \ m\_pVect[m\_count++]\ =\ elem;}
+\DoxyCodeLine{00157\ \}}
+\DoxyCodeLine{00158\ }
+\DoxyCodeLine{00159\ \textcolor{keyword}{template}\ <\textcolor{keyword}{typename}\ Traits>}
+\DoxyCodeLine{00160\ \textcolor{keyword}{typename}\ CVector<Traits>::value\_type\&\ \mbox{\hyperlink{classCVector_adbf20043ee2534ecc5ffcc757fc6e7f6}{CVector<Traits>::operator[]}}(\textcolor{keywordtype}{size\_t}\ index)\ \{}
+\DoxyCodeLine{00161\ \ \ \ \ \textcolor{keywordflow}{if}\ (index\ >=\ m\_count)\ \{}
+\DoxyCodeLine{00162\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{throw}\ std::out\_of\_range(\textcolor{stringliteral}{"{}Index\ out\ of\ range"{}});}
+\DoxyCodeLine{00163\ \ \ \ \ \}}
+\DoxyCodeLine{00164\ \ \ \ \ \textcolor{keywordflow}{return}\ m\_pVect[index];}
+\DoxyCodeLine{00165\ \}}
+\DoxyCodeLine{00166\ }
+\DoxyCodeLine{00167\ \textcolor{keyword}{template}\ <\textcolor{keyword}{typename}\ Traits>}
+\DoxyCodeLine{00168\ std::ostream\&\ operator<<(std::ostream\&\ os,\ \mbox{\hyperlink{classCVector}{CVector<Traits>}}\&\ vec)\ \{}
+\DoxyCodeLine{00169\ \ \ \ \ \textcolor{comment}{//\ os\ <<\ "{}["{};}}
+\DoxyCodeLine{00170\ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keywordtype}{size\_t}\ i\ =\ 0;\ i\ <\ vec.\mbox{\hyperlink{classCVector_aefa112a5b6c6acab865f44adb6241410}{size}}();\ ++i)}
+\DoxyCodeLine{00171\ \ \ \ \ \ \ \ \ os\ <<\ vec[i]\ <<\ \textcolor{stringliteral}{"{}\ "{}};}
+\DoxyCodeLine{00172\ \ \ \ \ \textcolor{comment}{//\ os\ <<\ "{}]"{};}}
+\DoxyCodeLine{00173\ \ \ \ \ \textcolor{keywordflow}{return}\ os;}
+\DoxyCodeLine{00174\ \}}
+\DoxyCodeLine{00175\ }
+\DoxyCodeLine{00176\ \textcolor{preprocessor}{\#endif\ }\textcolor{comment}{//\ \_\_VECTOR\_H\_\_}}
+\DoxyCodeLine{00177\ }
+
+\end{DoxyCode}

@@ -5,6 +5,21 @@
 #include <assert.h>
 #include <functional>
 
+/**
+ * @file CBTreePage.h
+ * @brief Declaración de la clase `CBTreePage` y funciones auxiliares relacionadas con la implementación de un árbol B.
+ *
+ * Este archivo contiene la declaración de una clase que representa una página dentro de un árbol B,
+ * así como funciones adicionales para manipular objetos de la estructura de datos.
+ * Las funciones auxiliares y los TODOs indican áreas de mejora o funcionalidades pendientes de implementación.
+ *
+ * @todo #1 Crear una función para agregarla al demo.cpp.
+ * @todo #2 Agregar un trait a la clase.
+ * @todo #3 Crear un iterador para recorrer las páginas del árbol.
+ * @todo #4 Integrar la función de recorrido al árbol B.
+ */
+
+
 // TODO: #1 Crear una function para agregarla al demo.cpp ( no trivial )
 // TODO: #2 Agregarle un Trait (prueba git) ( no trivial )
 // TODO: #3 crear un iterator ( no trivial )
@@ -16,7 +31,42 @@ template <typename Trait>
 class BTree;
 
 using namespace std;
+
+/**
+ * @enum bt_ErrorCode
+ * @brief Códigos de error utilizados en las operaciones del árbol B.
+ *
+ * Esta enumeración define los posibles resultados de las operaciones del árbol B,
+ * tales como inserciones, eliminaciones, y búsquedas. Cada código indica un tipo específico
+ * de error o el estado de éxito de la operación.
+ */
+
 enum bt_ErrorCode {bt_ok, bt_overflow, bt_underflow, bt_duplicate, bt_nofound, bt_rootmerged};
+
+
+/**
+ * @brief Realiza una búsqueda binaria en un contenedor.
+ * 
+ * Esta función realiza una búsqueda binaria en un contenedor para encontrar la posición en la que 
+ * un objeto debería insertarse o para comprobar su existencia. La búsqueda binaria es eficiente 
+ * y se realiza sobre un contenedor ordenado.
+ * 
+ * @tparam Container El tipo de contenedor sobre el que se realiza la búsqueda.
+ * @tparam ObjType El tipo de los objetos que se almacenan en el contenedor.
+ * @tparam Functor El tipo de la función de comparación que se usa para comparar objetos.
+ * 
+ * @param container El contenedor sobre el cual se realiza la búsqueda.
+ * @param first El índice inicial del contenedor donde comienza la búsqueda.
+ * @param last El índice final del contenedor donde termina la búsqueda.
+ * @param object El objeto que se busca o se desea insertar.
+ * @param compare La función de comparación que se utiliza para ordenar los elementos del contenedor. 
+ *                Por defecto, se utiliza `std::less<ObjType>`.
+ * 
+ * @return El índice en el que se encuentra el objeto o el índice donde debería insertarse.
+ * 
+ * @note Esta implementación de búsqueda binaria es genérica y se puede utilizar con cualquier tipo de
+ *       contenedor que permita el acceso mediante índices, como un `std::vector`.
+ */
 
 template <typename Container, typename ObjType, typename Functor = std::less<ObjType> >
 size_t binary_search(Container& container, size_t first, size_t last, ObjType &object, Functor compare)
@@ -48,6 +98,8 @@ size_t binary_search(Container& container, size_t first, size_t last, ObjType &o
           return last;
 }
 
+
+
 // Error al poner size_t
 // Posible motivo: El i está disminuyendo
 template <typename Container, typename ObjType>
@@ -60,6 +112,19 @@ void insert_at(Container& container, ObjType object, int pos)
        container[pos] =  object;
 }
 
+
+/**
+ * @brief Elimina un objeto en una posición específica dentro de un contenedor.
+ * 
+ * Este método mueve todos los elementos después de la posición especificada una posición a la izquierda
+ * para cubrir el espacio dejado por el objeto eliminado. 
+ * 
+ * @tparam Container El tipo del contenedor en el que se realiza la eliminación (por ejemplo, `std::vector`).
+ * 
+ * @param container El contenedor del cual se eliminará el objeto.
+ * @param pos La posición del objeto a eliminar dentro del contenedor.
+ */
+
 template <typename Container>
 void remove(Container& container, size_t pos)
 {
@@ -68,21 +133,74 @@ void remove(Container& container, size_t pos)
            container[i-1] = container[i];
 }
 
+/**
+ * @struct tagObjectInfo
+ * @brief Estructura que contiene la información de un objeto en el árbol B.
+ * 
+ * Esta estructura almacena información relacionada con las claves de los objetos y su identificación
+ * dentro del árbol B. Además, incluye un contador de uso para realizar un seguimiento de la cantidad de
+ * veces que un objeto ha sido accedido o utilizado.
+ * 
+ * @tparam keyType El tipo de clave asociado con el objeto.
+ * @tparam ObjIDType El tipo de identificación asociado con el objeto.
+ */
 template <typename keyType, typename ObjIDType>
 struct tagObjectInfo
 {
-       keyType                 key;
-       ObjIDType               ObjID;
-       size_t                    UseCounter;
-       tagObjectInfo(const keyType     &_key, ObjIDType _ObjID)
-               : key(_key), ObjID(_ObjID), UseCounter(0) {}
-       tagObjectInfo(const tagObjectInfo &objInfo)
-               : key(objInfo.key), ObjID(objInfo.ObjID), UseCounter(0) {}
-       tagObjectInfo()                          {}
-       operator keyType                         ()     { return key; }
-       size_t                    GetUseCounter() { return UseCounter;    }
+    keyType key;             ///< La clave asociada con el objeto.
+    ObjIDType ObjID;         ///< El identificador único del objeto.
+    size_t UseCounter;       ///< El contador de uso del objeto.
+    
+    /**
+     * @brief Constructor que inicializa la clave y el identificador del objeto.
+     * 
+     * @param _key La clave del objeto.
+     * @param _ObjID El identificador único del objeto.
+     */
+    tagObjectInfo(const keyType &_key, ObjIDType _ObjID)
+        : key(_key), ObjID(_ObjID), UseCounter(0) {}
+    
+    /**
+     * @brief Constructor de copia para crear un nuevo objeto a partir de otro.
+     * 
+     * @param objInfo El objeto a copiar.
+     */
+    tagObjectInfo(const tagObjectInfo &objInfo)
+        : key(objInfo.key), ObjID(objInfo.ObjID), UseCounter(0) {}
+
+    /**
+     * @brief Constructor por defecto.
+     */
+    tagObjectInfo() {}
+
+    /**
+     * @brief Conversión implícita a tipo `keyType`.
+     * 
+     * Permite usar un objeto `tagObjectInfo` como una clave en otras estructuras de datos.
+     * 
+     * @return La clave del objeto.
+     */
+    operator keyType() { return key; }
+
+    /**
+     * @brief Obtiene el contador de uso del objeto.
+     * 
+     * @return El contador de uso.
+     */
+    size_t GetUseCounter() { return UseCounter; }
 };
 
+
+/**
+ * @class CBTreePage
+ * @brief Representa una página dentro de un árbol B en memoria.
+ * 
+ * La clase `CBTreePage` es una implementación en memoria de una página del árbol B. Cada página contiene un conjunto
+ * de claves y referencias a otras páginas (subpáginas). Esta clase es responsable de manejar la inserción, eliminación,
+ * búsqueda, y otras operaciones dentro de una página del árbol B.
+ * 
+ * @tparam Trait El tipo de traits que define las propiedades del árbol B, como el tipo de clave y el tipo de comparación.
+ */
 template <typename Trait>
 class CBTreePage //: public SimpleIndex <keyType>
 // this is the in-memory version of the CBTreePage
@@ -205,6 +323,19 @@ private:
        void MovePage(BTPage *  pChildPage,vector<ObjectInfo> & tmpKeys,vector<BTPage *> & tmpSubPages);
 };
 
+/**
+ * @brief Constructor para crear una página del árbol B.
+ * 
+ * Este constructor inicializa una nueva página en el árbol B con un número máximo de claves (`maxKeys`) y la opción
+ * de hacer las claves únicas (`unique`). El número de claves es inicializado a cero. Luego, se llaman a los métodos `Create()`
+ * y `SetMaxKeysForChilds()` para completar la configuración de la página.
+ * 
+ * @tparam Trait El tipo de los traits que define las propiedades del árbol B.
+ * 
+ * @param maxKeys El número máximo de claves que esta página puede contener.
+ * @param unique Indica si las claves deben ser únicas en esta página (por defecto es `true`).
+ */
+
 template <typename Trait>
 CBTreePage<Trait>:: CBTreePage(size_t maxKeys, bool unique)
                                : m_MaxKeys(maxKeys), m_Unique(unique), m_KeyCount(0)
@@ -213,13 +344,32 @@ CBTreePage<Trait>:: CBTreePage(size_t maxKeys, bool unique)
        SetMaxKeysForChilds(m_MaxKeys);
 }
 
+/**
+ * @brief Destructor de la clase `CBTreePage`.
+ * 
+ * El destructor de la página del árbol B llama al método `Reset()` para liberar los recursos asociados a esta página.
+ */
+
 template <typename Trait>
 CBTreePage<Trait>::~CBTreePage()
 {
        Reset();
 }
 
+
 //move constructor
+/**
+ * @brief Constructor de movimiento para transferir los recursos de otra página al nuevo objeto.
+ * 
+ * Este constructor toma una página existente (pasada como `other`) y transfiere sus recursos (como claves, subpáginas y configuraciones)
+ * al nuevo objeto. Después de la transferencia, los atributos de `other` se restablecen a sus valores predeterminados.
+ * 
+ * @tparam Trait El tipo de los traits que define las propiedades del árbol B.
+ * 
+ * @param other La página de la cual se moverán los recursos al nuevo objeto.
+ * 
+ * @note Este constructor permite la transferencia eficiente de recursos, evitando copias innecesarias.
+ */
 template <typename Trait>
 CBTreePage<Trait>::CBTreePage(CBTreePage &&other){
         // std::cout << "CBTreePage MOVE CONSTRUCTOR debug\n";
@@ -239,6 +389,22 @@ CBTreePage<Trait>::CBTreePage(CBTreePage &&other){
 }
 
 //move assignment operator
+/**
+ * @brief Operador de asignación por movimiento para transferir los recursos de otra página al objeto actual.
+ * 
+ * Este operador permite asignar una página existente (pasada como `other`) al objeto actual, moviendo sus recursos
+ * (como claves, subpáginas y configuraciones) en lugar de copiarlos. Después de la transferencia, los atributos de `other`
+ * se restablecen a sus valores predeterminados. Este método es eficiente y evita la duplicación innecesaria de recursos.
+ * 
+ * @tparam Trait El tipo de los traits que define las propiedades del árbol B.
+ * 
+ * @param other La página de la cual se moverán los recursos al objeto actual.
+ * 
+ * @return Una referencia al objeto actual (`*this`) después de la asignación.
+ * 
+ * @note Si el objeto actual es el mismo que `other`, no se realiza ninguna operación.
+ */
+
 template <typename Trait>
 CBTreePage<Trait>& CBTreePage<Trait>::operator=(CBTreePage &&other){
         // std::cout << "CBTreePage MOVE ASSIGNMENT OPERATOR debug\n";
@@ -260,6 +426,26 @@ CBTreePage<Trait>& CBTreePage<Trait>::operator=(CBTreePage &&other){
         return *this;
 }
 
+
+/**
+ * @brief Inserta una clave y su identificador de objeto en la página del árbol B.
+ * 
+ * Este método realiza la inserción de una clave en la página del árbol B. Si la clave ya existe y no se permiten claves duplicadas, el método retorna un error de tipo `bt_duplicate`. Si la página es una hoja, la clave se inserta directamente; si no, la inserción se realiza de manera recursiva en las subpáginas correspondientes.
+ * 
+ * Si se produce un desbordamiento en la página (es decir, el número de claves excede el máximo permitido), se intenta redistribuir los elementos con los hermanos adyacentes, o bien se divide la página en dos. Si el desbordamiento persiste, se propaga hacia arriba.
+ * 
+ * @tparam Trait El tipo de los traits que define las propiedades del árbol B.
+ * 
+ * @param key La clave que se desea insertar.
+ * @param ObjID El identificador del objeto asociado a la clave.
+ * 
+ * @return Un código de error `bt_ErrorCode`, que puede ser:
+ * - `bt_ok`: Inserción exitosa.
+ * - `bt_duplicate`: La clave ya existe en la página y no se permiten duplicados.
+ * - `bt_overflow`: La página ha desbordado.
+ * 
+ * @note Este método maneja la inserción tanto en páginas hoja como en subpáginas, y gestiona los desbordamientos mediante redistribución o división de páginas.
+ */
 template <typename Trait>
 bt_ErrorCode CBTreePage<Trait>::Insert(const keyType& key, const ObjIDType ObjID){
        size_t pos = binary_search(m_Keys, 0, m_KeyCount, key, m_Compare);
@@ -293,6 +479,29 @@ bt_ErrorCode CBTreePage<Trait>::Insert(const keyType& key, const ObjIDType ObjID
        return bt_ok;
 }
 
+
+/**
+ * @brief Redistribuye las claves de un nodo B-Tree con uno de sus hermanos.
+ * 
+ * Este método maneja tanto los casos de subfluyo (cuando un nodo tiene menos claves de las necesarias) como
+ * los casos de desbordamiento (cuando un nodo tiene más claves de las que puede manejar). Dependiendo de la situación, 
+ * se redistribuirán las claves con el hermano izquierdo o derecho del nodo, o se realizará una fusión si no es posible 
+ * la redistribución.
+ * 
+ * @param pos La posición del nodo en el arreglo de subpáginas. Se pasa como referencia ya que puede modificarse 
+ *            durante el proceso de redistribución.
+ * 
+ * @return `true` si la redistribución fue exitosa; de lo contrario, `false` si no es posible realizar la 
+ *         redistribución debido a la falta de espacio o las condiciones del árbol.
+ * 
+ * @details Este método primero verifica si el nodo en la posición indicada está en un estado de "subfluyo" (es decir, 
+ *          tiene menos claves de las necesarias). Si es así, el algoritmo intenta redistribuir las claves con el hermano 
+ *          izquierdo o derecho. Si el nodo está en estado de "desbordamiento", se intentará hacer espacio en el nodo 
+ *          redistribuyendo claves con sus hermanos.
+ * 
+ * @note Este método es crítico para mantener el equilibrio del árbol B al garantizar que los nodos no se desborden o 
+ *       queden en un estado subfluyente sin ser manejados adecuadamente.
+ */
 template <typename Trait>
 bool CBTreePage<Trait>::RedistributeWith1Brother(size_t &pos)
 {
@@ -343,6 +552,36 @@ bool CBTreePage<Trait>::RedistributeWith1Brother(size_t &pos)
    it considers two brothers m_SubPages[pos-1] && m_SubPages[pos+1]
    if it fails the only way is merge !
 **/
+
+
+/**
+ * @brief Redistribuye las claves entre tres nodos hermanos en un árbol B cuando dos de ellos están en subfluyo.
+ * 
+ * Este método maneja una situación en la que el nodo actual y al menos uno de sus hermanos (izquierdo o derecho) 
+ * están en estado de subfluyo, es decir, contienen menos claves de las necesarias para cumplir con las condiciones 
+ * del árbol B. El método redistribuye las claves entre los tres nodos (el nodo actual y sus dos hermanos) para 
+ * equilibrar la cantidad de claves.
+ * 
+ * @param pos La posición del nodo en el arreglo de subpáginas, que se pasa como referencia. El nodo actual está 
+ *            en la posición `pos`, con un hermano a la izquierda (`pos-1`) y uno a la derecha (`pos+1`).
+ * 
+ * @return `true` si la redistribución se ha realizado correctamente. Si no es posible realizar la redistribución 
+ *         debido a que el estado de subfluyo persiste en alguno de los nodos, se retorna `false`.
+ * 
+ * @details Este método intenta redistribuir las claves de los nodos vecinos de la siguiente manera:
+ * 
+ * - Si el hermano izquierdo está en subfluyo, las claves se redistribuyen hacia el nodo actual y el hermano izquierdo 
+ *   mediante una rotación de derecha a izquierda (`R2L`).
+ * 
+ * - Si el hermano derecho está en subfluyo, las claves se redistribuyen hacia el nodo actual y el hermano derecho 
+ *   mediante una rotación de izquierda a derecha (`L2R`).
+ * 
+ * - Si ambos hermanos están en subfluyo, se realiza primero una rotación de izquierda a derecha en el hermano izquierdo, 
+ *   seguida de una rotación de derecha a izquierda en el hermano derecho.
+ * 
+ * @note Este método es fundamental para mantener el equilibrio del árbol B y garantizar que los nodos no se 
+ *       queden en un estado de subfluyo durante las operaciones de inserción y eliminación de claves.
+ */
 template <typename Trait>
 bool CBTreePage<Trait>::RedistributeWith2Brothers(size_t pos)
 {
@@ -377,6 +616,25 @@ bool CBTreePage<Trait>::RedistributeWith2Brothers(size_t pos)
        return true;
 }
 
+/**
+ * @brief Redistribuye claves y subpáginas de derecha a izquierda entre dos nodos hijos.
+ * 
+ * Este método toma claves y punteros desde el nodo hijo en la posición `pos` (nodo derecho) y los 
+ * inserta en su hermano izquierdo (`pos-1`). La clave correspondiente en el nodo padre también 
+ * se ajusta para mantener las propiedades del árbol B.
+ * 
+ * @param pos Posición del nodo hijo derecho en el vector `m_SubPages`. El hermano izquierdo está en `pos-1`.
+ * 
+ * @details La redistribución ocurre mientras el nodo derecho (source) tenga más claves que su mínimo permitido 
+ *          (`MinNumberOfKeys`) y el nodo izquierdo (target) tenga menos claves que el nodo derecho. En cada iteración:
+ *          - Se mueve la clave del nodo padre `m_Keys[pos-1]` al final del nodo izquierdo.
+ *          - Se mueve el primer puntero del nodo derecho al nodo izquierdo.
+ *          - La primera clave del nodo derecho se mueve al nodo padre (`m_Keys[pos-1]`).
+ *          - Se elimina la primera clave y puntero del nodo derecho y se decrementa su contador de claves.
+ * 
+ * @note Este método es útil para resolver underflow (subfluyo) en árboles B sin necesidad de hacer split o merge, 
+ *       redistribuyendo claves entre hermanos adyacentes.
+ */
 template <typename Trait>
 void CBTreePage<Trait>::RedistributeR2L(size_t pos)
 {
@@ -401,6 +659,26 @@ void CBTreePage<Trait>::RedistributeR2L(size_t pos)
        }
 }
 
+
+/**
+ * @brief Redistribuye claves y subpáginas de izquierda a derecha entre dos nodos hijos.
+ * 
+ * Este método toma claves y punteros desde el nodo hijo en la posición `pos` (nodo izquierdo) 
+ * y los inserta en su hermano derecho (`pos+1`). La clave correspondiente en el nodo padre también 
+ * se ajusta para mantener las propiedades del árbol B.
+ * 
+ * @param pos Posición del nodo hijo izquierdo en el vector `m_SubPages`. El hermano derecho está en `pos+1`.
+ * 
+ * @details La redistribución ocurre mientras el nodo izquierdo (source) tenga más claves que su mínimo permitido 
+ *          (`MinNumberOfKeys`) y el nodo derecho (target) tenga menos claves que el nodo izquierdo. En cada iteración:
+ *          - Se mueve la clave del nodo padre `m_Keys[pos]` al principio del nodo derecho.
+ *          - Se mueve el último puntero del nodo izquierdo al principio del nodo derecho.
+ *          - La última clave del nodo izquierdo se mueve al nodo padre (`m_Keys[pos]`).
+ *          - Se elimina la última clave del nodo izquierdo y se decrementa su contador de claves.
+ * 
+ * @note Este método es útil para resolver underflow (subfluyo) en árboles B sin necesidad de hacer split o merge, 
+ *       redistribuyendo claves entre hermanos adyacentes.
+ */
 template <typename Trait>
 void CBTreePage<Trait>::RedistributeL2R(size_t pos)
 {
@@ -424,6 +702,26 @@ void CBTreePage<Trait>::RedistributeL2R(size_t pos)
        }
 }
 
+
+/**
+ * @brief Divide un nodo hijo lleno en tres nodos.
+ * 
+ * Este método maneja la división de un nodo hijo que se encuentra lleno. La división implica tomar dos nodos hijos,
+ * combinarlos temporalmente, y luego dividirlos en tres nodos distintos. El nodo padre se actualiza con las claves 
+ * correspondientes, y los nodos hijos se reorganizan.
+ * 
+ * @param pos Posición del nodo hijo en el vector `m_SubPages`. El nodo hijo en `pos` se divide, y el nodo 
+ *            adyacente izquierdo o derecho también se involucra en la división si está lleno.
+ * 
+ * @details El proceso de división consta de los siguientes pasos:
+ * 1. Se identifican los nodos hijos a dividir (izquierdo y derecho) según su posición en el vector `m_SubPages`.
+ * 2. Se crea un vector temporal para almacenar las claves y los punteros de los nodos hijos.
+ * 3. Las claves y los punteros de los nodos hijos izquierdo y derecho se copian al vector temporal.
+ * 4. El nodo padre se actualiza con dos nuevas claves (una de cada nodo hijo).
+ * 5. Los nodos hijos resultantes se reorganizan y se asignan a las posiciones correspondientes.
+ * 
+ * @note Este método se llama cuando un nodo hijo se llena y necesita ser dividido para mantener las propiedades del árbol B.
+ */
 template <typename Trait>
 void CBTreePage<Trait>::SplitChild(size_t pos)
 {
@@ -475,6 +773,31 @@ void CBTreePage<Trait>::SplitChild(size_t pos)
 }
 
 // Ddivide a large page into 3 pages (2m/3 each one)
+
+/**
+ * @brief Divide un conjunto de claves y subpáginas en tres nodos hijos.
+ * 
+ * Este método toma las claves y subpáginas de un nodo que se está dividiendo y las distribuye en tres nuevos nodos hijos. 
+ * Los dos primeros nodos obtienen aproximadamente un tercio de las claves y subpáginas cada uno, mientras que el tercer nodo 
+ * recibe el resto. Los elementos intermedios se "suben" al nodo padre.
+ * 
+ * @param tmpKeys Referencia a un vector que contiene las claves que se van a dividir entre los tres nodos hijos.
+ * @param tmpSubPages Referencia a un vector que contiene los punteros a las subpáginas (hijos) que se van a dividir.
+ * @param pChild1 Puntero a un puntero de un `BTPage`, donde se almacenará el primer nodo hijo creado.
+ * @param pChild2 Puntero a un puntero de un `BTPage`, donde se almacenará el segundo nodo hijo creado.
+ * @param pChild3 Puntero a un puntero de un `BTPage`, donde se almacenará el tercer nodo hijo creado.
+ * @param oi1 Clave que se "sube" al nodo padre desde el primer conjunto de claves.
+ * @param oi2 Clave que se "sube" al nodo padre desde el segundo conjunto de claves.
+ * 
+ * @details Este método distribuye las claves y subpáginas de la siguiente manera:
+ * 1. Se calcula el número de claves que deben ir al primer nodo hijo (`pChild1`), que contiene aproximadamente un tercio de las claves.
+ * 2. Se mueve un conjunto de claves al segundo nodo hijo (`pChild2`), que recibe otro tercio de las claves.
+ * 3. El resto de las claves se asigna al tercer nodo hijo (`pChild3`).
+ * 4. Las dos claves intermedias se "suben" al nodo padre.
+ * 
+ * @note El proceso asegura que las claves y subpáginas se distribuyan equitativamente entre los tres nodos hijos, 
+ * cumpliendo con las restricciones de un árbol B.
+ */
 template <typename Trait>
 void CBTreePage<Trait>::SplitPageInto3(vector<ObjectInfo>& tmpKeys,
                                                 vector<BTPage *>  & tmpSubPages,
@@ -536,6 +859,23 @@ void CBTreePage<Trait>::SplitPageInto3(vector<ObjectInfo>& tmpKeys,
        pChild3->m_SubPages[j] = tmpSubPages[i];
 }
 
+/**
+ * @brief Divide la raíz de un árbol B en tres nodos hijos.
+ * 
+ * Este método maneja la división de la raíz del árbol B cuando se encuentra llena. La división implica tomar las claves
+ * y subpáginas de la raíz, y distribuirlas en tres nuevos nodos hijos. Las dos claves intermedias se "suben" a la nueva raíz.
+ * 
+ * @return `true` si la división de la raíz se ha realizado correctamente.
+ * 
+ * @details El proceso de división consta de los siguientes pasos:
+ * 1. Se crean tres nuevos nodos hijos (`pChild1`, `pChild2`, `pChild3`).
+ * 2. Se llama al método `SplitPageInto3()` para distribuir las claves y subpáginas de la raíz entre los tres nodos hijos.
+ * 3. La raíz se actualiza con las dos claves intermedias que se "suben" desde los nodos hijos.
+ * 4. Los nodos hijos se asignan a las posiciones correspondientes en el vector de subpáginas de la raíz.
+ * 
+ * @note Este método es crucial para mantener las propiedades del árbol B cuando la raíz se llena, asegurando que el árbol
+ *       permanezca equilibrado y eficiente para las operaciones de búsqueda e inserción.
+ */
 template <typename Trait>
 bool CBTreePage<Trait>::SplitRoot(){
        BTPage  *pChild1 = 0, *pChild2 = 0, *pChild3 = 0;
@@ -557,6 +897,23 @@ bool CBTreePage<Trait>::SplitRoot(){
        return true;
 }
 
+
+/**
+ * @brief Busca una clave en la página del árbol B y obtiene su identificador de objeto.
+ * 
+ * Este método realiza una búsqueda binaria para localizar una clave específica en la página del árbol B. 
+ * Si la clave se encuentra, se devuelve el identificador de objeto asociado. Si la clave no está presente 
+ * en la página actual, la búsqueda se realiza recursivamente en las subpáginas correspondientes.
+ * 
+ * @tparam Trait El tipo de los traits que define las propiedades del árbol B.
+ * 
+ * @param key La clave que se desea buscar.
+ * @param ObjID Referencia donde se almacenará el identificador del objeto si la clave es encontrada.
+ * 
+ * @return `true` si la clave fue encontrada y `ObjID` fue actualizado; `false` si la clave no está presente.
+ * 
+ * @note Este método utiliza una comparación personalizada definida por `m_Compare` para determinar el orden de las claves.
+ */
 template <typename Trait>
 bool CBTreePage<Trait>::Search(const keyType &key, ObjIDType &ObjID)
 {
@@ -608,6 +965,23 @@ void CBTreePage<keyType, ObjIDType>::ForEachReverse(lpfnForEach2 lpfn, size_t le
 //                m_SubPages[m_KeyCount]->ForEach(lpfn, level+1, pExtra1);
 // }
 
+
+//generalizamos el metodo for each
+/*brief Aplica una función a cada clave en la página del árbol B, recorriéndola en orden.
+ * 
+ * Este método recorre todas las claves almacenadas en la página del árbol B y aplica una función proporcionada a cada clave. 
+ * La función también recibe el nivel actual en el árbol como argumento, lo que permite realizar operaciones específicas según la profundidad.
+ * 
+ * @tparam Trait El tipo de los traits que define las propiedades del árbol B.
+ * @tparam Function El tipo de la función que se aplicará a cada clave. Debe ser invocable con dos argumentos: la clave y el nivel.
+ * 
+ * @param fn La función que se aplicará a cada clave. Debe aceptar dos parámetros: la clave y el nivel.
+ * @param level El nivel actual en el árbol B, utilizado para proporcionar contexto adicional a la función aplicada.
+ * 
+ * @details El método recorre las claves en orden ascendente. Para cada clave, primero se llama recursivamente a `ForEach` en la subpágina correspondiente (si existe), 
+ *          luego se aplica la función `fn` a la clave actual junto con el nivel, y finalmente se continúa con la siguiente clave. Al final, también se llama a `ForEach` 
+ *          en la última subpágina (si existe).
+ */
 template <typename Trait>
 template <typename Function>
 void CBTreePage<Trait>::ForEach(Function fn, size_t level){
@@ -688,7 +1062,33 @@ void CBTreePage<keyType, ObjIDType>::ForEachReverse(lpfnForEach3 lpfn,
 //                        return pTmp;
 //        return 0;
 // }
+
+
 //generalizamos tambien first that
+/**
+ * @brief Busca el primer objeto que cumple con una condición.
+ * 
+ * Este método recursivo busca en las claves de la página actual (y sus subpáginas) el primer objeto que cumpla con una 
+ * condición definida por una función. La búsqueda se realiza de forma descendente en las subpáginas y se detiene tan pronto 
+ * como se encuentra un objeto que cumple la condición.
+ * 
+ * @tparam Function Tipo de la función que define la condición de búsqueda. La función debe ser invocable con una clave y un 
+ * nivel como parámetros y debe devolver un valor booleano.
+ * 
+ * @param fn Función que define la condición de búsqueda. Esta función debe aceptar una clave y el nivel de profundidad actual 
+ * y debe devolver `true` si la clave cumple con la condición, o `false` en caso contrario.
+ * @param level Nivel actual de profundidad en el árbol. Se utiliza para la recursión en las subpáginas.
+ * 
+ * @return Puntero al primer objeto que cumple con la condición, o `nullptr` si no se encuentra ninguno.
+ * 
+ * @details Este método recursivo realiza una búsqueda en las claves del nodo actual. Para cada clave, invoca la función 
+ * `fn` con la clave y el nivel actual. Si la función devuelve `true`, devuelve un puntero al objeto correspondiente. Si la clave 
+ * no cumple con la condición, el método continúa buscando en las subpáginas del nodo, descendiendo recursivamente.
+ * Si no se encuentra ningún objeto que cumpla con la condición, el método devuelve `nullptr`.
+ * 
+ * @note Este método es útil para realizar búsquedas complejas en un árbol B donde la condición de búsqueda no puede ser 
+ * fácilmente representada mediante comparaciones simples.
+ */
 template <typename Trait>
 template <typename Function>
 typename CBTreePage<Trait>::ObjectInfo *
@@ -711,6 +1111,24 @@ CBTreePage<Trait>::FirstThat(Function fn, size_t level)
 
 
 //implementamos el metodo write
+/**
+ * @brief Escribe la página del árbol B en un flujo de salida.
+ * 
+ * Este método serializa la información contenida en la página del árbol B a un flujo de salida, como `std::ofstream` o `std::cout`. La serialización incluye:
+ * - La cantidad de claves en la página.
+ * - Las claves y sus respectivos `ObjID`.
+ * - Un marcador `ENDKEYS` que indica el final de las claves.
+ * - Las subpáginas de la página, indicadas por "1" (si existen) o "0" (si no existen).
+ * 
+ * Además, si existen subpáginas, el método las serializa recursivamente.
+ * 
+ * @param os Flujo de salida donde se serializará la página.
+ * @return El flujo de salida `os` para permitir encadenamiento de operaciones de salida.
+ * 
+ * @details La función escribe la cabecera con el número de claves en la página, luego escribe cada clave y su respectivo `ObjID`. Después, indica la existencia de las subpáginas y recursivamente escribe cada subpágina si es necesario.
+ * 
+ * @note Este método es útil para guardar el estado de una página del árbol B en un archivo o para depuración.
+ */
 template <typename Trait>
 std::ostream& CBTreePage<Trait>::Write(std::ostream& os) {
     // Cabecera
@@ -739,6 +1157,24 @@ std::ostream& CBTreePage<Trait>::Write(std::ostream& os) {
 }
 
 //implementamos el metodo read
+/**
+ * @brief Lee los datos de una página del árbol B desde un flujo de entrada.
+ * 
+ * Este método deserializa una página del árbol B desde un flujo de entrada, como `std::ifstream`. Los datos leídos incluyen:
+ * - La cantidad de claves en la página.
+ * - Las claves y sus respectivos `ObjID`.
+ * - El marcador `ENDKEYS` que indica el fin de las claves.
+ * - La existencia de las subpáginas.
+ * 
+ * Si existen subpáginas, las deserializa recursivamente.
+ * 
+ * @param is Flujo de entrada desde el cual se deserializará la página.
+ * @return El flujo de entrada `is` para permitir encadenamiento de operaciones de entrada.
+ * 
+ * @details La función comienza leyendo la cabecera y el número de claves. Luego, deserializa las claves y sus respectivos `ObjID`. Después, lee las subpáginas, creando nuevas páginas y deserializándolas recursivamente si es necesario.
+ * 
+ * @note Este método es útil para cargar una página previamente serializada desde un archivo o flujo de entrada.
+ */
 template <typename Trait>
 std::istream& CBTreePage<Trait>::Read(std::istream& is) {
     std::string tag;
@@ -773,6 +1209,17 @@ std::istream& CBTreePage<Trait>::Read(std::istream& is) {
 
 
 //operador <<
+/**
+ * @brief Sobrecarga del operador de salida `<<` para imprimir una página del árbol B.
+ * 
+ * Esta sobrecarga del operador `<<` permite imprimir una página del árbol B en un flujo de salida de manera conveniente. Internamente, se llama al método `Print` para realizar la impresión.
+ * 
+ * @param os Flujo de salida donde se imprimirá la página.
+ * @param page La página del árbol B a imprimir.
+ * @return El flujo de salida `os` para permitir encadenamiento de operaciones de salida.
+ * 
+ * @note Esta sobrecarga es útil para imprimir la página del árbol B en la consola o en otros flujos de salida para depuración o visualización.
+ */
 template <typename Trait>
 std::ostream& operator<<(std::ostream& os, CBTreePage<Trait>& page) {
     page.Print(os);

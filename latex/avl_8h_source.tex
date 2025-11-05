@@ -1,0 +1,61 @@
+\doxysection{avl.\+h}
+\hypertarget{avl_8h_source}{}\label{avl_8h_source}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001\ \textcolor{preprocessor}{\#ifndef\ \_\_AVL\_H\_\_}}
+\DoxyCodeLine{00002\ \textcolor{preprocessor}{\#define\ \_\_AVL\_H\_\_}}
+\DoxyCodeLine{00003\ }
+\DoxyCodeLine{00004\ \textcolor{preprocessor}{\#include\ "{}binarytree.h"{}}}
+\DoxyCodeLine{00005\ }
+\DoxyCodeLine{00006\ \textcolor{keyword}{template}\ <\textcolor{keyword}{typename}\ Traits>}
+\DoxyCodeLine{00007\ \textcolor{keyword}{class\ }\mbox{\hyperlink{classCAVLNode}{CAVLNode}}\ :\ \textcolor{keyword}{public}\ \mbox{\hyperlink{classCBinaryTreeNode}{CBinaryTreeNode}}<value\_type>\{}
+\DoxyCodeLine{00008\ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00009\ \ \ \textcolor{keyword}{using\ }value\_type\ =\ \textcolor{keyword}{typename}\ Traits::T;}
+\DoxyCodeLine{00010\ \ \ \textcolor{keyword}{using\ }\mbox{\hyperlink{classCBinaryTreeNode}{Node}}\ \ \ \ \ \ \ =\ \mbox{\hyperlink{classCBinaryTreeNode}{CBinaryTreeNode<value\_type>}};}
+\DoxyCodeLine{00011\ \textcolor{keyword}{protected}:}
+\DoxyCodeLine{00012\ \ \ \ \ \textcolor{keywordtype}{int}\ \ \ \ \ m\_balanceFactor\ =\ 0;\ \textcolor{comment}{//\ Balance\ factor\ for\ AVL\ tree}}
+\DoxyCodeLine{00013\ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00014\ \};}
+\DoxyCodeLine{00015\ }
+\DoxyCodeLine{00016\ \textcolor{keyword}{template}\ <\textcolor{keyword}{typename}\ \_T>}
+\DoxyCodeLine{00017\ \textcolor{keyword}{struct\ }\mbox{\hyperlink{structAVLAscTraits}{AVLAscTraits}}\{}
+\DoxyCodeLine{00018\ \ \ \ \ \textcolor{keyword}{using\ \ }value\_type\ =\ \_T;}
+\DoxyCodeLine{00019\ \ \ \ \ \textcolor{keyword}{using\ \ }\mbox{\hyperlink{classCAVLNode}{Node}}\ \ \ \ \ \ \ =\ \mbox{\hyperlink{classCAVLNode}{CAVLNode<T>}};}
+\DoxyCodeLine{00020\ \ \ \ \ \textcolor{keyword}{using\ \ }CompareFn\ \ =\ less<T>;}
+\DoxyCodeLine{00021\ \};}
+\DoxyCodeLine{00022\ }
+\DoxyCodeLine{00023\ \textcolor{keyword}{template}\ <\textcolor{keyword}{typename}\ \_T>}
+\DoxyCodeLine{00024\ \textcolor{keyword}{struct\ }\mbox{\hyperlink{structAVLDescTraits}{AVLDescTraits}}\{}
+\DoxyCodeLine{00025\ \ \ \ \ \textcolor{keyword}{using\ \ }value\_type\ =\ \_T;}
+\DoxyCodeLine{00026\ \ \ \ \ \textcolor{keyword}{using\ \ }\mbox{\hyperlink{classCAVLNode}{Node}}\ \ \ \ \ \ \ =\ \mbox{\hyperlink{classCAVLNode}{CAVLNode<T>}};}
+\DoxyCodeLine{00027\ \ \ \ \ \textcolor{keyword}{using\ \ }CompareFn\ \ =\ greater<T>;}
+\DoxyCodeLine{00028\ \};}
+\DoxyCodeLine{00029\ }
+\DoxyCodeLine{00030\ \textcolor{keyword}{template}\ <\textcolor{keyword}{typename}\ Traits>}
+\DoxyCodeLine{00031\ \textcolor{keyword}{class\ }\mbox{\hyperlink{classCAVLTree}{CAVLTree}}\ :\ \textcolor{keyword}{public}\ \mbox{\hyperlink{classCBinaryTree}{CBinaryTree}}<Traits>\ \{}
+\DoxyCodeLine{00032\ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00033\ \ \ \ \ \textcolor{keyword}{using\ }\mbox{\hyperlink{classCBinaryTree}{Base}}\ \ \ \ \ \ \ =\ \mbox{\hyperlink{classCBinaryTree}{CBinaryTree<Traits>}};}
+\DoxyCodeLine{00034\ \ \ \ \ \textcolor{keyword}{using\ }Node\ \ \ \ \ \ \ =\ \textcolor{keyword}{typename}\ Traits::Node;}
+\DoxyCodeLine{00035\ \ \ \ \ \textcolor{keyword}{using\ }value\_type\ =\ \textcolor{keyword}{typename}\ Traits::value\_type;\ \ }
+\DoxyCodeLine{00036\ \ \ \ \ \textcolor{keyword}{using\ }CompareFn\ \ =\ \textcolor{keyword}{typename}\ Traits::CompareFn;}
+\DoxyCodeLine{00037\ \ \ \ \ \textcolor{keyword}{using\ }\mbox{\hyperlink{classCAVLTree}{Container}}\ \ =\ \mbox{\hyperlink{classCAVLTree}{CAVLTree<Traits>}};}
+\DoxyCodeLine{00038\ \ \ \ \ \textcolor{keyword}{using\ }\mbox{\hyperlink{classbinary__tree__iterator}{iterator}}\ \ \ =\ \mbox{\hyperlink{classbinary__tree__iterator}{binary\_tree\_iterator<Container>}};}
+\DoxyCodeLine{00039\ }
+\DoxyCodeLine{00040\ \textcolor{keyword}{protected}:}
+\DoxyCodeLine{00041\ \ \ \ \ \textcolor{comment}{//\ Additional\ members\ for\ AVL\ tree\ balancing\ can\ be\ added\ here}}
+\DoxyCodeLine{00042\ \ \ \ \ Node\ *internal\_insert(value\_type\ \&elem,\ Ref\ ref,}
+\DoxyCodeLine{00043\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ Node*\ pParent,\ Node*\&\ rpOrigin)\textcolor{keyword}{\ override}}
+\DoxyCodeLine{00044\ \textcolor{keyword}{\ \ \ \ }\{}
+\DoxyCodeLine{00045\ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ Call\ base\ class\ insert}}
+\DoxyCodeLine{00046\ \ \ \ \ \ \ \ \ Node*\ newNode\ =\ Base::internal\_insert(elem,\ ref,\ pParent,\ rpOrigin);}
+\DoxyCodeLine{00047\ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ TODO:\ Verificar\ balance\ y\ realizar\ rotaciones\ si\ es\ necesario}}
+\DoxyCodeLine{00048\ \ \ \ \ \ \ \ \ }
+\DoxyCodeLine{00049\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ newNode;}
+\DoxyCodeLine{00050\ \ \ \ \ \}}
+\DoxyCodeLine{00051\ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00052\ \ \ \ \ \mbox{\hyperlink{classCAVLTree}{CAVLTree}}()\ :\ \mbox{\hyperlink{classCBinaryTree}{Base}}()\ \{\}\ \textcolor{comment}{//\ Empty\ tree}}
+\DoxyCodeLine{00053\ }
+\DoxyCodeLine{00054\ \};}
+\DoxyCodeLine{00055\ }
+\DoxyCodeLine{00056\ \textcolor{preprocessor}{\#endif\ }\textcolor{comment}{//\ \_\_AVL\_H\_\_}}
+
+\end{DoxyCode}

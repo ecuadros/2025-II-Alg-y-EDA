@@ -1,0 +1,44 @@
+\doxysection{BTree\+Trait\texorpdfstring{$<$}{<} \+\_\+key\+Type, \+\_\+\+Obj\+IDType \texorpdfstring{$>$}{>} Struct Template Reference}
+\hypertarget{structBTreeTrait}{}\label{structBTreeTrait}\index{BTreeTrait$<$ \_keyType, \_ObjIDType $>$@{BTreeTrait$<$ \_keyType, \_ObjIDType $>$}}
+
+
+Estructura que define los tipos de datos y la función de comparación para el \doxylink{classBTree}{BTree}.  
+
+
+
+
+{\ttfamily \#include $<$btree.\+h$>$}
+
+\doxysubsubsection*{Public Types}
+\begin{DoxyCompactItemize}
+\item 
+\Hypertarget{structBTreeTrait_abb539da0526461fed78976d049708c2f}\label{structBTreeTrait_abb539da0526461fed78976d049708c2f} 
+using {\bfseries key\+Type} = \+\_\+key\+Type
+\begin{DoxyCompactList}\small\item\em Tipo de las claves. \end{DoxyCompactList}\item 
+\Hypertarget{structBTreeTrait_a0caf7e757d90dc8ec4bee342b720b860}\label{structBTreeTrait_a0caf7e757d90dc8ec4bee342b720b860} 
+using {\bfseries Obj\+IDType} = \+\_\+\+Obj\+IDType
+\begin{DoxyCompactList}\small\item\em Tipo de los identificadores de objeto. \end{DoxyCompactList}\item 
+\Hypertarget{structBTreeTrait_adb8a8562253bd87edab2136bcba4c7cb}\label{structBTreeTrait_adb8a8562253bd87edab2136bcba4c7cb} 
+using {\bfseries Compare\+Function} = std\+::less$<$\mbox{\hyperlink{structBTreeTrait_abb539da0526461fed78976d049708c2f}{key\+Type}}$>$
+\begin{DoxyCompactList}\small\item\em Función de comparación predeterminada (menor que). \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+\subsubsection*{template$<$typename \+\_\+key\+Type, typename \+\_\+\+Obj\+IDType$>$\newline
+struct BTree\+Trait$<$ \+\_\+key\+Type, \+\_\+\+Obj\+IDType $>$}
+Estructura que define los tipos de datos y la función de comparación para el \doxylink{classBTree}{BTree}. 
+
+Esta estructura es una especie de "{}parámetro de tipo"{} para el árbol B (\doxylink{classBTree}{BTree}), donde se especifica el tipo de las claves, los identificadores de objeto, y la función de comparación.
+
+
+\begin{DoxyTemplParams}{Template Parameters}
+{\em \+\_\+key\+Type} & Tipo de las claves. \\
+\hline
+{\em \+\_\+\+Obj\+IDType} & Tipo del identificador de objeto. \\
+\hline
+\end{DoxyTemplParams}
+
+
+The documentation for this struct was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+btree.\+h\end{DoxyCompactItemize}
