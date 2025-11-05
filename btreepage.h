@@ -141,6 +141,7 @@ class CBTreePage //: public SimpleIndex <keyType>
         CBTreePage& operator=(CBTreePage&& other) noexcept;
         CBTreePage(const CBTreePage&) = delete;
         CBTreePage& operator=(const CBTreePage&) = delete;
+        void Write(std::ostream& os) const;
 protected:
         static bool less (const keyType& a, const keyType& b) {
         return typename Trait::Compare{}(a,b);
@@ -221,6 +222,21 @@ private:
 };
 
 template <typename Trait>
+void CBTreePage<Trait>::Write(std::ostream& os) const {
+    os << m_KeyCount << '\n';
+
+    for (size_t i = 0; i < m_KeyCount; ++i) {
+        os << m_Keys[i].key << ' ' << m_Keys[i].ObjID << '\n';
+    }
+
+    for (size_t i = 0; i <= m_KeyCount; ++i) {
+        const bool hasChild = (m_SubPages[i] != nullptr);
+        os << (hasChild ? 1 : 0) << '\n';
+        if (hasChild) m_SubPages[i]->Write(os);
+    }
+}
+
+template <typename Trait>
 CBTreePage<Trait>::CBTreePage(CBTreePage&& other) noexcept
     : m_MinKeys(other.m_MinKeys),
       m_MaxKeys(other.m_MaxKeys),
@@ -246,7 +262,6 @@ CBTreePage<Trait>& CBTreePage<Trait>::operator=(CBTreePage&& other) noexcept {
         m_Keys            = std::move(other.m_Keys);
         m_SubPages        = std::move(other.m_SubPages);
         m_KeyCount        = other.m_KeyCount;
-
         other.m_KeyCount = 0;
     }
     return *this;
@@ -600,7 +615,7 @@ void CBTreePage<Trait>::ForEachT(Fn&& fn, size_t level, Args&&... args) {
     if (m_SubPages[m_KeyCount])
         m_SubPages[m_KeyCount]->ForEachT(std::forward<Fn>(fn), level + 1, std::forward<Args>(args)...);
 }
-
+// v
 template <typename Trait>
 template <class Pred, class... Args>
 typename CBTreePage<Trait>::ObjectInfo*
@@ -617,7 +632,6 @@ CBTreePage<Trait>::FirstThatT(Pred&& pred, size_t level, Args&&... args) {
         return m_SubPages[m_KeyCount]->FirstThatT(std::forward<Pred>(pred), level + 1, std::forward<Args>(args)...);
     return nullptr;
 }
-
 
 template <typename Trait>
 void CBTreePage<Trait>::ForEach(lpfnForEach2 lpfn, size_t level, void *pExtra1) {

@@ -2,6 +2,7 @@
 #define __BTREE_H__
 
 #include <iostream>
+#include <fstream>
 #include "btreepage.h"
 #define DEFAULT_BTREE_ORDER 3
 
@@ -13,8 +14,8 @@ struct BTreeTrait
        using keyType = _keyType;
        using ObjIDType = _ObjIDType;
        // TODO: agregar funcion de comparacion
-       struct Compare {
-              bool operator()(const keType &a, const keytype &b) const {
+       struct Compare { 
+              bool operator() (const keyType &a, const keyType &b) const {
                      return a < b;
               }
        };
@@ -38,10 +39,11 @@ public:
 
 public:
        BTree(size_t order = DEFAULT_BTREE_ORDER, bool unique = true)
-              : m_Root(2 * order  + 1, unique),
+              : m_Root(2 * order + 1, unique),
                 m_Order(order),
                 m_NumKeys(0),
                 m_Unique(unique)
+                
        {
               m_Root.SetMaxKeysForChilds(order);
               m_Height = 1;
@@ -63,6 +65,11 @@ public:
 
        void            Print (ostream &os)
        {               m_Root.Print(os);                              }
+       template <class Fn, class... Args>
+       void ForEachT(Fn&& fn, Args&&... args) {
+              m_Root.ForEachT(std::forward<Fn>(fn), /*level=*/0,
+                            std::forward<Args>(args)...);
+       }
        void            ForEach( lpfnForEach2 lpfn, void *pExtra1 )
        {               m_Root.ForEach(lpfn, 0, pExtra1);              }
        void            ForEach( lpfnForEach3 lpfn, void *pExtra1, void *pExtra2)
@@ -71,18 +78,22 @@ public:
        {               return m_Root.FirstThat(lpfn, 0, pExtra1);     }
        ObjectInfo*     FirstThat( lpfnFirstThat3 lpfn, void *pExtra1, void *pExtra2)
        {               return m_Root.FirstThat(lpfn, 0, pExtra1, pExtra2);   }
-       //typedef               ObjectInfo iterator;
 public: 
        BTree(BTree&& other) noexcept;
        BTree& operator=(BTree&& other) noexcept;
        BTree(const BTree&) = delete;
        BTree& operator=(const BTree&) = delete;
+
+       bool Save(const std::string& filename) const;
+       bool Load(const std::string& filename);
 protected:
        BTNode          m_Root;
        size_t          m_Height;  // height of tree
        size_t          m_Order;   // order of tree
        size_t          m_NumKeys; // number of keys
        bool            m_Unique;  // Accept the elements only once ?
+       size_t computeHeight(const BTNode& n) const;
+       size_t computeSize  (const BTNode& n) const;
 };     
 
 template <typename Trait>
@@ -135,6 +146,59 @@ BTree<Trait>& BTree<Trait>::operator=(BTree&& other) noexcept {
         other.m_NumKeys = 0;
     }
     return *this;
+}
+template <typename Trait>
+size_t BTree<Trait>::computeHeight(const BTNode& n) const {
+    if (!n.m_SubPages[0]) return 1;
+    size_t best = 0;
+    for (size_t i = 0; i <= n.m_KeyCount; ++i) {
+        if (n.m_SubPages[i]) {
+            best = std::max(best, computeHeight(*n.m_SubPages[i]));
+        }
+    }
+    return best + 1;
+}
+template <typename Trait>
+size_t BTree<Trait>::computeSize(const BTNode& n) const {
+    size_t sum = n.m_KeyCount;
+    for (size_t i = 0; i <= n.m_KeyCount; ++i) {
+        if (n.m_SubPages[i]) sum += computeSize(*n.m_SubPages[i]);
+    }
+    return sum;
+}
+
+template <typename Trait>
+bool BTree<Trait>::Save(const std::string& filename) const {
+    std::ofstream ofs(filename);
+    if (!ofs) return false;
+
+    ofs << m_Order << ' ' << (m_Unique ? 1 : 0) << '\n';
+
+    m_Root.Write(ofs);
+
+    return true;
+}
+
+template <typename Trait>
+bool BTree<Trait>::Load(const std::string& filename) {
+    std::ifstream ifs(filename);
+    if (!ifs) return false;
+
+    size_t order = 0; int uniq = 1;
+    ifs >> order >> uniq;
+
+    m_Order  = order ? order : m_Order;
+    m_Unique = (uniq != 0);
+
+    m_Root.SetMaxKeysForChilds(m_Order);
+
+    m_Root.Reset();
+    m_Root.Read(ifs);
+
+    m_Height = computeHeight(m_Root);
+    m_NumKeys = computeSize(m_Root);
+
+    return true;
 }
 
 #endif
