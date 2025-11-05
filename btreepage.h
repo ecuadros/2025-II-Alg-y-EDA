@@ -5,12 +5,6 @@
 #include <assert.h>
 #include <functional>
 
-// TODO: #2 Agregarle un Trait (prueba git) ( no trivial )
-// TODO: #3 crear un iterator ( no trivial )
-//       Sugerencia: Tarea1 cada pagina debe tener un puntero al padre primero ( no trivial )
-// TODO: #4 integrarlo al recorrer ( no trivial )
-
-
 template <typename Trait>
 class BTree;
 

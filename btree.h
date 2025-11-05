@@ -30,6 +30,40 @@ class BTree // this is the full version of the BTree
 public:
        typedef typename BTNode::ObjectInfo      ObjectInfo;
 
+       class Iterator {
+       private:
+              std::vector<ObjectInfo*> items;
+              size_t index;
+              bool reverse;
+
+       public:
+              Iterator(const std::vector<ObjectInfo*>& vec, size_t idx, bool rev = false)
+                     : items(vec), index(idx), reverse(rev) {}
+
+              ObjectInfo& operator*() { return *items[index]; }
+              ObjectInfo* operator->() { return items[index]; }
+
+              Iterator& operator++() {
+                     if (reverse) index--;
+                     else index++;
+                     return *this;
+              }
+
+              Iterator operator++(int) {
+                     Iterator tmp = *this;
+                     ++(*this);
+                     return tmp;
+              }
+
+              bool operator==(const Iterator& other) const {
+                     return index == other.index;
+              }
+
+              bool operator!=(const Iterator& other) const {
+                     return index != other.index;
+              }
+       };
+
 public:
        BTree(size_t order = DEFAULT_BTREE_ORDER, bool unique = true)
               : m_Order(order),
@@ -78,7 +112,32 @@ public:
        ObjectInfo* FirstThat(Predicate pred, Args const&... args)
        {               return m_Root.FirstThat(pred, 0, args...);     }
 
+       Iterator begin() {
+              collectItems.clear();
+              m_Root.ForEach([](ObjectInfo& obj, size_t level, std::vector<ObjectInfo*>* vec) {
+                     vec->push_back(&obj);
+              }, 0, &collectItems);
+              return Iterator(collectItems, 0, false);
+       }
+
+       Iterator end() {
+              return Iterator(collectItems, collectItems.size(), false);
+       }
+
+       Iterator rbegin() {
+              collectItems.clear();
+              m_Root.ForEach([](ObjectInfo& obj, size_t level, std::vector<ObjectInfo*>* vec) {
+                     vec->push_back(&obj);
+              }, 0, &collectItems);
+              return Iterator(collectItems, collectItems.size() - 1, true);
+       }
+
+       Iterator rend() {
+              return Iterator(collectItems, (size_t)-1, true);
+       }
+
 protected:
+       std::vector<ObjectInfo*> collectItems;
        BTNode          m_Root;
        size_t          m_Height;  // height of tree
        size_t          m_Order;   // order of tree

@@ -67,6 +67,18 @@ int main (int argc, char * argv[]){
 	std::cout << "\n=== Usando operator<< ===" << std::endl;
 	std::cout << bt;
 
+	std::cout << "\n=== Forward Iterator ===" << std::endl;
+	for(auto it = bt.begin(); it != bt.end(); ++it) {
+		std::cout << it->key << "->" << it->ObjID << " ";
+	}
+	std::cout << std::endl;
+
+	std::cout << "\n=== Backward Iterator ===" << std::endl;
+	for(auto it = bt.rbegin(); it != bt.rend(); ++it) {
+		std::cout << it->key << "->" << it->ObjID << " ";
+	}
+	std::cout << std::endl;
+
 	std::cout << "\n=== Probando Move Constructor ===" << std::endl;
 	std::cout << "BTree original - size: " << bt.size() << ", height: " << bt.height() << std::endl;
 
