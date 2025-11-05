@@ -4,6 +4,7 @@
 #include <vector>
 #include <assert.h>
 #include <functional>
+#include <utility>
 
 // TODO: #1 Crear una function para agregarla al demo.cpp ( no trivial )
 // TODO: #2 Agregarle un Trait (prueba git) ( no trivial )
@@ -88,6 +89,43 @@ class CBTreePage //: public SimpleIndex <keyType>
  public:
        CBTreePage(size_t maxKeys, bool unique = true);
        virtual ~CBTreePage();
+       
+       // Move constructor: transfers page resources efficiently
+       CBTreePage(CBTreePage&& other) noexcept 
+              : m_MinKeys(other.m_MinKeys),
+                m_MaxKeys(other.m_MaxKeys),
+                m_MaxKeysForChilds(other.m_MaxKeysForChilds),
+                m_Unique(other.m_Unique),
+                m_isRoot(other.m_isRoot),
+                m_Keys(std::move(other.m_Keys)),
+                m_SubPages(std::move(other.m_SubPages)),
+                m_Compare(std::move(other.m_Compare)),
+                m_KeyCount(other.m_KeyCount)
+       {
+              other.m_KeyCount = 0; // Leave source in valid state
+       }
+       
+       // Move assignment: transfers to existing page
+       CBTreePage& operator=(CBTreePage&& other) noexcept 
+       {
+              if (this != &other)
+              {
+                     Reset(); // Clean up current resources first
+                     
+                     m_MinKeys = other.m_MinKeys;
+                     m_MaxKeys = other.m_MaxKeys;
+                     m_MaxKeysForChilds = other.m_MaxKeysForChilds;
+                     m_Unique = other.m_Unique;
+                     m_isRoot = other.m_isRoot;
+                     m_Keys = std::move(other.m_Keys);
+                     m_SubPages = std::move(other.m_SubPages);
+                     m_Compare = std::move(other.m_Compare);
+                     m_KeyCount = other.m_KeyCount;
+                     
+                     other.m_KeyCount = 0; // Leave source in valid state
+              }
+              return *this;
+       }
 
        bt_ErrorCode    Insert (const keyType &key, const ObjIDType ObjID);
        bt_ErrorCode    Remove (const keyType &key, const ObjIDType ObjID);

@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <functional>
+#include <utility>
 #include "btreepage.h"
 #define DEFAULT_BTREE_ORDER 3
 
@@ -46,6 +47,36 @@ public:
               m_Root.SetMaxKeysForChilds(order);
               m_Height = 1;
        }
+
+       // Move constructor: transfers ownership efficiently
+       BTree(BTree&& other) noexcept 
+              : m_Order(other.m_Order),
+                m_Root(std::move(other.m_Root)),
+                m_Height(other.m_Height),
+                m_Unique(other.m_Unique),
+                m_NumKeys(other.m_NumKeys)
+       {
+              other.m_Height = 1;  // Leave source in valid state
+              other.m_NumKeys = 0;
+       }
+       
+       // Move assignment: transfers ownership to existing object
+       BTree& operator=(BTree&& other) noexcept 
+       {
+              if (this != &other)
+              {
+                     m_Order = other.m_Order;
+                     m_Root = std::move(other.m_Root);
+                     m_Height = other.m_Height;
+                     m_Unique = other.m_Unique;
+                     m_NumKeys = other.m_NumKeys;
+                     
+                     other.m_Height = 1;  // Leave source in valid state
+                     other.m_NumKeys = 0;
+              }
+              return *this;
+       }
+       
        ~BTree() {}
        //int           Open (char * name, int mode);
        //int           Create (char * name, int mode);
