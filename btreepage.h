@@ -1,23 +1,41 @@
 #ifndef __CBTreePage_H__
 #define __CBTreePage_H__
 
+/**
+ * @file btreepage.h
+ * @brief Define la clase CBTreePage, que representa un nodo de el B-Tree.
+ */
+
 #include <vector>
 #include <assert.h>
 #include <functional>
 
-// TODO: #1 Crear una function para agregarla al demo.cpp ( no trivial )
-// TODO: #2 Agregarle un Trait (prueba git) ( no trivial )
-// TODO: #3 crear un iterator ( no trivial )
-//       Sugerencia: Tarea1 cada pagina debe tener un puntero al padre primero ( no trivial )
-// TODO: #4 integrarlo al recorrer ( no trivial )
+// TODO: #1 Crear una function para agregarla al demo.cpp ( no trivial ) (DONE)
+// TODO: #2 Agregarle un Trait (prueba git) ( no trivial ) (DONE)
+// TODO: #3 crear un iterator ( no trivial ) (DONE)
+//       Sugerencia: Tarea1 cada pagina debe tener un puntero al padre primero ( no trivial ) (DONE)
+// TODO: #4 integrarlo al recorrer ( no trivial ) (DONE)
 
 
 template <typename Trait>
 class BTree;
 
 using namespace std;
+/// Códigos de error para las operaciones del B-Tree.
 enum bt_ErrorCode {bt_ok, bt_overflow, bt_underflow, bt_duplicate, bt_nofound, bt_rootmerged};
 
+/**
+ * @brief Realiza una búsqueda binaria en un contenedor.
+ * @tparam Container El tipo del contenedor.
+ * @tparam ObjType El tipo del objeto a buscar.
+ * @tparam CompareFunc El tipo de la función de comparación.
+ * @param container El contenedor en el que se buscará.
+ * @param first El índice de inicio.
+ * @param last El índice final.
+ * @param object El objeto a encontrar.
+ * @param compare La función de comparación.
+ * @return El índice del objeto o la posición donde debería ser insertado.
+ */
 template <typename Container, typename ObjType, typename CompareFunc>
 size_t binary_search(Container& container, size_t first, size_t last, ObjType &object, CompareFunc compare)
 {
@@ -38,6 +56,14 @@ size_t binary_search(Container& container, size_t first, size_t last, ObjType &o
 
 // Error al poner size_t
 // Posible motivo: El i está disminuyendo
+/**
+ * @brief Inserta un objeto en un contenedor en una posición específica.
+ * @tparam Container El tipo del contenedor.
+ * @tparam ObjType El tipo del objeto a insertar.
+ * @param container El contenedor.
+ * @param object El objeto a insertar.
+ * @param pos La posición en la que se insertará.
+ */
 template <typename Container, typename ObjType>
 void insert_at(Container& container, ObjType object, size_t pos)
 {
@@ -49,6 +75,12 @@ void insert_at(Container& container, ObjType object, size_t pos)
         container[pos] =  object;	
 }
 
+/**
+ * @brief Elimina un elemento de un contenedor en una posición específica.
+ * @tparam Container El tipo del contenedor.
+ * @param container El contenedor.
+ * @param pos La posición del elemento a eliminar.
+ */
 template <typename Container>
 void remove(Container& container, size_t pos)
 {
@@ -57,12 +89,18 @@ void remove(Container& container, size_t pos)
            container[i-1] = container[i];
 }
 
+/**
+ * @struct tagObjectInfo
+ * @brief Almacena un par clave-valor y un contador de uso.
+ * @tparam keyType El tipo de la clave.
+ * @tparam ObjIDType El tipo del valor (ID de objeto).
+ */
 template <typename keyType, typename ObjIDType>
 struct tagObjectInfo
 {
-       keyType                 key;
-       ObjIDType               ObjID;
-       size_t                    UseCounter;
+       keyType                 key;         ///< La clave para los datos.
+       ObjIDType               ObjID;       ///< El valor o ID asociado con la clave.
+       size_t                    UseCounter;  ///< Contador para rastrear el uso.
        tagObjectInfo(const keyType     &_key, ObjIDType _ObjID)
                : key(_key), ObjID(_ObjID), UseCounter(0) {}
        tagObjectInfo(const tagObjectInfo &objInfo)
@@ -72,6 +110,11 @@ struct tagObjectInfo
        size_t                    GetUseCounter() { return UseCounter;    }
 };
 
+/**
+ * @class CBTreePage
+ * @brief Representa un único nodo (página) dentro de un B-Tree.
+ * @tparam Trait Un struct que define los tipos usados por el B-Tree.
+ */
 template <typename Trait>
 class CBTreePage //: public SimpleIndex <keyType>
 // this is the in-memory version of the CBTreePage
@@ -90,11 +133,26 @@ class CBTreePage //: public SimpleIndex <keyType>
        CBTreePage(size_t maxKeys, bool unique = true);
        virtual ~CBTreePage();
 
+       /**
+        * @brief Inserta un par clave-valor en este nodo o en un nodo hijo.
+        * @param key La clave a insertar.
+        * @param ObjID El valor a asociar con la clave.
+        * @return Un código de error que indica el resultado (ej. bt_ok, bt_overflow).
+        */
        bt_ErrorCode    Insert (const keyType &key, const ObjIDType ObjID);
        bt_ErrorCode    Remove (const keyType &key, const ObjIDType ObjID);
+       /**
+        * @brief Busca una clave en este nodo o en sus hijos.
+        * @param key La clave a buscar.
+        * @param ObjID Parámetro de salida para el ID de objeto encontrado.
+        * @return Verdadero si se encontró la clave, falso en caso contrario.
+        */
        bool            Search (const keyType &key, ObjIDType &ObjID);
+       /// Imprime el contenido de este nodo y sus hijos.
        void            Print  (ostream &os) const;
+       /// Escribe los datos del nodo en un flujo para serialización.
        void            Write(ostream& os) const;
+       /// Lee los datos del nodo desde un flujo para deserialización.
        void            Read(istream& is);
 
        
@@ -106,22 +164,18 @@ class CBTreePage //: public SimpleIndex <keyType>
        ObjectInfo* FirstThat(size_t level, Func&& func, Args&&... args) const;
 
 protected:
-       // TODO: #9 change by size_t (DONE)
-       size_t  m_MinKeys; // minimum number of keys in a node
-       size_t  m_MaxKeys, // maximum number of keys in a node
-
-                m_MaxKeysForChilds; // just to distinguish the root
-       bool m_Unique;
-       bool m_isRoot;
-       //size_t           NextNode; // address of next node at same level
-       //size_t RecAddr; // address of this node in the BTree file
-       vector<ObjectInfo> m_Keys;
-       vector<BTPage *>m_SubPages;
-       BTPage* m_pParent = nullptr;
-       Compare m_Compare;
+       size_t  m_MinKeys;          ///< Número mínimo de claves en un nodo.
+       size_t  m_MaxKeys;          ///< Número máximo de claves en un nodo.
+       size_t  m_MaxKeysForChilds; ///< Máximo de claves para los nodos hijos.
+       bool m_Unique;              ///< Verdadero si las claves deben ser únicas.
+       bool m_isRoot;              ///< Verdadero si este nodo es la raíz.
+       vector<ObjectInfo> m_Keys;  ///< Vector de pares clave-valor.
+       vector<BTPage *>m_SubPages; ///< Vector de punteros a nodos hijos.
+       BTPage* m_pParent = nullptr; ///< Puntero al nodo padre.
+       Compare m_Compare;           ///< Objeto de función de comparación.
        
-       // TODO: #10 size_t (DONE)
-       size_t  m_KeyCount;
+       size_t  m_KeyCount;          ///< Número actual de claves en el nodo.
+
        void  Create();
        void  Reset ();
        void  Destroy () {   Reset(); delete this;}

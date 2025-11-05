@@ -31,15 +31,15 @@ int main (int argc, char ** argv){
     }
     cout << "------------------------------------------\n" << endl;
     cout << "\n--- Probando BTree con orden descendente antes de ser movido ---" << endl;
-    // BTree con orden descendente (std::greater)
-    BTree<BTreeTrait<char, int, std::greater<char>>> bt_desc(BTreeSize);
+    // BTree con Trait de ejemplo
+    BTree<BTreeDescTrait<char, int>> bt_desc(BTreeSize);
     for (i = 0; keys1[i]; i++) {
         result = bt_desc.Insert(keys1[i], i+1); 
     }
     cout << bt_desc;
 
     cout << "\n--- Moviendo el arbol bt_desc a bt_moved ---" << endl;
-    BTree<BTreeTrait<char, int, std::greater<char>>> bt_moved(std::move(bt_desc));
+    BTree<BTreeDescTrait<char, int>> bt_moved(std::move(bt_desc));
 
     cout << "Arbol movido (bt_moved):" << endl;
     cout << bt_moved;

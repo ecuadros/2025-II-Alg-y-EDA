@@ -1,6 +1,11 @@
 #ifndef __BTREE_H__
 #define __BTREE_H__
 
+/**
+ * @file btree.h
+ * @brief Define la clase BTree, una estructura de datos de árbol balanceado.
+ */
+
 #include <shared_mutex>
 #include <iostream>
 #include <utility>
@@ -12,6 +17,13 @@
 
 const size_t MaxHeight = 5; 
 
+/**
+ * @struct BTreeTrait
+ * @brief Define los tipos y la función de comparación para el B-Tree.
+ * @tparam _keyType El tipo de dato para las claves.
+ * @tparam _ObjIDType El tipo de dato para los IDs de objeto (valores).
+ * @tparam _Compare La función de comparación (ej. std::less o std::greater).
+ */
 template <typename _keyType, typename _ObjIDType, typename _Compare = std::less<_keyType>>
 struct BTreeTrait
 {
@@ -21,6 +33,20 @@ struct BTreeTrait
        using Compare = _Compare;
 };
 
+/**
+ * @struct BTreeDescTrait
+ * @brief Trait de ejemplo para un B-Tree descendente.
+ * @tparam _keyType El tipo de dato para las claves.
+ * @tparam _ObjIDType El tipo de dato para los IDs de objeto.
+ */
+template <typename _keyType, typename _ObjIDType>
+struct BTreeDescTrait : public BTreeTrait<_keyType, _ObjIDType, std::greater<_keyType>> {};
+
+/**
+ * @class BTree
+ * @brief Implementa una estructura de datos B-Tree.
+ * @tparam Trait Un struct que define los tipos usados por el B-Tree.
+ */
 template <typename Trait>
 class BTree // this is the full version of the BTree
 {
@@ -32,6 +58,10 @@ class BTree // this is the full version of the BTree
 public:
        typedef typename BTNode::ObjectInfo      ObjectInfo;
 
+       /**
+        * @class BTreeIterator
+        * @brief Un iterador bidireccional para el B-Tree.
+        */
        class BTreeIterator {
        public:
               using iterator_category = std::bidirectional_iterator_tag;
@@ -39,12 +69,21 @@ public:
               using pointer = ObjectInfo*;
               using reference = ObjectInfo&;
 
+              /**
+               * @brief Construye un iterador de B-Tree.
+               * @param pTree Puntero al B-Tree padre.
+               * @param pNode Puntero al nodo actual.
+               * @param keyIndex Índice de la clave dentro del nodo.
+               */
               BTreeIterator(BTree* pTree, BTNode* pNode = nullptr, size_t keyIndex = 0)
                      : m_pTree(pTree), m_pNode(pNode), m_keyIndex(keyIndex) {}
 
+              /// Desreferencia el iterador para obtener el elemento.
               reference operator*() const { return m_pNode->m_Keys[m_keyIndex]; }
+              /// Desreferencia el iterador para acceder a un miembro del elemento.
               pointer operator->() const { return &m_pNode->m_Keys[m_keyIndex]; }
 
+              /// Operador de pre-incremento. Avanza el iterador al siguiente elemento.
               BTreeIterator& operator++() {
                      if (!m_pNode) {
                          return *this;
@@ -84,6 +123,7 @@ public:
                      return *this;
               }
 
+              /// Operador de pre-decremento. Mueve el iterador al elemento anterior.
               BTreeIterator& operator--() {
                     if (!m_pNode) {
                         m_pNode = &m_pTree->m_Root;
@@ -122,13 +162,15 @@ public:
                      return *this;
               }
 
+              /// Operador de comparación de igualdad.
               bool operator==(const BTreeIterator& other) const { return m_pNode == other.m_pNode && m_keyIndex == other.m_keyIndex; }
+              /// Operador de comparación de desigualdad.
               bool operator!=(const BTreeIterator& other) const { return !(*this == other); }
 
        private:
-              BTree*  m_pTree;
-              BTNode* m_pNode;
-              size_t m_keyIndex;
+              BTree*  m_pTree;    ///< Puntero al B-Tree al que pertenece este iterador.
+              BTNode* m_pNode;    ///< Puntero al nodo actual en el árbol.
+              size_t m_keyIndex;  ///< Índice de la clave actual en el nodo.
        };
 
        using iterator = BTreeIterator;
@@ -160,8 +202,19 @@ public:
        void            Write(ostream& os);
        void            Read(istream& is);
 
+       /**
+        * @brief Inserta un par clave-valor en el árbol.
+        * @param key La clave a insertar.
+        * @param ObjID El valor (ID de objeto) a asociar con la clave.
+        * @return Verdadero si la inserción fue exitosa, falso si la clave era un duplicado.
+        */
        bool            Insert (const keyType key, const ObjIDType ObjID);
        bool            Remove (const keyType key, const ObjIDType ObjID);
+       /**
+        * @brief Busca una clave en el árbol.
+        * @param key La clave a buscar.
+        * @return El ID del objeto si se encuentra, de lo contrario -1.
+        */
        ObjIDType       Search (const keyType key)
        {      
               std::lock_guard<std::shared_mutex> lock(m_Mutex);
@@ -169,16 +222,21 @@ public:
               m_Root.Search(key, ObjID);
               return ObjID;
        }
+       /// Devuelve el número total de claves en el árbol.
        size_t            size()  const { std::shared_lock<std::shared_mutex> lock(m_Mutex); return m_NumKeys; }
+       /// Devuelve la altura del árbol.
        size_t            height() const { std::shared_lock<std::shared_mutex> lock(m_Mutex); return m_Height;      }
+       /// Devuelve el orden del árbol.
        size_t            GetOrder() const { std::shared_lock<std::shared_mutex> lock(m_Mutex); return m_Order;     }
 
+       /// Imprime la estructura del árbol en un flujo de salida.
        void            Print (ostream &os) const
        {               
               std::shared_lock<std::shared_mutex> lock(m_Mutex);
               m_Root.Print(os);
        }
 
+       /// Devuelve un iterador al primer elemento del árbol.
        iterator begin() {
               std::lock_guard<std::shared_mutex> lock(m_Mutex);
               BTNode* pNode = &m_Root;
@@ -190,15 +248,17 @@ public:
               }
               return iterator(this, pNode, 0);
        }
+       /// Devuelve un iterador al elemento siguiente al último.
        iterator end() { 
-              // iterador "nulo" constante.
               return iterator(this, nullptr, 0); 
        }
 
+       /// Devuelve un iterador inverso al último elemento.
        reverse_iterator rbegin() { 
               std::lock_guard<std::shared_mutex> lock(m_Mutex);
               return reverse_iterator(end()); 
        }
+       /// Devuelve un iterador inverso al elemento anterior al primero.
        reverse_iterator rend() { return reverse_iterator(begin()); }
 
 
@@ -212,12 +272,12 @@ public:
               return m_Root.FirstThat(level, std::forward<Func>(func), std::forward<Args>(args)...);
        }
 protected:
-       BTNode          m_Root;
-       size_t          m_Height;  // height of tree
-       size_t          m_Order;   // order of tree
-       size_t          m_NumKeys; // number of keys
-       bool            m_Unique;  // Accept the elements only once ?
-       mutable std::shared_mutex m_Mutex; // Mutex de lectura-escritura
+       BTNode          m_Root;    ///< El nodo raíz del B-Tree.
+       size_t          m_Height;  ///< Altura del árbol.
+       size_t          m_Order;   ///< Orden del árbol.
+       size_t          m_NumKeys; ///< Número total de claves en el árbol.
+       bool            m_Unique;  ///< Verdadero si las claves deben ser únicas.
+       mutable std::shared_mutex m_Mutex; ///< Mutex de lectura-escritura para seguridad en hilos.
 };     
 
 template <typename Trait>
@@ -270,6 +330,7 @@ bool BTree<Trait>::Remove (const keyType key, const ObjIDType ObjID)
        return true;
 }
 
+/// Sobrecarga del operador <<
 template <typename Trait>
 std::ostream& operator<<(std::ostream& os, const BTree<Trait>& tree) {
     tree.Print(os);
