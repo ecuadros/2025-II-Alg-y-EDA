@@ -5,6 +5,7 @@
 #include <assert.h>
 #include <functional>
 #include <utility>
+#include <type_traits>
 
 // TODO: #1 Crear una function para agregarla al demo.cpp ( no trivial )
 // TODO: #2 Agregarle un Trait (prueba git) ( no trivial )
@@ -103,12 +104,15 @@ class CBTreePage //: public SimpleIndex <keyType>
        // TODO: #7 ForEach must be a template inside this template
        // void            ForEach(lpfnForEach2 lpfn, size_t level, void *pExtra1);
        // void            ForEach(lpfnForEach3 lpfn, size_t level, void *pExtra1, void *pExtra2);
-       template<typename Func, typename... Args>
-       void               ForEach(Func&& func, size_t level, Args&&... args)
+        template<typename Func, typename... Args>
+        void               ForEach(Func&& func, size_t level, Args&&... args);
 
        // TODO: #8 You may reduce these two function by using Invoke
-       ObjectInfo*     FirstThat(lpfnFirstThat2 lpfn, size_t level, void *pExtra1);
-       ObjectInfo*     FirstThat(lpfnFirstThat3 lpfn, size_t level, void *pExtra1, void *pExtra2);
+       // ObjectInfo*     FirstThat(lpfnFirstThat2 lpfn, size_t level, void *pExtra1);
+       // ObjectInfo*     FirstThat(lpfnFirstThat3 lpfn, size_t level, void *pExtra1, void *pExtra2);
+                template <typename Func, typename... Args>
+                 ObjectInfo*        FirstThat(Func&& func, size_t level, Args&&... args);
+
 
 protected:
        // TODO: #9 change by size_t
@@ -528,21 +532,21 @@ template <typename Trait>
 template<typename Func, typename... Args>
 void CBTreePage<Trait>::ForEach(Func&& func, size_t level, Args&&... args)
 {
-        auto &f = func;
+        auto func_copy = std::forward<Func>(func);
 
         for(size_t i = 0; i < m_KeyCount; i++)
         {
                 // Recorre primero el subárbol izquierdo
                 if(m_SubPages[i])
-                        m_SubPages[i]->ForEach(f, level+1, std::forward<Args>(args)...);
+                        m_SubPages[i]->ForEach(func_copy, level+1, std::forward<Args>(args)...);
 
                 // Invoca la función con la clave actual y todos los argumentos
-                std::invoke(f, m_Keys[i], level, std::forward<Args>(args)...);
+                std::invoke(func_copy, m_Keys[i], level, std::forward<Args>(args)...);
 
         }
         // Recorre el subárbol derecho final
         if(m_SubPages[m_KeyCount])
-              m_SubPages[m_KeyCount]->ForEach(f, level+1, std::forward<Args>(args)...);
+              m_SubPages[m_KeyCount]->ForEach(func_copy, level+1, std::forward<Args>(args)...);
 
 }
 
@@ -591,6 +595,7 @@ void CBTreePage<Trait>::ForEach(lpfnForEach3 lpfn, size_t level, void *pExtra1, 
 
 // Apicar una funcion hasta encontrar el 1er elemento
 // aque que retorne true ante esta funcion
+/*
 template <typename Trait>
 typename CBTreePage<Trait>::ObjectInfo *
 CBTreePage<Trait>::FirstThat(lpfnFirstThat2 lpfn, size_t level, void *pExtra1)
@@ -628,6 +633,36 @@ CBTreePage<Trait>::FirstThat(lpfnFirstThat3 lpfn,size_t level, void *pExtra1, vo
                        return pTmp;
        return 0;
 }
+*/
+
+template <typename Trait>
+template <typename Func, typename... Args>
+typename CBTreePage<Trait>::ObjectInfo* 
+CBTreePage<Trait>::FirstThat(Func&& func, size_t level, Args&&... args)
+{
+        auto func_copy = std::forward<Func>(func);
+
+        ObjectInfo *pTmp = nullptr;
+        for(size_t i = 0; i < m_KeyCount; i++)
+        {
+                // Recorre primero el subárbol izquierdo
+                if(m_SubPages[i])
+                        if((pTmp = m_SubPages[i]->FirstThat(func_copy,level+1,std::forward<Args>(args)...)))
+                                return pTmp;
+
+                if(std::invoke(func_copy, m_Keys[i], level, std::forward<Args>(args)...))
+                        return &m_Keys[i];
+        }
+
+        // Recorre el subárbol derecho final
+        if(m_SubPages[m_KeyCount])
+                if((pTmp = m_SubPages[m_KeyCount]->FirstThat(func_copy,level+1,std::forward<Args>(args)...)))
+                        return pTmp;
+
+        return nullptr;
+}
+
+
 
 template <typename Trait>
 bt_ErrorCode CBTreePage<Trait>::Remove(const keyType &key, const ObjIDType ObjID)
