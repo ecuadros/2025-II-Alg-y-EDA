@@ -142,6 +142,7 @@ class CBTreePage //: public SimpleIndex <keyType>
         CBTreePage(const CBTreePage&) = delete;
         CBTreePage& operator=(const CBTreePage&) = delete;
         void Write(std::ostream& os) const;
+        void Read (std::istream& is);
 protected:
         static bool less (const keyType& a, const keyType& b) {
         return typename Trait::Compare{}(a,b);
@@ -233,6 +234,33 @@ void CBTreePage<Trait>::Write(std::ostream& os) const {
         const bool hasChild = (m_SubPages[i] != nullptr);
         os << (hasChild ? 1 : 0) << '\n';
         if (hasChild) m_SubPages[i]->Write(os);
+    }
+}
+
+template <typename Trait>
+void CBTreePage<Trait>::Read(std::istream& is) {
+    Reset();
+    clear();
+
+    size_t count = 0;
+    is >> count;
+    m_KeyCount = count;
+
+    for (size_t i = 0; i < m_KeyCount; ++i) {
+        keyType k; ObjIDType id;
+        is >> k >> id;
+        m_Keys[i] = ObjectInfo(k, id);
+    }
+
+    for (size_t i = 0; i < m_MaxKeys + 2; ++i) m_SubPages[i] = nullptr;
+
+    for (size_t i = 0; i <= m_KeyCount; ++i) {
+        int hasChild = 0;
+        is >> hasChild;
+        if (hasChild) {
+            m_SubPages[i] = new CBTreePage<Trait>(m_MaxKeysForChilds, m_Unique);
+            m_SubPages[i]->Read(is);
+        }
     }
 }
 
