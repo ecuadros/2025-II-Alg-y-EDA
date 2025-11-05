@@ -2,6 +2,7 @@
 #define __BTREE_H__
 
 #include <iostream>
+#include <functional>
 #include "btreepage.h"
 #define DEFAULT_BTREE_ORDER 3
 
@@ -12,7 +13,23 @@ struct BTreeTrait
 {
        using keyType = _keyType;
        using ObjIDType = _ObjIDType;
-       // TODO: agregar funcion de comparacion
+       using CompareFn = std::less<_keyType>;
+};
+
+template <typename _keyType, typename _ObjIDType>
+struct BTreeAscTrait
+{
+       using keyType = _keyType;
+       using ObjIDType = _ObjIDType;
+       using CompareFn = std::less<_keyType>;
+};
+
+template <typename _keyType, typename _ObjIDType>
+struct BTreeDescTrait
+{
+       using keyType = _keyType;
+       using ObjIDType = _ObjIDType;
+       using CompareFn = std::greater<_keyType>;
 };
 
 template <typename Trait>
@@ -20,6 +37,7 @@ class BTree // this is the full version of the BTree
 {
        typedef typename Trait::keyType    keyType;
        typedef typename Trait::ObjIDType    ObjIDType;
+       typedef typename Trait::CompareFn    CompareFn;
        
        typedef CBTreePage <Trait> BTNode;// useful shorthand
 
@@ -77,6 +95,7 @@ protected:
        size_t          m_Order;   // order of tree
        size_t          m_NumKeys; // number of keys
        bool            m_Unique;  // Accept the elements only once ?
+       CompareFn       m_Compare;
 };     
 
 template <typename Trait>
