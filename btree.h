@@ -108,6 +108,51 @@ public:
        void            Print (ostream &os)
        {               m_Root.Print(os);                              }
        
+       std::ostream& Write(std::ostream& os) const
+       {
+
+               os << m_Order << "," << (m_Unique ? "1" : "0") << "\n";
+               os << m_NumKeys << "\n";
+               
+               BTree* non_const_this = const_cast<BTree*>(this);
+               for(auto it = non_const_this->begin(); it != non_const_this->end(); ++it) {
+                       os << it->key << "," << it->ObjID << "\n";
+               }
+               
+               return os;
+       }
+
+       std::istream& Read(std::istream& is)
+       {
+               size_t order;
+               int unique_int;
+               size_t count;
+               char comma;
+               
+               is >> order >> comma >> unique_int;  
+               is >> count;
+               
+               m_Root.Reset();
+               m_Order = order;
+               m_Unique = (unique_int == 1);
+               m_NumKeys = 0;
+               m_Height = 1;
+               
+               m_Root = BTNode(2 * order + 1, m_Unique);
+               m_Root.SetMaxKeysForChilds(order);
+               m_Root.SetParent(nullptr);
+               
+               for(size_t i = 0; i < count; i++) {
+                       keyType key;
+                       ObjIDType objID;
+                       
+                       is >> key >> comma >> objID; 
+                       Insert(key, objID);  
+               }
+               
+               return is;
+       }
+       
        // Template versions using std::invoke (TODO #6, #7, #8 completed)
        template <typename Func, typename... Args>
        void ForEach(Func&& func, Args&&... args)
@@ -147,6 +192,16 @@ public:
        reverse_iterator rend()
        {
                return reverse_iterator(this, nullptr, 0);
+       }
+
+       friend std::ostream& operator<<(std::ostream& os, const BTree& tree)
+       {
+               return tree.Write(os);
+       }
+
+       friend std::istream& operator>>(std::istream& is, BTree& tree)
+       {
+               return tree.Read(is);
        }
 
 protected:
