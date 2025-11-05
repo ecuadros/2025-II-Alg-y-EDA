@@ -86,6 +86,13 @@ public:
 
        bool Save(const std::string& filename) const;
        bool Load(const std::string& filename);
+       size_t size()   const { return m_NumKeys; }
+       size_t height() const { return m_Height;  }
+       size_t GetOrder() const { return m_Order; }
+
+       void Print(std::ostream& os) const {
+       const_cast<BTNode&>(m_Root).Print(os);
+       }
 protected:
        BTNode          m_Root;
        size_t          m_Height;  // height of tree
@@ -199,6 +206,12 @@ bool BTree<Trait>::Load(const std::string& filename) {
     m_NumKeys = computeSize(m_Root);
 
     return true;
+}
+template <typename Trait>
+std::ostream& operator<<(std::ostream& os, const BTree<Trait>& t) {
+    os << "size=" << t.size() << ", height=" << t.height() << "\n";
+    t.Print(os);        
+    return os;
 }
 
 #endif
