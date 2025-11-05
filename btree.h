@@ -40,6 +40,18 @@ public:
               m_Root.SetMaxKeysForChilds(order);
               m_Height = 1;
        }
+
+       BTree(BTree&& other) noexcept
+              : m_Root(std::move(other.m_Root)),
+                m_Height(other.m_Height),
+                m_Order(other.m_Order),
+                m_NumKeys(other.m_NumKeys),
+                m_Unique(other.m_Unique)
+       {
+              other.m_Height = 1;
+              other.m_NumKeys = 0;
+       }
+
        ~BTree() {}
        //int           Open (char * name, int mode);
        //int           Create (char * name, int mode);

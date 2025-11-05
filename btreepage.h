@@ -85,6 +85,7 @@ class CBTreePage //: public SimpleIndex <keyType>
 
  public:
        CBTreePage(size_t maxKeys, bool unique = true);
+       CBTreePage(CBTreePage&& other) noexcept;
        virtual ~CBTreePage();
 
        bt_ErrorCode    Insert (const keyType &key, const ObjIDType ObjID);
@@ -171,6 +172,21 @@ CBTreePage<Trait>:: CBTreePage(size_t maxKeys, bool unique)
 {
        Create();
        SetMaxKeysForChilds(m_MaxKeys);
+}
+
+template <typename Trait>
+CBTreePage<Trait>::CBTreePage(CBTreePage&& other) noexcept
+       : m_MinKeys(other.m_MinKeys),
+         m_MaxKeys(other.m_MaxKeys),
+         m_MaxKeysForChilds(other.m_MaxKeysForChilds),
+         m_Unique(other.m_Unique),
+         m_isRoot(other.m_isRoot),
+         m_Keys(std::move(other.m_Keys)),
+         m_SubPages(std::move(other.m_SubPages)),
+         m_KeyCount(other.m_KeyCount)
+{
+       other.m_KeyCount = 0;
+       other.m_MinKeys = 0;
 }
 
 template <typename Trait>

@@ -61,7 +61,16 @@ int main (int argc, char * argv[]){
 		result = bt.Insert(keys1[i], i*i);
 	}
 
-	bt.Print(std::cout);
+	std::cout << "\n=== Probando Move Constructor ===" << std::endl;
+	std::cout << "BTree original - size: " << bt.size() << ", height: " << bt.height() << std::endl;
+
+	BTree<CharTrait> bt2(std::move(bt));
+
+	std::cout << "BTree movido - size: " << bt2.size() << ", height: " << bt2.height() << std::endl;
+
+	std::cout << "BTree original despues del move - size: " << bt.size() << ", height: " << bt.height() << std::endl;
+
+	std::cout << "\nContenido del BTree movido:" << std::endl;
 
 	return 0;
 }
