@@ -4,6 +4,7 @@
 #include <vector>
 #include <assert.h>
 #include <functional>
+#include <utility>      
 
 /**
  * @file CBTreePage.h
@@ -374,19 +375,14 @@ template <typename Trait>
 CBTreePage<Trait>::CBTreePage(CBTreePage &&other){
         // std::cout << "CBTreePage MOVE CONSTRUCTOR debug\n";
 
-        m_Keys          = std::move(other.m_Keys);
-        m_SubPages      = std::move(other.m_SubPages);
-        m_KeyCount      = other.m_KeyCount;
-        m_MaxKeys       = other.m_MaxKeys;
-        m_MinKeys       = other.m_MinKeys;
-        m_Unique        = other.m_Unique;
-        m_isRoot        = other.m_isRoot;
-        m_Compare       = other.m_Compare;
-        //EXCHANGE //LOCK GUARD
-
-        other.m_KeyCount = 0;
-        other.m_MaxKeys  = 0;
-        other.m_MinKeys  = 0;
+        m_Keys          = std::exchange(other.m_Keys, {});
+        m_SubPages      = std::exchange(other.m_SubPages, {});
+        m_KeyCount      = std::exchange(other.m_KeyCount, 0);
+        m_MaxKeys       = std::exchange(other.m_MaxKeys, 0);
+        m_MinKeys       = std::exchange(other.m_MinKeys, 0);
+        m_Unique        = std::exchange(other.m_Unique, true);
+        m_isRoot        = std::exchange(other.m_isRoot, false);
+        m_Compare       = std::exchange(other.m_Compare, CompareFunction{});
 }
 
 //move assignment operator
@@ -411,18 +407,14 @@ CBTreePage<Trait>& CBTreePage<Trait>::operator=(CBTreePage &&other){
         // std::cout << "CBTreePage MOVE ASSIGNMENT OPERATOR debug\n";
 
         if(this != &other){
-                m_Keys          = std::move(other.m_Keys);
-                m_SubPages      = std::move(other.m_SubPages);
-                m_KeyCount      = other.m_KeyCount;
-                m_MaxKeys       = other.m_MaxKeys;
-                m_MinKeys       = other.m_MinKeys;
-                m_Unique        = other.m_Unique;
-                m_isRoot        = other.m_isRoot;
-                m_Compare       = other.m_Compare;
-
-                other.m_KeyCount = 0;
-                other.m_MaxKeys  = 0;
-                other.m_MinKeys  = 0;
+                m_Keys          = std::exchange(other.m_Keys, {});
+                m_SubPages      = std::exchange(other.m_SubPages, {});
+                m_KeyCount      = std::exchange(other.m_KeyCount, 0);
+                m_MaxKeys       = std::exchange(other.m_MaxKeys, 0);
+                m_MinKeys       = std::exchange(other.m_MinKeys, 0);
+                m_Unique        = std::exchange(other.m_Unique, true);
+                m_isRoot        = std::exchange(other.m_isRoot, false);
+                m_Compare       = std::exchange(other.m_Compare, CompareFunction{});
         }
         return *this;
 }

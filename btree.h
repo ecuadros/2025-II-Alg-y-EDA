@@ -2,6 +2,7 @@
 #define __BTREE_H__
 
 #include <iostream>
+#include <utility>
 #include "btreepage.h"
 #define DEFAULT_BTREE_ORDER 3
 
@@ -43,10 +44,10 @@ class BTree
     typedef typename Trait::keyType keyType; ///< Tipo de las claves del árbol.
     typedef typename Trait::ObjIDType ObjIDType; ///< Tipo de los identificadores de objeto.
     typedef typename Trait::CompareFunction CompareFunction; ///< Función de comparación.
-    // typedef CBTreePage<Trait> BTNode; ///< Nodo del árbol B (CBTreePage).
+    typedef CBTreePage<Trait> BTNode; ///< Nodo del árbol B (CBTreePage).
     
 public:
-typedef CBTreePage<Trait> BTNode; ///< Nodo del árbol B (CBTreePage).
+    // typedef CBTreePage<Trait> BTNode; ///< Nodo del árbol B (CBTreePage) solo para el testmove
     typedef typename BTNode::ObjectInfo ObjectInfo; ///< Información del objeto almacenado en el nodo.
 
     /**
@@ -203,32 +204,24 @@ protected:
 //move constructor en btree
 template <typename Trait>
 BTree<Trait>::BTree(BTree&& other){
-    m_Root = std::move(other.m_Root);
-    m_Height = other.m_Height;
-    m_Order = other.m_Order;
-    m_NumKeys = other.m_NumKeys;
-    m_Unique = other.m_Unique;
+    m_Root      = std::move(other.m_Root);
     
-    // Reset the source object
-    other.m_Height = 1;
-    other.m_Order = DEFAULT_BTREE_ORDER;
-    other.m_NumKeys = 0;
-    other.m_Unique = true;
+    m_Height    = std::exchange(other.m_Height, 1);
+    m_Order     = std::exchange(other.m_Order, DEFAULT_BTREE_ORDER);
+    m_NumKeys   = std::exchange(other.m_NumKeys, 0);
+    m_Unique    = std::exchange(other.m_Unique, true);
 }
 
 template <typename Trait>
 BTree<Trait>& BTree<Trait>::operator=(BTree &&other){
-    m_Root = std::move(other.m_Root);
-    m_Height = other.m_Height;
-    m_Order = other.m_Order;
-    m_NumKeys = other.m_NumKeys;
-    m_Unique = other.m_Unique;
-    
-    // Reset the source object
-    other.m_Height = 1;
-    other.m_Order = DEFAULT_BTREE_ORDER;
-    other.m_NumKeys = 0;
-    other.m_Unique = true;
+    if(this != &other){
+        m_Root      = std::move(other.m_Root);
+        
+        m_Height    = std::exchange(other.m_Height, 1);
+        m_Order     = std::exchange(other.m_Order, DEFAULT_BTREE_ORDER);
+        m_NumKeys   = std::exchange(other.m_NumKeys, 0);
+        m_Unique    = std::exchange(other.m_Unique, true);
+    }
     
     return *this;
 }
