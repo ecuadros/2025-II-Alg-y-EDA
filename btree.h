@@ -43,9 +43,10 @@ class BTree
     typedef typename Trait::keyType keyType; ///< Tipo de las claves del árbol.
     typedef typename Trait::ObjIDType ObjIDType; ///< Tipo de los identificadores de objeto.
     typedef typename Trait::CompareFunction CompareFunction; ///< Función de comparación.
-    typedef CBTreePage<Trait> BTNode; ///< Nodo del árbol B (CBTreePage).
+    // typedef CBTreePage<Trait> BTNode; ///< Nodo del árbol B (CBTreePage).
     
 public:
+typedef CBTreePage<Trait> BTNode; ///< Nodo del árbol B (CBTreePage).
     typedef typename BTNode::ObjectInfo ObjectInfo; ///< Información del objeto almacenado en el nodo.
 
     /**
@@ -65,11 +66,18 @@ public:
 
     ~BTree() {}
 
+    //move constructor en btree
+    BTree(BTree<Trait> &&other);
+
+       // move asignment operator en btree
+       BTree &operator=(BTree<Trait> &&other);
+
+
     /**
      * @brief Inserta una nueva clave en el árbol B.
-     * 
+     *
      * Si la clave ya existe y se permite duplicados, no se realiza ninguna acción.
-     * 
+     *
      * @param key La clave a insertar.
      * @param ObjID El identificador de objeto asociado con la clave.
      * @return `true` si la inserción fue exitosa, `false` si hubo un error (como duplicados).
@@ -98,10 +106,12 @@ public:
     ObjIDType Search(const keyType key)
     {
         ObjIDType ObjID = ObjIDType();
-        m_Root.Search(key, ObjID);
-        return ObjID;
-    }
+        
+        if (m_Root.Search(key, ObjID))
+            return ObjID;
+        return -1;
 
+    }
     /**
      * @brief Obtiene el número de claves almacenadas en el árbol B.
      * 
@@ -189,6 +199,40 @@ protected:
     bool m_Unique; ///< Si es `true`, los elementos deben ser únicos.
 };
 
+
+//move constructor en btree
+template <typename Trait>
+BTree<Trait>::BTree(BTree&& other){
+    m_Root = std::move(other.m_Root);
+    m_Height = other.m_Height;
+    m_Order = other.m_Order;
+    m_NumKeys = other.m_NumKeys;
+    m_Unique = other.m_Unique;
+    
+    // Reset the source object
+    other.m_Height = 1;
+    other.m_Order = DEFAULT_BTREE_ORDER;
+    other.m_NumKeys = 0;
+    other.m_Unique = true;
+}
+
+template <typename Trait>
+BTree<Trait>& BTree<Trait>::operator=(BTree &&other){
+    m_Root = std::move(other.m_Root);
+    m_Height = other.m_Height;
+    m_Order = other.m_Order;
+    m_NumKeys = other.m_NumKeys;
+    m_Unique = other.m_Unique;
+    
+    // Reset the source object
+    other.m_Height = 1;
+    other.m_Order = DEFAULT_BTREE_ORDER;
+    other.m_NumKeys = 0;
+    other.m_Unique = true;
+    
+    return *this;
+}
+
 /**
  * @brief Inserta una nueva clave en el árbol B.
  * 
@@ -231,6 +275,22 @@ bool BTree<Trait>::Remove(const keyType key, const ObjIDType ObjID)
     if (error == bt_rootmerged)
         m_Height--;
     return true;
+}
+
+//implementamos foreach
+template <typename Trait>
+template <typename Function>
+void BTree<Trait>::ForEach(Function fn)
+{
+    m_Root.ForEach(fn, 0);
+}
+
+//implementamos FirstThat
+template <typename Trait>
+template <typename Function>
+typename BTree<Trait>::ObjectInfo* BTree<Trait>::FirstThat(Function fn)
+{
+    return m_Root.FirstThat(fn, 0);
 }
 
 /**

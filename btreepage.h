@@ -1100,7 +1100,7 @@ CBTreePage<Trait>::FirstThat(Function fn, size_t level, Args... pExtra)
        for(size_t i = 0 ; i < m_KeyCount ; i++)
        {
                if( m_SubPages[i] )
-                       if( (pTmp = m_SubPages[i]->FirstThat(fn, level+1) ) )
+                       if( (pTmp = m_SubPages[i]->FirstThat(fn, level+1, pExtra...) ) )
                                return pTmp;
                if( std::invoke(fn, m_Keys[i], level, pExtra...) )
                        return &m_Keys[i];
@@ -1415,11 +1415,11 @@ void CBTreePage<Trait>::Print(ostream & os)
 }
 
 //descomentar para usar el test del move cosntructor
-// template <typename Trait>
-// size_t CBTreePage<Trait>::GetKeyCount()
-// {
-//        return m_KeyCount;
-// }
+template <typename Trait>
+size_t CBTreePage<Trait>::GetKeyCount()
+{
+       return m_KeyCount;
+}
 
 
 template <typename Trait>

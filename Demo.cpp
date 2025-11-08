@@ -74,6 +74,39 @@ void DemoOperations(DemoTree &bt)
 
 // }
 
+// Función para probar FirstThat
+void TestFirstThat(DemoTree &bt)
+{
+    std::cout << "\n--- Test para FirstThat ---\n";
+    std::cout << "Buscando la PRIMERA clave que sea una letra minúscula...\n";
+
+    auto esMinuscula = [](DemoTree::ObjectInfo &info, size_t level) -> bool {
+        return info.key >= 'a' && info.key <= 'z';
+    };
+
+    // Llamamos a FirstThat con nuestra lambda
+    DemoTree::ObjectInfo* pEncontrado = bt.FirstThat(esMinuscula);
+
+    if (pEncontrado) {
+        std::cout << "  Encontrado: Clave='" << pEncontrado->key 
+                  << "', ObjID=" << pEncontrado->ObjID << "\n";
+    } else {
+        std::cout << "  No se encontró ninguna clave minúscula.\n";
+    }
+
+    std::cout << "Buscando la PRIMERA clave que sea un '9'...\n";
+    DemoTree::ObjectInfo* pNueve = bt.FirstThat([](auto& info, auto level){
+        return info.key == '9';
+    });
+
+    if (pNueve) {
+        std::cout << "  Encontrado: Clave='" << pNueve->key 
+                  << "', ObjID=" << pNueve->ObjID << "\n";
+    } else {
+        std::cout << "  No se encontró la clave '9'.\n";
+    }
+}
+
 void TestWriteRead(){
     BTree<BTreeTrait<int, long>> tree1(3, true);
     tree1.Insert(10, 100);
@@ -116,6 +149,7 @@ int main()
     DemoTree bt(3);
     DemoOperations(bt);
     // TestMove();
+    TestFirstThat(bt);
     TestWriteRead();
     return 0;
 }
