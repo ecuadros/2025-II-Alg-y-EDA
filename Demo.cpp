@@ -34,7 +34,7 @@ void ThreadWorker(ConcTree &bt, int start_key, int count, int thread_id) {
 }
 
 void TestConcurrency() {
-    std::cout << "\n--- 🧪 Test de Concurrencia (Seguridad de Hilos) ---\n";
+    std::cout << "\n---Test de Concurrencia---\n";
     
     // Parámetros de la prueba
     const size_t NumThreads = 4;
@@ -211,9 +211,9 @@ void TestWriteRead(){
 
 
     BTree<BTreeTrait<int, long>> tree3(3, true);
-    std::ifstream ifs("BT.txt");
-    tree3.ReadBinaryTreeFormat(ifs);  
-    ifs.close();
+    std::ifstream ifs_("BT.txt");
+    tree3.ReadBinaryTreeFormat(ifs_);  
+    ifs_.close();
 
     std::cout << "\nArbol  cargado (formato del archivo BT.txt):\n";
     tree3.Print(std::cout);
