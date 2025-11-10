@@ -1,10 +1,89 @@
 #include <iostream>
 #include <cstring>
 #include <fstream>
+#include <algorithm>
+#include <thread>
+#include <vector>
 #include "btree.h"
 
 using DemoTrait = BTreeTrait<char, long>;
 using DemoTree  = BTree<DemoTrait>;
+
+using ConcTrait = BTreeTrait<int, int>;
+using ConcTree  = BTree<ConcTrait>;
+
+void ThreadWorker(ConcTree &bt, int start_key, int count, int thread_id) {
+    // 1. Inserciones (operaciones de Escritura)
+    for (int i = 0; i < count; ++i) {
+        int key = start_key + i;
+        if (!bt.Insert(key, thread_id)) {
+            // Esto debería ocurrir si m_Unique fuera true y la clave ya existiera.
+        }
+    }
+    
+    // 2. Búsquedas (operaciones de Lectura)
+    int found_count = 0;
+    for (int i = 0; i < count; ++i) {
+        int key = start_key + i;
+        if (bt.Search(key) != -1) {
+            found_count++;
+        }
+    }
+    std::cout << "  [Thread " << thread_id << "] Insertó y buscó " << count 
+              << " claves. Encontradas: " << found_count << '\n';
+}
+
+void TestConcurrency() {
+    std::cout << "\n--- 🧪 Test de Concurrencia (Seguridad de Hilos) ---\n";
+    
+    // Parámetros de la prueba
+    const size_t NumThreads = 4;
+    const int KeysPerThread = 50;
+    const int TotalKeys = NumThreads * KeysPerThread;
+    
+    // Creamos el árbol con un orden bajo (3) y unicidad
+    ConcTree concurrent_bt(3, true); 
+    
+    std::vector<std::thread> threads;
+    std::cout << "Lanzando " << NumThreads << " hilos para insertar " << TotalKeys << " claves...\n";
+
+    // Creamos y lanzamos los hilos
+    for (size_t i = 0; i < NumThreads; ++i) {
+        int start_key = i * KeysPerThread; // 0, 50, 100, 150...
+        threads.emplace_back(ThreadWorker, std::ref(concurrent_bt), start_key, KeysPerThread, (int)i + 1);
+    }
+    
+    // Esperamos a que todos los hilos terminen
+    for (auto &t : threads) {
+        t.join();
+    }
+    
+    std::cout << "\nTodos los hilos terminaron.\n";
+    std::cout << "Resultado final:\n";
+    std::cout << "  Claves insertadas (esperado): " << TotalKeys << '\n';
+    std::cout << "  Tamaño reportado por el árbol: " << concurrent_bt.size() << '\n';
+    std::cout << "  Altura del árbol: " << concurrent_bt.height() << '\n';
+
+    // Verificación final del árbol
+    bool integrity_ok = true;
+    for (int key = 0; key < TotalKeys; ++key) {
+        if (concurrent_bt.Search(key) == -1) {
+            std::cerr << "Fallo de integridad! Clave " << key << " no encontrada.\n";
+            integrity_ok = false;
+            break;
+        }
+    }
+
+    if (integrity_ok && concurrent_bt.size() == TotalKeys) {
+        std::cout << "El árbol pasó la prueba de integridad concurrente.\n";
+    } else {
+        std::cout << "El árbol falló la prueba de integridad o el conteo de claves.\n";
+    }
+
+    std::cout << "---------------------------------------------------------\n";
+}
+
+
 
 
 void DemoOperations(DemoTree &bt)
@@ -132,9 +211,9 @@ void TestWriteRead(){
 
 
     BTree<BTreeTrait<int, long>> tree3(3, true);
-    std::ifstream ifs_profesor("BT.txt");
-    tree3.ReadBinaryTreeFormat(ifs_profesor);  
-    ifs_profesor.close();
+    std::ifstream ifs("BT.txt");
+    tree3.ReadBinaryTreeFormat(ifs);  
+    ifs.close();
 
     std::cout << "\nArbol  cargado (formato del archivo BT.txt):\n";
     tree3.Print(std::cout);
@@ -151,5 +230,7 @@ int main()
     // TestMove();
     TestFirstThat(bt);
     TestWriteRead();
+
+    TestConcurrency();
     return 0;
 }
