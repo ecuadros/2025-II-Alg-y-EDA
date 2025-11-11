@@ -4,6 +4,9 @@
 #include <iostream>
 #include <utility>
 #include <functional>
+#include <mutex>
+#include <shared_mutex>
+#include <fstream>
 #include "btreepage.h"
 #define DEFAULT_BTREE_ORDER 3
 
@@ -44,7 +47,7 @@ class BTree // this is the full version of the BTree
 public:
        //typedef ObjectInfo iterator;
        typedef typename BTNode::ObjectInfo      ObjectInfo;
-       friend std::ostream& operator<<(std::ostream& os, const Btree<Trait>& tree);
+       friend std::ostream& operator<<(std::ostream& os, const BTree<Trait>& tree);
 
 public:
        BTree(size_t order = DEFAULT_BTREE_ORDER, bool unique = true)
@@ -88,34 +91,9 @@ public:
        }
        ~BTree() {}
        // Write tree to file
-       bool Write(const std::string& filename) {
-           std::ofstream file(filename, std::ios::binary);
-           if (!file) return false;
-
-           // Write Header
-           FileHeader header{m_NumKeys, m_Height};
-           if (!header.Write(file)) return false;
-
-           // Write Tree recursively
-           return WriteNode(file, &m_Root);
-       }
-
+       bool            Write(const std::string& filename);
        // Read tree from file
-       bool Read(const std::string& filename) {
-           std::ifstream file(filename, std::ios::binary);
-           if (!file) return false;
-
-           // read header
-           FileHeader header;
-           if (!header.Read(file)) return false;
-
-           // Update numKeys y height
-           m_NumKeys = header.numKeys;
-           m_Height = header.height;
-
-           // Read Tree recursively (m_Root ya está inicializada por el constructor)
-           return ReadNode(file, &m_Root);
-       }
+       bool            Read(const std::string& filename);
        //int           Open (char * name, int mode);
        //int           Create (char * name, int mode);
        //int           Close ();
@@ -208,10 +186,12 @@ protected:
        size_t          m_Order;   // order of tree
        size_t          m_NumKeys; // number of keys
        bool            m_Unique;  // Accept the elements only once ?
+       mutable         std::shared_mutex m_mutex; //mutable : lockable in const funcs
 };     
 
 template <typename Trait>
 bool BTree<Trait>::Insert(const keyType key, const long ObjID){
+       std::unique_lock<std::shared_mutex> _lk(this->m_Mutex);
        bt_ErrorCode error = m_Root.Insert(key, ObjID);
        if( error == bt_duplicate )
                return false;
@@ -226,6 +206,7 @@ bool BTree<Trait>::Insert(const keyType key, const long ObjID){
 template <typename Trait>
 bool BTree<Trait>::Remove (const keyType key, const long ObjID)
 {
+       std::unique_lock<std::shared_mutex> _lk(this->m_Mutex);
        bt_ErrorCode error = m_Root.Remove(key, ObjID);
        if( error == bt_duplicate || error == bt_nofound )
                return false;
@@ -237,7 +218,40 @@ bool BTree<Trait>::Remove (const keyType key, const long ObjID)
 }
 
 template <typename Trait>
+bool BTree<Trait>::Write(const std::string& filename) {
+       std::unique_lock<std::shared_mutex> _lk(this->m_Mutex);
+       std::ofstream file(filename, std::ios::binary);
+       if (!file) return false;
+
+       // Write Header
+       FileHeader header{m_NumKeys, m_Height};
+       if (!header.Write(file)) return false;
+       // Write Tree recursively
+       return WriteNode(file, &m_Root);
+}
+
+template <typename Trait>
+bool BTree<Trait>::Read(const std::string& filename) {
+       std::unique_lock<std::shared_mutex> _lk(this->m_Mutex);
+       std::ifstream file(filename, std::ios::binary);
+       if (!file) return false;
+
+       // read header
+       FileHeader header;
+       if (!header.Read(file)) return false;
+
+       // Update numKeys y height
+       m_NumKeys = header.numKeys;
+       m_Height = header.height;
+
+       // Read Tree recursively (m_Root ya está inicializada por el constructor)
+       return ReadNode(file, &m_Root);
+}
+
+
+template <typename Trait>
 std::ostream& operator<<(std::ostream& os, const BTree<Trait>& tree) {
+    std::shared_lock<std::shared_mutex> _lk(tree.m_Mutex);
     os << "BTree: order=" << tree.m_Order << ", height=" << tree.m_Height 
        << ", keys=" << tree.m_NumKeys << "\n";
     tree.m_Root.Print(os);  
