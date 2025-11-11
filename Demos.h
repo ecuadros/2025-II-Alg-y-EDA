@@ -12,7 +12,7 @@ void BTreeTest()
     // --- INSERCION ---
     std::cout << "Test #1: Inserción" << std::endl;
 
-    using MyTestTrait = BTreeTrait<int, long>;
+    using MyTestTrait = BTreeTrait<int, long, std::less<int>>;
     BTree<MyTestTrait> myTree;
 
     int keysToInsert[] = {
@@ -39,7 +39,7 @@ void BTreeTest()
     // --- FIRST THAT ---
     std::cout << "\nTest #4: FirstThat()" << std::endl;
     auto* result = 
-        myTree.FirstThat([](auto& info, size_t level) {
+        myTree.FirstThat([](auto& info) {
             return info.key > 20; // Encontrar la primera clave > 20
         });
     if (result) {
@@ -96,6 +96,12 @@ void BTreeTest()
     std::cout << "Contenido de 'reverseTree': " << reverseTree << std::endl;
     std::cout << "(Esperado: [30, 28, 25, 23, 22, 21, 20, 19, 18, 17, 15, 14, 12, 11, 10, 8, 7, 5, 3, 1])" << std::endl;
 
+    // --- ITERADORES ---
+    std::cout << "\nTest #10: Iteradores" << std::endl;
+    std::cout << "Iterando desde begin() hasta end(): ";
+    for (auto& item : reverseTree) {
+        std::cout << item.key << " ";
+    }
 }
 
 #endif // __DEMOS_H__

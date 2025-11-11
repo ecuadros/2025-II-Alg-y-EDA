@@ -107,11 +107,11 @@ class CBTreePage //: public SimpleIndex <keyType>
        void Write(ostream &file) const;
        void Read(istream &file, BTPage *pParent);
 
-       template <typename Function>
-       void ForEach(Function fn, size_t level);
+       template <typename Function, typename... Args>
+       void ForEach(Function fn, Args&&... args);
 
-       template <typename Function>
-       ObjectInfo* FirstThat(Function fn, size_t level);
+       template <typename Function, typename... Args>
+       ObjectInfo* FirstThat(Function fn, Args&&... args);
 
 protected:
        size_t  m_MinKeys; // minimum number of keys in a node
@@ -171,6 +171,16 @@ protected:
             return 0;
        }
 
+       size_t GetLevel(){
+                size_t level = 0;
+                BTPage *pPage = this;
+                while( pPage->m_parent != nullptr ){
+                        level++;
+                        pPage = pPage->m_parent;
+                }
+                return level;
+       }
+
 private:
        bool SplitRoot();
        void SplitPageInto3(vector<ObjectInfo>   & tmpKeys,
@@ -193,20 +203,17 @@ CBTreePage<Trait>:: CBTreePage(size_t maxKeys, bool unique, Compare comp)
 
 template <typename Trait>
 CBTreePage<Trait>::CBTreePage(CBTreePage&& other)
-        : m_MinKeys(other.m_MinKeys),
-          m_MaxKeys(other.m_MaxKeys),
-          m_MaxKeysForChilds(other.m_MaxKeysForChilds),
-          m_Unique(other.m_Unique),
-          m_isRoot(other.m_isRoot),
-          m_Keys(std::move(other.m_Keys)),
-          m_SubPages(std::move(other.m_SubPages)),
-          m_KeyCount(other.m_KeyCount),
-          m_compare(std::move(other.m_compare)),
-          m_parent(other.m_parent)
+        : m_MinKeys             (std::exchange(other.m_MinKeys, 0)),
+          m_MaxKeys             (std::exchange(other.m_MaxKeys, 0)),
+          m_MaxKeysForChilds    (std::exchange(other.m_MaxKeysForChilds, 0)),
+          m_Unique              (other.m_Unique),
+          m_isRoot              (other.m_isRoot),
+          m_Keys                (std::exchange(other.m_Keys, {})),
+          m_SubPages            (std::exchange(other.m_SubPages, {})),
+          m_KeyCount            (std::exchange(other.m_KeyCount, 0)),
+          m_compare             (std::exchange(other.m_compare, {})),
+          m_parent              (std::exchange(other.m_parent, nullptr))
 {
-       other.m_KeyCount = 0;
-       other.m_parent = nullptr;
-
        // Se debe actualizar el padre de los subnodos
        for (size_t i = 0; i <= m_KeyCount; ++i) {
               if (m_SubPages[i]) {
@@ -547,37 +554,37 @@ bool CBTreePage<Trait>::Search(const keyType &key, ObjIDType &ObjID)
 }
 
 template <typename Trait>
-template <typename Function>
-void CBTreePage<Trait>::ForEach(Function fn, size_t level)
+template <typename Function, typename... Args>
+void CBTreePage<Trait>::ForEach(Function fn, Args&&... args)
 {
        for(size_t i = 0 ; i < m_KeyCount ; i++)
        {
                if( m_SubPages[i] )
-                       m_SubPages[i]->ForEach(fn, level+1);
-               std::invoke(fn, m_Keys[i], level);
+                       m_SubPages[i]->ForEach(fn, std::forward<Args>(args)...);
+               std::invoke(fn, m_Keys[i], std::forward<Args>(args)...);
        }
        if( m_SubPages[m_KeyCount] )
-               m_SubPages[m_KeyCount]->ForEach(fn, level+1);
+               m_SubPages[m_KeyCount]->ForEach(fn, std::forward<Args>(args)...);
 }
 
 // Apicar una funcion hasta encontrar el 1er elemento
 // aque que retorne true ante esta funcion
 template <typename Trait>
-template <typename Function>
+template <typename Function, typename... Args>
 typename CBTreePage<Trait>::ObjectInfo *
-CBTreePage<Trait>::FirstThat(Function fn, size_t level)
+CBTreePage<Trait>::FirstThat(Function fn, Args&&... args)
 {
        ObjectInfo *pTmp;
        for(size_t i = 0 ; i < m_KeyCount ; i++)
        {
                if( m_SubPages[i] )
-                       if( (pTmp = m_SubPages[i]->FirstThat(fn, level+1)) )
+                       if( (pTmp = m_SubPages[i]->FirstThat(fn, std::forward<Args>(args)...)) )
                                return pTmp;
-               if( std::invoke(fn, m_Keys[i], level) )
+               if( std::invoke(fn, m_Keys[i], std::forward<Args>(args)...) )
                        return &m_Keys[i];
        }
        if( m_SubPages[m_KeyCount] )
-               if( (pTmp = m_SubPages[m_KeyCount]->FirstThat(fn, level+1)) )
+               if( (pTmp = m_SubPages[m_KeyCount]->FirstThat(fn, std::forward<Args>(args)...)) )
                        return pTmp;
        return 0;
 }
@@ -750,11 +757,13 @@ CBTreePage<Trait>::GetFirstObjectInfo()
 template <typename Trait>
 void CBTreePage<Trait>::Print(ostream & os)
 {
-       ForEach([&os](ObjectInfo &info, size_t level)
-        {
-                for(size_t i = 0; i < level ; i++) os << "\t";
-                os << info.key << "->" << info.ObjID << "(" << level << ")" << "\n";
-        }, 0);
+        ForEach([this, &os](ObjectInfo& info){
+               size_t level = this->GetLevel();
+               for (size_t i = 0; i < level; i++) {
+                      os << "\t";
+               }
+               os << "Key: " << info.key << ", ObjID: " << info.ObjID << "\n";
+        });
 }
 
 template <typename Trait>

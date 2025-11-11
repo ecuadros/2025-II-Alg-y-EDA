@@ -5,11 +5,22 @@
 #include "btreepage.h"
 #define DEFAULT_BTREE_ORDER 3
 
-// DONE: Funcion Compare agregada
+template <typename _keyType, typename _ObjIDType, typename _Compare >
+struct BTreeTrait;
+
+template <typename Trait>
+class BTreeIterator;
+
+template <typename Trait>
+class BTree;
+
+template <typename Trait>
+std::ostream& operator<<(std::ostream &os, BTree<Trait> &btree);
+
 
 const size_t MaxHeight = 5; 
 
-template <typename _keyType, typename _ObjIDType, typename _Compare = std::less<_keyType> >
+template <typename _keyType, typename _ObjIDType, typename _Compare >
 struct BTreeTrait
 {
        using keyType = _keyType;
@@ -71,6 +82,7 @@ public:
        typedef typename BTNode::ObjectInfo      ObjectInfo;
 
        friend class BTreeIterator<Trait>;
+       friend std::ostream& operator<< <>(ostream &os, BTree<Trait>& tree);
        typedef BTreeIterator<Trait>       iterator;
 
        iterator begin() {
@@ -97,20 +109,20 @@ public:
               return iterator(nullptr, 0);
        }
 
-       template <typename T_Func>
-       void ForEach(T_Func fn)
+       template <typename T_Func, typename... Args>
+       void ForEach(T_Func fn, Args&&... args)
        { 
-           m_Root.ForEach(fn, 0); 
+           m_Root.ForEach(fn, std::forward<Args>(args)...); 
        }
 
-       template <typename T_Func>
-       ObjectInfo* FirstThat(T_Func fn)
+       template <typename T_Func, typename... Args>
+       ObjectInfo* FirstThat(T_Func fn, Args&&... args)
        { 
-           return m_Root.FirstThat(fn, 0); 
+           return m_Root.FirstThat(fn, std::forward<Args>(args)...); 
        }
 
-       bool Write(const std::string &filename) const;
-       bool Read(const std::string &filename);
+       bool Write(const std::string &filename);
+       bool Read(std::string &filename);
 
 public:
        BTree(size_t order = DEFAULT_BTREE_ORDER, bool unique = true, const Compare& compare = Compare())
@@ -125,17 +137,14 @@ public:
        }
 
        BTree(BTree &&other)
-       : m_Order(other.m_Order),
-         m_compare(std::move(other.m_compare)),
-         m_Root(std::move(other.m_Root)),
-         m_Unique(other.m_Unique),
-         m_NumKeys(other.m_NumKeys),
-         m_Height(other.m_Height)
-       {
-              other.m_NumKeys = 0;
-              other.m_Height = 0;
+       : m_Order     (std::exchange(other.m_Order, 0)),
+         m_compare   (std::exchange(other.m_compare, {})),
+         m_Root      (std::exchange(other.m_Root, {})),
+         m_Unique    ((other.m_Unique)),
+         m_NumKeys   (std::exchange(other.m_NumKeys, 0)),
+         m_Height    (std::exchange(other.m_Height, 0))
+       {}
 
-       }
        ~BTree() {}
        //int           Open (char * name, int mode);
        //int           Create (char * name, int mode);
@@ -192,7 +201,7 @@ bool BTree<Trait>::Remove (const keyType key, const long ObjID)
 }
 
 template <typename Trait>
-bool BTree<Trait>::Write(const std::string &filename) const
+bool BTree<Trait>::Write(const std::string &filename)
 {
        std::ofstream file(filename);
        if (!file.is_open()) {
@@ -200,17 +209,13 @@ bool BTree<Trait>::Write(const std::string &filename) const
               return false;
        }
 
-       file << m_Height << " " << m_NumKeys << "\n";
-       
-       // Write recursivo
-       m_Root.Write(file);
-
+       file << (*this);
        file.close();
        return !file.fail();
 }
 
 template <typename Trait>
-bool BTree<Trait>::Read(const std::string &filename)
+bool BTree<Trait>::Read(std::string &filename)
 {
        std::ifstream file(filename);
        if (!file.is_open()) {
@@ -335,18 +340,8 @@ BTreeIterator<Trait>& BTreeIterator<Trait>::operator--()
 template <typename Trait>
 ostream& operator<<(ostream &os, BTree<Trait> &btree)
 {
-       os << "[";
-       bool first = true;
-
-       for(auto& item : btree) {
-              if (!first) {
-                     os << ", ";
-              }
-              os << item.key << "->" << item.ObjID;
-              first = false;
-       }
-
-       os << "]";
+       os << btree.height() << " " << btree.size() << "\n";
+       btree.m_Root.Write(os);
        return os;
 }
 
