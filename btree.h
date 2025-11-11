@@ -5,269 +5,266 @@
 #include <fstream>
 #include <memory>
 #include <functional>
-#include <stdexcept>
+#include <mutex>
+#include <shared_mutex>
+#include <iterator>
+#include <string>
+#include <utility>
 #include "btreepage.h"
 #define DEFAULT_BTREE_ORDER 3
 
+template <typename Trait>
+class BTree;
+template <typename Trait>
+class BtreeIterator;
+template <typename Trait>
+class BTreeReverseIterator;
+
 const size_t MaxHeight = 5;
 
-template <typename _keyType, typename _ObjIDType>
+template <typename _keyType, typename _ObjIDType, typename _Compare = std::less<_keyType>>
 struct BTreeTrait
 {
        using keyType = _keyType;
        using ObjIDType = _ObjIDType;
-       struct Compare
+       using Compare = _Compare;
+};
+
+template <typename Key, typename Value>
+using BTreeAscTrait = BTreeTrait<Key, Value, std::less<Key>>;
+
+template <typename Key, typename Value>
+using BTreeDescTrait = BTreeTrait<Key, Value, std::greater<Key>>;
+
+template <typename Trait>
+class BTreeIterator
+{
+       friend class BTree<Trait>;
+       typedef CBTreePage<Trait> BTPage;
+       typedef typename BTPage::ObjectInfo ObjectInfo;
+
+private:
+       BTPage *m_CurrentPage;
+       size_t m_CurrentIndex;
+
+       BTreeIterator(BTPage *page, size_t index) : m_CurrentPage(page), m_CurrentIndex(index) {}
+
+public:
+       using iterator_category = std::forward_iterator_tag;
+       using value_type = ObjectInfo;
+       using difference_type = std::ptrdiff_t;
+       using pointer = ObjectInfo *;
+       using reference = ObjectInfo &;
+
+       BTreeIterator() : m_CurrentPage(nullptr), m_CurrentIndex(0) {}
+
+       ObjectInfo &operator*() { return m_CurrentPage->m_Keys[m_CurrentIndex]; }
+       ObjectInfo *operator->() { return &(m_CurrentPage->m_Keys[m_CurrentIndex]); }
+       BTreeIterator &operator++();
+       BTreeIterator operator++(int)
        {
-              bool operator()(const keyType &a, const keyType &b) const
-              {
-                     return a < b;
-              }
-       };
+              BTreeIterator temp = *this;
+              ++(*this);
+              return temp;
+       }
+
+       bool operator==(cosnt BTreeIterator &other) const
+       {
+              if (m_CurrentPage == nullptr && other.m_CurrentPage == nullptr)
+                     return true;
+              return m_CurrentPage == other.m_CurrentPage && m_CurrentIndex == other.m_CurrentIndex;
+       }
+
+       bool operator!=(const BTreeIterator &other) const
+       {
+              return !(*this == other);
+       }
+};
+
+template <typename Trait>
+class BTreeReverseIterator
+{
+       friend class BTree<Trait>;
+       typedef CBTreePage<Trait> BTPage;
+       typedef typename BTPage::ObjectInfo ObjectInfo;
+
+private:
+       BTPage *m_CurrentPage;
+       size_t m_CurrentIndex;
+
+       BTreeReverseIterator(BTPage *page, size_t index) : m_CurrentPage(page), m_CurrentIndex(index) {}
+
+public:
+       using iterator_category = std::forward_iterator_tag;
+       using value_type = ObjectInfo;
+       using difference_type = std::ptrdiff_t;
+       using pointer = ObjectInfo *;
+       using reference = ObjectInfo &;
+
+       BTreeReverseIterator() : m_CurrentPage(nullptr), m_CurrentIndex(0) {}
+
+       ObjectInfo &operator*() { return m_CurrentPage->m_Keys[m_CurrentIndex]; }
+       ObjectInfo *operator->() { return &(m_CurrentPage->m_Keys[m_CurrentIndex]); }
+       BTreeReverseIterator &operator++();
+       BTreeReverseIterator operator++(int)
+       {
+              BTreeReverseIterator temp = *this;
+              ++(*this);
+              return temp;
+       }
+
+       bool operator==(const BTreeReverseIterator &other) const
+       {
+              if (m_CurrentPAge == nullptr && other.m_CurrentPage == nullptr)
+                     return true;
+              return m_CurrentPage == other.m_CurrentPage && m_CurrentIndex == other.m_CurrentIndex;
+       }
+
+       bool operator!=(const BTreeReverseIterator &other) const
+       {
+              return !(*this == other);
+       }
 };
 
 template <typename Trait>
 class BTree
 {
        typedef typename Trait::keyType keyType;
-       typedef typename Trait::ObjIDType ObjIDType;
+       typedef typename Trait : ObjIDType ObjIDType;
        typedef CBTreePage<Trait> BTNode;
 
 public:
-       typedef typename BTNode::lpfnForEach2 lpfnForEach2;
-       typedef typename BTNode::lpfnForEach3 lpfnForEach3;
-       typedef typename BTNode::lpfnFirstThat2 lpfnFirstThat2;
-       typedef typename BTNode::lpfnFirstThat3 lpfnFirstThat3;
        typedef typename BTNode::ObjectInfo ObjectInfo;
-
-protected:
-       template <bool Reverse>
-       class iterator_base
-       {
-       public:
-              using iterator_category = std::bidirectional_iterator_tag;
-              using value_type = ObjectInfo;
-              using reference = ObjectInfo &;
-              using pointer = ObjectInfo *;
-              using difference_type = std::ptrdiff_t;
-
-              iterator_base() : m_tree(nullptr), m_pos(-1), m_seq(nullptr) {}
-
-              reference operator*() const
-              {
-                     if (!valid())
-                            throw std::runtime_error("Invalid iterator");
-                     return m_seq->at(m_pos).first->m_Keys[m_seq->at(m_pos).second];
-              }
-
-              pointer operator->() const
-              {
-                     if (!valid())
-                            throw std::runtime_error("Invalid iterator");
-                     return &m_seq->at(m_pos).first->m_Keys[m_seq->at(m_pos).second];
-              }
-
-              iterator_base &operator++()
-              {
-                     if (!m_seq)
-                            return *this;
-                     if constexpr (!Reverse)
-                     {
-                            if (valid())
-                                   ++m_pos;
-                     }
-                     else
-                     {
-                            --m_pos;
-                     }
-                     return *this;
-              }
-
-              iterator_base operator++(int)
-              {
-                     iterator_base tmp = *this;
-                     ++*this;
-                     return tmp;
-              }
-
-              iterator_base &operator--()
-              {
-                     if (!m_seq)
-                            return *this;
-                     if constexpr (!Reverse)
-                     {
-                            --m_pos;
-                     }
-                     else
-                     {
-                            if (m_pos < (difference_type)m_seq->size())
-                                   ++m_pos;
-                     }
-                     return *this;
-              }
-
-              iterator_base operator--(int)
-              {
-                     iterator_base tmp = *this;
-                     --*this;
-                     return tmp;
-              }
-
-              bool operator==(const iterator_base &other) const
-              {
-                     // Two iterators are equal if they point to the same tree and have the same position
-                     if (m_tree != other.m_tree)
-                            return false;
-                     if (!m_seq && !other.m_seq)
-                            return true;
-                     if (!m_seq || !other.m_seq)
-                            return false;
-                     return m_pos == other.m_pos;
-              }
-
-              bool operator!=(const iterator_base &other) const
-              {
-                     return !(*this == other);
-              }
-
-       private:
-              friend class BTree;
-              using Entry = std::pair<BTNode *, size_t>;
-
-              iterator_base(BTree *tree, bool at_begin) : m_tree(tree), m_pos(-1), m_seq(nullptr)
-              {
-                     if (!tree)
-                            return;
-
-                     m_seq = build_sequence(tree);
-                     if (!m_seq || m_seq->empty())
-                            return;
-
-                     if constexpr (!Reverse)
-                     {
-                            m_pos = at_begin ? 0 : (difference_type)m_seq->size();
-                     }
-                     else
-                     {
-                            m_pos = at_begin ? ((difference_type)m_seq->size() - 1) : -1;
-                     }
-              }
-
-              bool valid() const
-              {
-                     return m_seq && m_pos >= 0 && m_pos < (difference_type)m_seq->size();
-              }
-
-              static std::shared_ptr<std::vector<Entry>> build_sequence(BTree *tree)
-              {
-                     auto seq = std::make_shared<std::vector<Entry>>();
-                     if (!tree)
-                            return seq;
-
-                     std::function<void(BTNode *)> dfs = [&](BTNode *n)
-                     {
-                            if (!n || n->m_KeyCount == 0)
-                                   return;
-                            for (size_t i = 0; i < n->m_KeyCount; ++i)
-                            {
-                                   if (n->m_SubPages[i])
-                                          dfs(n->m_SubPages[i]);
-                                   seq->push_back({n, i});
-                            }
-                            if (n->m_SubPages[n->m_KeyCount])
-                                   dfs(n->m_SubPages[n->m_KeyCount]);
-                     };
-
-                     dfs(&tree->m_Root);
-                     return seq;
-              }
-
-              BTree *m_tree;
-              difference_type m_pos;
-              std::shared_ptr<std::vector<Entry>> m_seq;
-       };
-
-public:
-       using iterator = iterator_base<false>;
-       using reverse_iterator = iterator_base<true>;
-
-       iterator begin() { return iterator(this, true); }
-       iterator end() { return iterator(this, false); }
-       reverse_iterator rbegin() { return reverse_iterator(this, true); }
-       reverse_iterator rend() { return reverse_iterator(this, false); }
+       friend class BTreeIterator<Trait>;
+       friend class BTReeReverseIterator<Trait>;
+       typedef BTreeIterator<Trait> iterator;
+       typedef BTreeReverseIterator<Trait> reverse_iterator;
 
 public:
        BTree(size_t order = DEFAULT_BTREE_ORDER, bool unique = true)
-           : m_Root(2 * order + 1, unique),
-             m_Order(order),
-             m_NumKeys(0),
-             m_Unique(unique)
+           : m_Order(order),
+             m_Root(2 * order + 1, unique),
+             m_Unique(unique),
+             m_NumKeys(0)
        {
               m_Root.SetMaxKeysForChilds(order);
               m_Height = 1;
+       }
+
+       BTree(BTree &&other) noexcept
+       {
+              std::unique_lock<std::shared_mutex> lock(other.m_Mutex);
+              m_Root 0 std::move(other.m_Root);
+              m_Height = std::exchange(other.m_Height, 1);
+              m_Unique = other.m_Unique;
+              m_NumKeys = std::exchange(other.m_NumKeys, 0);
+       }
+
+       BTree &operator=(BTree &&other) noexcept
+       {
+              if (this != &other)
+              {
+                     std::unique_lock<std::shared_mutex> lock1(m_Mutex, std::defer_lock);
+                     std::unique_lock<std::shared_mutex> lock2(other.m_Mutex, std::defer_lock);
+                     std::lock(lock1, lock2);
+                     m_Order = other.m_Order;
+                     m_Root = std::move(other.m_Root);
+                     m_Height = std::exchange(other.m_Height, 1);
+                     m_Unique = other.m_Unique;
+                     m_NumKeys = std::exchange(other.m_NumKeys, 0);
+              }
+              return *this;
        }
 
        ~BTree() {}
 
        bool Insert(const keyType key, const long ObjID);
        bool Remove(const keyType key, const long ObjID);
+
        ObjIDType Search(const keyType key)
        {
+              std::shared_lock<std::shared_mutex> lock(m_Mutex);
               ObjIDType ObjID = -1;
               m_Root.Search(key, ObjID);
               return ObjID;
        }
 
-       size_t size() { return m_NumKeys; }
-       size_t height() { return m_Height; }
-       size_t GetOrder() { return m_Order; }
-
-       void Print(ostream &os)
+       size_t size() const
        {
+              std::shared_lock<std::shared_mutex> lock(m_Mutex);
+              return m_NumKeys;
+       }
+
+       size_t height() const
+       {
+              std::shared_lock<std::shared_mutex> lock(m_Mutex);
+              return m_Height;
+       }
+
+       size_t GetOrder() const { return m_Order; }
+
+       void Print(ostream &os) const
+       {
+              std::shared_lock<std::mutex> lock(m_Mutex);
               m_Root.Print(os);
        }
 
-       template <class Fn, class... Args>
-       void ForEachT(Fn &&fn, Args &&...args)
+       std::ostream &Write(std::ostream &os) const;
+       std::istream &Read(std::istream &is);
+
+       template <typename Func, typename... Args>
+       void ForEach(Func &&func, Args &&..args)
        {
-              m_Root.ForEachT(std::forward<Fn>(fn), 0,
-                              std::forward<Args>(args)...);
+              m_Root.ForEach(std::forward<Func>(func), 0, std::forward<Args>(args)...);
        }
 
-       void ForEach(lpfnForEach2 lpfn, void *pExtra1)
+       template <typename Pred, typename... Args>
+       ObjectInfo *FirsThat(Pred &&predicatem Args &&...args)
        {
-              m_Root.ForEach(lpfn, 0, pExtra1);
+              return m_Root.FirstThat(std::forward<Pred>(predicate), 0, std::forward<Args>(args)...);
        }
 
-       void ForEach(lpfnForEach3 lpfn, void *pExtra1, void *pExtra2)
+       friend std::ostream &operator<<(std::ostream &os, const BTree<Trait> &tree)
        {
-              m_Root.ForEach(lpfn, 0, pExtra1, pExtra2);
+              tree.Print(os);
+              return os;
        }
 
-       ObjectInfo *FirstThat(lpfnFirstThat2 lpfn, void *pExtra1)
+       iterator begin()
        {
-              return m_Root.FirstThat(lpfn, 0, pExtra1);
+              std::shared_lock<std::shared_mutex> lock(m_Mutex)
+
+                  if (m_NumKeys == 0) return end();
+
+              BTNode *page = &m_Root;
+              while (page->m_SubPages[0])
+                     page = page->m_SubPages[0];
+
+              return iterator(page, 0);
        }
 
-       ObjectInfo *FirstThat(lpfnFirstThat3 lpfn, void *pExtra1, void *pExtra2)
+       iterator end()
        {
-              return m_Root.FirstThat(lpfn, 0, pExtra1, pExtra2);
+              return iterator(nullptr, 0);
        }
 
-public:
-       BTree(BTree &&other) noexcept;
-       BTree &operator=(BTree &&other) noexcept;
-       BTree(const BTree &) = delete;
-       BTree &operator=(const BTree &) = delete;
-
-       bool Save(const std::string &filename) const;
-       bool Load(const std::string &filename);
-       size_t size() const { return m_NumKeys; }
-       size_t height() const { return m_Height; }
-       size_t GetOrder() const { return m_Order; }
-
-       void Print(std::ostream &os) const
+       reverse_iterator rbegin()
        {
-              const_cast<BTNode &>(m_Root).Print(os);
+              std::shared_lock<std::shared_mutex> lock(m_Mutex);
+
+              if (m_NumKeys == 0)
+                     return rend();
+
+              BTNode *page = &m_Root;
+              while (page->m_SubPages[page->m_KeyCount])
+                     page = page->m_SubPages[page->m_KeyCount];
+
+              return reverse_iterator(page, page->m_KeyCount - 1);
+       }
+
+       reverse_iterator rend()
+       {
+              return reverse_iterator(nullptr, 0);
        }
 
 protected:
@@ -276,13 +273,14 @@ protected:
        size_t m_Order;
        size_t m_NumKeys;
        bool m_Unique;
-       size_t computeHeight(const BTNode &n) const;
-       size_t computeSize(const BTNode &n) const;
+       mutable std::shared_mutex m_Mutex;
 };
 
 template <typename Trait>
 bool BTree<Trait>::Insert(const keyType key, const long ObjID)
 {
+       std::unique_lock<std::shared_mutex> lock(m_Mutex);
+
        bt_ErrorCode error = m_Root.Insert(key, ObjID);
        if (error == bt_duplicate)
               return false;
@@ -298,6 +296,8 @@ bool BTree<Trait>::Insert(const keyType key, const long ObjID)
 template <typename Trait>
 bool BTree<Trait>::Remove(const keyType key, const long ObjID)
 {
+       std::unique_lock<std::shared_mutex> lock(m_Mutex);
+
        bt_ErrorCode error = m_Root.Remove(key, ObjID);
        if (error == bt_duplicate || error == bt_nofound)
               return false;
@@ -309,104 +309,135 @@ bool BTree<Trait>::Remove(const keyType key, const long ObjID)
 }
 
 template <typename Trait>
-BTree<Trait>::BTree(BTree &&other) noexcept
-    : m_Root(std::move(other.m_Root)),
-      m_Height(other.m_Height),
-      m_Order(other.m_Order),
-      m_NumKeys(other.m_NumKeys),
-      m_Unique(other.m_Unique)
+std::ostream &BTree<Trait>::Write(std::ostream &os) const
 {
-       other.m_Height = 0;
-       other.m_NumKeys = 0;
+       std::shared_lock<std::shared_mutex> lock(m_Mutex);
+
+       os << m_Order << " " << m_Height << " " << m_NumKeys << " " << m_Unique << "\n";
+
+       const_cast<BTNode &>(m_Root).WriteStructure(os);
+
+       return os;
 }
 
 template <typename Trait>
-BTree<Trait> &BTree<Trait>::operator=(BTree &&other) noexcept
+std::istream &BTree<Trait>::Read(std::istream &is)
 {
-       if (this != &other)
-       {
-              m_Root = std::move(other.m_Root);
-              m_Height = other.m_Height;
-              m_Order = other.m_Order;
-              m_NumKeys = other.m_NumKeys;
-              m_Unique = other.m_Unique;
+       std::unique_lock<std::shared_mutex> lock(m_Mutex);
 
-              other.m_Height = 0;
-              other.m_NumKeys = 0;
+       is >> m_Order >> m_Height >> m_NumKeys >> m_Unique;
+
+       m_Root.Reset();
+       m_Root = BTNode(2 * m_Order + 1, m_Unique);
+       m_Root.SetMaxKeysForChilds(m_Order);
+
+       m_Root.ReadStructure(is);
+
+       return is;
+}
+
+template <typename Trait>
+BTreeIterator<Trait> &BTreeIterator<Trait>::operator++()
+{
+       if (!m_CurrentPage)
+              return *this;
+
+       BTPage *rightChild = m_CurrentPage->m_SubPages[m_CurrentIndex + 1];
+       if (rightChild != nullptr)
+       {
+              BTPage *leftmost = rightChild;
+              while (leftmost->m_SubPages[0] != nullptr)
+              {
+                     leftmost = leftmost->m_SubPages[0];
+              }
+              m_CurrentPage = leftmost;
+              m_CurrentIndex = 0;
+              return *this;
        }
+
+       if (m_CurrentIndex + 1 < m_CurrentPage->m_KeyCount)
+       {
+              m_CurrentIndex++;
+              return *this;
+       }
+
+       BTPage *child = m_CurrentPage;
+       BTPage *parent = m_CurrentPage->m_Parent;
+
+       while (parent != nullptr)
+       {
+              size_t childPos = 0;
+              while (childPos <= parent->m_KeyCount && parent->m_SubPages[childPos] != child)
+              {
+                     childPos++;
+              }
+
+              if (childPos < parent->m_KeyCount)
+              {
+                     m_CurrentPage = parent;
+                     m_CurrentIndex = childPos;
+                     return *this;
+              }
+
+              child = parent;
+              parent = parent->m_Parent;
+       }
+
+       m_CurrentPage = nullptr;
+       m_CurrentIndex = 0;
        return *this;
 }
 
 template <typename Trait>
-size_t BTree<Trait>::computeHeight(const BTNode &n) const
+BTreeReverseIterator<Trait> &BTreeReverseIterator<Trait>::operator++()
 {
-       if (!n.m_SubPages[0])
-              return 1;
-       size_t best = 0;
-       for (size_t i = 0; i <= n.m_KeyCount; ++i)
+       if (!m_CurrentPage)
+              return *this;
+
+       BTPage *leftChild = m_CurrentPage->m_SubPages[m_CurrentIndex];
+       if (leftChild != nullptr)
        {
-              if (n.m_SubPages[i])
+              BTPage *rightmost = leftChild;
+              while (rightmost->m_SubPages[rightmost->m_KeyCount] != nullptr)
               {
-                     best = std::max(best, computeHeight(*n.m_SubPages[i]));
+                     rightmost = rightmost->m_SubPages[rightmost->m_KeyCount];
               }
+              m_CurrentPage = rightmost;
+              m_CurrentIndex = rightmost->m_KeyCount - 1;
+              return *this;
        }
-       return best + 1;
-}
 
-template <typename Trait>
-size_t BTree<Trait>::computeSize(const BTNode &n) const
-{
-       size_t sum = n.m_KeyCount;
-       for (size_t i = 0; i <= n.m_KeyCount; ++i)
+       if (m_CurrentIndex > 0)
        {
-              if (n.m_SubPages[i])
-                     sum += computeSize(*n.m_SubPages[i]);
+              m_CurrentIndex--;
+              return *this;
        }
-       return sum;
-}
 
-template <typename Trait>
-bool BTree<Trait>::Save(const std::string &filename) const
-{
-       std::ofstream ofs(filename);
-       if (!ofs)
-              return false;
+       BTPage *child = m_CurrentPage;
+       BTPage *parent = m_CurrentPage->m_Parent;
 
-       ofs << m_Order << ' ' << (m_Unique ? 1 : 0) << '\n';
-       m_Root.Write(ofs);
-       return true;
-}
+       while (parent != nullptr)
+       {
+              size_t childPos = 0;
+              while (childPos <= parent->m_KeyCount && parent->m_SubPages[childPos] != child)
+              {
+                     childPos++;
+              }
 
-template <typename Trait>
-bool BTree<Trait>::Load(const std::string &filename)
-{
-       std::ifstream ifs(filename);
-       if (!ifs)
-              return false;
+              if (childPos > 0)
+              {
+                     m_CurrentPage = parent;
+                     m_CurrentIndex = childPos - 1;
+                     return *this;
+              }
 
-       size_t order = 0;
-       int uniq = 1;
-       ifs >> order >> uniq;
+              child = parent;
+              parent = parent->m_Parent;
+       }
 
-       m_Order = order ? order : m_Order;
-       m_Unique = (uniq != 0);
-
-       m_Root.SetMaxKeysForChilds(m_Order);
-       m_Root.Reset();
-       m_Root.Read(ifs);
-
-       m_Height = computeHeight(m_Root);
-       m_NumKeys = computeSize(m_Root);
-
-       return true;
-}
-
-template <typename Trait>
-std::ostream &operator<<(std::ostream &os, const BTree<Trait> &t)
-{
-       os << "size=" << t.size() << ", height=" << t.height() << "\n";
-       t.Print(os);
-       return os;
+       m_CurrentPage = nullptr;
+       m_CurrentIndex = 0;
+       return *this;
 }
 
 #endif
