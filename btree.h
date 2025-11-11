@@ -9,6 +9,11 @@
 #include <iterator>
 #include <mutex>
 #include <shared_mutex>
+
+template <typename Trait> class BTree;
+template <typename Trait> class BTreeIterator;
+template <typename Trait> class BTreeReverseIterator;
+
 #include "btreepage.h"
 #define DEFAULT_BTREE_ORDER 3
 
@@ -20,7 +25,7 @@ const size_t MaxHeight = 5;
  * @tparam _ObjIDType Tipo de dato para los identificadores de objetos
  * @tparam _Compare Función de comparación (std::less o std::greater)
  */
-template <typename _keyType, typename _ObjIDType, typename _Compare>
+template <typename _keyType, typename _ObjIDType, typename _Compare = std::less<_keyType>>
 struct BTreeTrait
 {
        using keyType = _keyType;      ///< Tipo de las claves
@@ -44,16 +49,11 @@ using BTreeAscTrait = BTreeTrait<Key, Value, std::less<Key>>;
 template <typename Key, typename Value>
 using BTreeDescTrait = BTreeTrait<Key, Value, std::greater<Key>>;
 
-// Declaración anticipada
-template <typename Trait>
-class BTree;
-
 /**
- * @brief Iterador bidireccional para recorrer un BTree en orden
+ * @brief Iterador forward para recorrer un BTree de menor a mayor
  * 
- * Permite navegación forward (operator++) y backward (operator--).
- * Realiza in-order traversal del árbol B.
- * 
+ * Este iterador navega el árbol B en orden ascendente (in-order traversal).
+ * El usuario controla la dirección eligiendo begin() o rbegin().
  * 
  * @tparam Trait Trait que define los tipos del BTree
  */
@@ -65,43 +65,48 @@ class BTreeIterator
        typedef typename BTPage::ObjectInfo ObjectInfo;
        
 private:
-       BTPage* m_CurrentPage;    // Página actual
-       size_t m_CurrentIndex;    // Índice en la página actual
+       BTPage* m_CurrentPage;    ///< Página actual en el árbol
+       size_t m_CurrentIndex;    ///< Índice de la clave actual en la página
        
+       /**
+        * @brief Constructor privado usado por BTree
+        * @param page Puntero a la página actual
+        * @param index Índice de la clave en la página
+        */
        BTreeIterator(BTPage* page, size_t index) 
               : m_CurrentPage(page), m_CurrentIndex(index) {}
        
 public:
-       // Tipos para compatibilidad con STL
-       using iterator_category = std::bidirectional_iterator_tag;
+       // Tipos requeridos por STL
+       using iterator_category = std::forward_iterator_tag;
        using value_type = ObjectInfo;
        using difference_type = std::ptrdiff_t;
        using pointer = ObjectInfo*;
        using reference = ObjectInfo&;
        
-       /** @brief Constructor por defecto, crea un iterador nulo */
+       /** @brief Constructor por defecto, crea un iterador nulo (end) */
        BTreeIterator() : m_CurrentPage(nullptr), m_CurrentIndex(0) {}
        
        /**
         * @brief Operador de desreferencia
-        * @return Referencia al objeto actual
+        * @return Referencia al ObjectInfo actual
         */
        ObjectInfo& operator*() { return m_CurrentPage->m_Keys[m_CurrentIndex]; }
        
        /**
         * @brief Operador de acceso a miembros
-        * @return Puntero al objeto actual
+        * @return Puntero al ObjectInfo actual
         */
        ObjectInfo* operator->() { return &(m_CurrentPage->m_Keys[m_CurrentIndex]); }
        
        /**
-        * @brief Pre-incremento: avanza al siguiente elemento en orden ascendente
+        * @brief Pre-incremento: avanza al siguiente elemento (menor a mayor)
         * @return Referencia a este iterador
         */
        BTreeIterator& operator++();
        
        /**
-        * @brief Post-incremento: avanza al siguiente elemento
+        * @brief Post-incremento: avanza y retorna copia del estado anterior
         * @return Copia del iterador antes de avanzar
         */
        BTreeIterator operator++(int)
@@ -112,26 +117,9 @@ public:
        }
        
        /**
-        * @brief Pre-decremento: retrocede al elemento anterior en orden ascendente
-        * @return Referencia a este iterador
-        */
-       BTreeIterator& operator--();
-       
-       /**
-        * @brief Post-decremento: retrocede al elemento anterior
-        * @return Copia del iterador antes de retroceder
-        */
-       BTreeIterator operator--(int)
-       {
-               BTreeIterator temp = *this;
-               --(*this);
-               return temp;
-       }
-       
-       /**
         * @brief Compara dos iteradores por igualdad
-        * @param other El otro iterador a comparar
-        * @return true si ambos iteradores apuntan a la misma posición
+        * @param other Otro iterador a comparar
+        * @return true si apuntan a la misma posición
         */
        bool operator==(const BTreeIterator& other) const
        {
@@ -142,8 +130,8 @@ public:
        
        /**
         * @brief Compara dos iteradores por desigualdad
-        * @param other El otro iterador a comparar
-        * @return true si los iteradores apuntan a posiciones diferentes
+        * @param other Otro iterador a comparar
+        * @return true si apuntan a posiciones diferentes
         */
        bool operator!=(const BTreeIterator& other) const
        {
@@ -152,11 +140,101 @@ public:
 };
 
 /**
- * @brief Árbol B (B-Tree) genérico con soporte para iteradores bidireccionales y concurrencia
+ * @brief Iterador reverso para recorrer un BTree de mayor a menor
+ * 
+ * Este iterador navega el árbol B en orden descendente (reverse in-order).
+ * Se usa con rbegin() para iniciar en el elemento más grande.
+ * 
+ * @tparam Trait Trait que define los tipos del BTree
+ */
+template <typename Trait>
+class BTreeReverseIterator
+{
+       friend class BTree<Trait>;
+       typedef CBTreePage<Trait> BTPage;
+       typedef typename BTPage::ObjectInfo ObjectInfo;
+       
+private:
+       BTPage* m_CurrentPage;    ///< Página actual en el árbol
+       size_t m_CurrentIndex;    ///< Índice de la clave actual en la página
+       
+       /**
+        * @brief Constructor privado usado por BTree
+        * @param page Puntero a la página actual
+        * @param index Índice de la clave en la página
+        */
+       BTreeReverseIterator(BTPage* page, size_t index) 
+              : m_CurrentPage(page), m_CurrentIndex(index) {}
+       
+public:
+       // Tipos requeridos por STL
+       using iterator_category = std::forward_iterator_tag;
+       using value_type = ObjectInfo;
+       using difference_type = std::ptrdiff_t;
+       using pointer = ObjectInfo*;
+       using reference = ObjectInfo&;
+       
+       /** @brief Constructor por defecto, crea un iterador nulo (rend) */
+       BTreeReverseIterator() : m_CurrentPage(nullptr), m_CurrentIndex(0) {}
+       
+       /**
+        * @brief Operador de desreferencia
+        * @return Referencia al ObjectInfo actual
+        */
+       ObjectInfo& operator*() { return m_CurrentPage->m_Keys[m_CurrentIndex]; }
+       
+       /**
+        * @brief Operador de acceso a miembros
+        * @return Puntero al ObjectInfo actual
+        */
+       ObjectInfo* operator->() { return &(m_CurrentPage->m_Keys[m_CurrentIndex]); }
+       
+       /**
+        * @brief Pre-incremento: avanza al elemento anterior (mayor a menor)
+        * @return Referencia a este iterador
+        */
+       BTreeReverseIterator& operator++();
+       
+       /**
+        * @brief Post-incremento: avanza y retorna copia del estado anterior
+        * @return Copia del iterador antes de avanzar
+        */
+       BTreeReverseIterator operator++(int)
+       {
+               BTreeReverseIterator temp = *this;
+               ++(*this);
+               return temp;
+       }
+       
+       /**
+        * @brief Compara dos iteradores por igualdad
+        * @param other Otro iterador a comparar
+        * @return true si apuntan a la misma posición
+        */
+       bool operator==(const BTreeReverseIterator& other) const
+       {
+               if (m_CurrentPage == nullptr && other.m_CurrentPage == nullptr)
+                       return true;
+               return m_CurrentPage == other.m_CurrentPage && m_CurrentIndex == other.m_CurrentIndex;
+       }
+       
+       /**
+        * @brief Compara dos iteradores por desigualdad
+        * @param other Otro iterador a comparar
+        * @return true si apuntan a posiciones diferentes
+        */
+       bool operator!=(const BTreeReverseIterator& other) const
+       {
+               return !(*this == other);
+       }
+};
+
+/**
+ * @brief Árbol B (B-Tree) genérico con soporte para iteradores y concurrencia
  * 
  * Esta clase implementa un árbol B completo con las siguientes características:
  * - Operaciones de inserción, búsqueda y eliminación
- * - Iteradores bidireccionales compatibles con STL
+ * - Iteradores forward para recorrido ascendente y descendente
  * - Thread-safety mediante std::shared_mutex (múltiples lectores o un solo escritor)
  * - Soporte para claves únicas o duplicadas
  * - Persistencia con serialización a disco
@@ -174,9 +252,11 @@ class BTree // this is the full version of the BTree
 public:
        typedef typename BTNode::ObjectInfo      ObjectInfo;
        
-       // Soporte para iterador bidireccional
+       // Soporte para iteradores forward y reverso
        friend class BTreeIterator<Trait>;
+       friend class BTreeReverseIterator<Trait>;
        typedef BTreeIterator<Trait> iterator;
+       typedef BTreeReverseIterator<Trait> reverse_iterator;
 
 public:
        /**
@@ -197,26 +277,34 @@ public:
        /**
         * @brief Constructor de movimiento: transfiere la propiedad eficientemente
         * @param other Árbol a mover (queda en estado válido pero vacío)
+        * @note Thread-safe: bloquea el objeto fuente durante la transferencia
         */
        BTree(BTree&& other) noexcept 
-              : m_Order(other.m_Order),
-                m_Root(std::move(other.m_Root)),
-                m_Height(std::exchange(other.m_Height, 1)),    // Toma valor y resetea a 1
-                m_Unique(other.m_Unique),
-                m_NumKeys(std::exchange(other.m_NumKeys, 0))   // Toma valor y resetea a 0
        {
-              //
+              std::unique_lock<std::shared_mutex> lock(other.m_Mutex);  // Bloquear el objeto fuente
+              
+              m_Order = other.m_Order;
+              m_Root = std::move(other.m_Root);
+              m_Height = std::exchange(other.m_Height, 1);    // Toma valor y resetea a 1
+              m_Unique = other.m_Unique;
+              m_NumKeys = std::exchange(other.m_NumKeys, 0);   // Toma valor y resetea a 0
        }
        
        /**
         * @brief Asignación por movimiento: transfiere propiedad a objeto existente
         * @param other Árbol a mover
         * @return Referencia a este árbol
+        * @note Thread-safe: bloquea ambos objetos (this y other) en orden para evitar deadlock
         */
        BTree& operator=(BTree&& other) noexcept 
        {
               if (this != &other)
               {
+                     // Bloquear ambos mutex en orden consistente para evitar deadlock
+                     std::unique_lock<std::shared_mutex> lock1(m_Mutex, std::defer_lock);
+                     std::unique_lock<std::shared_mutex> lock2(other.m_Mutex, std::defer_lock);
+                     std::lock(lock1, lock2);  // Bloqueo atómico de ambos
+                     
                      m_Order = other.m_Order;
                      m_Root = std::move(other.m_Root);
                      m_Height = std::exchange(other.m_Height, 1);    // Transfiere y resetea
@@ -348,8 +436,8 @@ public:
        
        /**
         * @brief Retorna iterador al elemento más pequeño del árbol
-        * @return Iterador apuntando a la clave mínima (leftmost)
-        * @note Esta operación es thread-safe (bloqueo compartido)
+        * @return Iterador forward apuntando a la clave mínima (leftmost)
+        * @note Thread-safe: usa bloqueo compartido (shared_lock) para lectura
         */
        iterator begin()
        {
@@ -358,7 +446,7 @@ public:
                if (m_NumKeys == 0)
                        return end();
                
-               // Encontrar el elemento más a la izquierda (clave más pequeña)
+               // Descender hasta el hijo más a la izquierda
                BTNode* page = &m_Root;
                while (page->m_SubPages[0])
                        page = page->m_SubPages[0];
@@ -367,8 +455,8 @@ public:
        }
        
        /**
-        * @brief Retorna iterador centinela que marca el final
-        * @return Iterador nulo (nullptr) que indica fin de recorrido
+        * @brief Retorna iterador centinela que marca el final del recorrido
+        * @return Iterador nulo (nullptr) que indica fin de recorrido forward
         */
        iterator end()
        {
@@ -376,32 +464,32 @@ public:
        }
        
        /**
-        * @brief Retorna iterador al elemento más grande del árbol
-        * @return Iterador apuntando a la clave máxima (rightmost)
-        * @note Esta operación es thread-safe (bloqueo compartido)
+        * @brief Retorna iterador reverso al elemento más grande del árbol
+        * @return Iterador reverso apuntando a la clave máxima (rightmost)
+        * @note Thread-safe: usa bloqueo compartido (shared_lock) para lectura
         */
-       iterator rbegin()
+       reverse_iterator rbegin()
        {
                std::shared_lock<std::shared_mutex> lock(m_Mutex);  // Bloqueo compartido
                
                if (m_NumKeys == 0)
                        return rend();
                
-               // Encontrar el elemento más a la derecha (clave más grande)
+               // Descender hasta el hijo más a la derecha
                BTNode* page = &m_Root;
                while (page->m_SubPages[page->m_KeyCount])
                        page = page->m_SubPages[page->m_KeyCount];
                
-               return iterator(page, page->m_KeyCount - 1);
+               return reverse_iterator(page, page->m_KeyCount - 1);
        }
        
        /**
-        * @brief Retorna iterador centinela que marca el inicio al retroceder
-        * @return Iterador nulo (nullptr) que indica fin de recorrido reverso
+        * @brief Retorna iterador centinela que marca el inicio del recorrido reverso
+        * @return Iterador nulo (nullptr) que indica fin de recorrido backward
         */
-       iterator rend()
+       reverse_iterator rend()
        {
-               return iterator(nullptr, 0);
+               return reverse_iterator(nullptr, 0);
        }
 
 protected:
@@ -482,126 +570,135 @@ std::istream& BTree<Trait>::Read(std::istream& is)
 }
 
 // ============================================================================
-// Implementación de operadores de BTreeIterator
+// Implementación de operadores de BTreeIterator (forward: menor a mayor)
 // ============================================================================
 
 /**
- * @brief Implementación de operator++ (avanza en orden ascendente)
+ * @brief Implementación de operator++ para BTreeIterator (navegación forward)
+ * 
+ * Navega el árbol B en orden ascendente (in-order traversal de menor a mayor).
  * 
  * Algoritmo:
- * 1. Si hay hijo derecho, descender al hijo más a la izquierda
- * 2. Si hay más keys a la derecha en el nodo actual, avanzar
- * 3. Subir al padre hasta encontrar una key no visitada
- * 4. Si no hay más elementos, marcar como nullptr (end)
+ * 1. Si existe hijo derecho, descender al hijo más a la izquierda de ese subárbol
+ * 2. Si no hay hijo derecho pero hay más keys a la derecha, avanzar en el nodo actual
+ * 3. Si no hay más keys, subir al padre hasta encontrar una key pendiente
+ * 4. Si llegamos al final del árbol, marcar como nullptr (end)
  */
 template <typename Trait>
 BTreeIterator<Trait>& BTreeIterator<Trait>::operator++()
 {
        if (!m_CurrentPage) return *this;
        
-       // 1. Si hay hijo derecho, descender al hijo más a la izquierda
+       // Caso 1: Si hay hijo derecho, ir al leftmost de ese subárbol
        BTPage* rightChild = m_CurrentPage->m_SubPages[m_CurrentIndex + 1];
        if (rightChild != nullptr) {
-               BTPage* next = rightChild;
-               while (next->m_SubPages[0] != nullptr) {
-                       next = next->m_SubPages[0];
+               BTPage* leftmost = rightChild;
+               while (leftmost->m_SubPages[0] != nullptr) {
+                       leftmost = leftmost->m_SubPages[0];
                }
-               m_CurrentPage = next;
+               m_CurrentPage = leftmost;
                m_CurrentIndex = 0;
                return *this;
        }
        
-       // 2. Si hay más keys en el nodo actual, avanzar a la derecha
+       // Caso 2: Avanzar en el nodo actual si hay más keys a la derecha
        if (m_CurrentIndex + 1 < m_CurrentPage->m_KeyCount) {
                m_CurrentIndex++;
                return *this;
        }
        
-       // 3. Subir al padre hasta encontrar una key no visitada
+       // Caso 3: Subir al padre hasta encontrar una key no visitada
        BTPage* child = m_CurrentPage;
        BTPage* parent = m_CurrentPage->m_Parent;
        
        while (parent != nullptr) {
-               // Encontrar la posición del hijo en el padre
+               // Buscar posición del hijo en el arreglo de SubPages del padre
                size_t childPos = 0;
                while (childPos <= parent->m_KeyCount && parent->m_SubPages[childPos] != child) {
                        childPos++;
                }
                
-               // Si child está en SubPages[i], la siguiente key es Keys[i]
+               // Si encontramos una key válida en el padre, esa es la siguiente
                if (childPos < parent->m_KeyCount) {
                        m_CurrentPage = parent;
                        m_CurrentIndex = childPos;
                        return *this;
                }
                
-               // Seguir subiendo
+               // Continuar subiendo en el árbol
                child = parent;
                parent = parent->m_Parent;
        }
        
-       // No hay más elementos - alcanzamos el final
+       // Caso 4: No hay más elementos, hemos alcanzado end()
        m_CurrentPage = nullptr;
        m_CurrentIndex = 0;
        return *this;
 }
 
+// ============================================================================
+// Implementación de operadores de BTreeReverseIterator (backward: mayor a menor)
+// ============================================================================
+
 /**
- * @brief Implementación de operator-- (retrocede en orden ascendente)
+ * @brief Implementación de operator++ para BTreeReverseIterator (navegación backward)
+ * 
+ * Navega el árbol B en orden descendente (reverse in-order traversal de mayor a menor).
+ * Aunque usa operator++, navega hacia ATRÁS (de mayor a menor).
  * 
  * Algoritmo:
- * 1. Si hay hijo izquierdo, descender al hijo más a la derecha
- * 2. Si hay más keys a la izquierda en el nodo actual, retroceder
- * 3. Subir al padre hasta encontrar una key no visitada
- * 4. Si no hay más elementos, marcar como nullptr (rend)
+ * 1. Si existe hijo izquierdo, descender al hijo más a la derecha de ese subárbol
+ * 2. Si no hay hijo izquierdo pero hay más keys a la izquierda, retroceder en el nodo actual
+ * 3. Si no hay más keys, subir al padre hasta encontrar una key pendiente
+ * 4. Si llegamos al inicio del árbol, marcar como nullptr (rend)
  */
 template <typename Trait>
-BTreeIterator<Trait>& BTreeIterator<Trait>::operator--()
+BTreeReverseIterator<Trait>& BTreeReverseIterator<Trait>::operator++()
 {
        if (!m_CurrentPage) return *this;
        
-       // 1. Si hay hijo izquierdo, descender al hijo más a la derecha
+       // Caso 1: Si hay hijo izquierdo, ir al rightmost de ese subárbol
        BTPage* leftChild = m_CurrentPage->m_SubPages[m_CurrentIndex];
        if (leftChild != nullptr) {
-               BTPage* next = leftChild;
-               while (next->m_SubPages[next->m_KeyCount] != nullptr) {
-                       next = next->m_SubPages[next->m_KeyCount];
+               BTPage* rightmost = leftChild;
+               while (rightmost->m_SubPages[rightmost->m_KeyCount] != nullptr) {
+                       rightmost = rightmost->m_SubPages[rightmost->m_KeyCount];
                }
-               m_CurrentPage = next;
-               m_CurrentIndex = next->m_KeyCount - 1;
+               m_CurrentPage = rightmost;
+               m_CurrentIndex = rightmost->m_KeyCount - 1;
                return *this;
        }
        
-       // 2. Si hay más keys a la izquierda en el nodo actual, retroceder
+       // Caso 2: Retroceder en el nodo actual si hay más keys a la izquierda
        if (m_CurrentIndex > 0) {
                m_CurrentIndex--;
                return *this;
        }
        
-       // 3. Subir al padre hasta encontrar una key no visitada
+       // Caso 3: Subir al padre hasta encontrar una key no visitada
        BTPage* child = m_CurrentPage;
        BTPage* parent = m_CurrentPage->m_Parent;
        
        while (parent != nullptr) {
-               // Encontrar la posición del hijo en el padre
+               // Buscar posición del hijo en el arreglo de SubPages del padre
                size_t childPos = 0;
                while (childPos <= parent->m_KeyCount && parent->m_SubPages[childPos] != child) {
                        childPos++;
                }
                
-               // Si child está en SubPages[i] con i > 0, la key anterior es Keys[i-1]
+               // Si el hijo está en una posición > 0, la key anterior del padre es la siguiente
                if (childPos > 0) {
                        m_CurrentPage = parent;
                        m_CurrentIndex = childPos - 1;
                        return *this;
                }
                
-               // Seguir subiendo
+               // Continuar subiendo en el árbol
                child = parent;
                parent = parent->m_Parent;
        }
        
-       // No hay más elementos - alcanzamos el inicio
+       // Caso 4: No hay más elementos, hemos alcanzado rend()
        m_CurrentPage = nullptr;
        m_CurrentIndex = 0;
        return *this;

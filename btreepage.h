@@ -14,7 +14,6 @@
 // TODO: #1 Crear una function para agregarla al demo.cpp ( no trivial )
 // TODO: #2 Agregarle un Trait (prueba git) ( no trivial )
 // DONE: #3 crear un iterator ( no trivial )
-//       Se implementó BTreeIterator bidireccional con operator++ y operator--
 // TODO: #4 integrarlo al recorrer ( no trivial )
 
 
@@ -41,8 +40,8 @@ enum bt_ErrorCode {bt_ok, bt_overflow, bt_underflow, bt_duplicate, bt_nofound, b
  * @param comp Función de comparación
  * @return Índice donde se encuentra o debería insertarse el objeto
  */
-template <typename Container, typename ObjType, typename Compare = std::less<ObjType>>
-size_t binary_search(Container& container, size_t first, size_t last, ObjType &object, Compare comp = Compare())
+template <typename Container, typename ObjType, typename Compare>
+size_t binary_search(Container& container, size_t first, size_t last, ObjType &object, Compare comp)
 {
        if( first >= last )
                return first;
@@ -144,7 +143,8 @@ class CBTreePage //: public SimpleIndex <keyType>
 // this is the in-memory version of the CBTreePage
 {
        friend class BTree<Trait>;
-       friend class BTreeIterator<Trait>;   // Bidirectional iterator
+       friend class BTreeIterator<Trait>;           // Forward iterator
+       friend class BTreeReverseIterator<Trait>;    // Reverse iterator
        
        typedef typename Trait::keyType  keyType;
        typedef typename Trait::ObjIDType  ObjIDType;
@@ -238,10 +238,11 @@ protected:
        vector<ObjectInfo> m_Keys;
        vector<BTPage *>m_SubPages;
        BTPage* m_Parent;  // Pointer to parent page (for iterator navigation)
-       Compare m_Compare; // Comparison function object
        
        // TODO: #10 size_t
        size_t  m_KeyCount;
+       Compare m_Compare;  // Función de comparación
+       
        void  Create();
        void  Reset ();
        void  Destroy () {   Reset(); delete this;}
@@ -298,7 +299,7 @@ private:
 
 template <typename Trait>
 CBTreePage<Trait>:: CBTreePage(size_t maxKeys, bool unique)
-                               : m_MaxKeys(maxKeys), m_Unique(unique), m_Parent(nullptr), m_KeyCount(0)
+                               : m_MaxKeys(maxKeys), m_Unique(unique), m_Parent(nullptr), m_Compare(Compare()), m_KeyCount(0)
 {
        Create();
        SetMaxKeysForChilds(m_MaxKeys);
