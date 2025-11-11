@@ -25,9 +25,26 @@ class BTree // this is the full version of the BTree
        
        typedef CBTreePage <Trait> BTNode;// useful shorthand
 
+       // File header structure
+       struct FileHeader {
+           size_t numKeys;      
+           size_t height;       
+
+           bool Write(std::ostream& os) const {
+               os.write(reinterpret_cast<const char*>(this), sizeof(FileHeader));
+               return os.good();
+           }
+
+           bool Read(std::istream& is) {
+               is.read(reinterpret_cast<char*>(this), sizeof(FileHeader));
+               return is.good();
+           }
+       };
+
 public:
        //typedef ObjectInfo iterator;
        typedef typename BTNode::ObjectInfo      ObjectInfo;
+       friend std::ostream& operator<<(std::ostream& os, const Btree<Trait>& tree);
 
 public:
        BTree(size_t order = DEFAULT_BTREE_ORDER, bool unique = true)
@@ -70,11 +87,40 @@ public:
               return *this;
        }
        ~BTree() {}
+       // Write tree to file
+       bool Write(const std::string& filename) {
+           std::ofstream file(filename, std::ios::binary);
+           if (!file) return false;
+
+           // Write Header
+           FileHeader header{m_NumKeys, m_Height};
+           if (!header.Write(file)) return false;
+
+           // Write Tree recursively
+           return WriteNode(file, &m_Root);
+       }
+
+       // Read tree from file
+       bool Read(const std::string& filename) {
+           std::ifstream file(filename, std::ios::binary);
+           if (!file) return false;
+
+           // read header
+           FileHeader header;
+           if (!header.Read(file)) return false;
+
+           // Update numKeys y height
+           m_NumKeys = header.numKeys;
+           m_Height = header.height;
+
+           // Read Tree recursively (m_Root ya está inicializada por el constructor)
+           return ReadNode(file, &m_Root);
+       }
        //int           Open (char * name, int mode);
        //int           Create (char * name, int mode);
        //int           Close ();
        bool            Insert (const keyType key, const long ObjID);
-       bool            Re   (const keyType key, const long ObjID);
+       bool            Remove   (const keyType key, const long ObjID);
        ObjIDType       Search (const keyType key)
        {      ObjIDType ObjID = -1;
               m_Root.Search(key, ObjID);
@@ -97,6 +143,64 @@ public:
        {               return m_Root.FirstThat(std::forward<Func>(func), 0, std::forward<Args>(args)...);     }
       
        //typedef               ObjectInfo iterator;
+private:
+       
+       bool WriteNode(std::ostream& os, BTNode* node) {
+           if (!node) return true;
+
+           // Write  number of keys
+           size_t count = node->GetNumberOfKeys();
+           os.write(reinterpret_cast<const char*>(&count), sizeof(count));
+           if (!os.good()) return false;
+
+           // write keys
+           for (size_t i = 0; i < count; i++) {
+               if (!node->m_Keys[i].Write(os)) return false;
+           }
+
+           // Write childs recursively
+           for (size_t i = 0; i <= count; i++) {
+               bool hasChild = node->m_SubPages[i] != nullptr;
+               os.write(reinterpret_cast<const char*>(&hasChild), sizeof(hasChild));
+               if (hasChild && !WriteNode(os, node->m_SubPages[i])) {
+                   return false;
+               }
+           }
+
+           return true;
+       }
+
+
+       bool ReadNode(std::istream& is, BTNode* node) {
+           if (!node) return false;
+
+           // Read number of keys
+           size_t count;
+           is.read(reinterpret_cast<char*>(&count), sizeof(count));
+           if (!is.good()) return false;
+
+           // Read keys
+           for (size_t i = 0; i < count; i++) {
+               ObjectInfo info;
+               if (!info.Read(is)) return false;
+               node->m_Keys[i] = std::move(info);
+           }
+           node->m_KeyCount = count;
+
+           // Read childs recursively
+           for (size_t i = 0; i <= count; i++) {
+               bool hasChild;
+               is.read(reinterpret_cast<char*>(&hasChild), sizeof(hasChild));
+               if (hasChild) {
+                   node->m_SubPages[i] = new BTNode(node->m_MaxKeysForChilds, node->m_Unique);
+                   if (!ReadNode(is, node->m_SubPages[i])) {
+                       return false;
+                   }
+               }
+           }
+
+           return true;
+       }
 
 protected:
        BTNode          m_Root;
@@ -130,6 +234,14 @@ bool BTree<Trait>::Remove (const keyType key, const long ObjID)
        if( error == bt_rootmerged )
                m_Height--;
        return true;
+}
+
+template <typename Trait>
+std::ostream& operator<<(std::ostream& os, const BTree<Trait>& tree) {
+    os << "BTree: order=" << tree.m_Order << ", height=" << tree.m_Height 
+       << ", keys=" << tree.m_NumKeys << "\n";
+    tree.m_Root.Print(os);  
+    return os;
 }
 
 #endif
