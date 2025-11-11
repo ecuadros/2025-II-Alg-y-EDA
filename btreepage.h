@@ -4,6 +4,7 @@
 #include <vector>
 #include <assert.h>
 #include <functional>
+#include <utility>
 
 // TODO: #1 Crear una function para agregarla al demo.cpp ( no trivial )
 // TODO: #2 Agregarle un Trait (prueba git) ( no trivial )
@@ -85,11 +86,58 @@ class CBTreePage //: public SimpleIndex <keyType>
        typedef CBTreePage<Trait>    BTPage;         // useful shorthand
        typedef tagObjectInfo<keyType, ObjIDType> ObjectInfo;
 
-       typedef ObjectInfo *(*lpfnFirstThat2)(ObjectInfo &info, size_t level, void *pExtra1);
-       typedef ObjectInfo *(*lpfnFirstThat3)(ObjectInfo &info, size_t level, void *pExtra1, void *pExtra2);
  public:
        CBTreePage(size_t maxKeys, bool unique = true);
        virtual ~CBTreePage();
+
+       // Move constructor: 
+       CBTreePage(CBTreePage&& btree)             
+       {
+                
+                // transfering page resources 
+                m_MinKeys = btree.m_MinKeys;
+                m_MaxKeys = btree.m_MaxKeys;
+                m_MaxKeysForChilds = btree.m_MaxKeysForChilds;
+                m_Unique = btree.m_Unique;
+                m_isRoot = btree.m_isRoot;
+                m_Keys = std::move(btree.m_Keys);
+                m_SubPages = std::move(btree.m_SubPages);
+                compare = std::move(btree.compare);
+                m_KeyCount = btree.m_KeyCount;
+
+                // Leave source in a valid empty state
+                btree.m_KeyCount = 0;
+                btree.m_Keys.clear();
+                btree.m_SubPages.clear();
+                btree.m_MinKeys = 0;
+                btree.m_MaxKeys = 0;
+                btree.m_MaxKeysForChilds = 0;
+                btree.m_Unique = false;
+                btree.m_isRoot = false;
+       }
+       
+       // Move assignment
+       CBTreePage& operator=(CBTreePage&& btree) noexcept 
+       {
+              if (this != &btree)
+              {
+                     Reset(); // Clean up current resources first
+
+                     m_MinKeys = btree.m_MinKeys;
+                     m_MaxKeys = btree.m_MaxKeys;
+                     m_MaxKeysForChilds = btree.m_MaxKeysForChilds;
+                     m_Unique = btree.m_Unique;
+                     m_isRoot = btree.m_isRoot;
+                     m_Keys = std::move(btree.m_Keys);
+                     m_SubPages = std::move(btree.m_SubPages);
+                     compare = std::move(btree.compare);
+                     m_KeyCount = btree.m_KeyCount;
+
+                     btree.m_KeyCount = 0; // Leave source in valid state
+              }
+              return *this;
+       }
+
 
        bt_ErrorCode    Insert (const keyType &key, const ObjIDType ObjID);
        bt_ErrorCode    Remove (const keyType &key, const ObjIDType ObjID);

@@ -2,6 +2,8 @@
 #define __BTREE_H__
 
 #include <iostream>
+#include <utility>
+#include <functional>
 #include "btreepage.h"
 #define DEFAULT_BTREE_ORDER 3
 
@@ -37,12 +39,42 @@ public:
               m_Root.SetMaxKeysForChilds(order);
               m_Height = 1;
        }
+       // Move contructor
+       BTree(Btree&& btree){
+       // Transfering resources
+              m_Order = btree.m_Order;
+              m_Root = std::move(btree.m_Root);
+              m_Height = btree.m_Height;
+              m_Unique = btree.m_Unique,
+              m_NumKeys = btree.m_NumKeys;
+
+       // Leaving btree in "valid" state
+              btree.m_Height = 1;
+              btree.m_numKeys = 0;
+
+       }
+       // Move assignment: transfers ownership to existing object
+       BTree& operator=(BTree&& btree  ) noexcept 
+       {
+              if (this != &btree  )
+              {
+                     m_Order = btree  .m_Order;
+                     m_Root = std::move(btree  .m_Root);
+                     m_Height = btree  .m_Height;
+                     m_Unique = btree  .m_Unique;
+                     m_NumKeys = btree  .m_NumKeys;
+
+                     btree  .m_Height = 1;  // Leave source in valid state
+                     btree  .m_NumKeys = 0;
+              }
+              return *this;
+       }
        ~BTree() {}
        //int           Open (char * name, int mode);
        //int           Create (char * name, int mode);
        //int           Close ();
        bool            Insert (const keyType key, const long ObjID);
-       bool            Remove (const keyType key, const long ObjID);
+       bool            Re   (const keyType key, const long ObjID);
        ObjIDType       Search (const keyType key)
        {      ObjIDType ObjID = -1;
               m_Root.Search(key, ObjID);
