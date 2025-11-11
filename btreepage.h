@@ -5,6 +5,7 @@
 #include <assert.h>
 #include <functional>
 #include <utility>
+#include <ostream>
 
 // TODO: #1 Crear una function para agregarla al demo.cpp ( no trivial )
 // TODO: #2 Agregarle un Trait (prueba git) ( no trivial )
@@ -91,7 +92,7 @@ class CBTreePage //: public SimpleIndex <keyType>
        virtual ~CBTreePage();
 
        // Move constructor: 
-       CBTreePage(CBTreePage&& btree)             
+       CBTreePage(CBTreePage&& btree)              
        {
                 
                 // transfering page resources 

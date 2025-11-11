@@ -46,8 +46,10 @@ class BTree // this is the full version of the BTree
 
 public:
        //typedef ObjectInfo iterator;
-       typedef typename BTNode::ObjectInfo      ObjectInfo;
-       friend std::ostream& operator<<(std::ostream& os, const BTree<Trait>& tree);
+       typedef typename BTNode::ObjectInfo     ObjectInfo;
+       
+       template<typename U>
+       friend std::ostream& operator<<(std::ostream& os, BTree<U>& tree);
 
 public:
        BTree(size_t order = DEFAULT_BTREE_ORDER, bool unique = true)
@@ -59,18 +61,18 @@ public:
               m_Root.SetMaxKeysForChilds(order);
               m_Height = 1;
        }
-       // Move contructor
-       BTree(Btree&& btree){
-       // Transfering resources
-              m_Order = btree.m_Order;
-              m_Root = std::move(btree.m_Root);
-              m_Height = btree.m_Height;
-              m_Unique = btree.m_Unique,
-              m_NumKeys = btree.m_NumKeys;
-
+       // Move contructor : move-initialize members to avoid default-constructing m_Root
+       BTree(BTree&& btree) noexcept:
+              m_Root(std::move(btree.m_Root)),
+              m_Height(btree.m_Height),
+              m_Order(btree.m_Order),
+              m_NumKeys(btree.m_NumKeys),
+              m_Unique(btree.m_Unique)
+       {
+       
        // Leaving btree in "valid" state
               btree.m_Height = 1;
-              btree.m_numKeys = 0;
+              btree.m_NumKeys = 0;
 
        }
        // Move assignment: transfers ownership to existing object
@@ -131,9 +133,12 @@ private:
            os.write(reinterpret_cast<const char*>(&count), sizeof(count));
            if (!os.good()) return false;
 
-           // write keys
-           for (size_t i = 0; i < count; i++) {
-               if (!node->m_Keys[i].Write(os)) return false;
+           // write keys (Serialize key and ObjID)
+           for (size_t i = 0; i < count; ++i) {
+              const auto &oi = node->m_Keys[i];
+              os.write(reinterpret_cast<const char*>(&oi.key), sizeof(oi.key));
+              os.write(reinterpret_cast<const char*>(&oi.ObjID), sizeof(oi.ObjID));
+              if (!os.good()) return false;
            }
 
            // Write childs recursively
@@ -157,11 +162,16 @@ private:
            is.read(reinterpret_cast<char*>(&count), sizeof(count));
            if (!is.good()) return false;
 
-           // Read keys
+           // Read keys (Deserialize key and ObjID)
+           node->m_Keys.resize(count);
            for (size_t i = 0; i < count; i++) {
-               ObjectInfo info;
-               if (!info.Read(is)) return false;
-               node->m_Keys[i] = std::move(info);
+              keyType k;
+              ObjIDType id;
+              is.read(reinterpret_cast<char*>(&k), sizeof(k));
+              is.read(reinterpret_cast<char*>(&id), sizeof(id));
+              if (!is.good()) return false;
+              node->m_Keys[i].key = k;
+              node->m_Keys[i].ObjID = id;
            }
            node->m_KeyCount = count;
 
@@ -191,7 +201,7 @@ protected:
 
 template <typename Trait>
 bool BTree<Trait>::Insert(const keyType key, const long ObjID){
-       std::unique_lock<std::shared_mutex> _lk(this->m_Mutex);
+       std::unique_lock<std::shared_mutex> _lk(m_mutex);
        bt_ErrorCode error = m_Root.Insert(key, ObjID);
        if( error == bt_duplicate )
                return false;
@@ -206,7 +216,7 @@ bool BTree<Trait>::Insert(const keyType key, const long ObjID){
 template <typename Trait>
 bool BTree<Trait>::Remove (const keyType key, const long ObjID)
 {
-       std::unique_lock<std::shared_mutex> _lk(this->m_Mutex);
+       std::unique_lock<std::shared_mutex> _lk(m_mutex);
        bt_ErrorCode error = m_Root.Remove(key, ObjID);
        if( error == bt_duplicate || error == bt_nofound )
                return false;
@@ -219,7 +229,7 @@ bool BTree<Trait>::Remove (const keyType key, const long ObjID)
 
 template <typename Trait>
 bool BTree<Trait>::Write(const std::string& filename) {
-       std::unique_lock<std::shared_mutex> _lk(this->m_Mutex);
+       std::unique_lock<std::shared_mutex> _lk(m_mutex);
        std::ofstream file(filename, std::ios::binary);
        if (!file) return false;
 
@@ -232,7 +242,7 @@ bool BTree<Trait>::Write(const std::string& filename) {
 
 template <typename Trait>
 bool BTree<Trait>::Read(const std::string& filename) {
-       std::unique_lock<std::shared_mutex> _lk(this->m_Mutex);
+       std::unique_lock<std::shared_mutex> _lk(m_mutex);
        std::ifstream file(filename, std::ios::binary);
        if (!file) return false;
 
@@ -250,11 +260,11 @@ bool BTree<Trait>::Read(const std::string& filename) {
 
 
 template <typename Trait>
-std::ostream& operator<<(std::ostream& os, const BTree<Trait>& tree) {
-    std::shared_lock<std::shared_mutex> _lk(tree.m_Mutex);
+std::ostream& operator<<(std::ostream& os,  BTree<Trait>& tree) {
+    std::shared_lock<std::shared_mutex> _lk(tree.m_mutex);
     os << "BTree: order=" << tree.m_Order << ", height=" << tree.m_Height 
        << ", keys=" << tree.m_NumKeys << "\n";
-    tree.m_Root.Print(os);  
+    tree.Print(os);  
     return os;
 }
 
