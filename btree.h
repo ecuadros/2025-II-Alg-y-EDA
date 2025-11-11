@@ -98,15 +98,16 @@ public:
         * @param other Otro BTree a mover.
         */
         BTree(BTree&& other) noexcept
-              : m_Root(std::move(other.m_Root)),
-                m_Height(other.m_Height),
-                m_Order(other.m_Order),
-                m_NumKeys(other.m_NumKeys),
-                m_Unique(other.m_Unique)
-            {
-              other.m_Height = 1;
-              other.m_NumKeys = 0;
-            }
+       : m_Mutex() 
+       {
+              std::scoped_lock lock(m_Mutex, other.m_Mutex);
+
+              m_Order   = std::exchange(other.m_Order, DEFAULT_BTREE_ORDER);
+              m_Root    = std::move(other.m_Root); 
+              m_Height  = std::exchange(other.m_Height, 1);
+              m_NumKeys = std::exchange(other.m_NumKeys, 0);
+              m_Unique  = std::exchange(other.m_Unique, true);
+       }
     
        /**
        @brief Inserta un nuevo elemento en el BTree.
