@@ -1,10 +1,14 @@
 name: doxygen gh
 
-on: push
+on:
+  push:
+    branches:
+      - 'doc*' # all branches starting with 'doc' will trigger the workflow
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     permissions:
       contents: write
     steps:
