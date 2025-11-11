@@ -7,12 +7,12 @@
 
 const size_t MaxHeight = 5; 
 
-template <typename _keyType, typename _ObjIDType>
+template <typename _keyType, typename _ObjIDType, typename _CompareF>
 struct BTreeTrait
 {
        using keyType = _keyType;
-       using ObjIDType = _ObjIDType;
-       // TODO: agregar funcion de comparacion
+       using ObjIDType = _ObjIDType;     
+       using CompareF = _CompareF;
 };
 
 template <typename Trait>
