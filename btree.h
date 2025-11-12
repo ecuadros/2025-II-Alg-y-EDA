@@ -20,18 +20,12 @@ const size_t MaxHeight = 5;
  * @tparam _ObjIDType Tipo del valor/identificador asociado.
  * @brief Rasgos para configurar el B-Tree (tipos y comparador).
  */
-template <typename _keyType, typename _ObjIDType>
+template <typename _keyType, typename _ObjIDType,typename Compare = std::less<_keyType>>
 struct BTreeTrait
 {
        using keyType = _keyType;
        using ObjIDType = _ObjIDType;
-       // TODO DONE: agregar funcion de comparacion
-
-       struct Compare { 
-              bool operator() (const keyType &a, const keyType &b) const {
-                     return a < b;
-              }
-       };
+       using Compare = Compare;
 };
 
 /**
@@ -349,7 +343,6 @@ public :
     // Factories
     iterator begin()  { 
         // Adquiere un bloqueo compartido que el iterador mantendrá.
-        // ADVERTENCIA: El usuario debe asegurarse de que el iterador se destruya
         // para liberar el bloqueo. No se debe almacenar el iterador por mucho tiempo.
         std::shared_lock<std::shared_mutex> lk(m_mtx);
         return iterator(this, /*to_begin=*/true); 
