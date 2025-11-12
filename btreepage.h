@@ -310,16 +310,16 @@ bt_ErrorCode CBTreePage<Trait>::Insert(const keyType& key, const ObjIDType ObjID
 
 template <typename Trait>
 CBTreePage<Trait>::CBTreePage(CBTreePage&& other) noexcept
-    : m_MinKeys(other.m_MinKeys),
-      m_MaxKeys(other.m_MaxKeys),
-      m_MaxKeysForChilds(other.m_MaxKeysForChilds),
-      m_Unique(other.m_Unique),
-      m_isRoot(other.m_isRoot),
+    : m_MinKeys(std::exchange(other.m_MinKeys, 0)),
+      m_MaxKeys(std::exchange(other.m_MaxKeys, 0)),
+      m_MaxKeysForChilds(std::exchange(other.m_MaxKeysForChilds, 0)),
+      m_Unique(std::exchange(other.m_Unique, false)),
+      m_isRoot(std::exchange(other.m_isRoot, false)),
       m_Keys(std::move(other.m_Keys)),
       m_SubPages(std::move(other.m_SubPages)),
       m_Compare(std::move(other.m_Compare)),
-      m_KeyCount(std::exchange(other.m_KeyCount), 0),
-      m_pParent(other.m_pParent)
+      m_KeyCount(std::exchange(other.m_KeyCount, 0)),
+      m_pParent(std::exchange(other.m_pParent, nullptr))
 {
         
 }

@@ -56,66 +56,59 @@ class BTree // this is the full version of the BTree
        typedef CBTreePage <Trait> BTNode;// useful shorthand
 
 public:
-       typedef typename BTNode::ObjectInfo      ObjectInfo;
-
        /**
-        * @class BTreeIterator
-        * @brief Un iterador bidireccional para el B-Tree.
+        * @class ForwardBTreeIterator
+        * @brief Un iterador hacia adelante para el B-Tree.
         */
-       class BTreeIterator {
+       class ForwardBTreeIterator {
        public:
-              using iterator_category = std::bidirectional_iterator_tag;
-              using value_type = ObjectInfo;
-              using pointer = ObjectInfo*;
-              using reference = ObjectInfo&;
+              using iterator_category = std::forward_iterator_tag;
+              using value_type = typename BTNode::ObjectInfo;
+              using pointer = value_type*;
+              using reference = value_type&;
 
-              /**
-               * @brief Construye un iterador de B-Tree.
-               * @param pTree Puntero al B-Tree padre.
-               * @param pNode Puntero al nodo actual.
-               * @param keyIndex Índice de la clave dentro del nodo.
-               */
-              BTreeIterator(BTree* pTree, BTNode* pNode = nullptr, size_t keyIndex = 0)
+              ForwardBTreeIterator(BTree* pTree, BTNode* pNode = nullptr, size_t keyIndex = 0)
                      : m_pTree(pTree), m_pNode(pNode), m_keyIndex(keyIndex) {}
 
-              /// Desreferencia el iterador para obtener el elemento.
               reference operator*() const { return m_pNode->m_Keys[m_keyIndex]; }
-              /// Desreferencia el iterador para acceder a un miembro del elemento.
               pointer operator->() const { return &m_pNode->m_Keys[m_keyIndex]; }
 
-              /// Operador de pre-incremento. Avanza el iterador al siguiente elemento.
-              BTreeIterator& operator++() {
+              ForwardBTreeIterator& operator++() {
                      if (!m_pNode) {
                          return *this;
                      }
  
                      if (m_pNode->m_SubPages[0] != nullptr) {
                          BTNode* pCursor = m_pNode->m_SubPages[m_keyIndex + 1];
-                         while (pCursor->m_SubPages[0] != nullptr) {
+                         while (pCursor && pCursor->m_SubPages[0] != nullptr) {
                              pCursor = pCursor->m_SubPages[0];
                          }
                          m_pNode = pCursor;
                          m_keyIndex = 0;
-                         return *this;
-                     }
-
-                     if (m_pNode->m_SubPages[0] == nullptr) { // Es un nodo hoja
+                     } else { // Es un nodo hoja o el último hijo de un nodo interno
                          m_keyIndex++;
                          if (m_keyIndex < m_pNode->m_KeyCount) {
                              return *this;
                          }
                          BTNode* pCurrent = m_pNode;
                          BTNode* pParent = pCurrent->m_pParent;
-                         while (pParent != nullptr && pParent->m_SubPages[pParent->m_KeyCount] == pCurrent) {
+                         size_t pos = 0;
+                         if (pParent) {
+                            while(pos <= pParent->m_KeyCount && pParent->m_SubPages[pos] != pCurrent) pos++;
+                         }
+
+                         while (pParent != nullptr && pos == pParent->m_KeyCount + 1) {
                              pCurrent = pParent;
                              pParent = pParent->m_pParent;
+                             if (pParent) {
+                                pos = 0;
+                                while(pos <= pParent->m_KeyCount && pParent->m_SubPages[pos] != pCurrent) pos++;
+                             }
                          }
 
                          if (pParent == nullptr) {
                              m_pNode = nullptr;
                          } else {
-                             size_t pos = 0;
-                             while(pParent->m_SubPages[pos] != pCurrent) pos++;
                              m_pNode = pParent;
                              m_keyIndex = pos;
                          }
@@ -123,58 +116,90 @@ public:
                      return *this;
               }
 
-              /// Operador de pre-decremento. Mueve el iterador al elemento anterior.
-              BTreeIterator& operator--() {
-                    if (!m_pNode) {
-                        m_pNode = &m_pTree->m_Root;
-                        while (m_pNode->m_SubPages[m_pNode->m_KeyCount]) {
-                            m_pNode = m_pNode->m_SubPages[m_pNode->m_KeyCount];
-                        }
-                        m_keyIndex = m_pNode->m_KeyCount - 1;
-                        return *this;
-                    }
+              bool operator==(const ForwardBTreeIterator& other) const { return m_pNode == other.m_pNode && m_keyIndex == other.m_keyIndex; }
+              bool operator!=(const ForwardBTreeIterator& other) const { return !(*this == other); }
 
-                    BTNode* pCursor = m_pNode->m_SubPages[m_keyIndex];
-                    if (pCursor) {
-                        while (pCursor->m_SubPages[pCursor->m_KeyCount]) {
-                            pCursor = pCursor->m_SubPages[pCursor->m_KeyCount];
-                        }
-                        m_pNode = pCursor;
-                        m_keyIndex = pCursor->m_KeyCount - 1;
-                    } else {
-                        BTNode* pChild = m_pNode;
-                        BTNode* pParent = m_pNode->m_pParent;
-                        while (pParent && pParent->m_SubPages[0] == pChild) {
-                            pChild = pParent;
-                            pParent = pParent->m_pParent;
-                        }
-                        if (!pParent) {
-                            m_pNode = nullptr;
-                        } else {
-                            size_t child_pos = 0;
-                            while(child_pos <= pParent->m_KeyCount && pParent->m_SubPages[child_pos] != pChild) {
-                                child_pos++;
-                            }
-                            m_pNode = pParent;
-                            m_keyIndex = child_pos - 1;
-                        }
-                    }
+       private:
+              BTree*  m_pTree;
+              BTNode* m_pNode;
+              size_t m_keyIndex;
+       };
+
+       /**
+        * @class BackwardBTreeIterator
+        * @brief Un iterador hacia atrás para el B-Tree.
+        */
+       class BackwardBTreeIterator {
+       public:
+              using iterator_category = std::forward_iterator_tag;
+              using value_type = typename BTNode::ObjectInfo;
+              using pointer = value_type*;
+              using reference = value_type&;
+
+              BackwardBTreeIterator(BTree* pTree, BTNode* pNode = nullptr, size_t keyIndex = 0)
+                     : m_pTree(pTree), m_pNode(pNode), m_keyIndex(keyIndex) {}
+
+              reference operator*() const { return m_pNode->m_Keys[m_keyIndex]; }
+              pointer operator->() const { return &m_pNode->m_Keys[m_keyIndex]; }
+
+              BackwardBTreeIterator& operator++() { // Mueve el iterador al elemento "anterior"
+                     if (!m_pNode) { // Si estamos en rend(), no hacemos nada.
+                         return *this;
+                     }
+
+                     // Caso 1: El nodo actual tiene hijos (no es hoja).
+                     // El predecesor es el elemento más a la derecha del subárbol izquierdo.
+                     if (m_pNode->m_SubPages[0] != nullptr) {
+                         BTNode* pCursor = m_pNode->m_SubPages[m_keyIndex];
+                         while (pCursor && pCursor->m_SubPages[pCursor->m_KeyCount]) {
+                             pCursor = pCursor->m_SubPages[pCursor->m_KeyCount];
+                         }
+                         m_pNode = pCursor;
+                         m_keyIndex = pCursor ? pCursor->m_KeyCount - 1 : 0;
+                     } else { // Caso 2: El nodo actual es una hoja.
+                         if (m_keyIndex > 0) {
+                             m_keyIndex--; // El predecesor está en el mismo nodo.
+                         } else {
+                             // Si no, subimos por el árbol hasta encontrar un ancestro que sea un hijo derecho.
+                             BTNode* pCurrent = m_pNode;
+                             BTNode* pParent = pCurrent->m_pParent;
+                             size_t pos = 0;
+                             if (pParent) {
+                                while(pos <= pParent->m_KeyCount && pParent->m_SubPages[pos] != pCurrent) pos++;
+                             }
+
+                             while (pParent != nullptr && pos == 0) {
+                                 pCurrent = pParent;
+                                 pParent = pParent->m_pParent;
+                                 if (pParent) {
+                                    pos = 0;
+                                    while(pos <= pParent->m_KeyCount && pParent->m_SubPages[pos] != pCurrent) pos++;
+                                 }
+                             }
+
+                             if (pParent == nullptr) { // Llegamos a la raíz y no hay más predecesores
+                                 m_pNode = nullptr; // Esto nos lleva a un estado equivalente a rend()
+                             } else {
+                                 m_pNode = pParent;
+                                 m_keyIndex = pos - 1;
+                             }
+                         }
+                     }
                      return *this;
               }
 
-              /// Operador de comparación de igualdad.
-              bool operator==(const BTreeIterator& other) const { return m_pNode == other.m_pNode && m_keyIndex == other.m_keyIndex; }
-              /// Operador de comparación de desigualdad.
-              bool operator!=(const BTreeIterator& other) const { return !(*this == other); }
+              bool operator==(const BackwardBTreeIterator& other) const { return m_pNode == other.m_pNode && m_keyIndex == other.m_keyIndex; }
+              bool operator!=(const BackwardBTreeIterator& other) const { return !(*this == other); }
 
        private:
-              BTree*  m_pTree;    ///< Puntero al B-Tree al que pertenece este iterador.
-              BTNode* m_pNode;    ///< Puntero al nodo actual en el árbol.
-              size_t m_keyIndex;  ///< Índice de la clave actual en el nodo.
+              BTree*  m_pTree;
+              BTNode* m_pNode;
+              size_t m_keyIndex;
        };
 
-       using iterator = BTreeIterator;
-       using reverse_iterator = std::reverse_iterator<iterator>;
+       using iterator = ForwardBTreeIterator;
+       using reverse_iterator = BackwardBTreeIterator;
+       typedef typename BTNode::ObjectInfo      ObjectInfo;
 
 public:
        /**
@@ -197,13 +222,14 @@ public:
         * @param other El B-Tree a mover.
         */
        BTree(BTree&& other) noexcept
-              : m_Root(other.m_Root),
-                m_Height(std::exchange(other.m_Height, 1)),
-                m_Order(std::exchange(other.m_Order, 0)),
-                m_NumKeys(std::exchange(other.m_NumKeys, 0)),
-                m_Unique(std::exchange(other.m_Unique, false))
        {
-
+              std::scoped_lock lock(m_Mutex, other.m_Mutex);
+ 
+              m_Root    = std::exchange(other.m_Root, BTNode(0, false));
+              m_Height  = std::exchange(other.m_Height, 1);
+              m_Order   = std::exchange(other.m_Order, 0);
+              m_NumKeys = std::exchange(other.m_NumKeys, 0);
+              m_Unique  = std::exchange(other.m_Unique, false);
        }
        /// @brief Destructor.
        ~BTree() {}
@@ -261,26 +287,34 @@ public:
        iterator begin() {
               std::lock_guard<std::shared_mutex> lock(m_Mutex);
               BTNode* pNode = &m_Root;
-              if (pNode->m_KeyCount == 0) { 
-                  return iterator(this, nullptr, 0); // Retorna end()
+              if (!pNode || pNode->m_KeyCount == 0) {
+                  return end();
               }
-              while (pNode->m_SubPages[0] != nullptr) { 
+              while (pNode && pNode->m_SubPages[0] != nullptr) {
                      pNode = pNode->m_SubPages[0];
               }
               return iterator(this, pNode, 0);
        }
        /// Devuelve un iterador al elemento siguiente al último.
-       iterator end() { 
-              return iterator(this, nullptr, 0); 
-       }
+       iterator end() { return iterator(this, nullptr, 0); }
 
        /// Devuelve un iterador inverso al último elemento.
-       reverse_iterator rbegin() { 
+       reverse_iterator rbegin() {
               std::lock_guard<std::shared_mutex> lock(m_Mutex);
-              return reverse_iterator(end()); 
+              BTNode* pNode = &m_Root;
+              if (!pNode || pNode->m_KeyCount == 0) {
+                  return rend();
+              }
+              while (pNode && pNode->m_SubPages[pNode->m_KeyCount]) {
+                  pNode = pNode->m_SubPages[pNode->m_KeyCount];
+              }
+              if (pNode && pNode->m_KeyCount > 0) {
+                  return reverse_iterator(this, pNode, pNode->m_KeyCount - 1);
+              }
+              return rend();
        }
        /// Devuelve un iterador inverso al elemento anterior al primero.
-       reverse_iterator rend() { return reverse_iterator(begin()); }
+       reverse_iterator rend() { return reverse_iterator(this, nullptr, 0); }
 
 
        /**
