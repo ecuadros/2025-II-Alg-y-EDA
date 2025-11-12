@@ -27,6 +27,9 @@ class BTree;
 template <typename Trait>
 class BTreeIterator;
 
+template <typename Trait>
+class BTreeReverseIterator;
+
 using namespace std;
 
 /**
@@ -511,7 +514,6 @@ CBTreePage<Trait>::CBTreePage(size_t maxKeys, bool unique) : m_MaxKeys(maxKeys),
         SetMaxKeysForChilds(m_MaxKeys);
 }
 
-
 /**
  * @brief Destructor de CBTreePage
  * @tparam Trait Tipo de rasgos
@@ -521,7 +523,6 @@ CBTreePage<Trait>::~CBTreePage()
 {
         Reset();
 }
-
 
 /**
  * @brief Inserta una clave con su identificador en la página
@@ -619,7 +620,6 @@ bool CBTreePage<Trait>::RedistributeWith1Brother(size_t &pos)
         }
         return true;
 }
-
 
 /**
  * @brief Redistribuye claves con dos nodos hermanos
@@ -832,7 +832,6 @@ void CBTreePage<Trait>::SplitPageInto3(vector<ObjectInfo> &tmpKeys,
                 tmpSubPages[i]->m_Parent = pChild3;
 }
 
-
 /**
  * @brief Divide el nodo raíz
  * @tparam Trait Tipo de rasgos
@@ -995,7 +994,6 @@ bt_ErrorCode CBTreePage<Trait>::Remove(const keyType &key, const ObjIDType ObjID
         return bt_ok;
 }
 
-
 /**
  * @brief Fusiona tres nodos en dos
  * @tparam Trait Tipo de rasgos
@@ -1128,7 +1126,6 @@ CBTreePage<Trait>::GetFirstObjectInfo()
                 return m_SubPages[0]->GetFirstObjectInfo();
         return m_Keys[0];
 }
-
 
 /**
  * @brief Función auxiliar para imprimir información de objeto

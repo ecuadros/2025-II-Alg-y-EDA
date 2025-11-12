@@ -16,7 +16,7 @@
 template <typename Trait>
 class BTree;
 template <typename Trait>
-class BtreeIterator;
+class BTreeIterator;
 template <typename Trait>
 class BTreeReverseIterator;
 
@@ -24,7 +24,7 @@ const size_t MaxHeight = 5;
 
 /**
  * @brief Estructura de características para el árbol B.
- * 
+ *
  * @tparam _keyType Tipo de clave del árbol
  * @tparam _ObjIDType Tipo de identificador del objeto asociado a la clave
  * @tparam _Compare Función de comparación (por defecto std::less)
@@ -47,7 +47,7 @@ using BTreeDescTrait = BTreeTrait<Key, Value, std::greater<Key>>;
 
 /**
  * @brief Iterador directo para árbol B.
- * 
+ *
  * @tparam Trait Características del árbol B
  */
 template <typename Trait>
@@ -88,7 +88,7 @@ public:
        }
 
        /** @brief Comparación de igualdad */
-       bool operator==(cosnt BTreeIterator &other) const
+       bool operator==(const BTreeIterator &other) const
        {
               if (m_CurrentPage == nullptr && other.m_CurrentPage == nullptr)
                      return true;
@@ -104,7 +104,7 @@ public:
 
 /**
  * @brief Iterador reverso para árbol B.
- * 
+ *
  * @tparam Trait Características del árbol B
  */
 template <typename Trait>
@@ -147,7 +147,7 @@ public:
        /** @brief Comparación de igualdad */
        bool operator==(const BTreeReverseIterator &other) const
        {
-              if (m_CurrentPAge == nullptr && other.m_CurrentPage == nullptr)
+              if (m_CurrentPage == nullptr && other.m_CurrentPage == nullptr)
                      return true;
               return m_CurrentPage == other.m_CurrentPage && m_CurrentIndex == other.m_CurrentIndex;
        }
@@ -161,23 +161,23 @@ public:
 
 /**
  * @brief Árbol B balanceado para búsqueda y ordenamiento.
- * 
+ *
  * Implementa un árbol B con características personalizables mediante Trait.
  * Soporta operaciones concurrentes mediante std::shared_mutex.
- * 
+ *
  * @tparam Trait Estructura con tipos keyType, ObjIDType y función Compare
  */
 template <typename Trait>
 class BTree
 {
        typedef typename Trait::keyType keyType;
-       typedef typename Trait : ObjIDType ObjIDType;
+       typedef typename Trait::ObjIDType ObjIDType;
        typedef CBTreePage<Trait> BTNode;
 
 public:
        typedef typename BTNode::ObjectInfo ObjectInfo;
        friend class BTreeIterator<Trait>;
-       friend class BTReeReverseIterator<Trait>;
+       friend class BTreeReverseIterator<Trait>;
        typedef BTreeIterator<Trait> iterator;
        typedef BTreeReverseIterator<Trait> reverse_iterator;
 
@@ -196,7 +196,7 @@ public:
        BTree(BTree &&other) noexcept
        {
               std::unique_lock<std::shared_mutex> lock(other.m_Mutex);
-              m_Root 0 std::move(other.m_Root);
+              m_Root = std::move(other.m_Root);
               m_Height = std::exchange(other.m_Height, 1);
               m_Unique = other.m_Unique;
               m_NumKeys = std::exchange(other.m_NumKeys, 0);
@@ -221,16 +221,16 @@ public:
 
        /**
         * @brief Inserta una clave con su identificador en el árbol.
-        * 
+        *
         * @param key Clave a insertar
         * @param ObjID Identificador del objeto asociado
         * @return true si la inserción fue exitosa, false si la clave es duplicada
         */
        bool Insert(const keyType key, const long ObjID);
-       
+
        /**
         * @brief Elimina una clave del árbol.
-        * 
+        *
         * @param key Clave a eliminar
         * @param ObjID Identificador del objeto
         * @return true si la eliminación fue exitosa, false si no se encontró
@@ -239,7 +239,7 @@ public:
 
        /**
         * @brief Busca una clave en el árbol.
-        * 
+        *
         * @param key Clave a buscar
         * @return Identificador del objeto si existe, -1 en caso contrario
         */
@@ -279,25 +279,25 @@ public:
 
        /**
         * @brief Imprime la estructura del árbol.
-        * 
+        *
         * @param os Stream de salida
         */
-       void Print(ostream &os) const
+       void Print(std::ostream &os) const
        {
-              std::shared_lock<std::mutex> lock(m_Mutex);
+              std::shared_lock<std::shared_mutex> lock(m_Mutex);
               m_Root.Print(os);
        }
 
        /**
         * @brief Escribe la estructura del árbol en un stream.
-        * 
+        *
         * @param os Stream de salida
         * @return Referencia al stream
         */
        std::ostream &Write(std::ostream &os) const;
        /**
         * @brief Lee la estructura del árbol desde un stream.
-        * 
+        *
         * @param is Stream de entrada
         * @return Referencia al stream
         */
@@ -305,21 +305,21 @@ public:
 
        /**
         * @brief Aplica una función a cada elemento del árbol (in-order).
-        * 
+        *
         * @tparam Func Tipo de función
         * @tparam Args Argumentos adicionales
         * @param func Función a aplicar
         * @param args Argumentos adicionales
         */
        template <typename Func, typename... Args>
-       void ForEach(Func &&func, Args &&..args)
+       void ForEach(Func &&func, Args &&...args)
        {
               m_Root.ForEach(std::forward<Func>(func), 0, std::forward<Args>(args)...);
        }
 
        /**
         * @brief Busca el primer elemento que cumple un predicado.
-        * 
+        *
         * @tparam Pred Tipo de predicado
         * @tparam Args Argumentos adicionales
         * @param predicatem Predicado a aplicar
@@ -327,14 +327,14 @@ public:
         * @return Puntero al elemento encontrado o nullptr
         */
        template <typename Pred, typename... Args>
-       ObjectInfo *FirsThat(Pred &&predicatem Args &&...args)
+       ObjectInfo *FirstThat(Pred &&predicate, Args &&...args)
        {
               return m_Root.FirstThat(std::forward<Pred>(predicate), 0, std::forward<Args>(args)...);
        }
 
        /**
         * @brief Operador de salida para imprimir el árbol.
-        * 
+        *
         * @param os Stream de salida
         * @param tree Árbol a imprimir
         * @return Referencia al stream
@@ -347,14 +347,15 @@ public:
 
        /**
         * @brief Obtiene un iterador al primer elemento.
-        * 
+        *
         * @return Iterador al inicio
         */
        iterator begin()
        {
-              std::shared_lock<std::shared_mutex> lock(m_Mutex)
+              std::shared_lock<std::shared_mutex> lock(m_Mutex);
 
-                  if (m_NumKeys == 0) return end();
+              if (m_NumKeys == 0)
+                     return end();
 
               BTNode *page = &m_Root;
               while (page->m_SubPages[0])
@@ -374,7 +375,7 @@ public:
 
        /**
         * @brief Obtiene un iterador reverso al último elemento.
-        * 
+        *
         * @return Iterador reverso al inicio
         */
        reverse_iterator rbegin()
@@ -417,7 +418,7 @@ protected:
 
 /**
  * @brief Inserción de un elemento en el árbol B.
- * 
+ *
  * @tparam Trait Características del árbol
  * @param key Clave a insertar
  * @param ObjID Identificador del objeto
@@ -442,7 +443,7 @@ bool BTree<Trait>::Insert(const keyType key, const long ObjID)
 
 /**
  * @brief Eliminación de un elemento del árbol B.
- * 
+ *
  * @tparam Trait Características del árbol
  * @param key Clave a eliminar
  * @param ObjID Identificador del objeto
@@ -465,7 +466,7 @@ bool BTree<Trait>::Remove(const keyType key, const long ObjID)
 
 /**
  * @brief Escribe la estructura del árbol en un stream.
- * 
+ *
  * @tparam Trait Características del árbol
  * @param os Stream de salida
  * @return Referencia al stream
@@ -484,7 +485,7 @@ std::ostream &BTree<Trait>::Write(std::ostream &os) const
 
 /**
  * @brief Lee la estructura del árbol desde un stream.
- * 
+ *
  * @tparam Trait Características del árbol
  * @param is Stream de entrada
  * @return Referencia al stream
@@ -507,7 +508,7 @@ std::istream &BTree<Trait>::Read(std::istream &is)
 
 /**
  * @brief Incremento del iterador directo.
- * 
+ *
  * @tparam Trait Características del árbol
  * @return Referencia al iterador
  */
@@ -565,7 +566,7 @@ BTreeIterator<Trait> &BTreeIterator<Trait>::operator++()
 
 /**
  * @brief Incremento del iterador reverso.
- * 
+
  * @tparam Trait Características del árbol
  * @return Referencia al iterador
  */
