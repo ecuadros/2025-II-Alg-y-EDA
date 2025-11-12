@@ -277,11 +277,12 @@ public:
        /**
         * @brief Constructor de movimiento: transfiere la propiedad eficientemente
         * @param other Árbol a mover (queda en estado válido pero vacío)
-        * @note Thread-safe: bloquea el objeto fuente durante la transferencia
+        * @note Thread-safe: bloquea ambos objetos
         */
        BTree(BTree&& other) noexcept 
+              : m_Mutex()
        {
-              std::scoped_lock lock(other.m_Mutex);  // Bloquear el objeto fuente
+              std::scoped_lock lock(m_Mutex, other.m_Mutex);  // Bloquear ambos
               
               m_Order = other.m_Order;
               m_Root = std::move(other.m_Root);
