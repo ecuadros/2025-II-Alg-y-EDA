@@ -24,8 +24,21 @@ template <typename Trait>
 class backward_btree_iterator;
 
 using namespace std;
+
+/**
+ * @brief Códigos de error para operaciones del árbol B
+ */
 enum bt_ErrorCode {bt_ok, bt_overflow, bt_underflow, bt_duplicate, bt_nofound, bt_rootmerged};
 
+/**
+ * @brief Búsqueda binaria en un contenedor
+ * @param container Contenedor donde buscar
+ * @param first Índice inicial
+ * @param last Índice final
+ * @param object Objeto a buscar
+ * @param comp Función de comparación
+ * @return Posición donde se encuentra o debería insertarse el objeto
+ */
 template <typename Container, typename ObjType, typename Compare>
 size_t binary_search(Container& container, size_t first, size_t last, ObjType &object, Compare comp)
 {
@@ -46,8 +59,12 @@ size_t binary_search(Container& container, size_t first, size_t last, ObjType &o
        return last;
 }
 
-// Error al poner size_t
-// Posible motivo: El i está disminuyendo
+/**
+ * @brief Inserta un objeto en una posición específica del contenedor
+ * @param container Contenedor donde insertar
+ * @param object Objeto a insertar
+ * @param pos Posición de inserción
+ */
 template <typename Container, typename ObjType>
 void insert_at(Container& container, ObjType object, int pos)
 {
@@ -58,6 +75,11 @@ void insert_at(Container& container, ObjType object, int pos)
        container[pos] =  object;	
 }
 
+/**
+ * @brief Elimina un elemento de una posición específica
+ * @param container Contenedor donde eliminar
+ * @param pos Posición del elemento a eliminar
+ */
 template <typename Container>
 void remove(Container& container, size_t pos)
 {
@@ -66,6 +88,11 @@ void remove(Container& container, size_t pos)
            container[i-1] = container[i];
 }
 
+/**
+ * @brief Estructura que almacena información de un objeto en el árbol
+ * @tparam keyType Tipo de la clave
+ * @tparam ObjIDType Tipo del identificador de objeto
+ */
 template <typename keyType, typename ObjIDType>
 struct tagObjectInfo
 {
@@ -81,6 +108,10 @@ struct tagObjectInfo
        size_t                    GetUseCounter() { return UseCounter;    }
 };
 
+/**
+ * @brief Página del árbol B (nodo interno o hoja)
+ * @tparam Trait Trait que define keyType, ObjIDType y Compare
+ */
 template <typename Trait>
 class CBTreePage //: public SimpleIndex <keyType>
 // this is the in-memory version of the CBTreePage
@@ -96,6 +127,11 @@ class CBTreePage //: public SimpleIndex <keyType>
 public:
        typedef tagObjectInfo<keyType, ObjIDType> ObjectInfo;
  public:
+       /**
+        * @brief Constructor de página del árbol B
+        * @param maxKeys Número máximo de claves por página
+        * @param unique Si es true, no permite duplicados
+        */
        CBTreePage(size_t maxKeys, bool unique = true);
        virtual ~CBTreePage();
 
@@ -103,7 +139,10 @@ public:
        CBTreePage(const CBTreePage&) = delete;
        CBTreePage& operator=(const CBTreePage&) = delete;
 
-       // Move Constructor
+       /**
+        * @brief Constructor de movimiento
+        * @param other Página a mover
+        */
        CBTreePage(CBTreePage&& other) noexcept
               : m_MaxKeys(other.m_MaxKeys),
                 m_Unique(other.m_Unique),
@@ -128,7 +167,11 @@ public:
               other.m_KeyCount = 0;
        }
 
-       // Move Assignment Operator
+       /**
+        * @brief Operador de asignación por movimiento
+        * @param other Página a mover
+        * @return Referencia a la página actual
+        */
        CBTreePage& operator=(CBTreePage&& other) noexcept
        {
               if (this != &other) {
@@ -161,17 +204,52 @@ public:
               return *this;
        }
 
+       /**
+        * @brief Inserta una clave en la página
+        * @param key Clave a insertar
+        * @param ObjID Referencia asociada
+        * @return Código de error (bt_ok, bt_overflow, bt_duplicate)
+        */
        bt_ErrorCode    Insert (const keyType &key, const ObjIDType ObjID);
+       
+       /**
+        * @brief Elimina una clave de la página
+        * @param key Clave a eliminar
+        * @param ObjID Referencia asociada
+        * @return Código de error (bt_ok, bt_underflow, bt_nofound)
+        */
        bt_ErrorCode    Remove (const keyType &key, const ObjIDType ObjID);
+       
+       /**
+        * @brief Busca una clave en la página
+        * @param key Clave a buscar
+        * @param ObjID Referencia donde se almacena el resultado
+        * @return true si se encontró, false en caso contrario
+        */
        bool            Search (const keyType &key, ObjIDType &ObjID);
+       
+       /**
+        * @brief Imprime la página
+        * @param os Stream de salida
+        */
        void            Print  (ostream &os);
 
-       // Template versions using std::invoke (TODO #6, #7, #8 completed)
+       /**
+        * @brief Aplica una función a cada elemento de la página
+        * @param func Función a aplicar
+        * @param args Argumentos adicionales
+        */
        template <typename Func, typename... Args>
        void ForEach(Func&& func, Args&&... args) {
                ForEachImpl(0, std::forward<Func>(func), std::forward<Args>(args)...);
        }
 
+       /**
+        * @brief Busca el primer elemento que cumple una condición
+        * @param func Función predicado
+        * @param args Argumentos adicionales
+        * @return Puntero al elemento o nullptr
+        */
        template <typename Func, typename... Args>
        ObjectInfo* FirstThat(Func&& func, Args&&... args) {
                return FirstThatImpl(0, std::forward<Func>(func), std::forward<Args>(args)...);
@@ -922,7 +1000,10 @@ void CBTreePage<Trait>::MovePage(BTPage *pChildPage, vector<ObjectInfo> &tmpKeys
        pChildPage->clear();
 }
 
-// Forward iterator: recorre el árbol en orden ascendente (in-order traversal)
+/**
+ * @brief Iterador forward para recorrer el árbol en orden ascendente
+ * @tparam Trait Trait del árbol B
+ */
 template <typename Trait>
 class forward_btree_iterator
 {
@@ -944,21 +1025,38 @@ public:
                        goToFirstLeaf();
        }
 
+       /**
+        * @brief Constructor de copia
+        * @param other Iterador a copiar
+        */
        forward_btree_iterator(const iterator &other)
                : m_pTree(other.m_pTree), m_pPage(other.m_pPage), m_Index(other.m_Index)
        {}
 
+       /**
+        * @brief Operador de igualdad
+        * @param other Iterador a comparar
+        * @return true si son iguales
+        */
        bool operator==(const iterator& other) const {
                return m_pTree == other.m_pTree &&
                       m_pPage == other.m_pPage &&
                       m_Index == other.m_Index;
        }
 
+       /**
+        * @brief Operador de desigualdad
+        * @param other Iterador a comparar
+        * @return true si son diferentes
+        */
        bool operator!=(const iterator& other) const {
                return !(*this == other);
        }
 
-       // Operador de avance (SOLO FORWARD)
+       /**
+        * @brief Pre-incremento (avanza al siguiente elemento)
+        * @return Referencia al iterador
+        */
        iterator operator++() {
                if (!m_pPage)
                        return *this;
@@ -1027,7 +1125,10 @@ private:
        }
 };
 
-// Backward iterator: recorre el árbol en orden descendente (reverse in-order traversal)
+/**
+ * @brief Iterador backward para recorrer el árbol en orden descendente
+ * @tparam Trait Trait del árbol B
+ */
 template <typename Trait>
 class backward_btree_iterator
 {
@@ -1049,21 +1150,38 @@ public:
                        goToLastLeaf();
        }
 
+       /**
+        * @brief Constructor de copia
+        * @param other Iterador a copiar
+        */
        backward_btree_iterator(const iterator &other)
                : m_pTree(other.m_pTree), m_pPage(other.m_pPage), m_Index(other.m_Index)
        {}
 
+       /**
+        * @brief Operador de igualdad
+        * @param other Iterador a comparar
+        * @return true si son iguales
+        */
        bool operator==(const iterator& other) const {
                return m_pTree == other.m_pTree &&
                       m_pPage == other.m_pPage &&
                       m_Index == other.m_Index;
        }
 
+       /**
+        * @brief Operador de desigualdad
+        * @param other Iterador a comparar
+        * @return true si son diferentes
+        */
        bool operator!=(const iterator& other) const {
                return !(*this == other);
        }
 
-       // Operador de avance (avanza BACKWARD en el árbol)
+       /**
+        * @brief Pre-incremento (avanza al elemento anterior en orden)
+        * @return Referencia al iterador
+        */
        iterator operator++() {
                if (!m_pPage)
                        return *this;

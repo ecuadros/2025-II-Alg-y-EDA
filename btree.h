@@ -39,6 +39,11 @@ public:
        friend class backward_btree_iterator<Trait>;
 
 public:
+       /**
+        * @brief Constructor del árbol B
+        * @param order Orden del árbol (número máximo de claves por nodo interno)
+        * @param unique Si es true, no permite claves duplicadas
+        */
        BTree(size_t order = DEFAULT_BTREE_ORDER, bool unique = true)
               : m_Order(order),
                 m_Root(2 * order  + 1, unique),
@@ -54,7 +59,10 @@ public:
        BTree(const BTree&) = delete;
        BTree& operator=(const BTree&) = delete;
 
-       // Move Constructor
+       /**
+        * @brief Constructor de movimiento
+        * @param other Árbol B a mover
+        */
        BTree(BTree&& other) noexcept
               : m_Order(other.m_Order),
                 m_Root(std::move(other.m_Root)),
@@ -77,7 +85,11 @@ public:
               // Locks se liberan automáticamente al salir del scope
        }
 
-       // Move Assignment Operator
+       /**
+        * @brief Operador de asignación por movimiento
+        * @param other Árbol B a mover
+        * @return Referencia al árbol actual
+        */
        BTree& operator=(BTree&& other) noexcept
        {
               if (this != &other) {
@@ -106,11 +118,30 @@ public:
        }
 
        ~BTree() {}
-       //int           Open (char * name, int mode);
-       //int           Create (char * name, int mode);
-       //int           Close ();
+       
+       /**
+        * @brief Inserta una clave y su referencia asociada
+        * @param key Clave a insertar
+        * @param ObjID Referencia asociada a la clave
+        * @return true Si la inserción fue exitosa
+        * @return false Si la clave ya existía (cuando unique es true)
+        */
        bool            Insert (const keyType key, const long ObjID);
+       
+       /**
+        * @brief Elimina una clave del árbol
+        * @param key Clave a eliminar
+        * @param ObjID Referencia asociada
+        * @return true Si la eliminación fue exitosa
+        * @return false Si la clave no fue encontrada
+        */
        bool            Remove (const keyType key, const long ObjID);
+       
+       /**
+        * @brief Busca una clave en el árbol
+        * @param key Clave a buscar
+        * @return Referencia asociada o -1 si no se encuentra
+        */
        ObjIDType       Search (const keyType key) const
        {      
               // Shared lock: permite múltiples lectores simultáneos
@@ -122,30 +153,51 @@ public:
               return ObjID;
        }
        
+       /**
+        * @brief Retorna el número total de claves
+        * @return Cantidad de claves en el árbol
+        */
        size_t            size() const
        {
               std::shared_lock<std::shared_mutex> lock(m_mutex);
               return m_NumKeys;
        }
        
+       /**
+        * @brief Retorna la altura del árbol
+        * @return Altura del árbol
+        */
        size_t            height() const
        {
               std::shared_lock<std::shared_mutex> lock(m_mutex);
               return m_Height;
        }
        
+       /**
+        * @brief Retorna el orden del árbol
+        * @return Orden del árbol
+        */
        size_t            GetOrder() const
        {
               std::shared_lock<std::shared_mutex> lock(m_mutex);
               return m_Order;
        }
 
+       /**
+        * @brief Imprime el árbol
+        * @param os Stream de salida
+        */
        void            Print (ostream &os) const
        {
               std::shared_lock<std::shared_mutex> lock(m_mutex);
               m_Root.Print(os);
        }
        
+       /**
+        * @brief Serializa el árbol a un stream
+        * @param os Stream de salida
+        * @return Referencia al stream
+        */
        std::ostream& Write(std::ostream& os) const
        {
                // Shared lock: solo lectura del árbol
@@ -162,6 +214,11 @@ public:
                return os;
        }
 
+       /**
+        * @brief Deserializa el árbol desde un stream
+        * @param is Stream de entrada
+        * @return Referencia al stream
+        */
        std::istream& Read(std::istream& is)
        {
                size_t order;
@@ -199,7 +256,11 @@ public:
                return is;
        }
        
-       // Template versions using std::invoke (TODO #6, #7, #8 completed)
+       /**
+        * @brief Aplica una función a cada elemento del árbol
+        * @param func Función a aplicar
+        * @param args Argumentos adicionales para la función
+        */
        template <typename Func, typename... Args>
        void ForEach(Func&& func, Args&&... args) const
        {
@@ -208,6 +269,12 @@ public:
               m_Root.ForEach(std::forward<Func>(func), std::forward<Args>(args)...);
        }
 
+       /**
+        * @brief Busca el primer elemento que cumple una condición
+        * @param func Función predicado
+        * @param args Argumentos adicionales
+        * @return Puntero al elemento o nullptr si no se encuentra
+        */
        template <typename Func, typename... Args>
        ObjectInfo* FirstThat(Func&& func, Args&&... args) const
        {
@@ -216,7 +283,10 @@ public:
               return m_Root.FirstThat(std::forward<Func>(func), std::forward<Args>(args)...);
        }
 
-       // Iteradores forward (in-order traversal: orden ascendente)
+       /**
+        * @brief Retorna un iterador al inicio del árbol
+        * @return Iterador al primer elemento
+        */
        iterator begin()
        {
                if (m_NumKeys == 0)
@@ -224,12 +294,19 @@ public:
                return iterator(this, &m_Root, 0);
        }
 
+       /**
+        * @brief Retorna un iterador al final del árbol
+        * @return Iterador pasado el último elemento
+        */
        iterator end()
        {
                return iterator(this, nullptr, 0);
        }
 
-       // Iteradores reverse (reverse in-order: orden descendente)
+       /**
+        * @brief Retorna un iterador inverso al inicio
+        * @return Iterador al último elemento
+        */
        reverse_iterator rbegin()
        {
                if (m_NumKeys == 0)
@@ -243,6 +320,10 @@ public:
                return reverse_iterator(this, node, node->GetNumberOfKeys() - 1);
        }
 
+       /**
+        * @brief Retorna un iterador inverso al final
+        * @return Iterador antes del primer elemento
+        */
        reverse_iterator rend()
        {
                return reverse_iterator(this, nullptr, 0);
