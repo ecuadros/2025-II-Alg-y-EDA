@@ -1009,6 +1009,12 @@ private:
        size_t        m_Index = 0;
 
 public:
+       /**
+        * @brief Constructor principal
+        * @param pTree Puntero al árbol B propietario
+        * @param pPage Página actual
+        * @param index Índice actual
+        */
        forward_btree_iterator(BTree<Trait> *pTree, BTPage *pPage, size_t index = 0)
                : m_pTree(pTree), m_pPage(pPage), m_Index(index)
        {
@@ -1071,17 +1077,28 @@ public:
                return *this;
        }
 
-       // Post-incremento
+       /**
+        * @brief Post-incremento
+        * @return Copia del iterador antes del incremento
+        */
        iterator operator++(int) {
                iterator tmp = *this;
                ++(*this);
                return tmp;
        }
 
+       /**
+        * @brief Operador de desreferencia
+        * @return Referencia al elemento actual
+        */
        value_type& operator*() const {
                return m_pPage->m_Keys[m_Index];
        }
 
+       /**
+        * @brief Operador de acceso a miembro
+        * @return Puntero al elemento actual
+        */
        value_type* operator->() const {
                return &m_pPage->m_Keys[m_Index];
        }
@@ -1134,6 +1151,12 @@ private:
        size_t        m_Index = 0;
 
 public:
+       /**
+        * @brief Constructor principal
+        * @param pTree Puntero al árbol B propietario
+        * @param pPage Página actual
+        * @param index Índice actual
+        */
        backward_btree_iterator(BTree<Trait> *pTree, BTPage *pPage, size_t index = 0)
                : m_pTree(pTree), m_pPage(pPage), m_Index(index)
        {
@@ -1196,17 +1219,28 @@ public:
                return *this;
        }
 
-       // Post-incremento
+       /**
+        * @brief Post-incremento
+        * @return Copia del iterador antes del incremento
+        */
        iterator operator++(int) {
                iterator tmp = *this;
                ++(*this);
                return tmp;
        }
 
+       /**
+        * @brief Operador de desreferencia
+        * @return Referencia al elemento actual
+        */
        value_type& operator*() const {
                return m_pPage->m_Keys[m_Index];
        }
 
+       /**
+        * @brief Operador de acceso a miembro
+        * @return Puntero al elemento actual
+        */
        value_type* operator->() const {
                return &m_pPage->m_Keys[m_Index];
        }
