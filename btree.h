@@ -281,7 +281,7 @@ public:
         */
        BTree(BTree&& other) noexcept 
        {
-              std::unique_lock<std::shared_mutex> lock(other.m_Mutex);  // Bloquear el objeto fuente
+              std::scoped_lock lock(other.m_Mutex);  // Bloquear el objeto fuente
               
               m_Order = other.m_Order;
               m_Root = std::move(other.m_Root);
