@@ -214,8 +214,11 @@ class CBTreePage //: public SimpleIndex <keyType>
        typedef CBTreePage<Trait>    BTPage;         // useful shorthand
        typedef tagObjectInfo<keyType, ObjIDType> ObjectInfo;
 
+       friend class BTree<Trait>;
+       template <typename T> friend class BTreeIterator;
+
 public:
-       CBTreePage(size_t maxKeys, bool unique = true);
+       CBTreePage(size_t maxKeys, bool unique = true, BTPage* m_parent = nullptr);
        virtual ~CBTreePage();
        //move constuctor
        CBTreePage(CBTreePage &&other);
@@ -253,6 +256,7 @@ public:
 
 
 protected:
+        BTPage* m_parent; // pointer to parent page
        // TODO: #9 change by size_t
        size_t  m_MinKeys; // minimum number of keys in a node
        size_t  m_MaxKeys, // maximum number of keys in a node
@@ -339,7 +343,7 @@ private:
 
 template <typename Trait>
 CBTreePage<Trait>:: CBTreePage(size_t maxKeys, bool unique)
-                               : m_MaxKeys(maxKeys), m_Unique(unique), m_KeyCount(0), m_Compare(CompareFunction())
+                               : m_MaxKeys(maxKeys), m_Unique(unique), m_KeyCount(0), m_Compare(CompareFunction(), m_parent(nullptr))
 {
        Create();
        SetMaxKeysForChilds(m_MaxKeys);
@@ -383,6 +387,14 @@ CBTreePage<Trait>::CBTreePage(CBTreePage &&other){
         m_Unique        = std::exchange(other.m_Unique, true);
         m_isRoot        = std::exchange(other.m_isRoot, false);
         m_Compare       = std::exchange(other.m_Compare, CompareFunction{});
+
+         m_Parent = nullptr;
+
+        for(size_t i = 0; i < m_SubPages.size(); i++) {
+                if(m_SubPages[i] != nullptr) {
+                m_SubPages[i]->m_Parent = this;
+                }
+        }
 }
 
 //move assignment operator
@@ -732,6 +744,7 @@ void CBTreePage<Trait>::SplitChild(size_t pos)
                        pChild1 = m_SubPages[pos];
                        pChild2 = m_SubPages[pos+1];
                }
+
        size_t nKeys = pChild1->GetNumberOfKeys() + pChild2->GetNumberOfKeys() + 1;
 
        // SECOND: copy both pages to a temporal one
@@ -763,6 +776,10 @@ void CBTreePage<Trait>::SplitChild(size_t pos)
        NumberOfKeys()++;
 
        m_SubPages[pos+2] = pChild3;
+
+       if (pChild1) pChild1->m_Parent = this;
+       if (pChild2) pChild2->m_Parent = this;
+       if (pChild3) pChild3->m_Parent = this;
 }
 
 // Ddivide a large page into 3 pages (2m/3 each one)
@@ -1417,11 +1434,19 @@ size_t CBTreePage<Trait>::GetKeyCount()
 template <typename Trait>
 void CBTreePage<Trait>::Create()
 {
-       Reset();
-       m_Keys.resize(m_MaxKeys+1);
-       m_SubPages.resize(m_MaxKeys+2, NULL);
-       m_KeyCount = 0;
-       m_MinKeys  = 2 * m_MaxKeys/3;
+    Reset();
+    m_Keys.resize(m_MaxKeys+1);
+    m_SubPages.resize(m_MaxKeys+2, nullptr);
+    
+    // NUEVO: Establecer padres de subpáginas
+    for(size_t i = 0; i < m_SubPages.size(); i++) {
+        if(m_SubPages[i]) {
+            m_SubPages[i]->m_Parent = this;
+        }
+    }
+    
+    m_KeyCount = 0;
+    m_MinKeys = 2 * m_MaxKeys/3;
 }
 
 template <typename Trait>

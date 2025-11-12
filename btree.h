@@ -30,6 +30,244 @@ struct BTreeTrait
     using CompareFunction = _CompareFunction;
 };
 
+
+//forward iterator
+template <typename Trait>
+class BTreeForwardIterator {
+public:
+    typedef std::forward_iterator_tag iterator_category;
+    typedef std::ptrdiff_t difference_type;
+
+    typedef typename CBTreePage<Trait>::ObjectInfo value_type;
+    typedef CBTreePage<Trait> BTNode;
+
+    typedef value_type* pointer;
+    typedef value_type& reference;
+
+private: 
+    BTNode* current_node;
+    size_t current_pos;
+
+    // Constructores
+    BTreeForwardIterator() {
+        current_node = nullptr;
+        current_pos = 0;
+    }
+    
+    BTreeForwardIterator(BTNode* node, size_t position) {
+        current_node = node;
+        current_pos = position;
+    }
+
+    // Operadores de acceso
+    reference operator*() const {
+        return current_node->m_Keys[current_pos];
+    }
+    
+    pointer operator->() const {
+        return &(current_node->m_Keys[current_pos]);
+    }
+    // Operadores de comparación
+    bool operator==(const BTreeForwardIterator& other) const {
+        if(current_node == nullptr && other.current_node == nullptr)
+            return true;
+        return current_node == other.current_node && current_pos == other.current_pos;
+    }
+    
+    bool operator!=(const BTreeForwardIterator& other) const {
+        return !(*this == other);
+    }
+    
+    // Operador de incremento 
+    BTreeForwardIterator& operator++() {
+        if (!current_node) return *this;
+        
+        // Si hay subárbol derecho, ir al mínimo de ese subárbol
+        if (current_node->m_SubPages[current_pos + 1]) {
+            current_node = current_node->m_SubPages[current_pos + 1];
+            MoveToFirst();
+        }
+        // Si no hay subárbol derecho, avanzar en el nodo actual
+        else if (current_pos + 1 < current_node->m_KeyCount) {
+            current_pos++;
+        }
+        // Si terminamos el nodo actual, subir al padre
+        else {
+            MoveToNextParent();
+        }
+        
+        return *this;
+    }
+    
+    // Operador de incremento (it++)
+    BTreeForwardIterator operator++(int) {
+        BTreeForwardIterator temp = *this;
+        ++(*this);
+        return temp;
+    }
+    
+    // Moverse al primer elemento del subárbol actual (más a la izquierda)
+    void MoveToFirst() {
+        while (current_node && current_node->m_SubPages[0]) {
+            current_node = current_node->m_SubPages[0];
+        }
+        current_pos = 0;
+    }
+    
+    // Subir al siguiente nodo padre que tenga elementos no visitados
+    void MoveToNextParent() {
+        if (!current_node || !current_node->m_Parent) {
+            // Llegamos al final del rbol
+            current_node = nullptr;
+            current_pos = 0;
+            return;
+        }
+        
+        BTNode* parent = current_node->m_Parent;
+        
+        // Encontrar la posición del nodo actual en el padre
+        size_t pos = 0;
+        for (; pos <= parent->m_KeyCount; pos++) {
+            if (parent->m_SubPages[pos] == current_node) {
+                break;
+            }
+        }
+        
+        // Si el nodo actual está en la posición pos, el siguiente elemento
+        // está en parent->m_Keys[pos] (si pos < m_KeyCount)
+        if (pos < parent->m_KeyCount) {
+            current_node = parent;
+            current_pos = pos;
+        } else {
+            // Si estamos en la última subpágina, subir más
+            current_node = parent;
+            MoveToNextParent();
+        }
+    }
+    
+    friend class BTree<Trait>;
+};
+
+
+//backward iterator
+template <typename Trait>
+class BTreeBackwardIterator {
+public:
+    typedef std::forward_iterator_tag iterator_category;
+    typedef std::ptrdiff_t difference_type;
+
+    typedef typename CBTreePage<Trait>::ObjectInfo value_type;
+    typedef CBTreePage<Trait> BTNode;
+
+    typedef value_type* pointer;
+    typedef value_type& reference;
+
+    // Constructores
+    BTreeBackwardIterator(){
+        current_node = nullptr;
+        current_pos = 0;
+    }
+    
+    BTreeBackwardIterator(BTNode* node, size_t position) {
+        current_node = node;
+        current_pos = position;
+    }
+    
+    // Operadores de comparación
+    bool operator==(const BTreeBackwardIterator& other) const {
+        return current_node == other.current_node && current_pos == other.current_pos;
+    }
+    
+    bool operator!=(const BTreeBackwardIterator& other) const {
+        return !(*this == other);
+    }
+    
+    // Operadores de acceso
+    reference operator*() const {
+        return current_node->m_Keys[current_pos];
+    }
+    
+    pointer operator->() const {
+        return &(current_node->m_Keys[current_pos]);
+    }
+    
+    // Operador de incremento (++it) - Backward (va hacia atrás)
+    BTreeBackwardIterator& operator++() {
+        if (!current_node) return *this;
+        
+        // Si hay subárbol izquierdo, ir al máximo de ese subárbol
+        if (current_node->m_SubPages[current_pos]) {
+            current_node = current_node->m_SubPages[current_pos];
+            MoveToLast();
+        }
+        // Si estamos en el primer elemento del nodo, subir al padre
+        else if (current_pos == 0) {
+            MoveToPrevParent();
+        }
+        // Si no, retroceder en el nodo actual
+        else {
+            current_pos--;
+        }
+        
+        return *this;
+    }
+    
+    // Operador de incremento (it++)
+    BTreeBackwardIterator operator++(int) {
+        BTreeBackwardIterator temp = *this;
+        ++(*this);
+        return temp;
+    }
+    
+private:
+    BTNode* current_node;
+    size_t current_pos;
+    
+    // Moverse al último elemento del subárbol actual (más a la derecha)
+    void MoveToLast() {
+        while (current_node && current_node->m_SubPages[current_node->m_KeyCount]) {
+            current_node = current_node->m_SubPages[current_node->m_KeyCount];
+        }
+        if (current_node && current_node->m_KeyCount > 0) {
+            current_pos = current_node->m_KeyCount - 1;
+        }
+    }
+    
+    // Subir al anterior nodo padre que tenga elementos no visitados
+    void MoveToPrevParent() {
+        if (!current_node || !current_node->m_Parent) {
+            // Llegamos al inicio del árbol (fin del recorrido backward)
+            current_node = nullptr;
+            current_pos = 0;
+            return;
+        }
+        
+        BTNode* parent = current_node->m_Parent;
+        
+        // Encontrar la posición del nodo actual en el padre
+        size_t pos = 0;
+        for (; pos <= parent->m_KeyCount; pos++) {
+            if (parent->m_SubPages[pos] == current_node) {
+                break;
+            }
+        }
+        
+        // Si el nodo actual está en la posición pos > 0, el elemento anterior
+        // está en parent->m_Keys[pos-1]
+        if (pos > 0) {
+            current_node = parent;
+            current_pos = pos - 1;
+        } else {
+            // Si estamos en la primera subpágina, subir más
+            current_node = parent;
+            MoveToPrevParent();
+        }
+    }
+    
+    friend class BTree<Trait>;
+};
+
+
 /**
  * @class BTree
  * @brief Implementación de un árbol B genérico.
@@ -49,6 +287,8 @@ class BTree
     typedef CBTreePage<Trait> BTNode; ///< Nodo del árbol B (CBTreePage).
     
 public:
+    using forward_iterator = BTreeForwardIterator<Trait>;
+    using backward_iterator = BTreeBackwardIterator<Trait>;
     // typedef CBTreePage<Trait> BTNode; ///< Nodo del árbol B (CBTreePage) solo para el testmove
     typedef typename BTNode::ObjectInfo ObjectInfo; ///< Información del objeto almacenado en el nodo.
 
@@ -75,6 +315,52 @@ public:
     // move asignment operator en btree
     BTree &operator=(BTree<Trait> &&other);
 
+
+    forward_iterator begin() {
+        std::shared_lock<std::shared_mutex> lock(m_mutex);
+        
+        if (m_NumKeys == 0) {
+            return end();
+        }
+        
+        // Buscar el nodo más a la izquierda 
+        BTNode* current = &m_Root;
+        while (current->m_SubPages[0]) {
+            current = current->m_SubPages[0];
+        }
+        
+        return forward_iterator(current, 0);
+    }
+    
+    forward_iterator end() {
+        return forward_iterator(nullptr, 0);
+    }
+
+//para la parte del backward rbegin y rend
+    backward_iterator rbegin() {
+        std::shared_lock<std::shared_mutex> lock(m_mutex);
+        
+        if (m_NumKeys == 0) {
+            return rend();
+        }
+        
+        // Buscar el nodo más a la derecha (lo opuesto al forward)
+        BTNode* current = &m_Root;
+        while (current->m_SubPages[current->m_KeyCount]) {
+            current = current->m_SubPages[current->m_KeyCount];
+        }
+        
+        if (current->m_KeyCount > 0) {
+            return backward_iterator(current, current->m_KeyCount - 1);
+        }
+        
+        return rend();
+    }
+    
+
+    backward_iterator rend() {
+        return backward_iterator(nullptr, 0);
+    }
 
     /**
      * @brief Inserta una nueva clave en el árbol B.
