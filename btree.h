@@ -52,9 +52,12 @@ struct BTreeDescTraits
 template <typename Container, typename Iterator>
 class general_iterator{
 protected:
-    using Node       = typename Container::BTNode;
     using keyType    = typename Container::keyType;
     using ObjIDType  = typename Container::ObjIDType;
+
+    using Node       = typename Container::BTNode;
+    using Parent     = general_iterator<Container, Derived>;
+    using iterator   = Iterator
 
     Container* m_pContainer;
     Node* m_pNode;
@@ -63,10 +66,9 @@ protected:
 public:
     general_iterator(Container* pContainer = nullptr, Node* pNode = nullptr, size_t indx = 0)
         : m_pContainer(pContainer), m_pNode(pNode), m_Indx(indx) {}
-       value_type& operator*() const { return m_pNode->getDataRef(); }
 
-    bool operator==(const Iterator& other) const { return m_pNode == other.m_pNode; }
-    bool operator!=(const Iterator& other) const { return !(*this == other); }
+    bool operator==(const iterator& other) const { return m_pNode == other.m_pNode; }
+    bool operator!=(const iterator& other) const { return !(*this == other); }
 
     ObjectInfo& operator*(){ return m_node->m_Keys[m_Indx];}
     ObjectInfo* operator->(){return &(m_node->m_Keys[m_Indx]);}
@@ -79,6 +81,11 @@ public:
     bool operator!=(const iterator& other) {
         return !(*this == other);
     }
+
+    iterator& operator++() {
+        (iterator*)(this)->next();
+        return *this;
+    }
 };
 
 template <typename Container>
@@ -86,20 +93,14 @@ class btree_forward_iterator
     : public general_iterator<Container, btree_forward_iterator<Container>> 
 {
 public:
-    using Parent    = general_iterator<Container, btree_forward_iterator<Container>>;
-    using Node      = typename Container::BTNode;
-    using iterator  = btree_forward_iterator<Container>;
-
-public:
     btree_forward_iterator(Container *pContainer, Node *pNode) 
         : Parent(pContainer, pNode) {}
 
     btree_forward_iterator(const iterator& other)
         : Parent(other.m_pContainer, other.m_pNode) {}
 
-    iterator& operator++() {
-        this->m_pNode = this->m_pNode ? (Node*)this->m_pNode->getNext(this->m_Indx, true) : nullptr;
-        return *this;
+    void next() {
+        this->m_pNode = this->m_pNode ? (Node*)this->m_pNode->getNext(this->m_Indx) : nullptr;
     }
 };
 
@@ -109,7 +110,6 @@ class btree_backward_iterator
 {
 public:
     using Parent    = general_iterator<Container, btree_backward_iterator<Container>>;
-    using Node      = typename Container::BTNode;
     using iterator  = btree_backward_iterator<Container>;
 
 public:
@@ -119,9 +119,8 @@ public:
     btree_backward_iterator(const iterator& other)
         : Parent(other.m_pContainer, other.m_pNode) {}
 
-    iterator& operator++() {
-        this->m_pNode = this->m_pNode ? (Node*)this->m_pNode->getNext(this->m_Indx, false) : nullptr;
-        return *this;
+    void next() {
+        this->m_pNode = this->m_pNode ? (Node*)this->m_pNode->getPrev(this->m_Indx) : nullptr;
     }
 };
 

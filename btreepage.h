@@ -234,15 +234,15 @@ protected:
             return 0;
        }
 
-    BTreeNode* getNext(int& index, bool forward = true) {
-        int i = forward ? index + 1 : index;
+    BTreeNode* getNext(int& index) {
+        int i = index + 1;
 
-        if (m_SubPages[i]) {
+        if (i <= m_KeyCount && m_SubPages[i]) {
             BTreeNode* p = m_SubPages[i];
-            while (p->m_SubPages[forward ? 0 : p->m_KeyCount]) {
-                p = p->m_SubPages[forward ? 0 : p->m_KeyCount];
+            while (p->m_SubPages[0]) {
+                p = p->m_SubPages[0];
             }
-            index = 0
+            index = 0;
             return p;
         }
 
@@ -254,20 +254,53 @@ protected:
                 j++;
             }
 
-            if (forward && j < p->m_KeyCount) {
-                index = j;
-                return p;
-            } else if (!forward && j > 0) {
+            if (j < p->m_KeyCount) {
                 index = j;
                 return p;
             }
 
             node = p;
-            p = p->parent;
+            p = p->m_Parent;
         }
-        index=0;
-        return nullptr; 
+
+        index = 0;
+        return nullptr;
     }
+
+    BTreeNode* getPrev(int& index) {
+        int i = index;
+
+        if (i >= 0 && m_SubPages[i]) {
+            BTreeNode* p = m_SubPages[i];
+            while (p->m_SubPages[p->m_KeyCount]) {
+                p = p->m_SubPages[p->m_KeyCount];
+            }
+            index = p->m_KeyCount - 1;
+            return p;
+        }
+
+        BTreeNode* node = this;
+        BTreeNode* p = m_Parent;
+        while (p) {
+            int j = 0;
+            while (j <= p->m_KeyCount && p->m_SubPages[j] != node) {
+                j++;
+            }
+
+            if (j > 0) {
+                index = j - 1;
+                return p;
+            }
+
+            node = p;
+            p = p->m_Parent;
+        }
+
+        index = 0;
+        return nullptr;
+    }
+
+
 private:
        bool SplitRoot();
        void SplitPageInto3(vector<ObjectInfo>   & tmpKeys,
