@@ -4,6 +4,7 @@
 #include <time.h>
 #include <stdlib.h>
 #include <iostream>
+#include <fstream>
 #include <thread>
 #include <vector>
 
@@ -21,7 +22,7 @@ bool compararClaves(const T& a, const T& b) {
 }
 
 int main (int argc, char * argv[]){
-	int result, i;
+	int i;
 
 	typedef BTreeTrait<char, long> CharTrait;
 
@@ -55,16 +56,14 @@ int main (int argc, char * argv[]){
 		std::cout << "5 NO es igual a 10 usando IntTrait::isEqual()" << std::endl;
 	}
 
+	std::cout << "\n=== BTree con comparador por defecto (std::less) ===" << std::endl;
 	BTree<CharTrait> bt (BTreeSize);
 
-	for (i = 0; i < 10 && keys1[i]; i++)  // Solo primeros 10 para prueba
+	for (i = 0; i < 10 && keys1[i]; i++)
 	{
 		std::cout << "Insertando '" << keys1[i] << "'" << std::endl;
-		result = bt.Insert(keys1[i], i*i);
+		bt.Insert(keys1[i], i*i);
 	}
-
-	std::cout << "\n=== Usando Print() ===" << std::endl;
-	bt.Print(std::cout);
 
 	std::cout << "\n=== Usando operator<< ===" << std::endl;
 	std::cout << bt;
@@ -81,7 +80,60 @@ int main (int argc, char * argv[]){
 	}
 	std::cout << std::endl;
 
-	std::cout << "\n=== Probando Move Constructor ===" << std::endl;
+	std::cout << "\n=== ForEach: Contando elementos mayores a 'J' ===" << std::endl;
+	int count = 0;
+	bt.ForEach([](auto& obj, size_t level, int* counter) {
+		if(obj.key > 'J') {
+			(*counter)++;
+		}
+	}, &count);
+	std::cout << "Elementos mayores a 'J': " << count << std::endl;
+
+	std::cout << "\n=== ForEach: Imprimiendo con nivel de profundidad ===" << std::endl;
+	bt.ForEach([](auto& obj, size_t level) {
+		for(size_t i = 0; i < level; i++) std::cout << "  ";
+		std::cout << obj.key << "->" << obj.ObjID << " (nivel " << level << ")" << std::endl;
+	});
+
+	std::cout << "\n=== FirstThat: Buscando primer elemento > 'K' ===" << std::endl;
+	auto* found = bt.FirstThat([](auto& obj, size_t level) {
+		return obj.key > 'K';
+	});
+	if(found) {
+		std::cout << "Encontrado: " << found->key << "->" << found->ObjID << std::endl;
+	} else {
+		std::cout << "No encontrado" << std::endl;
+	}
+
+	std::cout << "\n=== FirstThat: Buscando elemento con ObjID == 16 ===" << std::endl;
+	found = bt.FirstThat([](auto& obj, size_t level, long targetID) {
+		return obj.ObjID == targetID;
+	}, 16L);
+	if(found) {
+		std::cout << "Encontrado: " << found->key << "->" << found->ObjID << std::endl;
+	} else {
+		std::cout << "No encontrado" << std::endl;
+	}
+
+	std::cout << "\n=== Write: Guardando árbol en archivo ===" << std::endl;
+	std::ofstream outFile("btree_data.txt");
+	if(outFile) {
+		bt.Write(outFile);
+		outFile.close();
+		std::cout << "Árbol guardado en btree_data.txt" << std::endl;
+	}
+
+	std::cout << "\n=== Read: Cargando árbol desde archivo ===" << std::endl;
+	BTree<CharTrait> btLoaded(BTreeSize);
+	std::ifstream inFile("btree_data.txt");
+	if(inFile) {
+		btLoaded.Read(inFile);
+		inFile.close();
+		std::cout << "Árbol cargado desde archivo:" << std::endl;
+		std::cout << btLoaded;
+	}
+
+	std::cout << "\n=== Move Constructor ===" << std::endl;
 	std::cout << "BTree original - size: " << bt.size() << ", height: " << bt.height() << std::endl;
 
 	BTree<CharTrait> bt2(std::move(bt));
@@ -90,10 +142,10 @@ int main (int argc, char * argv[]){
 
 	std::cout << "BTree original despues del move - size: " << bt.size() << ", height: " << bt.height() << std::endl;
 
-	std::cout << "\nContenido del BTree movido:" << std::endl;
+	std::cout << "\nContenido del BTree movido (usando operator<<):" << std::endl;
 	std::cout << bt2;
 
-	std::cout << "\n=== Probando Concurrencia ===" << std::endl;
+	std::cout << "\n=== Concurrencia: Inserciones y búsquedas paralelas ===" << std::endl;
 	BTree<CharTrait> btConcurrent(BTreeSize);
 
 	auto insertWorker = [&](int start, int count) {
@@ -124,6 +176,7 @@ int main (int argc, char * argv[]){
 	}
 
 	std::cout << "BTree concurrente - size: " << btConcurrent.size() << std::endl;
+	std::cout << "Contenido (usando operator<<):" << std::endl;
 	std::cout << btConcurrent;
 
 	return 0;
