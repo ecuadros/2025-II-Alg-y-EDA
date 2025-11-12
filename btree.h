@@ -63,16 +63,18 @@ public:
         * @param other Árbol B a mover
         */
        BTree(BTree&& other) noexcept
-              : m_Order(std::exchange(other.m_Order, DEFAULT_BTREE_ORDER)),
-                m_Root(std::move(other.m_Root)),
-                m_Height(std::exchange(other.m_Height, 1)),
-                m_Unique(std::exchange(other.m_Unique, true)),
-                m_NumKeys(std::exchange(other.m_NumKeys, 0))
        {
-              // scoped_lock adquiere múltiples locks sin deadlock (más simple que defer_lock + std::lock)
+              // PRIMERO: Adquirir locks antes de mover datos
               std::scoped_lock lock(m_mutex, other.m_mutex);
               
-              // El root no debe tener padre
+              // SEGUNDO: Mover los datos de forma segura
+              m_Order = std::exchange(other.m_Order, DEFAULT_BTREE_ORDER);
+              m_Root = std::move(other.m_Root);
+              m_Height = std::exchange(other.m_Height, 1);
+              m_Unique = std::exchange(other.m_Unique, true);
+              m_NumKeys = std::exchange(other.m_NumKeys, 0);
+              
+              // TERCERO: Configurar el estado correcto
               m_Root.SetParent(nullptr);
        }
 
