@@ -144,14 +144,14 @@ public:
         * @param other Página a mover
         */
        CBTreePage(CBTreePage&& other) noexcept
-              : m_MaxKeys(other.m_MaxKeys),
-                m_Unique(other.m_Unique),
+              : m_MaxKeys(std::exchange(other.m_MaxKeys, 0)),
+                m_Unique(std::exchange(other.m_Unique, true)),
                 m_Compare(std::move(other.m_Compare)),
-                m_Parent(nullptr),  // El nuevo nodo no tiene padre inicialmente
-                m_KeyCount(other.m_KeyCount),
-                m_MinKeys(other.m_MinKeys),
-                m_MaxKeysForChilds(other.m_MaxKeysForChilds),
-                m_isRoot(other.m_isRoot),
+                m_Parent(std::exchange(other.m_Parent, nullptr)),
+                m_KeyCount(std::exchange(other.m_KeyCount, 0)),
+                m_MinKeys(std::exchange(other.m_MinKeys, 0)),
+                m_MaxKeysForChilds(std::exchange(other.m_MaxKeysForChilds, 0)),
+                m_isRoot(std::exchange(other.m_isRoot, false)),
                 m_Keys(std::move(other.m_Keys)),
                 m_SubPages(std::move(other.m_SubPages))
        {
@@ -161,10 +161,6 @@ public:
                             m_SubPages[i]->SetParent(this);
                      }
               }
-
-              // Reset other to a valid but empty state
-              other.m_Parent = nullptr;
-              other.m_KeyCount = 0;
        }
 
        /**
@@ -178,14 +174,14 @@ public:
                      // First, clean up current resources
                      Reset();
 
-                     // Move data from other
-                     m_MaxKeys = other.m_MaxKeys;
-                     m_MinKeys = other.m_MinKeys;
-                     m_MaxKeysForChilds = other.m_MaxKeysForChilds;
-                     m_Unique = other.m_Unique;
-                     m_isRoot = other.m_isRoot;
-                     m_KeyCount = other.m_KeyCount;
-                     m_Parent = nullptr;  // El nodo movido no tiene padre
+                     // Move data from other usando std::exchange
+                     m_MaxKeys = std::exchange(other.m_MaxKeys, 0);
+                     m_MinKeys = std::exchange(other.m_MinKeys, 0);
+                     m_MaxKeysForChilds = std::exchange(other.m_MaxKeysForChilds, 0);
+                     m_Unique = std::exchange(other.m_Unique, true);
+                     m_isRoot = std::exchange(other.m_isRoot, false);
+                     m_KeyCount = std::exchange(other.m_KeyCount, 0);
+                     m_Parent = std::exchange(other.m_Parent, nullptr);
                      m_Compare = std::move(other.m_Compare);
                      m_Keys = std::move(other.m_Keys);
                      m_SubPages = std::move(other.m_SubPages);
@@ -196,10 +192,6 @@ public:
                                    m_SubPages[i]->SetParent(this);
                             }
                      }
-
-                     // Reset other to a valid but empty state
-                     other.m_Parent = nullptr;
-                     other.m_KeyCount = 0;
               }
               return *this;
        }

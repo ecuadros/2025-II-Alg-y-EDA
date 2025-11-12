@@ -2,7 +2,7 @@
 #define __BTREE_H__
 
 #include <iostream>
-#include <utility>      // Para std::move
+#include <utility>      // Para std::move y std::exchange
 #include <shared_mutex> // Para std::shared_mutex (lecturas concurrentes)
 #include "btreepage.h"
 #define DEFAULT_BTREE_ORDER 3
@@ -64,23 +64,18 @@ public:
         * @param other Árbol B a mover
         */
        BTree(BTree&& other) noexcept
-              : m_Order(other.m_Order),
+              : m_Order(std::exchange(other.m_Order, DEFAULT_BTREE_ORDER)),
                 m_Root(std::move(other.m_Root)),
-                m_Height(other.m_Height),
-                m_Unique(other.m_Unique),
-                m_NumKeys(other.m_NumKeys)
+                m_Height(std::exchange(other.m_Height, 1)),
+                m_Unique(std::exchange(other.m_Unique, true)),
+                m_NumKeys(std::exchange(other.m_NumKeys, 0))
        {
-
               std::unique_lock<std::shared_mutex> lock1(m_mutex, std::defer_lock);
               std::unique_lock<std::shared_mutex> lock2(other.m_mutex, std::defer_lock);
               std::lock(lock1, lock2); // Lock ambos sin deadlock
               
               // El root no debe tener padre
               m_Root.SetParent(nullptr);
-              
-              // Reset other to a valid but empty state
-              other.m_Height = 1;
-              other.m_NumKeys = 0;
               
               // Locks se liberan automáticamente al salir del scope
        }
@@ -98,19 +93,15 @@ public:
                      std::unique_lock<std::shared_mutex> lock2(other.m_mutex, std::defer_lock);
                      std::lock(lock1, lock2); // Lock ambos sin deadlock
                      
-                     // Move data from other
-                     m_Order = other.m_Order;
+                     // Move data from other usando std::exchange
+                     m_Order = std::exchange(other.m_Order, DEFAULT_BTREE_ORDER);
                      m_Root = std::move(other.m_Root);
-                     m_Height = other.m_Height;
-                     m_Unique = other.m_Unique;
-                     m_NumKeys = other.m_NumKeys;
+                     m_Height = std::exchange(other.m_Height, 1);
+                     m_Unique = std::exchange(other.m_Unique, true);
+                     m_NumKeys = std::exchange(other.m_NumKeys, 0);
 
                      // El root no debe tener padre
                      m_Root.SetParent(nullptr);
-
-                     // Reset other to a valid but empty state
-                     other.m_Height = 1;
-                     other.m_NumKeys = 0;
                      
                      // Locks se liberan automáticamente
               }
