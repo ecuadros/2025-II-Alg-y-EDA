@@ -59,13 +59,13 @@ public:
 	///	 Transfers ownership of the resources from another BTree.
 	/// @param other The BTree instance to move from.
 	BTree(BTree &&other) {
-		std::lock_guard<std::shared_mutex> lock(other.m_Mutex);
-		m_Root = std::move(other.m_Root);
-		m_Height = std::move(other.m_Height);
-		m_Order = std::move(other.m_Order);
-		m_NumKeys = std::move(other.m_NumKeys);
-		m_Unique = std::move(other.m_Unique);
-		m_Compfn = std::move(other.m_Compfn);
+		std::lock_guard<std::scoped_lock> lock(other.m_Mutex);
+		m_Root = std::exchange(other.m_Root);
+		m_Height = std::exchange(other.m_Height);
+		m_Order = std::exchange(other.m_Order);
+		m_NumKeys = std::exchange(other.m_NumKeys);
+		m_Unique = std::exchange(other.m_Unique);
+		m_Compfn = std::exchange(other.m_Compfn);
 	}
 	
 	/// @brief Destructor.
