@@ -3,7 +3,6 @@
 #include <iostream>
 #include "types.h"
 #include "traits.h"
-#include "foreach.h"
 
 template <typename Traits>
 class DLLNode{
