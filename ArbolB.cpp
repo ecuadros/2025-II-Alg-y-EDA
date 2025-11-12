@@ -7,14 +7,77 @@
 
 #include "btree.h"
 #include <string>
+#include <functional>
+#include <iostream>
+#include <fstream>
+
+using namespace std;
 
 //const char * keys="CDAMPIWNBKEHOLJYQZFXVRTSGU";
 const char * keys1 = "D1XJ2xTg8zKL9AhijOPQcEowRSp0NbW567BUfCqrs4FdtYZakHIuvGV3eMylmn";
-const char * keys2 = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz��";
-const char * keys3 = "�DYZakHIUwxVJ203ejOP9Qc8AdtuEop1XvTRghSNbW567BfiCqrs4FGMyz�KLlmn";
+const char * keys2 = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+const char * keys3 = "DYZakHIUwxVJ203ejOP9Qc8AdtuEop1XvTRghSNbW567BfiCqrs4FGMyz";
 
 const int BTreeSize = 3;
 int main (int argc, char * argv){
+       test_default_comparison();
+       test_descending_comparison();
+       test_integer_comparison();
+       test_search();
+       test_remove();
+
+       test_move_constructor();
+       test_move_assignment();
+       test_return_value_optimization();
+
+       test_generic_foreach();
+       test_generic_foreach_functor();
+       test_generic_firstthat();
+       test_generic_foreach_multiparams();
+       test_oldstyle_vs_generic();
+
+       test_iterator_basic();
+       test_iterator_empty_tree();
+       test_iterator_single_element();
+       test_iterator_with_stl_algorithms();
+       test_iterator_large_tree();
+       test_iterator_modification();
+       test_iterator_comparison();
+
+       test_reverse_iterator_basic();
+       test_reverse_iterator_decrement();
+       test_reverse_iterator_empty_tree();
+       test_reverse_iterator_single_element();
+       test_reverse_iterator_with_stl_algorithms();
+       test_bidirectional_navigation();
+       test_reverse_iterator_modification();
+       test_reverse_iterator_large_tree();
+
+       test_operator_output_basic();
+       test_operator_output_empty_tree();
+       test_operator_output_large_tree();
+       test_operator_output_with_metadata();
+       test_operator_output_to_file();
+       test_operator_output_chaining();
+
+       test_write_basic();
+       test_write_empty_tree();
+       test_write_large_tree();
+       test_write_single_element();
+       test_write_non_unique();
+       test_write_file_error();
+
+       test_read_basic();
+       test_read_and_verify();
+       test_read_large_tree();
+       test_read_empty_tree();
+       test_read_invalid_file();
+       test_read_order_mismatch();
+       test_write_read_cycle();
+
+       return 0;
+
+/*
        int result, i;
        BTree <char> bt (BTreeSize);
        for (i = 0; keys1[i]; i++)
