@@ -2,8 +2,8 @@
 #define __BTREE_H__
 
 #include <iostream>
-#include <utility>  // Para std::move
-#include <mutex>    // Para concurrencia con std::mutex
+#include <utility>      // Para std::move
+#include <shared_mutex> // Para std::shared_mutex (lecturas concurrentes)
 #include "btreepage.h"
 #define DEFAULT_BTREE_ORDER 3
 
@@ -62,14 +62,10 @@ public:
                 m_Unique(other.m_Unique),
                 m_NumKeys(other.m_NumKeys)
        {
-              // Lock both mutexes in consistent order (by address) to prevent deadlock
-              if (this < &other) {
-                     m_mutex.lock();
-                     other.m_mutex.lock();
-              } else {
-                     other.m_mutex.lock();
-                     m_mutex.lock();
-              }
+
+              std::unique_lock<std::shared_mutex> lock1(m_mutex, std::defer_lock);
+              std::unique_lock<std::shared_mutex> lock2(other.m_mutex, std::defer_lock);
+              std::lock(lock1, lock2); // Lock ambos sin deadlock
               
               // El root no debe tener padre
               m_Root.SetParent(nullptr);
@@ -78,28 +74,17 @@ public:
               other.m_Height = 1;
               other.m_NumKeys = 0;
               
-              // Unlock in reverse order
-              if (this < &other) {
-                     other.m_mutex.unlock();
-                     m_mutex.unlock();
-              } else {
-                     m_mutex.unlock();
-                     other.m_mutex.unlock();
-              }
+              // Locks se liberan automáticamente al salir del scope
        }
 
        // Move Assignment Operator
        BTree& operator=(BTree&& other) noexcept
        {
               if (this != &other) {
-                     // Lock both mutexes in consistent order
-                     if (this < &other) {
-                            m_mutex.lock();
-                            other.m_mutex.lock();
-                     } else {
-                            other.m_mutex.lock();
-                            m_mutex.lock();
-                     }
+                     // Lock exclusivo para escritura en ambos objetos
+                     std::unique_lock<std::shared_mutex> lock1(m_mutex, std::defer_lock);
+                     std::unique_lock<std::shared_mutex> lock2(other.m_mutex, std::defer_lock);
+                     std::lock(lock1, lock2); // Lock ambos sin deadlock
                      
                      // Move data from other
                      m_Order = other.m_Order;
@@ -115,14 +100,7 @@ public:
                      other.m_Height = 1;
                      other.m_NumKeys = 0;
                      
-                     // Unlock in reverse order
-                     if (this < &other) {
-                            other.m_mutex.unlock();
-                            m_mutex.unlock();
-                     } else {
-                            m_mutex.unlock();
-                            other.m_mutex.unlock();
-                     }
+                     // Locks se liberan automáticamente
               }
               return *this;
        }
@@ -133,53 +111,45 @@ public:
        //int           Close ();
        bool            Insert (const keyType key, const long ObjID);
        bool            Remove (const keyType key, const long ObjID);
-       ObjIDType       Search (const keyType key)
+       ObjIDType       Search (const keyType key) const
        {      
-              // Lock para thread-safety
-              m_mutex.lock();
+              // Shared lock: permite múltiples lectores simultáneos
+              std::shared_lock<std::shared_mutex> lock(m_mutex);
               
               ObjIDType ObjID = -1;
               m_Root.Search(key, ObjID);
               
-              // Unlock antes de return
-              m_mutex.unlock();
-              
               return ObjID;
        }
+       
        size_t            size() const
        {
-              m_mutex.lock();
-              size_t result = m_NumKeys;
-              m_mutex.unlock();
-              return result;
+              std::shared_lock<std::shared_mutex> lock(m_mutex);
+              return m_NumKeys;
        }
        
        size_t            height() const
        {
-              m_mutex.lock();
-              size_t result = m_Height;
-              m_mutex.unlock();
-              return result;
+              std::shared_lock<std::shared_mutex> lock(m_mutex);
+              return m_Height;
        }
        
        size_t            GetOrder() const
        {
-              m_mutex.lock();
-              size_t result = m_Order;
-              m_mutex.unlock();
-              return result;
+              std::shared_lock<std::shared_mutex> lock(m_mutex);
+              return m_Order;
        }
 
-       void            Print (ostream &os)
+       void            Print (ostream &os) const
        {
-              m_mutex.lock();
+              std::shared_lock<std::shared_mutex> lock(m_mutex);
               m_Root.Print(os);
-              m_mutex.unlock();
        }
        
        std::ostream& Write(std::ostream& os) const
        {
-               m_mutex.lock();
+               // Shared lock: solo lectura del árbol
+               std::shared_lock<std::shared_mutex> lock(m_mutex);
                
                os << m_Order << "," << (m_Unique ? "1" : "0") << "\n";
                os << m_NumKeys << "\n";
@@ -189,16 +159,11 @@ public:
                        os << it->key << "," << it->ObjID << "\n";
                }
                
-               m_mutex.unlock();
-               
                return os;
        }
 
        std::istream& Read(std::istream& is)
        {
-               // Lock para preparar estructura
-               m_mutex.lock();
-               
                size_t order;
                int unique_int;
                size_t count;
@@ -207,20 +172,22 @@ public:
                is >> order >> comma >> unique_int;  
                is >> count;
                
-               m_Root.Reset();
-               m_Order = order;
-               m_Unique = (unique_int == 1);
-               m_NumKeys = 0;
-               m_Height = 1;
+               {
+                       // Unique lock: escritura exclusiva para preparar estructura
+                       std::unique_lock<std::shared_mutex> lock(m_mutex);
+                       
+                       m_Root.Reset();
+                       m_Order = order;
+                       m_Unique = (unique_int == 1);
+                       m_NumKeys = 0;
+                       m_Height = 1;
+                       
+                       m_Root = BTNode(2 * order + 1, m_Unique);
+                       m_Root.SetMaxKeysForChilds(order);
+                       m_Root.SetParent(nullptr);
+               } // Lock se libera aquí
                
-               m_Root = BTNode(2 * order + 1, m_Unique);
-               m_Root.SetMaxKeysForChilds(order);
-               m_Root.SetParent(nullptr);
-               
-               // Unlock ANTES de llamar Insert (evitar deadlock)
-               m_mutex.unlock();
-               
-               // Insert hace su propio lock/unlock por cada elemento
+               // Insert hace su propio lock por cada elemento (evita deadlock)
                for(size_t i = 0; i < count; i++) {
                        keyType key;
                        ObjIDType objID;
@@ -234,20 +201,19 @@ public:
        
        // Template versions using std::invoke (TODO #6, #7, #8 completed)
        template <typename Func, typename... Args>
-       void ForEach(Func&& func, Args&&... args)
+       void ForEach(Func&& func, Args&&... args) const
        {
-              m_mutex.lock();
+              // Shared lock: solo lectura
+              std::shared_lock<std::shared_mutex> lock(m_mutex);
               m_Root.ForEach(std::forward<Func>(func), std::forward<Args>(args)...);
-              m_mutex.unlock();
        }
 
        template <typename Func, typename... Args>
-       ObjectInfo* FirstThat(Func&& func, Args&&... args)
+       ObjectInfo* FirstThat(Func&& func, Args&&... args) const
        {
-              m_mutex.lock();
-              ObjectInfo* result = m_Root.FirstThat(std::forward<Func>(func), std::forward<Args>(args)...);
-              m_mutex.unlock();
-              return result;
+              // Shared lock: solo lectura
+              std::shared_lock<std::shared_mutex> lock(m_mutex);
+              return m_Root.FirstThat(std::forward<Func>(func), std::forward<Args>(args)...);
        }
 
        // Iteradores forward (in-order traversal: orden ascendente)
@@ -299,61 +265,47 @@ protected:
        size_t          m_NumKeys; // number of keys
        bool            m_Unique;  // Accept the elements only once ?
        
-       // Mutex para concurrencia (TODO #11: Thread-safety)
-       mutable std::mutex m_mutex;
+
+       mutable std::shared_mutex m_mutex;
 };     
 
 template <typename Trait>
 bool BTree<Trait>::Insert(const keyType key, const long ObjID){
-       // Lock para thread-safety
-       m_mutex.lock();
+       // Unique lock: escritura exclusiva
+       std::unique_lock<std::shared_mutex> lock(m_mutex);
        
        bt_ErrorCode error = m_Root.Insert(key, ObjID);
        
-       // Preparar resultado sin return intermedio
-       bool result = false;
-       
        if( error == bt_duplicate ) {
-              result = false;
-       } else {
-              m_NumKeys++;
-              if( error == bt_overflow ){
-                     m_Root.SplitRoot();
-                     m_Height++;
-              }
-              result = true;
+              return false;
        }
        
-       // Unlock antes de return
-       m_mutex.unlock();
+       m_NumKeys++;
+       if( error == bt_overflow ){
+              m_Root.SplitRoot();
+              m_Height++;
+       }
        
-       return result;
+       return true;
 }
 
 template <typename Trait>
 bool BTree<Trait>::Remove (const keyType key, const long ObjID)
 {
-       // Lock para thread-safety
-       m_mutex.lock();
+       // Unique lock: escritura exclusiva
+       std::unique_lock<std::shared_mutex> lock(m_mutex);
        
        bt_ErrorCode error = m_Root.Remove(key, ObjID);
        
-       // Preparar resultado sin return intermedio
-       bool result = false;
-       
        if( error == bt_duplicate || error == bt_nofound ) {
-              result = false;
-       } else {
-              m_NumKeys--;
-              if( error == bt_rootmerged )
-                     m_Height--;
-              result = true;
+              return false;
        }
        
-       // Unlock antes de return
-       m_mutex.unlock();
+       m_NumKeys--;
+       if( error == bt_rootmerged )
+              m_Height--;
        
-       return result;
+       return true;
 }
 
 #endif
