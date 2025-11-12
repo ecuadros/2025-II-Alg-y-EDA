@@ -1,7 +1,7 @@
 /**
  * @file btree.h
  * @brief Árbol B genérico con concurrencia (shared_mutex), guardado/carga y recorridos.
- * @details Expone BTreeTrait, BTree, iteradores forward/reverse, y utilidades como Save/Load.
+ * @details Expone BTreeTrait, BTree, iteradores thread-safe y utilidades como Save/Load.
  */
 #ifndef __BTREE_H__
 #define __BTREE_H__
@@ -14,6 +14,7 @@
 #define DEFAULT_BTREE_ORDER 3
 
 const size_t MaxHeight = 5; 
+
 /**
  * @tparam _keyType   Tipo de clave.
  * @tparam _ObjIDType Tipo del valor/identificador asociado.
@@ -36,12 +37,12 @@ struct BTreeTrait
 /**
  * @class BTree
  * @brief Implementación de un B-Tree con inserción, búsqueda, borrado y concurrencia.
- * @tparam Trait Debe definir `keyType`, `ObjIDType` y `struct Compare { bool operator()(const keyType&, const keyType&) const; }`.
+ * @tparam Trait Debe definir `keyType`, `ObjIDType` y un funtor `Compare`.
  *
  * @par Características
  * - Concurrencia: protecciones con std::shared_mutex en operaciones públicas.
  * - Persistencia: @ref Save y @ref Load para escribir/leer el árbol.
- * - Recorridos: @ref ForEachT (genérico), @ref Print, e iteradores forward/reverse.
+ * - Recorridos: Iteradores `begin`, `end`, `rbegin`, `rend` para recorridos in-order.
  */
 
 template <typename Trait>
@@ -52,15 +53,13 @@ class BTree // this is the full version of the BTree
        
        typedef CBTreePage <Trait> BTNode;// useful shorthand
 
-public:
-       //typedef ObjectInfo iterator;
-       typedef typename BTNode::lpfnForEach2    lpfnForEach2;
-       typedef typename BTNode::lpfnForEach3    lpfnForEach3;
-       typedef typename BTNode::lpfnFirstThat2  lpfnFirstThat2;
-       typedef typename BTNode::lpfnFirstThat3  lpfnFirstThat3;
-       typedef typename BTNode::ObjectInfo      ObjectInfo;
 
 public:
+       /**
+        * @brief Constructor del Árbol B.
+        * @param order El orden del árbol (número máximo de hijos por nodo).
+        * @param unique Si es `true`, no se permiten claves duplicadas.
+        */
        BTree(size_t order = DEFAULT_BTREE_ORDER, bool unique = true)
               : m_Root(2 * order + 1, unique),
                 m_Order(order),
@@ -72,55 +71,100 @@ public:
               m_Height = 1;
        }
        ~BTree() {}
-       //int           Open (char * name, int mode);
-       //int           Create (char * name, int mode);
-       //int           Close ();
+
+       /**
+        * @brief Inserta una clave y su ID asociado en el árbol. Thread-safe.
+        * @param key La clave a insertar.
+        * @param ObjID El ID del objeto asociado a la clave.
+        * @return `true` si la inserción fue exitosa, `false` si la clave ya existía (y el árbol es `unique`).
+        */
        bool            Insert (const keyType key, const long ObjID);
+
+       /**
+        * @brief Elimina una clave del árbol. Thread-safe.
+        * @param key La clave a eliminar.
+        * @param ObjID (No utilizado actualmente, para futuras extensiones).
+        * @return `true` si la clave fue encontrada y eliminada, `false` en caso contrario.
+        */
        bool            Remove (const keyType key, const long ObjID);
        ObjIDType       Search (const keyType key)
-       {      ObjIDType ObjID = -1;
+       {      
+              std::shared_lock<std::shared_mutex> lk(m_mtx);
+              ObjIDType ObjID = -1;
               m_Root.Search(key, ObjID);
               return ObjID;
        }
-       size_t            size()  { return m_NumKeys; }
-       size_t            height() { return m_Height;      }
-       size_t            GetOrder() { return m_Order;     }
+       size_t            size()  { 
+              std::shared_lock<std::shared_mutex> lk(m_mtx);
+              return m_NumKeys; 
+       }
+       size_t            height() {
+              std::shared_lock<std::shared_mutex> lk(m_mtx);
+              return m_Height;
+       }
+       size_t            GetOrder() {
+              std::shared_lock<std::shared_mutex> lk(m_mtx);
+              return m_Order;
+       }
 
        void            Print (ostream &os)
-       {               m_Root.Print(os);                              }
+       {
+              std::shared_lock<std::shared_mutex> lk(m_mtx);
+              m_Root.Print(os);
+       }
+
+
        template <class Fn, class... Args>
        void ForEachT(Fn&& fn, Args&&... args) {
+              std::shared_lock<std::shared_mutex> lk(m_mtx);
               m_Root.ForEachT(std::forward<Fn>(fn), /*level=*/0,
                             std::forward<Args>(args)...);
        }
-       void            ForEach( lpfnForEach2 lpfn, void *pExtra1 )
-       {               m_Root.ForEach(lpfn, 0, pExtra1);              }
-       void            ForEach( lpfnForEach3 lpfn, void *pExtra1, void *pExtra2)
-       {               m_Root.ForEach(lpfn, 0, pExtra1, pExtra2);     }
-       ObjectInfo*     FirstThat( lpfnFirstThat2 lpfn, void *pExtra1 )
-       {               return m_Root.FirstThat(lpfn, 0, pExtra1);     }
-       ObjectInfo*     FirstThat( lpfnFirstThat3 lpfn, void *pExtra1, void *pExtra2)
-       {               return m_Root.FirstThat(lpfn, 0, pExtra1, pExtra2);   }
-       //typedef               ObjectInfo iterator;
+       
+       template<typename Func, typename... Args>
+       ObjectInfo* FirstThat(size_t level, Func&& func, Args&&... args) {
+              std::shared_lock<std::shared_mutex> lk(m_mtx);
+              return m_Root.FirstThat(level, std::forward<Func>(func), std::forward<Args>(args)...);
+       }
+
 //move constructor 
 public: 
-       BTree(BTree&& other) noexcept;
-       BTree& operator=(BTree&& other) noexcept;
+       BTree(BTree&& other) noexcept {
+        std::scoped_lock lk(m_mtx, other.m_mtx);
+        m_Root    = std::move(other.m_Root);
+        m_Height  = std::exchange(other.m_Height, 1);
+        m_Order   = std::exchange(other.m_Order, 0);
+        m_NumKeys = std::exchange(other.m_NumKeys, 0);
+        m_Unique  = std::exchange(other.m_Unique, true);
+    }
 
-       //deshabilitar copia
-       BTree(const BTree&) = delete;
-       BTree& operator=(const BTree&) = delete;
-
+       /**
+        * @brief Guarda el estado actual del árbol en un archivo. Thread-safe.
+        * @param filename La ruta del archivo donde se guardará el árbol.
+        * @return `true` si se guardó correctamente, `false` si hubo un error.
+        */
 // write and read
        bool Save(const std::string& filename) const;
        bool Load(const std::string& filename);
        // getters const (nuevos o sobrecargas)
-       size_t size()   const { return m_NumKeys; }
-       size_t height() const { return m_Height;  }
-       size_t GetOrder() const { return m_Order; }
+       size_t size()   const {
+              std::shared_lock<std::shared_mutex> lk(m_mtx);
+              return m_NumKeys;
+       }
+       size_t height() const {
+              std::shared_lock<std::shared_mutex> lk(m_mtx);
+              return m_Height;
+       }
+       size_t GetOrder() const {
+              std::shared_lock<std::shared_mutex> lk(m_mtx);
+              return m_Order;
+       }
 
        void Print(std::ostream& os) const {
-       const_cast<BTNode&>(m_Root).Print(os);
+              std::shared_lock<std::shared_mutex> lk(m_mtx);
+              // El const_cast es seguro si Print no modifica el nodo.
+              // Si lo hiciera, necesitaríamos un unique_lock y el método no podría ser const.
+              const_cast<BTNode&>(m_Root).Print(os);
        }
 public : 
     // Iteradores in-order (forward) y reverse in-order (backward)
@@ -303,10 +347,25 @@ public :
     };
 
     // Factories
-    iterator begin()  { return iterator(this, /*to_begin=*/true); }
-    iterator end()    { return iterator(this, /*to_begin=*/false); }
-    reverse_iterator rbegin() { return reverse_iterator(this, /*to_rbegin=*/true); }
-    reverse_iterator rend()   { return reverse_iterator(this, /*to_rbegin=*/false); }
+    iterator begin()  { 
+        // Adquiere un bloqueo compartido que el iterador mantendrá.
+        // ADVERTENCIA: El usuario debe asegurarse de que el iterador se destruya
+        // para liberar el bloqueo. No se debe almacenar el iterador por mucho tiempo.
+        std::shared_lock<std::shared_mutex> lk(m_mtx);
+        return iterator(this, /*to_begin=*/true); 
+    }
+    iterator end()    { 
+        std::shared_lock<std::shared_mutex> lk(m_mtx);
+        return iterator(this, /*to_begin=*/false); 
+    }
+    reverse_iterator rbegin() { 
+        std::shared_lock<std::shared_mutex> lk(m_mtx);
+        return reverse_iterator(this, /*to_rbegin=*/true); 
+    }
+    reverse_iterator rend()   { 
+        std::shared_lock<std::shared_mutex> lk(m_mtx);
+        return reverse_iterator(this, /*to_rbegin=*/false); 
+    }
 
 protected:
        BTNode          m_Root;
@@ -316,6 +375,10 @@ protected:
        bool            m_Unique;  // Accept the elements only once ?
        size_t computeHeight(const BTNode& n) const;
        size_t computeSize  (const BTNode& n) const;
+       /**
+        * @brief Mutex para controlar el acceso concurrente al árbol.
+        * Se usa `shared_mutex` para permitir múltiples lectores simultáneos.
+        */
        mutable std::shared_mutex m_mtx;
 
 }; 
@@ -347,33 +410,21 @@ bool BTree<Trait>::Remove (const keyType key, const long ObjID)
                m_Height--;
        return true;
 }
-//insertar template move constructor y move assignment
-template <typename Trait>
-BTree<Trait>::BTree(BTree&& other) noexcept
-    : m_Root(std::move(other.m_Root)),
-      m_Height(other.m_Height),
-      m_Order(other.m_Order),
-      m_NumKeys(other.m_NumKeys),
-      m_Unique(other.m_Unique)
-{
-    other.m_Height = 0;
-    other.m_NumKeys = 0;
-}
-
+//move assignment
 template <typename Trait>
 BTree<Trait>& BTree<Trait>::operator=(BTree&& other) noexcept {
     if (this != &other) {
-        m_Root   = std::move(other.m_Root);  // se usa el move de CBTreePage
-        m_Height = other.m_Height;
-        m_Order  = other.m_Order;
-        m_NumKeys= other.m_NumKeys;
-        m_Unique = other.m_Unique;
-
-        other.m_Height = 0;
-        other.m_NumKeys = 0;
+        std::scoped_lock lk(m_mtx, other.m_mtx);
+        m_Root    = std::move(other.m_Root);
+        m_Height  = std::exchange(other.m_Height, 1);
+        m_Order   = std::exchange(other.m_Order, 0);
+        m_NumKeys = std::exchange(other.m_NumKeys, 0);
+        m_Unique  = std::exchange(other.m_Unique, true);
     }
     return *this;
 }
+
+
 //write and read
 template <typename Trait>
 size_t BTree<Trait>::computeHeight(const BTNode& n) const {
@@ -437,6 +488,7 @@ bool BTree<Trait>::Load(const std::string& filename) {
 
     return true;
 }
+
 template <typename Trait>
 std::ostream& operator<<(std::ostream& os, const BTree<Trait>& t) {
     os << "size=" << t.size() << ", height=" << t.height() << "\n";
