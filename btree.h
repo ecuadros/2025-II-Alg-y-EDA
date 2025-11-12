@@ -142,13 +142,11 @@ public:
               reference operator*() const { return m_pNode->m_Keys[m_keyIndex]; }
               pointer operator->() const { return &m_pNode->m_Keys[m_keyIndex]; }
 
-              BackwardBTreeIterator& operator++() { // Mueve el iterador al elemento "anterior"
+              BackwardBTreeIterator& operator++() {
                      if (!m_pNode) { // Si estamos en rend(), no hacemos nada.
                          return *this;
                      }
 
-                     // Caso 1: El nodo actual tiene hijos (no es hoja).
-                     // El predecesor es el elemento más a la derecha del subárbol izquierdo.
                      if (m_pNode->m_SubPages[0] != nullptr) {
                          BTNode* pCursor = m_pNode->m_SubPages[m_keyIndex];
                          while (pCursor && pCursor->m_SubPages[pCursor->m_KeyCount]) {
@@ -156,11 +154,10 @@ public:
                          }
                          m_pNode = pCursor;
                          m_keyIndex = pCursor ? pCursor->m_KeyCount - 1 : 0;
-                     } else { // Caso 2: El nodo actual es una hoja.
+                     } else {
                          if (m_keyIndex > 0) {
-                             m_keyIndex--; // El predecesor está en el mismo nodo.
+                             m_keyIndex--;
                          } else {
-                             // Si no, subimos por el árbol hasta encontrar un ancestro que sea un hijo derecho.
                              BTNode* pCurrent = m_pNode;
                              BTNode* pParent = pCurrent->m_pParent;
                              size_t pos = 0;
@@ -177,8 +174,8 @@ public:
                                  }
                              }
 
-                             if (pParent == nullptr) { // Llegamos a la raíz y no hay más predecesores
-                                 m_pNode = nullptr; // Esto nos lleva a un estado equivalente a rend()
+                             if (pParent == nullptr) {
+                                 m_pNode = nullptr;
                              } else {
                                  m_pNode = pParent;
                                  m_keyIndex = pos - 1;
