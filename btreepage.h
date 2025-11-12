@@ -103,11 +103,6 @@ class CBTreePage {
 	typedef CBTreePage<Trait>    BTPage;         // useful shorthand
 	typedef tagObjectInfo<keyType, ObjIDType> ObjectInfo;
 
-	typedef void (*lpfnForEach2)(ObjectInfo &info, size_t level, void *pExtra1);
-	typedef void (*lpfnForEach3)(ObjectInfo &info, size_t level, void *pExtra1, void *pExtra2);
-
-	typedef ObjectInfo *(*lpfnFirstThat2)(ObjectInfo &info, size_t level, void *pExtra1);
-	typedef ObjectInfo *(*lpfnFirstThat3)(ObjectInfo &info, size_t level, void *pExtra1, void *pExtra2);
  public:
 	/// @brief Constructor of the BTreePage.
 	/// @param maxKeys Max keys that hold this page.
@@ -139,6 +134,13 @@ class CBTreePage {
 	/// @param os The output stream.
 	void            Print  (ostream &os);
 
+
+	/// @brief Iterates over all keys stored in the B-Tree page and its subpages, invoking a user-provided function for each key.
+	/// @tparam Function A callable type that can be invoked
+	/// @tparam ...Args Variadic template parameters for any additional arguments that will be passed to the callback function.
+	/// @param function The callable object to invoke for each key during traversal.
+	/// @param level The current level (or depth) of the node within the tree. The root node starts at level 0.
+	/// @param ...args Additional arguments forwarded to the callback function.
 	template <typename Trait>
 	template <typename Function, typename... Args>
 	void CBTreePage<Trait>::ForEach(Function&& function, size_t level, Args&&... args){
@@ -152,6 +154,13 @@ class CBTreePage {
 				m_SubPages[m_KeyCount]->ForEach(std::forward<Function>(function), level + 1, std::forward<Args>(args)...);
 	}
 
+
+	/// @brief Searches the B-Tree page (and recursively its subpages) for the first key that satisfies a given predicate.
+	/// @tparam Trait The trait type that defines key and comparison characteristics of the B-Tree.
+	/// @param pred The predicate function used to test each key. Should return `true` when the desired key is found.
+	/// @param level The current level (or depth) within the B-Tree. The root node starts at level 0.
+	/// @param ...args Additional arguments forwarded to the predicate function.
+	/// @return A pointer to the first key (`ObjectInfo*`) that satisfies the predicate, or `nullptr` if no matching key is found.
 	template <typename Trait>
 	template <typename Function, typename... Args>
 	ObjectInfo* FirstThat(Function&& pred, size_t level, Args&&... args){
@@ -170,6 +179,11 @@ class CBTreePage {
 			return m_SubPages[m_KeyCount]->FirstThat(std::forward<Function>(pred), level + 1, std::forward<Args>(args)...);
 		return nullptr;
 	}
+
+	/// @brief Write the tree values to a output stream.
+	/// @param os the stream to write.
+	/// @return the stream with the tree on it.
+	std::ostream& Write(ostream &os) const;
 
 protected:
 	CompareFn	Compfn;
@@ -878,6 +892,26 @@ void CBTreePage<Trait>::MovePage(BTPage *pChildPage, vector<ObjectInfo> &tmpKeys
 	}
 	tmpSubPages.push_back(pChildPage->m_SubPages[i]);
 	pChildPage->clear();
+}
+
+template <typename Trait>
+std::ostream& CBTreePage<Trait>::Write(ostream &os) const {
+	os << m_KeyCount << " ";
+
+	for(size_t i = 0; i < m_KeyCount; ++i) 
+		os << m_Keys[i].key << " " << m_Keys[i].ObjID << " ";
+	os << "\n";
+
+	for(size_t i = 0; i <= m_KeyCount; ++i) {
+		if(m_SubPages[i]) {
+			os << "* ";
+			m_SubPages[i]->Write(os);
+		}
+		else
+			os << "# ";
+	}
+	os << "\n";
+	return os;
 }
 
 #endif

@@ -130,8 +130,26 @@ public:
 	/// @param os The stream to write.
 	void Write(ostream &os) { 
 		std::shared_lock<std::shared_mutex> lock(m_Mutex);
-		os << *this; 
+		os << m_Order << " " << m_Height << " " << m_NumKeys << " " << m_Unique << "\n";
+       	m_Root.Write(os);
 	}
+
+	/// @brief 
+	/// @param func 
+	/// @param ...args 
+	void ForEach(Function&& func, Args&&... args) {
+		std::lock_guard<std::shared_mutex> lock(m_Mutex);
+		m_Root.ForEach(std::forward<Function>(func), 0, std::forward<Args>(args)...);
+	}
+
+	/// @brief 
+	/// @param func 
+	/// @param ...args 
+	/// @return 
+	ObjectInfo* FirstThat(Function&& func, Args&&... args) {
+		std::shared_lock<std::shared_mutex> lock(m_Mutex);
+		return m_Root.FirstThat(std::forward<Function>(func), 0, std::forward<Args>(args)...);
+    }
 
 	friend std::ostream& operator<<(std::ostream &os, BTree<Trait> &obj);
 
@@ -168,7 +186,7 @@ bool BTree<Trait>::Remove (const keyType key, const long ObjID)
 template <typename Trait>
 std::ostream& operator<<(std::ostream &os, BTree<Trait> &obj) {
 	obj.Print(os);
-    return os;
+	return os;
 }
 
 #endif
