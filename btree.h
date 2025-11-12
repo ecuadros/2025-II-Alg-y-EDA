@@ -164,9 +164,7 @@ public:
        {
               if (this != &other)
               {
-                     std::unique_lock<std::shared_mutex> lock1(m_Mutex, std::defer_lock);
-                     std::unique_lock<std::shared_mutex> lock2(other.m_Mutex, std::defer_lock);
-                     std::lock(lock1, lock2);
+                     std::scoped_lock lock(m_Mutex, other.m_Mutex);
                      m_Order = other.m_Order;
                      m_Root = std::move(other.m_Root);
                      m_Height = std::exchange(other.m_Height, 1);
