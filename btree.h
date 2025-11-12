@@ -300,10 +300,8 @@ public:
        {
               if (this != &other)
               {
-                     // Bloquear ambos mutex en orden consistente para evitar deadlock
-                     std::unique_lock<std::shared_mutex> lock1(m_Mutex, std::defer_lock);
-                     std::unique_lock<std::shared_mutex> lock2(other.m_Mutex, std::defer_lock);
-                     std::lock(lock1, lock2);  // Bloqueo atómico de ambos
+                     // Bloquear ambos mutex simultáneamente para evitar deadlock
+                     std::scoped_lock lock(m_Mutex, other.m_Mutex);
                      
                      m_Order = other.m_Order;
                      m_Root = std::move(other.m_Root);
