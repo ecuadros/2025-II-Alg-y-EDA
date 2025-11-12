@@ -262,10 +262,7 @@ public:
        void            Print (ostream &os)
        {               std::shared_lock lock(m_Mutex);   
                        m_Root.Print(os);                              }
-       void            ForEach( lpfnForEach2 lpfn, void *pExtra1 )
-       {               m_Root.ForEach(lpfn, 0, pExtra1);              }
-       void            ForEach( lpfnForEach3 lpfn, void *pExtra1, void *pExtra2)
-       {               m_Root.ForEach(lpfn, 0, pExtra1, pExtra2);     }
+
 
 
        /**
@@ -343,10 +340,10 @@ protected:
            m_NumKeys = 0;
        }
 
-       Node* getExtremeNode(Node* startNode, int direction) const {
+       BTNode* getExtremeNode(BTNode* startNode, int direction) const {
             if (!startNode) return nullptr;
             
-            Node* pNode = startNode;
+            BTNode* pNode = startNode;
             while (pNode->m_SubPages[direction ? 0 : pNode->m_KeyCount]) {
                 pNode = pNode->m_SubPages[direction ? 0 : pNode->m_KeyCount];
             }
