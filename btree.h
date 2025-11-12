@@ -49,6 +49,82 @@ struct BTreeDescTraits
     using  CompareFn         = greater<_keyType>;
 };
 
+template <typename Container, typename Iterator>
+class general_iterator{
+protected:
+    using Node       = typename Container::BTNode;
+    using keyType    = typename Container::keyType;
+    using ObjIDType  = typename Container::ObjIDType;
+
+    Container* m_pContainer;
+    Node* m_pNode;
+    size_t m_Indx;
+
+public:
+    general_iterator(Container* pContainer = nullptr, Node* pNode = nullptr, size_t indx = 0)
+        : m_pContainer(pContainer), m_pNode(pNode), m_Indx(indx) {}
+       value_type& operator*() const { return m_pNode->getDataRef(); }
+
+    bool operator==(const Iterator& other) const { return m_pNode == other.m_pNode; }
+    bool operator!=(const Iterator& other) const { return !(*this == other); }
+
+    ObjectInfo& operator*(){ return m_node->m_Keys[m_Indx];}
+    ObjectInfo* operator->(){return &(m_node->m_Keys[m_Indx]);}
+
+    bool operator==(const iterator& other) {
+        return m_Node == other.m_Node && 
+            (m_Node == nullptr || m_Indx == other.m_Indx);
+    }
+    
+    bool operator!=(const iterator& other) {
+        return !(*this == other);
+    }
+};
+
+template <typename Container>
+class btree_forward_iterator 
+    : public general_iterator<Container, btree_forward_iterator<Container>> 
+{
+public:
+    using Parent    = general_iterator<Container, btree_forward_iterator<Container>>;
+    using Node      = typename Container::BTNode;
+    using iterator  = btree_forward_iterator<Container>;
+
+public:
+    btree_forward_iterator(Container *pContainer, Node *pNode) 
+        : Parent(pContainer, pNode) {}
+
+    btree_forward_iterator(const iterator& other)
+        : Parent(other.m_pContainer, other.m_pNode) {}
+
+    iterator& operator++() {
+        this->m_pNode = this->m_pNode ? (Node*)this->m_pNode->getNext(this->m_Indx, true) : nullptr;
+        return *this;
+    }
+};
+
+template <typename Container>
+class btree_backward_iterator 
+    : public general_iterator<Container, btree_backward_iterator<Container>> 
+{
+public:
+    using Parent    = general_iterator<Container, btree_backward_iterator<Container>>;
+    using Node      = typename Container::BTNode;
+    using iterator  = btree_backward_iterator<Container>;
+
+public:
+    btree_backward_iterator(Container *pContainer, Node *pNode) 
+        : Parent(pContainer, pNode) {}
+
+    btree_backward_iterator(const iterator& other)
+        : Parent(other.m_pContainer, other.m_pNode) {}
+
+    iterator& operator++() {
+        this->m_pNode = this->m_pNode ? (Node*)this->m_pNode->getNext(this->m_Indx, false) : nullptr;
+        return *this;
+    }
+};
+
 /**
  * @brief Implementación de un BTree genérico.
  * 
@@ -66,14 +142,28 @@ class BTree // this is the full version of the BTree
        typedef CBTreePage <Trait> BTNode;// useful shorthand
 
 public:
-       //typedef ObjectInfo iterator;
-       typedef typename BTNode::lpfnForEach2    lpfnForEach2;
-       typedef typename BTNode::lpfnForEach3    lpfnForEach3;
-       typedef typename BTNode::lpfnFirstThat2  lpfnFirstThat2;
-       typedef typename BTNode::lpfnFirstThat3  lpfnFirstThat3;
-       typedef typename BTNode::ObjectInfo      ObjectInfo;
+        typedef typename BTNode::ObjectInfo      ObjectInfo;
+
+        using forward_iterator = btree_forward_iterator<BTree>;
+        using backward_iterator = btree_backward_iterator<BTree>;
 
 public:
+
+    backward_iterator rbegin() { 
+        if (!m_pRoot) return rend();
+        return backward_iterator(this, getExtremeNode(m_pRoot, 1));
+    }
+    backward_iterator rend()   { return backward_iterator(this, nullptr); }
+
+    forward_iterator fbegin() {
+        if (!m_pRoot) return fend();
+        return forward_iterator(this, getExtremeNode(m_pRoot, 0));
+    }
+
+    forward_iterator fend() {
+        return forward_iterator(this, nullptr);
+    }
+
     /**
      * @brief Constructor del BTree.
      * @param order Orden máximo del árbol.
@@ -100,7 +190,7 @@ public:
         BTree(BTree&& other) noexcept
        : m_Mutex() 
        {
-              std::scoped_lock lock(m_Mutex, other.m_Mutex);
+              std::unique_lock lock(other.m_Mutex);
 
               m_Order   = std::exchange(other.m_Order, DEFAULT_BTREE_ORDER);
               m_Root    = std::move(other.m_Root); 
@@ -108,6 +198,20 @@ public:
               m_NumKeys = std::exchange(other.m_NumKeys, 0);
               m_Unique  = std::exchange(other.m_Unique, true);
        }
+
+       BTree &operator=(BTree&& other) noexcept {
+           if (this != &other) {
+               std::scoped_lock lock(m_Mutex, other.m_Mutex);
+
+               m_Order   = std::exchange(other.m_Order, DEFAULT_BTREE_ORDER);
+               m_Root    = std::move(other.m_Root); 
+               m_Height  = std::exchange(other.m_Height, 1);
+               m_NumKeys = std::exchange(other.m_NumKeys, 0);
+               m_Unique  = std::exchange(other.m_Unique, true);
+           }
+           return *this;
+       }
+
     
        /**
        @brief Inserta un nuevo elemento en el BTree.
@@ -223,6 +327,8 @@ public:
             }
         }
 
+
+
 protected:
        BTNode          m_Root;
        size_t          m_Height;  // height of tree
@@ -236,6 +342,16 @@ protected:
            m_Height = 1;
            m_NumKeys = 0;
        }
+
+       Node* getExtremeNode(Node* startNode, int direction) const {
+            if (!startNode) return nullptr;
+            
+            Node* pNode = startNode;
+            while (pNode->m_SubPages[direction ? 0 : pNode->m_KeyCount]) {
+                pNode = pNode->m_SubPages[direction ? 0 : pNode->m_KeyCount];
+            }
+            return pNode;
+        }
 };     
 
 template <typename Trait>

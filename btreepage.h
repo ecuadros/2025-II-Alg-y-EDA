@@ -97,20 +97,36 @@ class CBTreePage //: public SimpleIndex <keyType>
        virtual ~CBTreePage();
 
         CBTreePage(CBTreePage&& other) noexcept
-            : m_MinKeys(other.m_MinKeys),
-            m_MaxKeys(other.m_MaxKeys),
-            m_MaxKeysForChilds(other.m_MaxKeysForChilds),
-            m_Unique(other.m_Unique),
-            m_isRoot(other.m_isRoot),
-            m_Keys(std::move(other.m_Keys)),           
-            m_SubPages(std::move(other.m_SubPages)),  
-            Compfn(std::move(other.Compfn)),
-            m_KeyCount(other.m_KeyCount)
-        {
-            other.m_KeyCount = 0;
-            other.m_MinKeys = 0;
+        : m_Mutex() {  
+                std::unique_lock lock(other.m_nodeMutex);  
+                
+                m_MinKeys = std::exchange(other.m_MinKeys, 0);
+                m_MaxKeys = std::exchange(other.m_MaxKeys, 0);
+                m_MaxKeysForChilds = std::exchange(other.m_MaxKeysForChilds, 0);
+                m_Unique = std::exchange(other.m_Unique, true);
+                m_isRoot = std::exchange(other.m_isRoot, false);
+                m_Keys = std::move(other.m_Keys);
+                m_SubPages = std::move(other.m_SubPages);
+                m_KeyCount = std::exchange(other.m_KeyCount, 0);
+                m_Parent = std::exchange(other.m_Parent, nullptr);
         }
+        
+        CBTreePage& operator=(CBTreePage&& other) noexcept {
+            if (this != &other) {
+                std::scoped_lock lock1(m_Mutex, other.m_Mutex);
 
+                m_MinKeys = std::exchange(other.m_MinKeys, 0);
+                m_MaxKeys = std::exchange(other.m_MaxKeys, 0);
+                m_MaxKeysForChilds = std::exchange(other.m_MaxKeysForChilds, 0);
+                m_Unique = std::exchange(other.m_Unique, true);
+                m_isRoot = std::exchange(other.m_isRoot, false);
+                m_Keys = std::move(other.m_Keys);
+                m_SubPages = std::move(other.m_SubPages);
+                m_KeyCount = std::exchange(other.m_KeyCount, 0);
+                m_Parent = std::exchange(other.m_Parent, nullptr);
+            }
+            return *this;
+        }
 
        bt_ErrorCode    Insert (const keyType &key, const ObjIDType ObjID);
        bt_ErrorCode    Remove (const keyType &key, const ObjIDType ObjID);
@@ -166,6 +182,7 @@ protected:
                 m_MaxKeysForChilds; // just to distinguish the root
        bool m_Unique;
        bool m_isRoot;
+       CBTreePage* m_Parent = nullptr; // Puntero al nodo padre
        //size_t           NextNode; // address of next node at same level
        //size_t RecAddr; // address of this node in the BTree file
        vector<ObjectInfo> m_Keys;
@@ -217,6 +234,40 @@ protected:
             return 0;
        }
 
+    BTreeNode* getNext(int& index, bool forward = true) {
+        int i = forward ? index + 1 : index;
+
+        if (m_SubPages[i]) {
+            BTreeNode* p = m_SubPages[i];
+            while (p->m_SubPages[forward ? 0 : p->m_KeyCount]) {
+                p = p->m_SubPages[forward ? 0 : p->m_KeyCount];
+            }
+            index = 0
+            return p;
+        }
+
+        BTreeNode* node = this;
+        BTreeNode* p = m_Parent;
+        while (p) {
+            int j = 0;
+            while (j <= p->m_KeyCount && p->m_SubPages[j] != node) {
+                j++;
+            }
+
+            if (forward && j < p->m_KeyCount) {
+                index = j;
+                return p;
+            } else if (!forward && j > 0) {
+                index = j;
+                return p;
+            }
+
+            node = p;
+            p = p->parent;
+        }
+        index=0;
+        return nullptr; 
+    }
 private:
        bool SplitRoot();
        void SplitPageInto3(vector<ObjectInfo>   & tmpKeys,
@@ -232,7 +283,7 @@ private:
 
 template <typename Trait>
 CBTreePage<Trait>:: CBTreePage(size_t maxKeys, bool unique)
-                               : m_MaxKeys(maxKeys), m_Unique(unique), m_KeyCount(0)
+                               : m_MaxKeys(maxKeys), m_Unique(unique), m_KeyCount(0), m_Parent(nullptr)
 {
        Create();
        SetMaxKeysForChilds(m_MaxKeys);
