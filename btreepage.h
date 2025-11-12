@@ -868,21 +868,16 @@ bool CBTreePage<Trait>::WritePage(std::ofstream &ofs)
        if (!ofs.is_open()) {
               return false;
        }
-
-       // Write page metadata
        ofs.write(reinterpret_cast<const char*>(&m_KeyCount), sizeof(m_KeyCount));
 
-       // Write all keys in this page
        for (size_t i = 0; i < m_KeyCount; i++) {
               ofs.write(reinterpret_cast<const char*>(&m_Keys[i].key), sizeof(keyType));
               ofs.write(reinterpret_cast<const char*>(&m_Keys[i].ObjID), sizeof(ObjIDType));
        }
 
-       // Write if this is a leaf node (has no children)
        bool hasChildren = (m_SubPages[0] != nullptr);
        ofs.write(reinterpret_cast<const char*>(&hasChildren), sizeof(hasChildren));
 
-       // If not a leaf, recursively write children
        if (hasChildren) {
               for (size_t i = 0; i <= m_KeyCount; i++) {
                      if (m_SubPages[i]) {
@@ -903,7 +898,6 @@ bool CBTreePage<Trait>::ReadPage(std::ifstream &ifs)
               return false;
        }
 
-       // Read page metadata
        size_t keyCount;
        ifs.read(reinterpret_cast<char*>(&keyCount), sizeof(keyCount));
 
@@ -913,7 +907,6 @@ bool CBTreePage<Trait>::ReadPage(std::ifstream &ifs)
 
        m_KeyCount = keyCount;
 
-       // Read all keys in this page
        for (size_t i = 0; i < m_KeyCount; i++) {
               keyType key;
               ObjIDType objID;
@@ -929,7 +922,6 @@ bool CBTreePage<Trait>::ReadPage(std::ifstream &ifs)
               m_Keys[i].UseCounter = 0;
        }
 
-       // Read if this is a leaf node (has no children)
        bool hasChildren;
        ifs.read(reinterpret_cast<char*>(&hasChildren), sizeof(hasChildren));
 
@@ -937,21 +929,17 @@ bool CBTreePage<Trait>::ReadPage(std::ifstream &ifs)
               return false;
        }
 
-       // If not a leaf, recursively read children
        if (hasChildren) {
               for (size_t i = 0; i <= m_KeyCount; i++) {
-                     // Create child page
                      m_SubPages[i] = new BTPage(m_MaxKeysForChilds, m_Unique);
                      m_SubPages[i]->m_Parent = this;
                      m_SubPages[i]->SetMaxKeysForChilds(m_MaxKeysForChilds);
 
-                     // Recursively read child
                      if (!m_SubPages[i]->ReadPage(ifs)) {
                             return false;
                      }
               }
        } else {
-              // Leaf node - ensure all child pointers are null
               for (size_t i = 0; i <= m_KeyCount; i++) {
                      m_SubPages[i] = nullptr;
               }

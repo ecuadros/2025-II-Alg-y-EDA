@@ -27,7 +27,7 @@ class BTree // this is the full version of the BTree
        typedef CBTreePage <Trait> BTNode;// useful shorthand
 
 public:
-       // Iterator type aliases
+       // Iterator 
        typedef BTreeIterator<Trait> iterator;
        typedef std::reverse_iterator<iterator> reverse_iterator;
 
@@ -66,7 +66,6 @@ public:
               other.m_NumKeys = 0;
        }
 
-       // Move Assignment Operator
        BTree& operator=(BTree&& other) noexcept
        {
               if (this != &other) {
@@ -119,15 +118,12 @@ public:
        ObjectInfo* FirstThat(Pred&& pred, Args&&... args)
        {               return m_Root.FirstThat(std::forward<Pred>(pred), std::forward<Args>(args)...);   }
 
-       // Iterator support - STL-compliant interface
        iterator begin() { return iterator(&m_Root); }
        iterator end() { return iterator::end(); }
-
-       // Reverse iterator support
        reverse_iterator rbegin() { return reverse_iterator(end()); }
        reverse_iterator rend() { return reverse_iterator(begin()); }
 
-       // Friend declaration for operator<<
+       //operator<<
        template<typename T>
        friend std::ostream& operator<<(std::ostream& os, BTree<T>& bt);
 
@@ -165,7 +161,7 @@ bool BTree<Trait>::Remove (const keyType key, const long ObjID)
        return true;
 }
 
-// operator<< for BTree - allows streaming output
+// operator<<
 template <typename Trait>
 std::ostream& operator<<(std::ostream& os, BTree<Trait>& bt)
 {
@@ -178,7 +174,7 @@ std::ostream& operator<<(std::ostream& os, BTree<Trait>& bt)
        return os;
 }
 
-// Write implementation - Binary serialization
+// Write
 template <typename Trait>
 bool BTree<Trait>::Write(const char* filename)
 {
@@ -188,17 +184,12 @@ bool BTree<Trait>::Write(const char* filename)
               return false;
        }
 
-       // Write file header: "BTREE" magic number
        const char magic[6] = "BTREE";
        ofs.write(magic, 5);
-
-       // Write metadata
        ofs.write(reinterpret_cast<const char*>(&m_Order), sizeof(m_Order));
        ofs.write(reinterpret_cast<const char*>(&m_Height), sizeof(m_Height));
        ofs.write(reinterpret_cast<const char*>(&m_NumKeys), sizeof(m_NumKeys));
        ofs.write(reinterpret_cast<const char*>(&m_Unique), sizeof(m_Unique));
-
-       // Write tree structure recursively
        bool success = m_Root.WritePage(ofs);
 
        ofs.close();
@@ -211,7 +202,7 @@ bool BTree<Trait>::Write(const char* filename)
        return true;
 }
 
-// Read implementation - Binary deserialization
+// Read 
 template <typename Trait>
 bool BTree<Trait>::Read(const char* filename)
 {
@@ -221,7 +212,6 @@ bool BTree<Trait>::Read(const char* filename)
               return false;
        }
 
-       // Read and validate magic number
        char magic[6] = {0};
        ifs.read(magic, 5);
        if (std::string(magic) != "BTREE") {
@@ -230,7 +220,6 @@ bool BTree<Trait>::Read(const char* filename)
               return false;
        }
 
-       // Read metadata
        size_t fileOrder, fileHeight, fileNumKeys;
        bool fileUnique;
 
@@ -239,7 +228,6 @@ bool BTree<Trait>::Read(const char* filename)
        ifs.read(reinterpret_cast<char*>(&fileNumKeys), sizeof(fileNumKeys));
        ifs.read(reinterpret_cast<char*>(&fileUnique), sizeof(fileUnique));
 
-       // Validate metadata
        if (fileOrder != m_Order) {
               std::cerr << "Error: BTree order mismatch (file=" << fileOrder
                         << ", current=" << m_Order << ")" << std::endl;
@@ -252,23 +240,17 @@ bool BTree<Trait>::Read(const char* filename)
                         << ", current=" << m_Unique << ")" << std::endl;
        }
 
-       // Clear current tree
        m_Root.Reset();
        m_Root.Create();
        m_Height = 1;
        m_NumKeys = 0;
-
-       // Read tree structure recursively
        bool success = m_Root.ReadPage(ifs);
-
        ifs.close();
 
        if (!success) {
               std::cerr << "Error: Failed to read BTree structure from file" << std::endl;
               return false;
        }
-
-       // Update metadata from file
        m_Height = fileHeight;
        m_NumKeys = fileNumKeys;
 
