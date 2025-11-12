@@ -3,11 +3,10 @@
 
 #include <iostream>
 #include <utility>      // Para std::move y std::exchange
+#include <mutex>        // Para std::unique_lock y std::lock
 #include <shared_mutex> // Para std::shared_mutex (lecturas concurrentes)
 #include "btreepage.h"
-#define DEFAULT_BTREE_ORDER 3
-
-const size_t MaxHeight = 5; 
+#define DEFAULT_BTREE_ORDER 3 
 
 template <typename _keyType, typename _ObjIDType, typename _Compare = std::less<_keyType>>
 struct BTreeTrait
@@ -70,14 +69,11 @@ public:
                 m_Unique(std::exchange(other.m_Unique, true)),
                 m_NumKeys(std::exchange(other.m_NumKeys, 0))
        {
-              std::unique_lock<std::shared_mutex> lock1(m_mutex, std::defer_lock);
-              std::unique_lock<std::shared_mutex> lock2(other.m_mutex, std::defer_lock);
-              std::lock(lock1, lock2); // Lock ambos sin deadlock
+              // scoped_lock adquiere múltiples locks sin deadlock (más simple que defer_lock + std::lock)
+              std::scoped_lock lock(m_mutex, other.m_mutex);
               
               // El root no debe tener padre
               m_Root.SetParent(nullptr);
-              
-              // Locks se liberan automáticamente al salir del scope
        }
 
        /**
@@ -88,10 +84,8 @@ public:
        BTree& operator=(BTree&& other) noexcept
        {
               if (this != &other) {
-                     // Lock exclusivo para escritura en ambos objetos
-                     std::unique_lock<std::shared_mutex> lock1(m_mutex, std::defer_lock);
-                     std::unique_lock<std::shared_mutex> lock2(other.m_mutex, std::defer_lock);
-                     std::lock(lock1, lock2); // Lock ambos sin deadlock
+                     // scoped_lock adquiere múltiples locks sin deadlock
+                     std::scoped_lock lock(m_mutex, other.m_mutex);
                      
                      // Move data from other usando std::exchange
                      m_Order = std::exchange(other.m_Order, DEFAULT_BTREE_ORDER);
@@ -102,8 +96,6 @@ public:
 
                      // El root no debe tener padre
                      m_Root.SetParent(nullptr);
-                     
-                     // Locks se liberan automáticamente
               }
               return *this;
        }
@@ -133,7 +125,7 @@ public:
         * @param key Clave a buscar
         * @return Referencia asociada o -1 si no se encuentra
         */
-       ObjIDType       Search (const keyType key) const
+       ObjIDType       Search (const keyType key)
        {      
               // Shared lock: permite múltiples lectores simultáneos
               std::shared_lock<std::shared_mutex> lock(m_mutex);
@@ -178,7 +170,7 @@ public:
         * @brief Imprime el árbol
         * @param os Stream de salida
         */
-       void            Print (ostream &os) const
+       void            Print (ostream &os)
        {
               std::shared_lock<std::shared_mutex> lock(m_mutex);
               m_Root.Print(os);
@@ -189,7 +181,7 @@ public:
         * @param os Stream de salida
         * @return Referencia al stream
         */
-       std::ostream& Write(std::ostream& os) const
+       std::ostream& Write(std::ostream& os)
        {
                // Shared lock: solo lectura del árbol
                std::shared_lock<std::shared_mutex> lock(m_mutex);
@@ -197,8 +189,7 @@ public:
                os << m_Order << "," << (m_Unique ? "1" : "0") << "\n";
                os << m_NumKeys << "\n";
                
-               BTree* non_const_this = const_cast<BTree*>(this);
-               for(auto it = non_const_this->begin(); it != non_const_this->end(); ++it) {
+               for(auto it = begin(); it != end(); ++it) {
                        os << it->key << "," << it->ObjID << "\n";
                }
                
@@ -253,7 +244,7 @@ public:
         * @param args Argumentos adicionales para la función
         */
        template <typename Func, typename... Args>
-       void ForEach(Func&& func, Args&&... args) const
+       void ForEach(Func&& func, Args&&... args)
        {
               // Shared lock: solo lectura
               std::shared_lock<std::shared_mutex> lock(m_mutex);
@@ -267,7 +258,7 @@ public:
         * @return Puntero al elemento o nullptr si no se encuentra
         */
        template <typename Func, typename... Args>
-       ObjectInfo* FirstThat(Func&& func, Args&&... args) const
+       ObjectInfo* FirstThat(Func&& func, Args&&... args)
        {
               // Shared lock: solo lectura
               std::shared_lock<std::shared_mutex> lock(m_mutex);
@@ -320,7 +311,7 @@ public:
                return reverse_iterator(this, nullptr, 0);
        }
 
-       friend std::ostream& operator<<(std::ostream& os, const BTree& tree)
+       friend std::ostream& operator<<(std::ostream& os, BTree& tree)
        {
                return tree.Write(os);
        }

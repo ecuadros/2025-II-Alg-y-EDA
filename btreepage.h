@@ -999,16 +999,11 @@ void CBTreePage<Trait>::MovePage(BTPage *pChildPage, vector<ObjectInfo> &tmpKeys
 template <typename Trait>
 class forward_btree_iterator
 {
-private:
+public:
        using value_type = typename BTree<Trait>::ObjectInfo;
        using BTPage     = typename BTree<Trait>::BTNode;
        using iterator   = forward_btree_iterator<Trait>;
 
-       BTree<Trait> *m_pTree = nullptr;
-       BTPage       *m_pPage = nullptr;
-       size_t        m_Index = 0;
-
-public:
        /**
         * @brief Constructor principal
         * @param pTree Puntero al árbol B propietario
@@ -1055,7 +1050,7 @@ public:
         * @brief Pre-incremento (avanza al siguiente elemento)
         * @return Referencia al iterador
         */
-       iterator operator++() {
+       iterator& operator++() {
                if (!m_pPage)
                        return *this;
 
@@ -1104,6 +1099,10 @@ public:
        }
 
 private:
+       BTree<Trait> *m_pTree;
+       BTPage       *m_pPage;
+       size_t        m_Index;
+
        void goToFirstLeaf() {
                while (m_pPage && m_pPage->m_SubPages[0]) {
                        m_pPage = m_pPage->m_SubPages[0];
@@ -1141,16 +1140,11 @@ private:
 template <typename Trait>
 class backward_btree_iterator
 {
-private:
+public:
        using value_type = typename BTree<Trait>::ObjectInfo;
        using BTPage     = typename BTree<Trait>::BTNode;
        using iterator   = backward_btree_iterator<Trait>;
 
-       BTree<Trait> *m_pTree = nullptr;
-       BTPage       *m_pPage = nullptr;
-       size_t        m_Index = 0;
-
-public:
        /**
         * @brief Constructor principal
         * @param pTree Puntero al árbol B propietario
@@ -1160,9 +1154,8 @@ public:
        backward_btree_iterator(BTree<Trait> *pTree, BTPage *pPage, size_t index = 0)
                : m_pTree(pTree), m_pPage(pPage), m_Index(index)
        {
-               // Si estamos en un nodo interno, ir a la última hoja
-               if (m_pPage && m_pPage->m_SubPages[0])
-                       goToLastLeaf();
+               // No necesita ir a ninguna hoja porque rbegin() ya posiciona correctamente
+               // y rend() usa nullptr
        }
 
        /**
@@ -1197,11 +1190,11 @@ public:
         * @brief Pre-incremento (avanza al elemento anterior en orden)
         * @return Referencia al iterador
         */
-       iterator operator++() {
+       iterator& operator++() {
                if (!m_pPage)
                        return *this;
 
-               // Si hay subárbol izquierdo, ir al máximo de ese subárbol
+               // Si hay subárbol izquierdo (child a la izquierda de la clave actual)
                if (m_pPage->m_SubPages[m_Index]) {
                        m_pPage = m_pPage->m_SubPages[m_Index];
                        goToLastLeaf();
@@ -1246,6 +1239,10 @@ public:
        }
 
 private:
+       BTree<Trait> *m_pTree;
+       BTPage       *m_pPage;
+       size_t        m_Index;
+
        void goToLastLeaf() {
                while (m_pPage && m_pPage->m_SubPages[m_pPage->GetNumberOfKeys()]) {
                        m_pPage = m_pPage->m_SubPages[m_pPage->GetNumberOfKeys()];
