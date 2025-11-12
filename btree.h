@@ -1,3 +1,12 @@
+/**
+ * @file btree.h
+ * @brief Thread-safe B-Tree implementation with disk persistence support
+ * 
+ * This file contains the implementation of a generic B-Tree data structure
+ * that supports concurrent access through reader-writer locks and provides
+ * binary serialization for persistent storage.
+ */
+
 #ifndef __BTREE_H__
 #define __BTREE_H__
 
@@ -12,46 +21,88 @@
 
 const size_t MaxHeight = 5; 
 
+/**
+ * @brief Trait structure to configure BTree type parameters
+ * 
+ * @tparam _keyType The type of keys stored in the B-Tree
+ * @tparam _ObjIDType The type of object identifiers associated with keys
+ * @tparam _CompareF Comparison function object type for ordering keys
+ */
 template <typename _keyType, typename _ObjIDType, typename _CompareF>
 struct BTreeTrait
 {
-       using keyType = _keyType;
-       using ObjIDType = _ObjIDType;     
-       using CompareF = _CompareF;
+       using keyType = _keyType;      /**< Type of keys */
+       using ObjIDType = _ObjIDType;  /**< Type of object IDs */  
+       using CompareF = _CompareF;    /**< Comparison function type */
+
 };
 
+/**
+ * @brief Thread-safe B-Tree data structure with disk persistence
+ * 
+ * This class implements a B-Tree that supports concurrent read/write operations
+ * using reader-writer locks. It provides standard B-Tree operations (Insert, Remove, Search)
+ * as well as disk persistence (Write, Read) and functional programming utilities (ForEach, FirstThat).
+ * 
+ * @tparam Trait Type trait containing keyType, ObjIDType, and CompareF definitions
+ */
 template <typename Trait>
 class BTree // this is the full version of the BTree
 {
-       typedef typename Trait::keyType    keyType;
-       typedef typename Trait::ObjIDType    ObjIDType;
+       typedef typename Trait::keyType    keyType;   /**< Key type from trait */
+       typedef typename Trait::ObjIDType  ObjIDType; /**< Object ID type from trait */
        
-       typedef CBTreePage <Trait> BTNode;// useful shorthand
+       typedef CBTreePage <Trait> BTNode;/**< Alias for tree node type */
 
-       // File header structure
+       /**
+        * @brief File header structure for binary serialization
+        */
        struct FileHeader {
-           size_t numKeys;      
-           size_t height;       
+           size_t numKeys;  /**< Total number of keys in the tree */    
+           size_t height;   /**< Height of the tree */     
 
+           /**
+            * @brief Write header to output stream
+            * @param os Output stream
+            * @return true if write succeeded, false otherwise
+            */
            bool Write(std::ostream& os) const {
                os.write(reinterpret_cast<const char*>(this), sizeof(FileHeader));
                return os.good();
            }
 
+           /**
+            * @brief Read header from input stream
+            * @param is Input stream
+            * @return true if read succeeded, false otherwise
+            */
            bool Read(std::istream& is) {
                is.read(reinterpret_cast<char*>(this), sizeof(FileHeader));
                return is.good();
+
            }
        };
 
 public:
        //typedef ObjectInfo iterator;
-       typedef typename BTNode::ObjectInfo     ObjectInfo;
+       typedef typename BTNode::ObjectInfo     ObjectInfo; /**< Type for key-ObjID pairs */
        
+       /**
+        * @brief Friend function for stream output operator
+        * @tparam U Trait type (must differ from class template parameter)
+        * @param os Output stream
+        * @param tree BTree to output
+        * @return Reference to output stream
+        */
        template<typename U>
        friend std::ostream& operator<<(std::ostream& os, BTree<U>& tree);
 
 public:
+       /**
+        * @brief Construct a new BTree
+        * @param order Order of the B-Tree (maximum keys per node = 2*order + 1)
+        * @param unique If true, duplicate keys are not allowed
+        */
        BTree(size_t order = DEFAULT_BTREE_ORDER, bool unique = true)
               : m_Order(order),
                 m_Root(2 * order  + 1, unique),
@@ -61,7 +112,11 @@ public:
               m_Root.SetMaxKeysForChilds(order);
               m_Height = 1;
        }
-       // Move contructor : move-initialize members to avoid default-constructing m_Root
+       
+       /**
+        * @brief Move constructor - transfers ownership of tree resources
+        * @param btree Source BTree to move from (left in valid but unspecified state)
+        */
        BTree(BTree&& btree) noexcept:
               m_Root(std::move(btree.m_Root)),
               m_Height(btree.m_Height),
@@ -75,7 +130,12 @@ public:
               btree.m_NumKeys = 0;
 
        }
-       // Move assignment: transfers ownership to existing object
+       
+       /**
+        * @brief Move assignment operator - transfers ownership to existing object
+        * @param btree Source BTree to move from
+        * @return Reference to this object
+        */
        BTree& operator=(BTree&& btree  ) noexcept 
        {
               if (this != &btree  )
@@ -91,33 +151,107 @@ public:
               }
               return *this;
        }
+       
+       /**
+        * @brief Destructor
+        */
        ~BTree() {}
-       // Write tree to file
+       
+       /**
+        * @brief Write tree to binary file
+        * @param filename Path to output file
+        * @return true if write succeeded, false otherwise
+        */
        bool            Write(const std::string& filename);
-       // Read tree from file
+       
+       /**
+        * @brief Read tree from binary file
+        * @param filename Path to input file
+        * @return true if read succeeded, false otherwise
+        */
        bool            Read(const std::string& filename);
        //int           Open (char * name, int mode);
        //int           Create (char * name, int mode);
        //int           Close ();
+       
+       /**
+        * @brief Insert a key-ObjID pair into the tree
+        * @param key Key to insert
+        * @param ObjID Object identifier associated with the key
+        * @return true if insertion succeeded, false if duplicate (when unique=true)
+        */
        bool            Insert (const keyType key, const long ObjID);
+       
+       /**
+        * @brief Remove a key-ObjID pair from the tree
+        * @param key Key to remove
+        * @param ObjID Object identifier to remove
+        * @return true if removal succeeded, false if not found
+        */
        bool            Remove   (const keyType key, const long ObjID);
+       
+       /**
+        * @brief Search for a key and return its associated ObjID
+        * @param key Key to search for
+        * @return ObjID if found, -1 otherwise
+        */
        ObjIDType       Search (const keyType key)
        {      ObjIDType ObjID = -1;
               m_Root.Search(key, ObjID);
               return ObjID;
        }
+       
+       /**
+        * @brief Get total number of keys in the tree
+        * @return Number of keys
+        */
        size_t            size()  { return m_NumKeys; }
+       
+       /**
+        * @brief Get height of the tree
+        * @return Tree height
+        */
        size_t            height() { return m_Height;      }
+       
+       /**
+        * @brief Get order of the tree
+        * @return Tree order
+        */
        size_t            GetOrder() { return m_Order;     }
 
+       /**
+        * @brief Print tree structure to output stream
+        * @param os Output stream
+        */
        void            Print (ostream &os)
        {               m_Root.Print(os);                              }
-       // Generalized ForEach 
+       
+       /**
+        * @brief Apply a function to each key-ObjID pair in the tree
+        * 
+        * Traverses the tree and invokes the provided function with each ObjectInfo
+        * and any additional forwarded arguments.
+        * 
+        * @tparam Func Function type (callable object)
+        * @tparam Args Variadic additional argument types
+        * @param func Function to apply to each element
+        * @param args Additional arguments to forward to func
+        */
        template <typename Func, typename... Args>
        void            ForEach( Func&& func, Args&&... args )
        {               m_Root.ForEach(std::forward<Func>(func), 0, std::forward<Args>(args)...);              }
 
-       // Generalized FirstThat
+       /**
+        * @brief Find first element matching a predicate
+        * 
+        * Traverses the tree until finding an ObjectInfo for which the predicate returns true.
+        * 
+        * @tparam Func Predicate function type
+        * @tparam Args Variadic additional argument types
+        * @param func Predicate function to test each element
+        * @param args Additional arguments to forward to func
+        * @return Pointer to first matching ObjectInfo, or nullptr if none found
+        */
        template <typename Func, typename... Args>
        ObjectInfo*     FirstThat( Func&& func, Args&&... args )
        {               return m_Root.FirstThat(std::forward<Func>(func), 0, std::forward<Args>(args)...);     }
@@ -125,6 +259,12 @@ public:
        //typedef               ObjectInfo iterator;
 private:
        
+       /**
+        * @brief Recursively write a node and its children to output stream
+        * @param os Output stream
+        * @param node Node to write
+        * @return true if write succeeded, false otherwise
+        */
        bool WriteNode(std::ostream& os, BTNode* node) {
            if (!node) return true;
 
@@ -153,7 +293,12 @@ private:
            return true;
        }
 
-
+       /**
+        * @brief Recursively read a node and its children from input stream
+        * @param is Input stream
+        * @param node Node to populate
+        * @return true if read succeeded, false otherwise
+        */
        bool ReadNode(std::istream& is, BTNode* node) {
            if (!node) return false;
 
@@ -191,12 +336,12 @@ private:
        }
 
 protected:
-       BTNode          m_Root;
-       size_t          m_Height;  // height of tree
-       size_t          m_Order;   // order of tree
-       size_t          m_NumKeys; // number of keys
-       bool            m_Unique;  // Accept the elements only once ?
-       mutable         std::shared_mutex m_mutex; //mutable : lockable in const funcs
+       BTNode          m_Root;     /**< Root node of the tree */
+       size_t          m_Height;   /**< Height of tree */
+       size_t          m_Order;    /**< Order of tree */
+       size_t          m_NumKeys;  /**< Total number of keys */
+       bool            m_Unique;   /**< Accept the elements only once ? */
+       mutable         std::shared_mutex m_mutex; /**< Mutex for thread-safe access (mutable: lockable in const funcs) */
 };     
 
 template <typename Trait>
