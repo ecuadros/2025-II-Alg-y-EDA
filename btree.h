@@ -67,9 +67,6 @@ public:
     general_iterator(Container* pContainer = nullptr, Node* pNode = nullptr, size_t indx = 0)
         : m_pContainer(pContainer), m_pNode(pNode), m_Indx(indx) {}
 
-    bool operator==(const iterator& other) const { return m_pNode == other.m_pNode; }
-    bool operator!=(const iterator& other) const { return !(*this == other); }
-
     ObjectInfo& operator*(){ return m_node->m_Keys[m_Indx];}
     ObjectInfo* operator->(){return &(m_node->m_Keys[m_Indx]);}
 
@@ -82,8 +79,10 @@ public:
         return !(*this == other);
     }
 
+    virtual void next() = 0;
+
     iterator& operator++() {
-        (iterator*)(this)->next();
+        next();
         return *this;
     }
 };
@@ -99,7 +98,7 @@ public:
     btree_forward_iterator(const iterator& other)
         : Parent(other.m_pContainer, other.m_pNode) {}
 
-    void next() {
+    void next override() {
         this->m_pNode = this->m_pNode ? (Node*)this->m_pNode->getNext(this->m_Indx) : nullptr;
     }
 };
@@ -119,7 +118,7 @@ public:
     btree_backward_iterator(const iterator& other)
         : Parent(other.m_pContainer, other.m_pNode) {}
 
-    void next() {
+    void next() override{
         this->m_pNode = this->m_pNode ? (Node*)this->m_pNode->getPrev(this->m_Indx) : nullptr;
     }
 };
