@@ -190,7 +190,7 @@ public:
         BTree(BTree&& other) noexcept
        : m_Mutex() 
        {
-              std::unique_lock lock(other.m_Mutex);
+              std::scoped_lock lock(m_Mutex, other.m_Mutex);
 
               m_Order   = std::exchange(other.m_Order, DEFAULT_BTREE_ORDER);
               m_Root    = std::move(other.m_Root); 

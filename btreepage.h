@@ -98,7 +98,7 @@ class CBTreePage //: public SimpleIndex <keyType>
 
         CBTreePage(CBTreePage&& other) noexcept
         : m_Mutex() {  
-                std::unique_lock lock(other.m_nodeMutex);  
+                std::scoped_lock lock(m_Mutex ,other.m_nodeMutex);  
                 
                 m_MinKeys = std::exchange(other.m_MinKeys, 0);
                 m_MaxKeys = std::exchange(other.m_MaxKeys, 0);
