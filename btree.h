@@ -144,6 +144,7 @@ public:
        {
               if (this != &btree  )
               {
+                     std::scoped_lock(m_mutex,btree.m_mutex); //Block both mutex
                      m_Order = btree  .m_Order;
                      m_Root = std::move(btree  .m_Root);
                      m_Height = btree  .m_Height;
@@ -200,7 +201,9 @@ public:
         * @return ObjID if found, -1 otherwise
         */
        ObjIDType       Search (const keyType key)
-       {      ObjIDType ObjID = -1;
+       {      
+              std::shared_lock<std::shared_mutex> lock(m_mutex);
+              ObjIDType ObjID = -1;
               m_Root.Search(key, ObjID);
               return ObjID;
        }
@@ -209,19 +212,30 @@ public:
         * @brief Get total number of keys in the tree
         * @return Number of keys
         */
-       size_t            size()  { return m_NumKeys; }
+       size_t            size()  
+       { 
+              std::shared_lock<std::shared_mutex> lock(m_mutex);
+              return m_NumKeys; 
+       }
        
        /**
         * @brief Get height of the tree
         * @return Tree height
         */
-       size_t            height() { return m_Height;      }
+       size_t            height() 
+       { 
+              std::shared_lock<std::shared_mutex> lock(m_mutex);
+              return m_Height;      
+       }
        
        /**
         * @brief Get order of the tree
         * @return Tree order
         */
-       size_t            GetOrder() { return m_Order;     }
+       size_t            GetOrder() { 
+              std::shared_lock<std::shared_mutex> lock(m_mutex);
+              return m_Order;     
+       }
 
        /**
         * @brief Print tree structure to output stream
