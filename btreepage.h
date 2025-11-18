@@ -25,6 +25,9 @@
 template <typename Trait>
 class BTree;
 
+template <typename Trait>
+class BTreeIterator;
+
 using namespace std;
 
 /**
@@ -166,6 +169,7 @@ class CBTreePage //: public SimpleIndex <keyType>
 // this is the in-memory version of the CBTreePage
 {
        friend class BTree<Trait>;
+       friend class BTreeIterator<Trait>; // Forward iterator
        typedef typename Trait::keyType  keyType;   /**< Key type from trait */
        typedef typename Trait::ObjIDType  ObjIDType; /**< Object ID type from trait */
        typedef typename Trait::CompareF CompareF;   /**< Comparison function type from trait */
@@ -203,6 +207,7 @@ class CBTreePage //: public SimpleIndex <keyType>
                 m_SubPages = std::move(btree.m_SubPages);
                 compare = std::move(btree.compare);
                 m_KeyCount = btree.m_KeyCount;
+                m_Parent = std::move(btree.m_Parent);
 
                 // Leave source in a valid empty state
                 btree.m_KeyCount = 0;
@@ -235,6 +240,7 @@ class CBTreePage //: public SimpleIndex <keyType>
                      m_SubPages = std::move(btree.m_SubPages);
                      compare = std::move(btree.compare);
                      m_KeyCount = btree.m_KeyCount;
+                     m_Parent = std::exchange(btree.m_Parent, nullptr);
 
                      btree.m_KeyCount = 0; // Leave source in valid state
               }
@@ -311,6 +317,7 @@ protected:
        vector<ObjectInfo> m_Keys;     /**< Keys stored in this page */
        vector<BTPage *>m_SubPages;    /**< Child page pointers */
        CompareF compare;              /**< Comparison function object */
+       BTPage* m_Parent;
        
        // TODO: #10 size_t
        size_t  m_KeyCount;  /**< Current number of keys in this page */
@@ -507,7 +514,7 @@ private:
 
 template <typename Trait>
 CBTreePage<Trait>:: CBTreePage(size_t maxKeys, bool unique)
-                               : m_MaxKeys(maxKeys), m_Unique(unique), m_KeyCount(0)
+                               : m_MaxKeys(maxKeys), m_Unique(unique),m_Parent(nullptr), m_KeyCount(0)
 {
        Create();
        SetMaxKeysForChilds(m_MaxKeys);
@@ -722,6 +729,7 @@ void CBTreePage<Trait>::SplitChild(size_t pos)
        // copy the first element to the root
        m_Keys    [pos] = oi1;
        m_SubPages[pos] = pChild1;
+       pChild1->m_Parent = this; 
 
        // copy the second element to the root
        ::insert_at(m_Keys, oi2, pos+1);
@@ -729,6 +737,8 @@ void CBTreePage<Trait>::SplitChild(size_t pos)
        NumberOfKeys()++;
 
        m_SubPages[pos+2] = pChild3;
+       pChild2->m_Parent = this;
+       pChild3->m_Parent = this;
 }
 
 // Ddivide a large page into 3 pages (2m/3 each one)
@@ -755,9 +765,13 @@ void CBTreePage<Trait>::SplitPageInto3(vector<ObjectInfo>& tmpKeys,
        {
                pChild1->m_Keys    [i] = tmpKeys    [i];
                pChild1->m_SubPages[i] = tmpSubPages[i];
+               if (tmpSubPages[i]) // Update parent for moved children
+                        tmpSubPages[i]->m_Parent = pChild1;
                pChild1->NumberOfKeys()++;
        }
        pChild1->m_SubPages[i] = tmpSubPages[i];
+       if (tmpSubPages[i])  // Update parent for last child
+               tmpSubPages[i]->m_Parent = pChild1;
 
        // first element to go up !
        oi1 = tmpKeys[i++];
@@ -772,9 +786,13 @@ void CBTreePage<Trait>::SplitPageInto3(vector<ObjectInfo>& tmpKeys,
        {
                pChild2->m_Keys    [j] = tmpKeys    [i];
                pChild2->m_SubPages[j] = tmpSubPages[i];
+               if (tmpSubPages[i])  // Update parent for moved children
+                       tmpSubPages[i]->m_Parent = pChild2;
                pChild2->NumberOfKeys()++;
        }
        pChild2->m_SubPages[j] = tmpSubPages[i];
+       if (tmpSubPages[i])  // Update parent for last child
+               tmpSubPages[i]->m_Parent = pChild2;
 
        // copy the second element to the root
        oi2 = tmpKeys[i++];
@@ -788,9 +806,13 @@ void CBTreePage<Trait>::SplitPageInto3(vector<ObjectInfo>& tmpKeys,
        {
                pChild3->m_Keys    [j] = tmpKeys    [i];
                pChild3->m_SubPages[j] = tmpSubPages[i];
+               if (tmpSubPages[i])  // Update parent for moved children
+                       tmpSubPages[i]->m_Parent = pChild3;
                pChild3->NumberOfKeys()++;
        }
        pChild3->m_SubPages[j] = tmpSubPages[i];
+       if (tmpSubPages[i])  // Update parent for last child
+               tmpSubPages[i]->m_Parent = pChild3;
 }
 
 template <typename Trait>
@@ -803,14 +825,17 @@ bool CBTreePage<Trait>::SplitRoot(){
        // copy the first element to the root
        m_Keys    [0] = oi1;
        m_SubPages[0] = pChild1;
+       pChild1->m_Parent = this;  // Update parent pointer
        NumberOfKeys()++;
 
        // copy the second element to the root
        m_Keys    [1] = oi2;
        m_SubPages[1] = pChild2;
+       pChild2->m_Parent = this;  // Update parent pointer
        NumberOfKeys()++;
 
        m_SubPages[2] = pChild3;
+       pChild3->m_Parent = this;  // Update parent pointer
        return true;
 }
 
@@ -972,12 +997,17 @@ bt_ErrorCode CBTreePage<Trait>::Merge(size_t pos)
        {
                pChild1->m_Keys    [i] = tmpKeys    [i];
                pChild1->m_SubPages[i] = tmpSubPages[i];
+               if (tmpSubPages[i])  // Update parent for moved children
+                       tmpSubPages[i]->m_Parent = pChild1;
                pChild1->NumberOfKeys()++;
        }
        pChild1->m_SubPages[i] = tmpSubPages[i];
+       if (tmpSubPages[i])  // Update parent for last child
+               tmpSubPages[i]->m_Parent = pChild1;
 
        m_Keys    [pos-1] = tmpKeys[i];
        m_SubPages[pos-1] = pChild1;
+       pChild1->m_Parent = this;  // Update parent pointer
 
        ::remove(m_Keys    , pos);
        ::remove(m_SubPages, pos);
@@ -991,10 +1021,15 @@ bt_ErrorCode CBTreePage<Trait>::Merge(size_t pos)
        {
                pChild2->m_Keys    [i] = tmpKeys    [j];
                pChild2->m_SubPages[i] = tmpSubPages[j];
+               if (tmpSubPages[j])  // Update parent for moved children
+                       tmpSubPages[j]->m_Parent = pChild2;
                pChild2->NumberOfKeys()++;
        }
        pChild2->m_SubPages[i] = tmpSubPages[j];
+       if (tmpSubPages[j])  // Update parent for last child
+               tmpSubPages[j]->m_Parent = pChild2;
        m_SubPages[ pos ]          = pChild2;
+       pChild2->m_Parent = this;  // Update parent pointer
 
        if( Underflow() )
                return bt_underflow;
@@ -1032,9 +1067,13 @@ bt_ErrorCode CBTreePage<Trait>::MergeRoot()
        {
                m_Keys    [i] = tmpKeys    [i];
                m_SubPages[i] = tmpSubPages[i];
+               if (tmpSubPages[i])  // Update parent for moved children
+                       tmpSubPages[i]->m_Parent = this;
                NumberOfKeys()++;
        }
        m_SubPages[i] = tmpSubPages[i];
+       if (tmpSubPages[i])  // Update parent for last child
+               tmpSubPages[i]->m_Parent = this;
 
        //Print(cout);
        pChild1->Destroy();

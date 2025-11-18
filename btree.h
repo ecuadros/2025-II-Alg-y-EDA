@@ -82,6 +82,10 @@ class BTree // this is the full version of the BTree
 
            }
        };
+public:
+       friend class BTreeIterator<Trait>;
+       typedef BTreeIterator<Trait> iterator;
+
 
 public:
        //typedef ObjectInfo iterator;
@@ -342,6 +346,24 @@ protected:
        size_t          m_NumKeys;  /**< Total number of keys */
        bool            m_Unique;   /**< Accept the elements only once ? */
        mutable         std::shared_mutex m_mutex; /**< Mutex for thread-safe access (mutable: lockable in const funcs) */
+
+public:
+       iterator begin()
+       {
+               std::shared_lock<std::shared_mutex> lock(m_mutex);  // Shared lock: Multiple threads can access it at the same time (Just lecture)   
+               if (m_NumKeys == 0)
+                       return end();
+               // Descender hasta el hijo más a la izquierda
+               BTNode* page = &m_Root;
+               while (!page->m_SubPages.empty() && page->m_SubPages[0] != nullptr)
+                       page = page->m_SubPages[0];
+               return iterator(page, 0);
+       }
+
+       iterator end()
+       {
+               return iterator(nullptr, 0);
+       }
 };     
 
 template <typename Trait>
@@ -411,6 +433,109 @@ std::ostream& operator<<(std::ostream& os,  BTree<Trait>& tree) {
        << ", keys=" << tree.m_NumKeys << "\n";
     tree.Print(os);  
     return os;
+}
+
+
+template <typename Trait>
+class BTreeIterator
+{
+       friend class BTree<Trait>;
+       typedef CBTreePage<Trait> BTPage;
+       typedef typename BTPage::ObjectInfo ObjectInfo;
+
+private:
+       BTPage* m_CurrentPage;
+       size_t m_CurrentIndex;
+
+       // Constructor
+       BTreeIterator(BTPage* page, size_t index): m_CurrentPage(page), m_CurrentIndex(index){}
+
+public:
+       using iterator_category = std::forward_iterator_tag; // custom forward iterator
+       using value_type = ObjectInfo;
+       using difference_type = std::ptrdiff_t; // Large enough to represent the diff between any two pointerts to elements on the same array
+       using pointer = ObjectInfo*;
+       using reference = ObjectInfo&;
+
+       // Default constructor
+       BTreeIterator(): m_CurrentPage(nullptr), m_CurrentIndex(0){}
+
+       // Reference
+       ObjectInfo& operator*(){ return m_CurrentPage->m_Keys[m_CurrentIndex];}
+
+       // Access to members
+       ObjectInfo* operator->() { return &(m_CurrentPage->m_Keys[m_CurrentIndex]);}
+
+       BTreeIterator& operator++();
+
+       BTreeIterator operator++(int){
+              BTreeIterator temp = *this;
+              ++(*this);
+              return temp;
+       }
+
+       bool operator==(const BTreeIterator& other) const {
+              if(m_CurrentPage == nullptr && other.m_CurrentPage == nullptr)
+                     return true;
+              return m_CurrentPage == other.m_CurrentPage && m_CurrentIndex == other.m_CurrentIndex;
+       }
+
+       bool operator!=(const BTreeIterator& other) const{
+              return !(*this == other);
+       }
+
+};
+
+template <typename Trait>
+BTreeIterator<Trait>& BTreeIterator<Trait>::operator++()
+{
+       if (!m_CurrentPage) return *this;
+
+       // Si hay hijo derecho, ir al leftmost de ese subárbol
+       BTPage* rightChild = m_CurrentPage->m_SubPages[m_CurrentIndex + 1];
+       if (rightChild != nullptr) {
+               BTPage* leftmost = rightChild;
+               while (leftmost->m_SubPages[0] != nullptr) {
+                       leftmost = leftmost->m_SubPages[0];
+               }
+               m_CurrentPage = leftmost;
+               m_CurrentIndex = 0;
+               return *this;
+       }
+
+       // Avanzar en el nodo actual si hay más keys a la derecha
+       if (m_CurrentIndex + 1 < m_CurrentPage->m_KeyCount) {
+               m_CurrentIndex++;
+               return *this;
+       }
+
+       // Subir al padre hasta encontrar una key no visitada
+       BTPage* child = m_CurrentPage;
+       BTPage* parent = m_CurrentPage->m_Parent;
+
+       while (parent != nullptr) {
+               // Buscar posición del hijo en el arreglo de SubPages del padre
+               size_t childPos = 0;
+               while (childPos <= parent->m_KeyCount && parent->m_SubPages[childPos] != child) {
+                       childPos++;
+               }
+
+               // Si encontramos una key válida en el padre, esa es la siguiente
+               if (childPos < parent->m_KeyCount) {
+                       m_CurrentPage = parent;
+                       m_CurrentIndex = childPos;
+                       return *this;
+               }
+
+               // Continuar subiendo en el árbol
+               child = parent;
+               parent = parent->m_Parent;
+       }
+
+       // No hay más elementos,  end
+       m_CurrentPage = nullptr;
+       m_CurrentIndex = 0;
+       return *this;
 }
 
 #endif
