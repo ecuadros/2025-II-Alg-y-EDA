@@ -1000,39 +1000,44 @@ public:
         return *this;
     }
     
-    // Operador -- (retroceder backward)
-    BTreeIterator& operator--() {
-        if (!current_page) return *this;
-        
-        // Si hay hijo izquierdo, bajar por ahí
-        if (current_page->m_SubPages[current_index]) {
-            stack.push_back({current_page, current_index});
-            current_page = current_page->m_SubPages[current_index];
-            // Ir al más derecho
-            while (current_page->m_SubPages[current_page->m_KeyCount]) {
-                stack.push_back({current_page, current_page->m_KeyCount});
-                current_page = current_page->m_SubPages[current_page->m_KeyCount];
-            }
-            current_index = current_page->m_KeyCount - 1;
-        }
-        // Si no hay hijo izquierdo, retroceder en la misma página
-        else if (current_index > 0) {
-            current_index--;
-        }
-        // Si estamos al inicio de la página, subir al padre
-        else {
-            if (stack.empty()) {
-                current_page = nullptr;
-            } else {
-                auto parent = stack.back();
-                stack.pop_back();
-                current_page = parent.first;
-                current_index = parent.second;
-                if (current_index > 0) current_index--;
-            }
-        }
-        return *this;
-    }
+    // Operador ++(int) - retroceder (backward)
+	BTreeIterator operator++(int) {
+		BTreeIterator temp = *this;  // devuelve el valor previo (semántica de post-incremento)
+
+		if (!current_page) return temp;
+
+		// Si hay hijo izquierdo, bajar por ahí
+		if (current_index >= 0 && current_page->m_SubPages[current_index]) {
+			stack.push_back({current_page, current_index});
+			current_page = current_page->m_SubPages[current_index];
+
+			// Ir al más derecho
+			while (current_page->m_SubPages[current_page->m_KeyCount]) {
+				stack.push_back({current_page, current_page->m_KeyCount});
+				current_page = current_page->m_SubPages[current_page->m_KeyCount];
+			}
+
+			current_index = current_page->m_KeyCount - 1;
+		}
+		// Retroceder dentro de la página
+		else if (current_index > 0) {
+			current_index--;
+		}
+		// Subir al padre
+		else {
+			if (stack.empty()) {
+				current_page = nullptr;
+			} else {
+				auto parent = stack.back();
+				stack.pop_back();
+				current_page = parent.first;
+				current_index = parent.second;
+			}
+		}
+
+		return temp;
+	}
+
     
     // Comparación
     bool operator==(const BTreeIterator& other) const {
