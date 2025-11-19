@@ -28,6 +28,9 @@ class BTree;
 template <typename Trait>
 class BTreeIterator;
 
+template <typename Trait>
+class BTreeReverseIterator;
+
 using namespace std;
 
 /**
@@ -170,6 +173,7 @@ class CBTreePage //: public SimpleIndex <keyType>
 {
        friend class BTree<Trait>;
        friend class BTreeIterator<Trait>; // Forward iterator
+       friend class BTreeReverseIterator<Trait>; //Backward Iterator
        typedef typename Trait::keyType  keyType;   /**< Key type from trait */
        typedef typename Trait::ObjIDType  ObjIDType; /**< Object ID type from trait */
        typedef typename Trait::CompareF CompareF;   /**< Comparison function type from trait */

@@ -85,6 +85,8 @@ class BTree // this is the full version of the BTree
 public:
        friend class BTreeIterator<Trait>;
        typedef BTreeIterator<Trait> iterator;
+       friend class BTreeReverseIterator<Trait>;
+       typedef BTreeReverseIterator<Trait> reverse_iterator;
 
 
 public:
@@ -121,18 +123,14 @@ public:
         * @brief Move constructor - transfers ownership of tree resources
         * @param btree Source BTree to move from (left in valid but unspecified state)
         */
-       BTree(BTree&& btree) noexcept:
-              m_Root(std::move(btree.m_Root)),
-              m_Height(btree.m_Height),
-              m_Order(btree.m_Order),
-              m_NumKeys(btree.m_NumKeys),
-              m_Unique(btree.m_Unique)
+       BTree(BTree&& btree) noexcept
        {
-       
-       // Leaving btree in "valid" state
-              btree.m_Height = 1;
-              btree.m_NumKeys = 0;
-
+              std::scoped_lock lock(m_mutex, btree.m_mutex);
+              m_Root = std::move(btree.m_Root);
+              m_Height = std::exchange(btree.m_Height,1);
+              m_Order = btree.m_Order,
+              m_Unique = btree.m_Unique;
+              m_NumKeys = std::exchange(btree.m_NumKeys,0);
        }
        
        /**
@@ -378,6 +376,29 @@ public:
        {
                return iterator(nullptr, 0);
        }
+
+       reverse_iterator rbegin()
+       {
+               std::shared_lock<std::shared_mutex> lock(m_mutex);  // Shared lock: Multiple threads can access it at the same time (Just lecture)   
+
+               if (m_NumKeys == 0)
+                       return rend();
+
+               // Descender hasta el hijo más a la derecha
+               BTNode* page = &m_Root;
+               while (!page->m_SubPages.empty()){
+                     size_t idx = page->m_KeyCount;
+                     page = page->m_SubPages[idx];
+               }
+
+
+               return reverse_iterator(page, page->m_KeyCount - 1);
+       }
+      
+       reverse_iterator rend()
+       {
+               return reverse_iterator(nullptr, 0);
+       }
 };     
 
 template <typename Trait>
@@ -551,5 +572,108 @@ BTreeIterator<Trait>& BTreeIterator<Trait>::operator++()
        m_CurrentIndex = 0;
        return *this;
 }
+
+template <typename Trait>
+class BTreeReverseIterator
+{
+       friend class BTree<Trait>;
+       typedef CBTreePage<Trait> BTPage;
+       typedef typename BTPage::ObjectInfo ObjectInfo;
+
+private:
+       BTPage* m_CurrentPage;
+       size_t m_CurrentIndex;
+
+       // Constructor
+       BTreeReverseIterator(BTPage* page, size_t index): m_CurrentPage(page), m_CurrentIndex(index){}
+
+public:
+       using iterator_category = std::forward_iterator_tag; // custom forward iterator
+       using value_type = ObjectInfo;
+       using difference_type = std::ptrdiff_t; // Large enough to represent the diff between any two pointerts to elements on the same array
+       using pointer = ObjectInfo*;
+       using reference = ObjectInfo&;
+
+       // Default constructor
+       BTreeReverseIterator(): m_CurrentPage(nullptr), m_CurrentIndex(0){}
+
+       // Reference
+       ObjectInfo& operator*(){ return m_CurrentPage->m_Keys[m_CurrentIndex];}
+
+       // Access to members
+       ObjectInfo* operator->() { return &(m_CurrentPage->m_Keys[m_CurrentIndex]);}
+
+       BTreeReverseIterator& operator++();
+
+       BTreeReverseIterator operator++(int){
+              BTreeReverseIterator temp = *this;
+              ++(*this);
+              return temp;
+       }
+
+       bool operator==(const BTreeReverseIterator& other) const {
+              if(m_CurrentPage == nullptr && other.m_CurrentPage == nullptr)
+                     return true;
+              return m_CurrentPage == other.m_CurrentPage && m_CurrentIndex == other.m_CurrentIndex;
+       }
+
+       bool operator!=(const BTreeReverseIterator& other) const{
+              return !(*this == other);
+       }
+
+};
+
+template <typename Trait>
+BTreeReverseIterator<Trait>& BTreeReverseIterator<Trait>::operator++()
+{
+       if (!m_CurrentPage) return *this;
+
+       // Si hay hijo izquierdo, ir al rightmost de ese subárbol
+       BTPage* leftChild = m_CurrentPage->m_SubPages[m_CurrentIndex];
+       if (leftChild != nullptr) {
+               BTPage* rightmost = leftChild;
+               while (rightmost->m_SubPages[rightmost->m_KeyCount] != nullptr) {
+                       rightmost = rightmost->m_SubPages[rightmost->m_KeyCount];
+               }
+               m_CurrentPage = rightmost;
+               m_CurrentIndex = rightmost->m_KeyCount - 1;
+               return *this;
+       }
+
+       // Retroceder en el nodo actual si hay más keys a la izquierda
+       if (m_CurrentIndex > 0) {
+               m_CurrentIndex--;
+               return *this;
+       }
+
+       // Subir al padre hasta encontrar una key no visitada
+       BTPage* child = m_CurrentPage;
+       BTPage* parent = m_CurrentPage->m_Parent;
+
+       while (parent != nullptr) {
+               // Buscar posición del hijo en el arreglo de SubPages del padre
+               size_t childPos = 0;
+               while (childPos <= parent->m_KeyCount && parent->m_SubPages[childPos] != child) {
+                       childPos++;
+               }
+
+               // Si el hijo está en una posición > 0, la key anterior del padre es la siguiente
+               if (childPos > 0) {
+                       m_CurrentPage = parent;
+                       m_CurrentIndex = childPos - 1;
+                       return *this;
+               }
+
+               // Continuar subiendo en el árbol
+               child = parent;
+               parent = parent->m_Parent;
+       }
+
+       // No hay más elementos, end
+       m_CurrentPage = nullptr;
+       m_CurrentIndex = 0;
+       return *this;
+}
+
 
 #endif
