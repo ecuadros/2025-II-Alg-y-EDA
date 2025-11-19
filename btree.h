@@ -36,27 +36,31 @@ public:
 
 public:
     using iterator = BTreeIterator<Trait>;
-    
-    // Funciones begin() y end()
-    iterator begin() {
-        std::shared_lock<std::shared_mutex> lock(m_Mutex);
-        if (m_NumKeys == 0) return iterator(nullptr);
-        iterator it(&m_Root);
-        return it;
-    }
-    
-    iterator end() {
-        return iterator(nullptr);
-    }
-    
-    // Para backward iteration
-    iterator rbegin() {
-        std::shared_lock<std::shared_mutex> lock(m_Mutex);
-        if (m_NumKeys == 0) return iterator(nullptr);
-        iterator it(&m_Root);
-        it.goToLast();
-        return it;
-    }
+  // Forward iteration
+	iterator begin() {
+		std::shared_lock<std::shared_mutex> lock(m_Mutex);
+		if (m_NumKeys == 0) return iterator(nullptr);
+		iterator it(&m_Root);
+		return it;
+	}
+
+	iterator end() {
+		return iterator(nullptr);
+	}
+
+	// Backward iteration
+	reverse_iterator rbegin() {
+		std::shared_lock<std::shared_mutex> lock(m_Mutex);
+		if (m_NumKeys == 0) return reverse_iterator(nullptr);
+		reverse_iterator it(&m_Root);
+		it.goToLast();
+		return it;
+	}
+
+	reverse_iterator rend() {
+		return reverse_iterator(nullptr);
+	}
+
 protected:
 	BTNode          m_Root;
 	size_t          m_Height;  // height of tree

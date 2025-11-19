@@ -922,121 +922,163 @@ void CBTreePage<Trait>::MovePage(BTPage *pChildPage, vector<ObjectInfo> &tmpKeys
 	tmpSubPages.push_back(pChildPage->m_SubPages[i]);
 	pChildPage->clear();
 }
-template <typename Trait>
-class BTreeIterator {
-public:
-    using BTPage = CBTreePage<Trait>;
-    using ObjectInfo = typename BTPage::ObjectInfo;
-    
-private:
-    BTPage* current_page;
-    size_t current_index;
-    std::vector<std::pair<BTPage*, size_t>> stack; // para recordar el camino
-    
-public:
-    BTreeIterator(BTPage* page = nullptr, size_t idx = 0) 
-        : current_page(page), current_index(idx) {
-        if (page) goToFirst();
-    }
-    
-    // Ir al primer elemento (más a la izquierda)
-    void goToFirst() {
-        while (current_page && current_page->m_SubPages[0]) {
-            stack.push_back({current_page, 0});
-            current_page = current_page->m_SubPages[0];
-        }
-        current_index = 0;
-    }
-    
-    // Ir al último elemento (más a la derecha)
-    void goToLast() {
-        while (current_page && current_page->m_SubPages[current_page->m_KeyCount]) {
-            stack.push_back({current_page, current_page->m_KeyCount});
-            current_page = current_page->m_SubPages[current_page->m_KeyCount];
-        }
-        if (current_page && current_page->m_KeyCount > 0)
-            current_index = current_page->m_KeyCount - 1;
-    }
-    
-    // Operador * para acceder al elemento
-    ObjectInfo& operator*() {
-        return current_page->m_Keys[current_index];
-    }
-    
-    ObjectInfo* operator->() {
-        return &(current_page->m_Keys[current_index]);
-    }
-    
-    // Operador ++ (avanzar forward)
-    BTreeIterator& operator++() {
-        if (!current_page) return *this;
-        
-        // Si hay hijo derecho, bajar por ahí
-        if (current_page->m_SubPages[current_index + 1]) {
-            stack.push_back({current_page, current_index});
-            current_page = current_page->m_SubPages[current_index + 1];
-            // Ir al más izquierdo
-            while (current_page->m_SubPages[0]) {
-                stack.push_back({current_page, 0});
-                current_page = current_page->m_SubPages[0];
-            }
-            current_index = 0;
-        }
-        // Si no hay hijo derecho, avanzar en la misma página
-        else if (current_index + 1 < current_page->m_KeyCount) {
-            current_index++;
-        }
-        // Si llegamos al final de la página, subir al padre
-        else {
-            if (stack.empty()) {
-                current_page = nullptr; // fin del recorrido
-            } else {
-                auto parent = stack.back();
-                stack.pop_back();
-                current_page = parent.first;
-                current_index = parent.second;
-            }
-        }
-        return *this;
-    }
-    
-    // Operador ++(int) - retroceder (backward)
-	BTreeIterator operator++(int) {
-		BTreeIterator temp = *this;  // devuelve el valor previo (semántica de post-incremento)
+// 
+//  FORWARD ITERATOR  (operator++ avanza hacia adelante)
 
-		if (!current_page) return temp;
 
-		// Si hay hijo izquierdo, bajar por ahí
-		if (current_index >= 0 && current_page->m_SubPages[current_index]) {
-			stack.push_back({current_page, current_index});
-			current_page = current_page->m_SubPages[current_index];
+	template<typename Trait>
+	class BTreeForwardIterator {
+	public:
+		using BTPage = CBTreePage<Trait>;
+		using ObjectInfo = typename BTPage::ObjectInfo;
 
-			// Ir al más derecho
-			while (current_page->m_SubPages[current_page->m_KeyCount]) {
+	private:
+		BTPage* current_page;
+		size_t current_index;
+		std::vector<std::pair<BTPage*, size_t>> stack;
+
+	public:
+		BTreeForwardIterator(BTPage* page = nullptr, size_t idx = 0)
+			: current_page(page), current_index(idx) 
+		{
+			if (page) goToFirst();
+		}
+
+		void goToFirst() {
+			while (current_page && current_page->m_SubPages[0]) {
+				stack.push_back({current_page, 0});
+				current_page = current_page->m_SubPages[0];
+			}
+			current_index = 0;
+		}
+
+		void goToLast() {
+			while (current_page && current_page->m_SubPages[current_page->m_KeyCount]) {
 				stack.push_back({current_page, current_page->m_KeyCount});
 				current_page = current_page->m_SubPages[current_page->m_KeyCount];
 			}
+			if (current_page)
+				current_index = current_page->m_KeyCount - 1;
+		}
 
-			current_index = current_page->m_KeyCount - 1;
-		}
-		// Retroceder dentro de la página
-		else if (current_index > 0) {
-			current_index--;
-		}
-		// Subir al padre
-		else {
-			if (stack.empty()) {
-				current_page = nullptr;
-			} else {
-				auto parent = stack.back();
-				stack.pop_back();
-				current_page = parent.first;
-				current_index = parent.second;
+		ObjectInfo& operator*() { return current_page->m_Keys[current_index]; }
+		ObjectInfo* operator->() { return &(current_page->m_Keys[current_index]); }
+
+	
+		BTreeForwardIterator& operator++() {
+			if (!current_page) return *this;
+
+			// Si hay hijo derecho
+			if (current_page->m_SubPages[current_index + 1]) {
+				stack.push_back({current_page, current_index});
+				current_page = current_page->m_SubPages[current_index + 1];
+
+				while (current_page->m_SubPages[0]) {
+					stack.push_back({current_page, 0});
+					current_page = current_page->m_SubPages[0];
+				}
+				current_index = 0;
 			}
+			// Avanzar en la misma página
+			else if (current_index + 1 < current_page->m_KeyCount) {
+				current_index++;
+			}
+			// Subir al padre
+			else {
+				if (stack.empty()) {
+					current_page = nullptr;
+				} else {
+					auto parent = stack.back();
+					stack.pop_back();
+					current_page = parent.first;
+					current_index = parent.second;
+				}
+			}
+
+			return *this;
+		}
+	};
+
+
+	//  BACKWARD ITERATOR (operator++ retrocede hacia atrás) 
+
+
+	template<typename Trait>
+	class BTreeBackwardIterator {
+	public:
+		using BTPage = CBTreePage<Trait>;
+		using ObjectInfo = typename BTPage::ObjectInfo;
+
+	private:
+		BTPage* current_page;
+		size_t current_index;
+		std::vector<std::pair<BTPage*, size_t>> stack;
+
+	public:
+		BTreeBackwardIterator(BTPage* page = nullptr, size_t idx = 0)
+			: current_page(page), current_index(idx)
+		{
+			if (page) goToLast();
 		}
 
-		return temp;
-	}
+		void goToFirst() {
+			while (current_page && current_page->m_SubPages[0]) {
+				stack.push_back({current_page, 0});
+				current_page = current_page->m_SubPages[0];
+			}
+			current_index = 0;
+		}
+
+		void goToLast() {
+			while (current_page && current_page->m_SubPages[current_page->m_KeyCount]) {
+				stack.push_back({current_page, current_page->m_KeyCount});
+				current_page = current_page->m_SubPages[current_page->m_KeyCount];
+			}
+			if (current_page)
+				current_index = current_page->m_KeyCount - 1;
+		}
+
+		ObjectInfo& operator*() { return current_page->m_Keys[current_index]; }
+		ObjectInfo* operator->() { return &(current_page->m_Keys[current_index]); }
+
+		
+		BTreeBackwardIterator& operator++() {
+			if (!current_page) return *this;
+
+			// Si hay hijo izquierdo
+			if (current_page->m_SubPages[current_index]) {
+				stack.push_back({current_page, current_index});
+				current_page = current_page->m_SubPages[current_index];
+
+				while (current_page->m_SubPages[current_page->m_KeyCount]) {
+					stack.push_back({current_page, current_page->m_KeyCount});
+					current_page = current_page->m_SubPages[current_page->m_KeyCount];
+				}
+
+				current_index = current_page->m_KeyCount - 1;
+			}
+			// Retroceder en la misma página
+			else if (current_index > 0) {
+				current_index--;
+			}
+			// Subir al padre
+			else {
+				if (stack.empty()) {
+					current_page = nullptr;
+				} else {
+					auto parent = stack.back();
+					stack.pop_back();
+					current_page = parent.first;
+					current_index = parent.second;
+
+					if (current_index > 0)
+						current_index--;
+				}
+			}
+
+			return *this;
+		}
+	};
 
     
     // Comparación
