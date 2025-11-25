@@ -7,28 +7,24 @@
 
 const size_t MaxHeight = 5; 
 
-template <typename _keyType, typename _ObjIDType>
+template <typename _keyType, typename _ObjIDType, typename _CompareFn = std::less<_keyType>>
 struct BTreeTrait
 {
-       using keyType = _keyType;
-       using ObjIDType = _ObjIDType;
-       // TODO: agregar funcion de comparacion
+	using keyType = _keyType;
+	using ObjIDType = _ObjIDType;
+	using CompareFn = _CompareFn;
 };
 
 template <typename Trait>
 class BTree // this is the full version of the BTree
 {
-       typedef typename Trait::keyType    keyType;
-       typedef typename Trait::ObjIDType    ObjIDType;
-       
-       typedef CBTreePage <Trait> BTNode;// useful shorthand
+	typedef typename Trait::keyType    keyType;
+	typedef typename Trait::ObjIDType    ObjIDType;
+	typedef typename Trait::CompareFn    CompareFn;
+
+	typedef CBTreePage <Trait> BTNode;// useful shorthand
 
 public:
-       //typedef ObjectInfo iterator;
-       typedef typename BTNode::lpfnForEach2    lpfnForEach2;
-       typedef typename BTNode::lpfnForEach3    lpfnForEach3;
-       typedef typename BTNode::lpfnFirstThat2  lpfnFirstThat2;
-       typedef typename BTNode::lpfnFirstThat3  lpfnFirstThat3;
        typedef typename BTNode::ObjectInfo      ObjectInfo;
 
 public:
@@ -58,15 +54,16 @@ public:
 
        void            Print (ostream &os)
        {               m_Root.Print(os);                              }
-       void            ForEach( lpfnForEach2 lpfn, void *pExtra1 )
-       {               m_Root.ForEach(lpfn, 0, pExtra1);              }
-       void            ForEach( lpfnForEach3 lpfn, void *pExtra1, void *pExtra2)
-       {               m_Root.ForEach(lpfn, 0, pExtra1, pExtra2);     }
-       ObjectInfo*     FirstThat( lpfnFirstThat2 lpfn, void *pExtra1 )
-       {               return m_Root.FirstThat(lpfn, 0, pExtra1);     }
-       ObjectInfo*     FirstThat( lpfnFirstThat3 lpfn, void *pExtra1, void *pExtra2)
-       {               return m_Root.FirstThat(lpfn, 0, pExtra1, pExtra2);   }
-       //typedef               ObjectInfo iterator;
+
+       // ForEach generalizado
+       template <typename Func, typename... Args>
+       void ForEach(Func&& func, Args&&... args)
+       {               m_Root.ForEach(std::forward<Func>(func), 0, std::forward<Args>(args)...); }
+
+       // FirstThat generalizado
+       template <typename Pred, typename... Args>
+       ObjectInfo* FirstThat(Pred&& pred, Args&&... args)
+       {               return m_Root.FirstThat(std::forward<Pred>(pred), 0, std::forward<Args>(args)...); }
 
 protected:
        BTNode          m_Root;
