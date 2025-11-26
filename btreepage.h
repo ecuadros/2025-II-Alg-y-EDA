@@ -88,8 +88,8 @@ class CBTreePage //: public SimpleIndex <keyType>
        //typedef void (*lpfnForEach2)(ObjectInfo &info, size_t level, void *pExtra1);
        //typedef void (*lpfnForEach3)(ObjectInfo &info, size_t level, void *pExtra1, void *pExtra2);
 
-       typedef ObjectInfo *(*lpfnFirstThat2)(ObjectInfo &info, size_t level, void *pExtra1);
-       typedef ObjectInfo *(*lpfnFirstThat3)(ObjectInfo &info, size_t level, void *pExtra1, void *pExtra2);
+       //typedef ObjectInfo *(*lpfnFirstThat2)(ObjectInfo &info, size_t level, void *pExtra1);
+       //typedef ObjectInfo *(*lpfnFirstThat3)(ObjectInfo &info, size_t level, void *pExtra1, void *pExtra2);
  public:
        CBTreePage(size_t maxKeys, bool unique = true);
        virtual ~CBTreePage();
@@ -115,8 +115,24 @@ class CBTreePage //: public SimpleIndex <keyType>
                 m_SubPages[m_KeyCount]->ForEach(std::forward<Func>(func), level + 1, std::forward<Args>(args)...);
         }
        // TODO: #8 You may reduce these two function by using Invoke
-       ObjectInfo*     FirstThat(lpfnFirstThat2 lpfn, size_t level, void *pExtra1);
-       ObjectInfo*     FirstThat(lpfnFirstThat3 lpfn, size_t level, void *pExtra1, void *pExtra2);
+       //ObjectInfo*     FirstThat(lpfnFirstThat2 lpfn, size_t level, void *pExtra1);
+       //ObjectInfo*     FirstThat(lpfnFirstThat3 lpfn, size_t level, void *pExtra1, void *pExtra2);
+       // FirstThat generalizado
+        template <typename Pred, typename... Args>
+        ObjectInfo* FirstThat(Pred&& pred, size_t level, Args&&... args) {
+        ObjectInfo* pTmp = nullptr;
+        for (size_t i = 0; i < m_KeyCount; i++) {
+                if (m_SubPages[i])
+                        if ((pTmp = m_SubPages[i]->FirstThat(std::forward<Pred>(pred), level + 1, std::forward<Args>(args)...)))
+                                return pTmp;
+                if (std::invoke(std::forward<Pred>(pred), m_Keys[i], level, std::forward<Args>(args)...))
+                        return &m_Keys[i];
+        }
+        if (m_SubPages[m_KeyCount])
+                if ((pTmp = m_SubPages[m_KeyCount]->FirstThat(std::forward<Pred>(pred), level + 1, std::forward<Args>(args)...)))
+                        return pTmp;
+                return nullptr;
+        }
 
 protected:
        // TODO: #9 change by size_t
@@ -574,7 +590,7 @@ void CBTreePage<Trait>::ForEach(lpfnForEach3 lpfn, size_t level, void *pExtra1, 
 */
 // Apicar una funcion hasta encontrar el 1er elemento
 // aque que retorne true ante esta funcion
-template <typename Trait>
+/*template <typename Trait>
 typename CBTreePage<Trait>::ObjectInfo *
 CBTreePage<Trait>::FirstThat(lpfnFirstThat2 lpfn, size_t level, void *pExtra1)
 {
@@ -610,7 +626,7 @@ CBTreePage<Trait>::FirstThat(lpfnFirstThat3 lpfn,size_t level, void *pExtra1, vo
                if( (pTmp = m_SubPages[m_KeyCount]->FirstThat(lpfn, level+1, pExtra1, pExtra2) ) )
                        return pTmp;
        return 0;
-}
+}*/
 
 template <typename Trait>
 bt_ErrorCode CBTreePage<Trait>::Remove(const keyType &key, const ObjIDType ObjID)

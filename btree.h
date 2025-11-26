@@ -28,8 +28,8 @@ public:
        //typedef ObjectInfo iterator;
        //typedef typename BTNode::lpfnForEach2    lpfnForEach2;
        //typedef typename BTNode::lpfnForEach3    lpfnForEach3;
-       typedef typename BTNode::lpfnFirstThat2  lpfnFirstThat2;
-       typedef typename BTNode::lpfnFirstThat3  lpfnFirstThat3;
+       //typedef typename BTNode::lpfnFirstThat2  lpfnFirstThat2;
+       //typedef typename BTNode::lpfnFirstThat3  lpfnFirstThat3;
        typedef typename BTNode::ObjectInfo      ObjectInfo;
 
 public:
@@ -67,10 +67,14 @@ public:
        void ForEach(Func&& func, Args&&... args) {
               m_Root.ForEach(std::forward<Func>(func), 0, std::forward<Args>(args)...);
        }
-       ObjectInfo*     FirstThat( lpfnFirstThat2 lpfn, void *pExtra1 )
+       /*ObjectInfo*     FirstThat( lpfnFirstThat2 lpfn, void *pExtra1 )
        {               return m_Root.FirstThat(lpfn, 0, pExtra1);     }
        ObjectInfo*     FirstThat( lpfnFirstThat3 lpfn, void *pExtra1, void *pExtra2)
-       {               return m_Root.FirstThat(lpfn, 0, pExtra1, pExtra2);   }
+       {               return m_Root.FirstThat(lpfn, 0, pExtra1, pExtra2);   }*/
+       template <typename Pred, typename... Args>
+       typename BTNode::ObjectInfo* FirstThat(Pred&& pred, Args&&... args) {
+              return m_Root.FirstThat(std::forward<Pred>(pred), 0, std::forward<Args>(args)...);
+       }
        //typedef               ObjectInfo iterator;
 
 protected:
