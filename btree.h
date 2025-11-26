@@ -63,16 +63,18 @@ public:
        bool            Insert (const keyType key, const long ObjID);
        bool            Remove (const keyType key, const long ObjID);
        ObjIDType       Search (const keyType key)
-       {      ObjIDType ObjID = -1;
+       {
+              std::shared_lock<std::shared_mutex> lock(m_Mutex);
+              ObjIDType ObjID = -1;
               m_Root.Search(key, ObjID);
               return ObjID;
        }
-       size_t            size()  { return m_NumKeys; }
-       size_t            height() { return m_Height;      }
-       size_t            GetOrder() { return m_Order;     }
+       size_t            size()  { std::shared_lock<std::shared_mutex> lock(m_Mutex); return m_NumKeys; }
+       size_t            height() { std::shared_lock<std::shared_mutex> lock(m_Mutex); return m_Height;      }
+       size_t            GetOrder() { std::shared_lock<std::shared_mutex> lock(m_Mutex); return m_Order;     }
 
        void            Print (ostream &os)
-       {               m_Root.Print(os);                              }
+       {               std::shared_lock<std::shared_mutex> lock(m_Mutex); m_Root.Print(os);                              }
        /*void            ForEach( lpfnForEach2 lpfn, void *pExtra1 )
        {               m_Root.ForEach(lpfn, 0, pExtra1);              }
        void            ForEach( lpfnForEach3 lpfn, void *pExtra1, void *pExtra2)
@@ -97,6 +99,7 @@ public:
        using iterator = BTreeForwardIterator<Trait>;
        iterator begin()
        {
+              std::shared_lock<std::shared_mutex> lock(m_Mutex);
               if (m_NumKeys == 0) {
                      return iterator();
               }
@@ -110,6 +113,7 @@ public:
        using reverse_iterator = BTreeBackwardIterator<Trait>;
        reverse_iterator rbegin()
        {
+              std::shared_lock<std::shared_mutex> lock(m_Mutex);
               if (m_NumKeys == 0) {
                      return reverse_iterator();
               }
@@ -141,6 +145,7 @@ public:
        // Read
        void Read(std::istream& is)
        {
+              std::lock_guard<std::shared_mutex> lock(m_Mutex);
               /*keyType key;
               ObjIDType objId;
               while (is >> key >> objId) {
@@ -164,7 +169,15 @@ public:
                      keyType key;
                      ObjIDType objId;
                      if (keyStream >> key && objIdStream >> objId) {
-                            Insert(key, objId);
+                            //Insert(key, objId);
+                            bt_ErrorCode error = m_Root.Insert(key, objId);
+                            if (error != bt_duplicate) {
+                                   m_NumKeys++;
+                                   if (error == bt_overflow) {
+                                          m_Root.SplitRoot();
+                                          m_Height++;
+                                   }
+                            }
                      }
               }
        }
@@ -189,6 +202,7 @@ protected:
 
 template <typename Trait>
 bool BTree<Trait>::Insert(const keyType key, const long ObjID){
+       std::lock_guard<std::shared_mutex> lock(m_Mutex);
        bt_ErrorCode error = m_Root.Insert(key, ObjID);
        if( error == bt_duplicate )
                return false;
@@ -203,6 +217,7 @@ bool BTree<Trait>::Insert(const keyType key, const long ObjID){
 template <typename Trait>
 bool BTree<Trait>::Remove (const keyType key, const long ObjID)
 {
+       std::lock_guard<std::shared_mutex> lock(m_Mutex);
        bt_ErrorCode error = m_Root.Remove(key, ObjID);
        if( error == bt_duplicate || error == bt_nofound )
                return false;
