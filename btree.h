@@ -79,6 +79,12 @@ public:
        {               m_Root.ForEach(lpfn, 0, pExtra1);              }
        void            ForEach( lpfnForEach3 lpfn, void *pExtra1, void *pExtra2)
        {               m_Root.ForEach(lpfn, 0, pExtra1, pExtra2);     }*/
+       /// @brief Aplica una funcion a cada elemento del arbol (recorrido inorden).
+       /// @tparam Func Tipo de funcion que recibe (ObjectInfo&, size_t nivel, Args...).
+       /// @tparam Args Tipos de argumentos adicionales.
+       /// @param func La funcion que se aplicara a cada elemento.
+       /// @param args Argumentos adicionales que se pasan a la funcion.
+       /// @note Es seguro para hilos: usa un lock compartido durante todo el recorrido.
        template <typename Func, typename... Args>
        void ForEach(Func&& func, Args&&... args) {
               std::shared_lock<std::shared_mutex> lock(m_Mutex);
@@ -88,6 +94,13 @@ public:
        {               return m_Root.FirstThat(lpfn, 0, pExtra1);     }
        ObjectInfo*     FirstThat( lpfnFirstThat3 lpfn, void *pExtra1, void *pExtra2)
        {               return m_Root.FirstThat(lpfn, 0, pExtra1, pExtra2);   }*/
+       /// @brief Busca el primer elemento que cumple una condicion.
+       /// @tparam Pred Tipo de predicado que retorna bool para (ObjectInfo&, size_t nivel, Args...).
+       /// @tparam Args Tipos de argumentos adicionales.
+       /// @param pred El predicado que se evalua para cada elemento.
+       /// @param args Argumentos adicionales que se pasan al predicado.
+       /// @return Puntero al primer elemento que cumple la condicion, o nullptr si no se encuentra.
+       /// @note Es seguro para hilos: usa un lock compartido durante la busqueda.
        template <typename Pred, typename... Args>
        typename BTNode::ObjectInfo* FirstThat(Pred&& pred, Args&&... args) {
               std::shared_lock<std::shared_mutex> lock(m_Mutex);
