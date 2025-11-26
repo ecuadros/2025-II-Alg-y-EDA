@@ -14,7 +14,10 @@
 
 template <typename Trait>
 class BTree;
-
+template <typename Trait>
+class BTreeForwardIterator;
+template <typename Trait>
+class BTreeBackwardIterator;
 using namespace std;
 enum bt_ErrorCode {bt_ok, bt_overflow, bt_underflow, bt_duplicate, bt_nofound, bt_rootmerged};
 
@@ -78,6 +81,10 @@ class CBTreePage //: public SimpleIndex <keyType>
 // this is the in-memory version of the CBTreePage
 {
        friend class BTree<Trait>;
+       template <typename T>
+       friend class BTreeForwardIterator;
+       template <typename T>
+       friend class BTreeBackwardIterator;
        typedef typename Trait::keyType  keyType;
        typedef typename Trait::ObjIDType  ObjIDType;
        typedef typename Trait::CompareFn    CompareFn; 
@@ -857,5 +864,194 @@ void CBTreePage<Trait>::MovePage(BTPage *pChildPage, vector<ObjectInfo> &tmpKeys
        tmpSubPages.push_back(pChildPage->m_SubPages[i]);
        pChildPage->clear();
 }
+
+// forward iterator
+template<typename Trait>
+class BTreeForwardIterator {
+public:
+       using BTPage = CBTreePage<Trait>;
+       using ObjectInfo = typename BTPage::ObjectInfo;
+       using iterator_category = std::forward_iterator_tag;
+       using value_type = ObjectInfo;
+       using difference_type = std::ptrdiff_t;
+       using pointer = ObjectInfo*;
+       using reference = ObjectInfo&;
+private:
+       BTPage* m_CurrentPage;
+       size_t m_CurrentIndex;
+       std::vector<std::pair<BTPage*, size_t>> m_Stack;
+public:
+       BTreeForwardIterator()
+              : m_CurrentPage(nullptr), m_CurrentIndex(0)
+       {}
+       explicit BTreeForwardIterator(BTPage* root)
+              : m_CurrentPage(root), m_CurrentIndex(0)
+       {
+              if (m_CurrentPage && m_CurrentPage->m_KeyCount > 0) {
+                     goToLeftmost();
+              } else {
+                     m_CurrentPage = nullptr;
+              }
+       }
+       void goToLeftmost()
+       {
+              while (m_CurrentPage->m_SubPages[0]) {
+                     m_Stack.push_back({m_CurrentPage, 0});
+                     m_CurrentPage = m_CurrentPage->m_SubPages[0];
+              }
+              m_CurrentIndex = 0;
+       }
+       reference operator*()
+       {
+              return m_CurrentPage->m_Keys[m_CurrentIndex];
+       }
+       pointer operator->()
+       {
+              return &(m_CurrentPage->m_Keys[m_CurrentIndex]);
+       }
+       BTreeForwardIterator& operator++()
+       {
+              if (!m_CurrentPage) return *this;
+              if (m_CurrentPage->m_SubPages[m_CurrentIndex + 1]) {
+                     m_Stack.push_back({m_CurrentPage, m_CurrentIndex + 1});
+                     m_CurrentPage = m_CurrentPage->m_SubPages[m_CurrentIndex + 1];
+                     goToLeftmost();
+                     return *this;
+              }
+              if (m_CurrentIndex + 1 < m_CurrentPage->m_KeyCount) {
+                     m_CurrentIndex++;
+                     return *this;
+              }
+              while (!m_Stack.empty()) {
+                     auto [parentPage, parentIndex] = m_Stack.back();
+                     m_Stack.pop_back();
+                     if (parentIndex < parentPage->m_KeyCount) {
+                            m_CurrentPage = parentPage;
+                            m_CurrentIndex = parentIndex;
+                            return *this;
+                     }
+              }
+              m_CurrentPage = nullptr;
+              m_CurrentIndex = 0;
+              return *this;
+       }
+       BTreeForwardIterator operator++(int)
+       {
+              BTreeForwardIterator tmp = *this;
+              ++(*this);
+              return tmp;
+       }
+       bool operator==(const BTreeForwardIterator& other) const
+       {
+              if (m_CurrentPage == nullptr && other.m_CurrentPage == nullptr) {
+                     return true;
+              }
+              return m_CurrentPage == other.m_CurrentPage &&
+                     m_CurrentIndex == other.m_CurrentIndex;
+       }
+       bool operator!=(const BTreeForwardIterator& other) const
+       {
+              return !(*this == other);
+       }
+};
+
+// backward iteratro
+template<typename Trait>
+class BTreeBackwardIterator {
+public:
+       using BTPage = CBTreePage<Trait>;
+       using ObjectInfo = typename BTPage::ObjectInfo;
+       using iterator_category = std::forward_iterator_tag;
+       using value_type = ObjectInfo;
+       using difference_type = std::ptrdiff_t;
+       using pointer = ObjectInfo*;
+       using reference = ObjectInfo&;
+private:
+       BTPage* m_CurrentPage;
+       size_t m_CurrentIndex;
+       std::vector<std::pair<BTPage*, size_t>> m_Stack;
+public:
+       BTreeBackwardIterator()
+              : m_CurrentPage(nullptr), m_CurrentIndex(0)
+       {}
+       explicit BTreeBackwardIterator(BTPage* root)
+              : m_CurrentPage(root), m_CurrentIndex(0)
+       {
+              if (m_CurrentPage && m_CurrentPage->m_KeyCount > 0) {
+                     goToRightmost();
+              } else {
+                     m_CurrentPage = nullptr;
+              }
+       }
+       void goToRightmost()
+       {
+              while (m_CurrentPage->m_SubPages[m_CurrentPage->m_KeyCount]) {
+                     m_Stack.push_back({m_CurrentPage, m_CurrentPage->m_KeyCount});
+                     m_CurrentPage = m_CurrentPage->m_SubPages[m_CurrentPage->m_KeyCount];
+              }
+              m_CurrentIndex = m_CurrentPage->m_KeyCount - 1;
+       }
+       reference operator*()
+       {
+              return m_CurrentPage->m_Keys[m_CurrentIndex];
+       }
+       pointer operator->()
+       {
+              return &(m_CurrentPage->m_Keys[m_CurrentIndex]);
+       }
+       BTreeBackwardIterator& operator++()
+       {
+              if (!m_CurrentPage) return *this;
+              if (m_CurrentPage->m_SubPages[m_CurrentIndex]) {
+                     m_Stack.push_back({m_CurrentPage, m_CurrentIndex});
+                     m_CurrentPage = m_CurrentPage->m_SubPages[m_CurrentIndex];
+                     goToRightmostInSubtree();
+                     return *this;
+              }
+              if (m_CurrentIndex > 0) {
+                     m_CurrentIndex--;
+                     return *this;
+              }
+              while (!m_Stack.empty()) {
+                     auto [parentPage, parentIndex] = m_Stack.back();
+                     m_Stack.pop_back();
+                     if (parentIndex > 0) {
+                            m_CurrentPage = parentPage;
+                            m_CurrentIndex = parentIndex - 1;
+                            return *this;
+                     }
+              }
+              m_CurrentPage = nullptr;
+              m_CurrentIndex = 0;
+              return *this;
+       }
+       BTreeBackwardIterator operator++(int)
+       {
+              BTreeBackwardIterator tmp = *this;
+              ++(*this);
+              return tmp;
+       }
+       bool operator==(const BTreeBackwardIterator& other) const
+       {
+              if (m_CurrentPage == nullptr && other.m_CurrentPage == nullptr) {
+                     return true;
+              }
+              return m_CurrentPage == other.m_CurrentPage &&
+                     m_CurrentIndex == other.m_CurrentIndex;
+       }
+       bool operator!=(const BTreeBackwardIterator& other) const
+       {
+              return !(*this == other);
+       }
+private:
+       void goToRightmostInSubtree()
+       {
+              while (m_CurrentPage->m_SubPages[m_CurrentPage->m_KeyCount]) {
+                     m_Stack.push_back({m_CurrentPage, m_CurrentPage->m_KeyCount});
+                     m_CurrentPage = m_CurrentPage->m_SubPages[m_CurrentPage->m_KeyCount];
+              }
+              m_CurrentIndex = m_CurrentPage->m_KeyCount - 1;
+       }
+};
 
 #endif

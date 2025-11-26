@@ -31,7 +31,15 @@ int main (int argc, char ** argv){
        //bt.Read(std::cin);
        BTree<BTreeTrait<char, long>> bt2(BTreeSize);
        bt2.Read("arbol_manual.txt");
-       cout << bt2;
+       //cout << bt2;
+
+        /*for (auto& info : bt) {
+                std::cout << info.key << std::endl;
+        }*/
+
+        for (auto it = bt.rbegin(); it != bt.rend(); ++it) {
+                std::cout << it->key << std::endl;
+        }
 
        /*for (i = 0; keys2[i]; i++)
        {

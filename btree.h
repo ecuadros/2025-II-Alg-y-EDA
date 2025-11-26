@@ -93,6 +93,33 @@ public:
        }
        //typedef               ObjectInfo iterator;
 
+       // Forward iterator
+       using iterator = BTreeForwardIterator<Trait>;
+       iterator begin()
+       {
+              if (m_NumKeys == 0) {
+                     return iterator();
+              }
+              return iterator(&m_Root);
+       }
+       iterator end()
+       {
+              return iterator();
+       }
+       // Backward iterator
+       using reverse_iterator = BTreeBackwardIterator<Trait>;
+       reverse_iterator rbegin()
+       {
+              if (m_NumKeys == 0) {
+                     return reverse_iterator();
+              }
+              return reverse_iterator(&m_Root);
+       }
+       reverse_iterator rend()
+       {
+              return reverse_iterator();
+       }
+
        template <typename T>
        friend std::ostream& operator<<(std::ostream& os, BTree<T>& obj);
 
@@ -193,4 +220,6 @@ std::ostream& operator<<(std::ostream& os, BTree<Trait>& obj)
        obj.m_Root.Print(os);
        return os;
 }
+
+
 #endif
