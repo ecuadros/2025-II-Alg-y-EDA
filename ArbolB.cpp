@@ -14,16 +14,33 @@ const char * keys2 = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuv
 const char * keys3 = "�DYZakHIUwxVJ203ejOP9Qc8AdtuEop1XvTRghSNbW567BfiCqrs4FGMyz�KLlmn";
 
 const int BTreeSize = 3;
-int main (int argc, char * argv){
+int main (int argc, char ** argv){
        int result, i;
-       BTree <char> bt (BTreeSize);
+       BTree <BTreeTrait<char, long>> bt (BTreeSize);
        for (i = 0; keys1[i]; i++)
        {
                //cout<<"Inserting "<<keys1[i]<<endl;
                result = bt.Insert(keys1[i], i*i);
                //bt.Print(cout);
        }
-       bt.Print(cout);
+       //cout << bt;
+       //bt.Write(std::cout);
+       std::ofstream archivo("arbol_manual.txt");
+       bt.Write(archivo);
+       archivo.close();
+       //bt.Read(std::cin);
+       BTree<BTreeTrait<char, long>> bt2(BTreeSize);
+       bt2.Read("arbol_manual.txt");
+       //cout << bt2;
+
+        /*for (auto& info : bt) {
+                std::cout << info.key << std::endl;
+        }*/
+
+        for (auto it = bt.rbegin(); it != bt.rend(); ++it) {
+                std::cout << it->key << std::endl;
+        }
+
        /*for (i = 0; keys2[i]; i++)
        {
                cout << "Searching " << keys2[i] << " ";

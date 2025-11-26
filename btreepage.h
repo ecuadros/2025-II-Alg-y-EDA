@@ -14,26 +14,29 @@
 
 template <typename Trait>
 class BTree;
-
+template <typename Trait>
+class BTreeForwardIterator;
+template <typename Trait>
+class BTreeBackwardIterator;
 using namespace std;
 enum bt_ErrorCode {bt_ok, bt_overflow, bt_underflow, bt_duplicate, bt_nofound, bt_rootmerged};
 
-template <typename Container, typename ObjType>
-size_t binary_search(Container& container, size_t first, size_t last, ObjType &object)
+template <typename Container, typename ObjType, typename Compare>
+size_t binary_search(Container& container, size_t first, size_t last, ObjType &object,  Compare comp)
 {
        if( first >= last )
                return first;
        while( first < last )
        {
                size_t mid = (first+last)/2;
-               if( object == (ObjType)container[mid ] )
+               if( !comp(container[mid], object) && !comp(object, container[mid]) )
                        return mid;
-               if( object > (ObjType)container[mid ] )
+               if( comp(container[mid], object) )
                        first = mid+1;
                else
                        last  = mid;
        }
-       if( object <= (ObjType)container[first] )
+       if( !comp(object, container[first]) )
                return first;
        return last;
 }
@@ -78,19 +81,25 @@ class CBTreePage //: public SimpleIndex <keyType>
 // this is the in-memory version of the CBTreePage
 {
        friend class BTree<Trait>;
+       template <typename T>
+       friend class BTreeForwardIterator;
+       template <typename T>
+       friend class BTreeBackwardIterator;
        typedef typename Trait::keyType  keyType;
-       typedef typename Trait::ObjIDType  ObjIDType; 
+       typedef typename Trait::ObjIDType  ObjIDType;
+       typedef typename Trait::CompareFn    CompareFn; 
 
        typedef CBTreePage<Trait>    BTPage;         // useful shorthand
        typedef tagObjectInfo<keyType, ObjIDType> ObjectInfo;
 
-       typedef void (*lpfnForEach2)(ObjectInfo &info, size_t level, void *pExtra1);
-       typedef void (*lpfnForEach3)(ObjectInfo &info, size_t level, void *pExtra1, void *pExtra2);
+       //typedef void (*lpfnForEach2)(ObjectInfo &info, size_t level, void *pExtra1);
+       //typedef void (*lpfnForEach3)(ObjectInfo &info, size_t level, void *pExtra1, void *pExtra2);
 
-       typedef ObjectInfo *(*lpfnFirstThat2)(ObjectInfo &info, size_t level, void *pExtra1);
-       typedef ObjectInfo *(*lpfnFirstThat3)(ObjectInfo &info, size_t level, void *pExtra1, void *pExtra2);
+       //typedef ObjectInfo *(*lpfnFirstThat2)(ObjectInfo &info, size_t level, void *pExtra1);
+       //typedef ObjectInfo *(*lpfnFirstThat3)(ObjectInfo &info, size_t level, void *pExtra1, void *pExtra2);
  public:
        CBTreePage(size_t maxKeys, bool unique = true);
+       CBTreePage() : m_MaxKeys(0), m_Unique(true), m_KeyCount(0) { }
        virtual ~CBTreePage();
 
        bt_ErrorCode    Insert (const keyType &key, const ObjIDType ObjID);
@@ -100,12 +109,38 @@ class CBTreePage //: public SimpleIndex <keyType>
 
        // TODO: #6 change by Invoke
        // TODO: #7 ForEach must be a template inside this template
-       void            ForEach(lpfnForEach2 lpfn, size_t level, void *pExtra1);
-       void            ForEach(lpfnForEach3 lpfn, size_t level, void *pExtra1, void *pExtra2);
-
+       //void            ForEach(lpfnForEach2 lpfn, size_t level, void *pExtra1);
+       //void            ForEach(lpfnForEach3 lpfn, size_t level, void *pExtra1, void *pExtra2);
+        // ForEach generalizado
+        template <typename Func, typename... Args>
+        void ForEach(Func&& func, size_t level, Args&&... args) {
+        for (size_t i = 0; i < m_KeyCount; i++) {
+                if (m_SubPages[i])
+                        m_SubPages[i]->ForEach(std::forward<Func>(func), level + 1, std::forward<Args>(args)...);
+                std::invoke(std::forward<Func>(func), m_Keys[i], level, std::forward<Args>(args)...);
+        }
+        if (m_SubPages[m_KeyCount])
+                m_SubPages[m_KeyCount]->ForEach(std::forward<Func>(func), level + 1, std::forward<Args>(args)...);
+        }
        // TODO: #8 You may reduce these two function by using Invoke
-       ObjectInfo*     FirstThat(lpfnFirstThat2 lpfn, size_t level, void *pExtra1);
-       ObjectInfo*     FirstThat(lpfnFirstThat3 lpfn, size_t level, void *pExtra1, void *pExtra2);
+       //ObjectInfo*     FirstThat(lpfnFirstThat2 lpfn, size_t level, void *pExtra1);
+       //ObjectInfo*     FirstThat(lpfnFirstThat3 lpfn, size_t level, void *pExtra1, void *pExtra2);
+       // FirstThat generalizado
+        template <typename Pred, typename... Args>
+        ObjectInfo* FirstThat(Pred&& pred, size_t level, Args&&... args) {
+        ObjectInfo* pTmp = nullptr;
+        for (size_t i = 0; i < m_KeyCount; i++) {
+                if (m_SubPages[i])
+                        if ((pTmp = m_SubPages[i]->FirstThat(std::forward<Pred>(pred), level + 1, std::forward<Args>(args)...)))
+                                return pTmp;
+                if (std::invoke(std::forward<Pred>(pred), m_Keys[i], level, std::forward<Args>(args)...))
+                        return &m_Keys[i];
+        }
+        if (m_SubPages[m_KeyCount])
+                if ((pTmp = m_SubPages[m_KeyCount]->FirstThat(std::forward<Pred>(pred), level + 1, std::forward<Args>(args)...)))
+                        return pTmp;
+        return nullptr;
+        }
 
 protected:
        // TODO: #9 change by size_t
@@ -117,6 +152,7 @@ protected:
        bool m_isRoot;
        //size_t           NextNode; // address of next node at same level
        //size_t RecAddr; // address of this node in the BTree file
+       CompareFn Compfn;
        vector<ObjectInfo> m_Keys;
        vector<BTPage *>m_SubPages;
        
@@ -192,10 +228,10 @@ CBTreePage<Trait>::~CBTreePage()
 
 template <typename Trait>
 bt_ErrorCode CBTreePage<Trait>::Insert(const keyType& key, const ObjIDType ObjID){
-       size_t pos = binary_search(m_Keys, 0, m_KeyCount, key);
+       size_t pos = binary_search(m_Keys, 0, m_KeyCount, key, Compfn);
        bt_ErrorCode error = bt_ok;
 
-       if( pos < m_KeyCount && (keyType)m_Keys[pos] == key && m_Unique)
+       if( pos < m_KeyCount && !Compfn(m_Keys[pos].key, key) && !Compfn(key, m_Keys[pos].key) && m_Unique)
                return bt_duplicate; // this key is duplicate
 
        if( !m_SubPages[pos] ){ // this is a leave
@@ -488,20 +524,20 @@ bool CBTreePage<Trait>::SplitRoot(){
 template <typename Trait>
 bool CBTreePage<Trait>::Search(const keyType &key, ObjIDType &ObjID)
 {
-       size_t pos = binary_search(m_Keys, 0, m_KeyCount, key);
+       size_t pos = binary_search(m_Keys, 0, m_KeyCount, key,  Compfn);
        if( pos >= m_KeyCount )
        {    if( m_SubPages[pos] )
                 return m_SubPages[pos]->Search(key, ObjID);
             else
                 return false;
        }
-       if( key == m_Keys[pos].key )
+       if( !Compfn(key, m_Keys[pos].key) && !Compfn(m_Keys[pos].key, key) )
        {
                ObjID = m_Keys[pos].ObjID;
                m_Keys[pos].UseCounter++;
                return true;
        }
-       if( key < m_Keys[pos].key )
+       if( Compfn(key, m_Keys[pos].key) )
                if( m_SubPages[pos] )
                        return m_SubPages[pos]->Search(key, ObjID);
        return false;
@@ -519,7 +555,7 @@ void CBTreePage<keyType, ObjIDType>::ForEachReverse(lpfnForEach2 lpfn, size_t le
                        m_SubPages[i]->ForEach(lpfn, level+1, pExtra1);
        }
 }*/
-
+/*
 template <typename Trait>
 void CBTreePage<Trait>::ForEach(lpfnForEach2 lpfn, size_t level, void *pExtra1)
 {
@@ -532,7 +568,7 @@ void CBTreePage<Trait>::ForEach(lpfnForEach2 lpfn, size_t level, void *pExtra1)
        if( m_SubPages[m_KeyCount] )
                m_SubPages[m_KeyCount]->ForEach(lpfn, level+1, pExtra1);
 }
-
+*/
 /*template <typename keyType, typename ObjIDType>
 void CBTreePage<keyType, ObjIDType>::ForEachReverse(lpfnForEach3 lpfn,
                                                                                                        size_t level, void *pExtra1, void *pExtra2)
@@ -546,7 +582,7 @@ void CBTreePage<keyType, ObjIDType>::ForEachReverse(lpfnForEach3 lpfn,
                        m_SubPages[i]->ForEach(lpfn, level+1, pExtra1, pExtra2);
        }
 }*/
-
+/*
 template <typename Trait>
 void CBTreePage<Trait>::ForEach(lpfnForEach3 lpfn, size_t level, void *pExtra1, void *pExtra2)
 {
@@ -559,10 +595,10 @@ void CBTreePage<Trait>::ForEach(lpfnForEach3 lpfn, size_t level, void *pExtra1, 
        if( m_SubPages[m_KeyCount] )
                m_SubPages[m_KeyCount]->ForEach(lpfn, level+1, pExtra1, pExtra2);
 }
-
+*/
 // Apicar una funcion hasta encontrar el 1er elemento
 // aque que retorne true ante esta funcion
-template <typename Trait>
+/*template <typename Trait>
 typename CBTreePage<Trait>::ObjectInfo *
 CBTreePage<Trait>::FirstThat(lpfnFirstThat2 lpfn, size_t level, void *pExtra1)
 {
@@ -598,14 +634,14 @@ CBTreePage<Trait>::FirstThat(lpfnFirstThat3 lpfn,size_t level, void *pExtra1, vo
                if( (pTmp = m_SubPages[m_KeyCount]->FirstThat(lpfn, level+1, pExtra1, pExtra2) ) )
                        return pTmp;
        return 0;
-}
+}*/
 
 template <typename Trait>
 bt_ErrorCode CBTreePage<Trait>::Remove(const keyType &key, const ObjIDType ObjID)
 {
        bt_ErrorCode error = bt_ok;
-       size_t pos = binary_search(m_Keys, 0, m_KeyCount, key);
-       if( pos < NumberOfKeys() && key == m_Keys[pos].key /*&& m_Keys[pos].m_ObjID == ObjID*/) // We found it !
+       size_t pos = binary_search(m_Keys, 0, m_KeyCount, key, Compfn);
+       if( pos < NumberOfKeys() && !Compfn(key, m_Keys[pos].key) && !Compfn(m_Keys[pos].key, key) /*&& m_Keys[pos].m_ObjID == ObjID*/) // We found it !
        {
                // This is a leave: First
                if( !m_SubPages[pos+1] )  // This is a leave ? FIRST CASE !
@@ -631,7 +667,7 @@ bt_ErrorCode CBTreePage<Trait>::Remove(const keyType &key, const ObjIDType ObjID
        }
        else if( pos == NumberOfKeys() ) // it is not here, go by the last branch
                error = m_SubPages[pos]->Remove(key, ObjID);
-       else if( key <= m_Keys[pos].key ) // = is because identical keys are inserted on left (see Insert)
+       else if( !Compfn(m_Keys[pos].key, key) ) // = is because identical keys are inserted on left (see Insert)
        {        if( m_SubPages[pos] )
                        error = m_SubPages[pos]->Remove(key, ObjID);
                else
@@ -777,8 +813,8 @@ void Print(tagObjectInfo<keyType, ObjIDType> &info, size_t level, void *pExtra)
 template <typename Trait>
 void CBTreePage<Trait>::Print(ostream & os)
 {
-       lpfnForEach2 lpfn = &::Print<keyType, ObjIDType>;
-       ForEach(lpfn, 0, &os);
+       //lpfnForEach2 lpfn = &::Print<keyType, ObjIDType>;
+       ForEach(::Print<keyType, ObjIDType>, 0, &os);
 }
 
 template <typename Trait>
@@ -828,5 +864,194 @@ void CBTreePage<Trait>::MovePage(BTPage *pChildPage, vector<ObjectInfo> &tmpKeys
        tmpSubPages.push_back(pChildPage->m_SubPages[i]);
        pChildPage->clear();
 }
+
+// forward iterator
+template<typename Trait>
+class BTreeForwardIterator {
+public:
+       using BTPage = CBTreePage<Trait>;
+       using ObjectInfo = typename BTPage::ObjectInfo;
+       using iterator_category = std::forward_iterator_tag;
+       using value_type = ObjectInfo;
+       using difference_type = std::ptrdiff_t;
+       using pointer = ObjectInfo*;
+       using reference = ObjectInfo&;
+private:
+       BTPage* m_CurrentPage;
+       size_t m_CurrentIndex;
+       std::vector<std::pair<BTPage*, size_t>> m_Stack;
+public:
+       BTreeForwardIterator()
+              : m_CurrentPage(nullptr), m_CurrentIndex(0)
+       {}
+       explicit BTreeForwardIterator(BTPage* root)
+              : m_CurrentPage(root), m_CurrentIndex(0)
+       {
+              if (m_CurrentPage && m_CurrentPage->m_KeyCount > 0) {
+                     goToLeftmost();
+              } else {
+                     m_CurrentPage = nullptr;
+              }
+       }
+       void goToLeftmost()
+       {
+              while (m_CurrentPage->m_SubPages[0]) {
+                     m_Stack.push_back({m_CurrentPage, 0});
+                     m_CurrentPage = m_CurrentPage->m_SubPages[0];
+              }
+              m_CurrentIndex = 0;
+       }
+       reference operator*()
+       {
+              return m_CurrentPage->m_Keys[m_CurrentIndex];
+       }
+       pointer operator->()
+       {
+              return &(m_CurrentPage->m_Keys[m_CurrentIndex]);
+       }
+       BTreeForwardIterator& operator++()
+       {
+              if (!m_CurrentPage) return *this;
+              if (m_CurrentPage->m_SubPages[m_CurrentIndex + 1]) {
+                     m_Stack.push_back({m_CurrentPage, m_CurrentIndex + 1});
+                     m_CurrentPage = m_CurrentPage->m_SubPages[m_CurrentIndex + 1];
+                     goToLeftmost();
+                     return *this;
+              }
+              if (m_CurrentIndex + 1 < m_CurrentPage->m_KeyCount) {
+                     m_CurrentIndex++;
+                     return *this;
+              }
+              while (!m_Stack.empty()) {
+                     auto [parentPage, parentIndex] = m_Stack.back();
+                     m_Stack.pop_back();
+                     if (parentIndex < parentPage->m_KeyCount) {
+                            m_CurrentPage = parentPage;
+                            m_CurrentIndex = parentIndex;
+                            return *this;
+                     }
+              }
+              m_CurrentPage = nullptr;
+              m_CurrentIndex = 0;
+              return *this;
+       }
+       BTreeForwardIterator operator++(int)
+       {
+              BTreeForwardIterator tmp = *this;
+              ++(*this);
+              return tmp;
+       }
+       bool operator==(const BTreeForwardIterator& other) const
+       {
+              if (m_CurrentPage == nullptr && other.m_CurrentPage == nullptr) {
+                     return true;
+              }
+              return m_CurrentPage == other.m_CurrentPage &&
+                     m_CurrentIndex == other.m_CurrentIndex;
+       }
+       bool operator!=(const BTreeForwardIterator& other) const
+       {
+              return !(*this == other);
+       }
+};
+
+// backward iteratro
+template<typename Trait>
+class BTreeBackwardIterator {
+public:
+       using BTPage = CBTreePage<Trait>;
+       using ObjectInfo = typename BTPage::ObjectInfo;
+       using iterator_category = std::forward_iterator_tag;
+       using value_type = ObjectInfo;
+       using difference_type = std::ptrdiff_t;
+       using pointer = ObjectInfo*;
+       using reference = ObjectInfo&;
+private:
+       BTPage* m_CurrentPage;
+       size_t m_CurrentIndex;
+       std::vector<std::pair<BTPage*, size_t>> m_Stack;
+public:
+       BTreeBackwardIterator()
+              : m_CurrentPage(nullptr), m_CurrentIndex(0)
+       {}
+       explicit BTreeBackwardIterator(BTPage* root)
+              : m_CurrentPage(root), m_CurrentIndex(0)
+       {
+              if (m_CurrentPage && m_CurrentPage->m_KeyCount > 0) {
+                     goToRightmost();
+              } else {
+                     m_CurrentPage = nullptr;
+              }
+       }
+       void goToRightmost()
+       {
+              while (m_CurrentPage->m_SubPages[m_CurrentPage->m_KeyCount]) {
+                     m_Stack.push_back({m_CurrentPage, m_CurrentPage->m_KeyCount});
+                     m_CurrentPage = m_CurrentPage->m_SubPages[m_CurrentPage->m_KeyCount];
+              }
+              m_CurrentIndex = m_CurrentPage->m_KeyCount - 1;
+       }
+       reference operator*()
+       {
+              return m_CurrentPage->m_Keys[m_CurrentIndex];
+       }
+       pointer operator->()
+       {
+              return &(m_CurrentPage->m_Keys[m_CurrentIndex]);
+       }
+       BTreeBackwardIterator& operator++()
+       {
+              if (!m_CurrentPage) return *this;
+              if (m_CurrentPage->m_SubPages[m_CurrentIndex]) {
+                     m_Stack.push_back({m_CurrentPage, m_CurrentIndex});
+                     m_CurrentPage = m_CurrentPage->m_SubPages[m_CurrentIndex];
+                     goToRightmostInSubtree();
+                     return *this;
+              }
+              if (m_CurrentIndex > 0) {
+                     m_CurrentIndex--;
+                     return *this;
+              }
+              while (!m_Stack.empty()) {
+                     auto [parentPage, parentIndex] = m_Stack.back();
+                     m_Stack.pop_back();
+                     if (parentIndex > 0) {
+                            m_CurrentPage = parentPage;
+                            m_CurrentIndex = parentIndex - 1;
+                            return *this;
+                     }
+              }
+              m_CurrentPage = nullptr;
+              m_CurrentIndex = 0;
+              return *this;
+       }
+       BTreeBackwardIterator operator++(int)
+       {
+              BTreeBackwardIterator tmp = *this;
+              ++(*this);
+              return tmp;
+       }
+       bool operator==(const BTreeBackwardIterator& other) const
+       {
+              if (m_CurrentPage == nullptr && other.m_CurrentPage == nullptr) {
+                     return true;
+              }
+              return m_CurrentPage == other.m_CurrentPage &&
+                     m_CurrentIndex == other.m_CurrentIndex;
+       }
+       bool operator!=(const BTreeBackwardIterator& other) const
+       {
+              return !(*this == other);
+       }
+private:
+       void goToRightmostInSubtree()
+       {
+              while (m_CurrentPage->m_SubPages[m_CurrentPage->m_KeyCount]) {
+                     m_Stack.push_back({m_CurrentPage, m_CurrentPage->m_KeyCount});
+                     m_CurrentPage = m_CurrentPage->m_SubPages[m_CurrentPage->m_KeyCount];
+              }
+              m_CurrentIndex = m_CurrentPage->m_KeyCount - 1;
+       }
+};
 
 #endif
