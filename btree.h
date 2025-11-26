@@ -4,6 +4,8 @@
 #include <iostream>
 #include <mutex>
 #include <shared_mutex>
+#include <fstream>
+#include <string>
 #include "btreepage.h"
 #define DEFAULT_BTREE_ORDER 3
 
@@ -93,6 +95,21 @@ public:
        template <typename T>
        friend std::ostream& operator<<(std::ostream& os, BTree<T>& obj);
 
+       // Write
+       void Write(std::ostream& os)
+       {
+              os << *this;
+       }
+
+       void Write(const std::string& filename)
+       {
+              std::ofstream file(filename);
+              if (file.is_open()) {
+                     Write(file);
+                     file.close();
+              }
+       }
+       
 protected:
        size_t          m_Order;   // order of tree
        BTNode          m_Root;
