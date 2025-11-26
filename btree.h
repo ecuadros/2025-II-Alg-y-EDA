@@ -33,7 +33,7 @@ public:
        typedef typename BTNode::ObjectInfo      ObjectInfo;
 
 public:
-       BTree(size_t order = DEFAULT_BTREE_ORDER, bool unique = true)
+       /*BTree(size_t order = DEFAULT_BTREE_ORDER, bool unique = true)
               : m_Order(order),
                 m_Root(2 * order  + 1, unique),
                 m_Unique(unique),
@@ -41,8 +41,19 @@ public:
        {
               m_Root.SetMaxKeysForChilds(order);
               m_Height = 1;
-       }
+       }*/
        ~BTree() {}
+       // Move constructor
+       BTree(BTree&& other)
+              : m_Order(other.order),
+                m_Root(std::move(other.m_Root)),
+                m_Unique(other.m_Unique),
+                m_NumKeys(other.m_NumKeys)
+                m_Height(other.m_Height)
+       {
+              other.m_NumKeys = 0;
+              other.m_Height = 1;
+       }
        //int           Open (char * name, int mode);
        //int           Create (char * name, int mode);
        //int           Close ();
