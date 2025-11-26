@@ -24,10 +24,14 @@ int main (int argc, char ** argv){
                //bt.Print(cout);
        }
        //cout << bt;
-       bt.Write(std::cout);
+       //bt.Write(std::cout);
        std::ofstream archivo("arbol_manual.txt");
        bt.Write(archivo);
        archivo.close();
+       //bt.Read(std::cin);
+       BTree<BTreeTrait<char, long>> bt2(BTreeSize);
+       bt2.Read("arbol_manual.txt");
+       cout << bt2;
 
        /*for (i = 0; keys2[i]; i++)
        {

@@ -5,6 +5,7 @@
 #include <mutex>
 #include <shared_mutex>
 #include <fstream>
+#include <sstream>
 #include <string>
 #include "btreepage.h"
 #define DEFAULT_BTREE_ORDER 3
@@ -106,6 +107,46 @@ public:
               std::ofstream file(filename);
               if (file.is_open()) {
                      Write(file);
+                     file.close();
+              }
+       }
+
+       // Read
+       void Read(std::istream& is)
+       {
+              /*keyType key;
+              ObjIDType objId;
+              while (is >> key >> objId) {
+                     Insert(key, objId);
+              }*/
+              std::string line;
+              while (std::getline(is, line)) {
+                     if (line.empty()) continue;
+                     size_t start = 0;
+                     while (start < line.size() && line[start] == '\t') {
+                            start++;
+                     }
+
+                     size_t arrowPos = line.find("->", start);
+                     if (arrowPos == std::string::npos) continue;
+                     std::string keyStr = line.substr(start, arrowPos - start);
+                     std::string objIdStr = line.substr(arrowPos + 2);
+                     std::istringstream keyStream(keyStr);
+                     std::istringstream objIdStream(objIdStr);
+
+                     keyType key;
+                     ObjIDType objId;
+                     if (keyStream >> key && objIdStream >> objId) {
+                            Insert(key, objId);
+                     }
+              }
+       }
+
+       void Read(const std::string& filename)
+       {
+              std::ifstream file(filename);
+              if (file.is_open()) {
+                     Read(file);
                      file.close();
               }
        }
