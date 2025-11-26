@@ -14,7 +14,7 @@ const char * keys2 = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuv
 const char * keys3 = "�DYZakHIUwxVJ203ejOP9Qc8AdtuEop1XvTRghSNbW567BfiCqrs4FGMyz�KLlmn";
 
 const int BTreeSize = 3;
-int main (int argc, char * argv){
+int main (int argc, char ** argv){
        int result, i;
        BTree <BTreeTrait<char, long>> bt (BTreeSize);
        for (i = 0; keys1[i]; i++)
@@ -23,7 +23,7 @@ int main (int argc, char * argv){
                result = bt.Insert(keys1[i], i*i);
                //bt.Print(cout);
        }
-       bt.Print(cout);
+       cout << bt;
        /*for (i = 0; keys2[i]; i++)
        {
                cout << "Searching " << keys2[i] << " ";

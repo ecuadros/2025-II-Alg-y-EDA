@@ -2,6 +2,8 @@
 #define __BTREE_H__
 
 #include <iostream>
+#include <mutex>
+#include <shared_mutex>
 #include "btreepage.h"
 #define DEFAULT_BTREE_ORDER 3
 
@@ -33,7 +35,7 @@ public:
        typedef typename BTNode::ObjectInfo      ObjectInfo;
 
 public:
-       /*BTree(size_t order = DEFAULT_BTREE_ORDER, bool unique = true)
+       BTree(size_t order = DEFAULT_BTREE_ORDER, bool unique = true)
               : m_Order(order),
                 m_Root(2 * order  + 1, unique),
                 m_Unique(unique),
@@ -41,18 +43,16 @@ public:
        {
               m_Root.SetMaxKeysForChilds(order);
               m_Height = 1;
-       }*/
+       }
        ~BTree() {}
        // Move constructor
-       BTree(BTree&& other)
-              : m_Order(other.order),
-                m_Root(std::move(other.m_Root)),
-                m_Unique(other.m_Unique),
-                m_NumKeys(other.m_NumKeys)
-                m_Height(other.m_Height)
-       {
-              other.m_NumKeys = 0;
-              other.m_Height = 1;
+       BTree(BTree&& other) {
+              std::lock_guard<std::shared_mutex> lock (other.m_Mutex);
+              m_Order = std::move(other.m_Order);
+              m_Root = std::move(other.m_Root);
+              m_Unique = std::move(other.m_Unique);
+              m_NumKeys = std::move(other.m_NumKeys);
+              m_Height = std::move(other.m_Height);
        }
        //int           Open (char * name, int mode);
        //int           Create (char * name, int mode);
@@ -76,6 +76,7 @@ public:
        {               m_Root.ForEach(lpfn, 0, pExtra1, pExtra2);     }*/
        template <typename Func, typename... Args>
        void ForEach(Func&& func, Args&&... args) {
+              std::shared_lock<std::shared_mutex> lock(m_Mutex);
               m_Root.ForEach(std::forward<Func>(func), 0, std::forward<Args>(args)...);
        }
        /*ObjectInfo*     FirstThat( lpfnFirstThat2 lpfn, void *pExtra1 )
@@ -84,16 +85,21 @@ public:
        {               return m_Root.FirstThat(lpfn, 0, pExtra1, pExtra2);   }*/
        template <typename Pred, typename... Args>
        typename BTNode::ObjectInfo* FirstThat(Pred&& pred, Args&&... args) {
+              std::shared_lock<std::shared_mutex> lock(m_Mutex);
               return m_Root.FirstThat(std::forward<Pred>(pred), 0, std::forward<Args>(args)...);
        }
        //typedef               ObjectInfo iterator;
 
+       template <typename T>
+       friend std::ostream& operator<<(std::ostream& os, BTree<T>& obj);
+
 protected:
-       BTNode          m_Root;
-       size_t          m_Height;  // height of tree
        size_t          m_Order;   // order of tree
-       size_t          m_NumKeys; // number of keys
+       BTNode          m_Root;
        bool            m_Unique;  // Accept the elements only once ?
+       size_t          m_NumKeys; // number of keys
+       size_t          m_Height;  // height of tree
+       std::shared_mutex m_Mutex;
 };     
 
 template <typename Trait>
@@ -122,4 +128,11 @@ bool BTree<Trait>::Remove (const keyType key, const long ObjID)
        return true;
 }
 
+template <typename Trait>
+std::ostream& operator<<(std::ostream& os, BTree<Trait>& obj)
+{
+       std::shared_lock<std::shared_mutex> lock(obj.m_Mutex);
+       obj.m_Root.Print(os);
+       return os;
+}
 #endif

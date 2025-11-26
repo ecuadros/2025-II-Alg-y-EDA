@@ -92,6 +92,7 @@ class CBTreePage //: public SimpleIndex <keyType>
        //typedef ObjectInfo *(*lpfnFirstThat3)(ObjectInfo &info, size_t level, void *pExtra1, void *pExtra2);
  public:
        CBTreePage(size_t maxKeys, bool unique = true);
+       CBTreePage() : m_MaxKeys(0), m_Unique(true), m_KeyCount(0) { }
        virtual ~CBTreePage();
 
        bt_ErrorCode    Insert (const keyType &key, const ObjIDType ObjID);
@@ -131,7 +132,7 @@ class CBTreePage //: public SimpleIndex <keyType>
         if (m_SubPages[m_KeyCount])
                 if ((pTmp = m_SubPages[m_KeyCount]->FirstThat(std::forward<Pred>(pred), level + 1, std::forward<Args>(args)...)))
                         return pTmp;
-                return nullptr;
+        return nullptr;
         }
 
 protected:
