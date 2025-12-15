@@ -3,84 +3,137 @@
 #include "types.h"
 #include "RTree.h"
 #include <cassert>
-#include <sstream>
 #include <iostream>
+#include <sstream>
+#include <vector>
 
-void RTreeDemo() {
-    using Traits = RTreeTraits;
-    CRTree<Traits> tree;
+#define TEST_CASE(name) std::cout << "[TEST] " << name << std::endl;
 
-    // ---------------------------------------
-    // Inserción básica
-    // ---------------------------------------
-    Rect r1{0, 0, 1, 1};
-    Rect r2{2, 2, 3, 3};
-    Rect r3{4, 4, 5, 5};
-    Rect r4{6, 6, 7, 7};
-    Rect r5{8, 8, 9, 9};
-    Rect r6{10, 10, 11, 11};
-    Rect r7{12, 12, 13, 13};
-    Rect r8{14, 14, 15, 15};
-    Rect r9{16, 16, 17, 17}; // fuerza split
+#define TEST_OK() std::cout << "  -> OK\n";
 
-    tree.Insert(r1, 1);
-    tree.Insert(r2, 2);
-    tree.Insert(r3, 3);
-    tree.Insert(r4, 4);
-    tree.Insert(r5, 5);
-    tree.Insert(r6, 6);
-    tree.Insert(r7, 7);
-    tree.Insert(r8, 8);
-    tree.Insert(r9, 9);
 
-    std::cout << "Inserciones realizadas\n";
+void TestInsertAndSplit() {
+    TEST_CASE("Insert & Split");
 
-    // ---------------------------------------
-    // Range Query test
-    // ---------------------------------------
-    Rect query{3, 3, 10, 10};
-    std::vector<Ref> result;
-    tree.RangeQuery(query, result);
+    CRTree<RTreeTraits> tree;
 
-    std::cout << "RangeQuery result: ";
-    for (auto id : result)
-        std::cout << id << " ";
-    std::cout << "\n";
-
-    assert(!result.empty());
-    std::cout << "RangeQuery básico\n";
-
-    // ---------------------------------------
-    // Range Query vacío
-    // ---------------------------------------
-    Rect emptyQuery{100, 100, 200, 200};
-    result.clear();
-    tree.RangeQuery(emptyQuery, result);
-
-    assert(result.empty());
-    std::cout << "RangeQuery vacío\n";
-
-    // ---------------------------------------
-    // Persistencia (Write)
-    // ---------------------------------------
-    std::stringstream ss;
-    tree.Write(ss);
-
-    assert(!ss.str().empty());
-    std::cout << "Escritura en stream\n";
-
-    // ---------------------------------------
-    // Inserción incremental + consultas
-    // ---------------------------------------
-    for (int i = 20; i < 40; ++i) {
-        Rect r{(float)i, (float)i, (float)i + 0.5f, (float)i + 0.5f};
+    for (int i = 0; i < 20; ++i) {
+        Rect r{(float)i, (float)i, (float)i + 1, (float)i + 1};
         tree.Insert(r, i);
     }
 
-    Rect largeQuery{0, 0, 50, 50};
-    result.clear();
-    tree.RangeQuery(largeQuery, result);
+    std::vector<Ref> res;
+    tree.RangeQuery({-1, -1, 100, 100}, res);
 
-    assert(result.size() >= 9);
-    std::cout << "Inserciones incrementales\n";
+    assert(res.size() == 20);
+    TEST_OK();
+}
+
+void TestRangeQuery() {
+    TEST_CASE("RangeQuery");
+
+    CRTree<RTreeTraits> tree;
+
+    tree.Insert({0, 0, 2, 2}, 1);
+    tree.Insert({3, 3, 5, 5}, 2);
+    tree.Insert({6, 6, 8, 8}, 3);
+
+    std::vector<Ref> res;
+    tree.RangeQuery({1, 1, 4, 4}, res);
+
+    assert(res.size() == 2);
+    TEST_OK();
+}
+
+void TestDeleteSimple() {
+    TEST_CASE("Delete Simple");
+
+    CRTree<RTreeTraits> tree;
+
+    Rect r{0, 0, 1, 1};
+    tree.Insert(r, 42);
+
+    std::vector<Ref> res;
+    tree.RangeQuery({0, 0, 2, 2}, res);
+    assert(res.size() == 1);
+
+    tree.Delete(r, 42);
+    res.clear();
+    tree.RangeQuery({0, 0, 2, 2}, res);
+
+    assert(res.empty());
+    TEST_OK();
+}
+
+void TestDeleteUnderflow() {
+    TEST_CASE("Delete Underflow + Reinsertion");
+
+    CRTree<RTreeTraits> tree;
+
+    for (int i = 0; i < 12; ++i) {
+        Rect r{(float)i, 0, (float)i + 1, 1};
+        tree.Insert(r, i);
+    }
+
+    // Provocar underflow
+    for (int i = 0; i < 8; ++i) {
+        Rect r{(float)i, 0, (float)i + 1, 1};
+        tree.Delete(r, i);
+    }
+
+    std::vector<Ref> res;
+    tree.RangeQuery({0, 0, 20, 20}, res);
+
+	std::cout << res.size() << std::endl;
+    assert(res.size() == 4);
+    TEST_OK();
+}
+
+void TestWriteReadStream() {
+    TEST_CASE("Write / Read Stream");
+
+    CRTree<RTreeTraits> tree;
+
+    for (int i = 0; i < 10; ++i)
+        tree.Insert({(float)i, (float)i, (float)i + 1, (float)i + 1}, i);
+
+    std::stringstream ss;
+    tree.Write(ss);
+
+    CRTree<RTreeTraits> loaded;
+    loaded.Read(ss);
+
+    std::vector<Ref> res;
+    loaded.RangeQuery({0, 0, 100, 100}, res);
+
+    assert(res.size() == 10);
+    TEST_OK();
+}
+
+void TestWriteReadFile() {
+    TEST_CASE("WriteToFile / ReadFromFile");
+
+    CRTree<RTreeTraits> tree;
+    tree.Insert({1, 1, 2, 2}, 99);
+
+    tree.WriteToFile("rtree_test.dat");
+
+    CRTree<RTreeTraits> loaded;
+    loaded.ReadFromFile("rtree_test.dat");
+
+    std::vector<Ref> res;
+    loaded.RangeQuery({0, 0, 10, 10}, res);
+
+    assert(res.size() == 1 && res[0] == 99);
+    TEST_OK();
+}
+
+void RTreeDemo() {
+    TestInsertAndSplit();
+    TestRangeQuery();
+    TestDeleteSimple();
+    TestDeleteUnderflow();
+    TestWriteReadStream();
+    TestWriteReadFile();
+    std::cout << "\n=== ALL RTREE TESTS PASSED ===\n";
 }

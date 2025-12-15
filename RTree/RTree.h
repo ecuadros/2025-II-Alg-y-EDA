@@ -3,6 +3,8 @@
 #include <vector>
 #include <limits>
 #include <functional>
+#include <fstream>
+#include <algorithm>
 #include "types.h"
 
 struct Rect {
@@ -154,24 +156,37 @@ private:
 	/// @param node The node to start checking (essentially the root).
 	/// @param rect The Rect to check where to insert.
 	/// @return The best leaf to insert.
-	Node* ChooseLeaf(Node* node, const Rect& rect);
+	Node* FindLeafInsert(Node* node, const Rect& rect);
 
-	/// @brief Private function that adjust the tree after an insertion.
+	/// @brief Adjust the tree after an insertion.
 	/// @param node The node to start adjusting.
-	void  AdjustTree(Node* node);
+	void AdjustTree(Node* node);
 
 	/// @brief Splits the node.
 	/// @param node The node to split.
-	void  SplitNode(Node* node);
+	void SplitNode(Node* node);
+
+	/// @brief Auxiliar function of the delete to search where is the data to 
+	/// delete.
+	/// @param node the node to start searching.
+	/// @param rect the rect to search for.
+	/// @param ref the reference to search for.
+	/// @return The node where is the element.
+	Node* FindLeafDelete(Node* node, const Rect& rect, Ref ref);
+
+	/// @brief Condense the tree (if possible) after a deletion.
+	/// @param node The leaf to start condensing.
+	/// @param eliminated The list of eliminated entris to be reinserted.
+	void CondenseTree(Node* node, std::vector<Entry>& eliminated);
 
 	/// @brief Destroys the node (only used by the default destroyer)
 	/// @param node the node to destroy.
-	void  Destroy(Node* node);
+	void Destroy(Node* node);
 };
 
 template <typename Traits>
 void CRTree<Traits>::Insert(const value_type& rect, Ref ref) {
-	Node* leaf = ChooseLeaf(m_pRoot, rect);
+	Node* leaf = FindLeafInsert(m_pRoot, rect);
 	leaf->Entries().push_back({ rect, nullptr, ref });
 
 	if (leaf->Size() > Traits::M)
@@ -182,7 +197,7 @@ void CRTree<Traits>::Insert(const value_type& rect, Ref ref) {
 
 template <typename Traits>
 typename CRTree<Traits>::Node*
-CRTree<Traits>::ChooseLeaf(Node* node, const Rect& rect) {
+CRTree<Traits>::FindLeafInsert(Node* node, const Rect& rect) {
 	if (node->IsLeaf())
 		return node;
 
@@ -197,7 +212,22 @@ CRTree<Traits>::ChooseLeaf(Node* node, const Rect& rect) {
 			bestChild = e.child;
 		}
 	}
-	return ChooseLeaf(bestChild, rect);
+	return FindLeafInsert(bestChild, rect);
+}
+
+template <typename Traits>
+void CRTree<Traits>::AdjustTree(Node* node) {
+	while (node->GetParent()) {
+		Node* parent = node->GetParent();
+		for (auto& e : parent->Entries())
+			if (e.child == node)
+				e.mbr = node->ComputeMBR();
+
+		if (parent->Size() > Traits::M)
+			SplitNode(parent);
+
+		node = parent;
+	}
 }
 
 template <typename Traits>
@@ -221,17 +251,83 @@ void CRTree<Traits>::SplitNode(Node* node) {
 }
 
 template <typename Traits>
-void CRTree<Traits>::AdjustTree(Node* node) {
-	while (node->GetParent()) {
+void CRTree<Traits>::Delete(const value_type& rect, Ref ref) {
+	Node* leaf = FindLeafDelete(m_pRoot, rect, ref);
+	if (!leaf) return;
+
+	auto& entries = leaf->Entries();
+	entries.erase(
+		std::remove_if(entries.begin(), entries.end(),
+			[&](const Entry& e) {
+				return e.ref == ref;
+			}),
+		entries.end()
+	);
+
+	std::vector<Entry> eliminated;
+	CondenseTree(leaf, eliminated);
+
+	for (auto& e : eliminated)
+		Insert(e.mbr, e.ref);
+
+	if (!m_pRoot->IsLeaf() && m_pRoot->Entries().size() == 1) {
+		Node* oldRoot = m_pRoot;
+		m_pRoot = m_pRoot->Entries()[0].child;
+		m_pRoot->SetParent(nullptr);
+		delete oldRoot;
+	}
+}
+
+template <typename Traits>
+typename CRTree<Traits>::Node*
+CRTree<Traits>::FindLeafDelete(Node* node, const Rect& rect, Ref ref) {
+	if (node->IsLeaf()) {
+		for (auto& e : node->Entries())
+			if (e.ref == ref)
+				return node;
+		return nullptr;
+	}
+
+	for (auto& e : node->Entries()) {
+		if (e.mbr.Intersects(rect)) {
+			Node* found = FindLeafDelete(e.child, rect, ref);
+			if (found) return found;
+		}
+	}
+	return nullptr;
+}
+
+template <typename Traits>
+void CRTree<Traits>::CondenseTree(Node* node, std::vector<Entry>& eliminated) {
+	while (node != m_pRoot) {
 		Node* parent = node->GetParent();
-		for (auto& e : parent->Entries())
-			if (e.child == node)
-				e.mbr = node->ComputeMBR();
 
-		if (parent->Size() > Traits::M)
-			SplitNode(parent);
+		if (node->Entries().size() < Traits::m) {
+			// Eliminar referencia del padre
+			auto& pEntries = parent->Entries();
+			auto it = std::find_if(
+				pEntries.begin(), pEntries.end(),
+				[&](const Entry& e) { return e.child == node; }
+			);
 
-		node = parent;
+			if (it != pEntries.end())
+				pEntries.erase(it);
+
+			// Guardar entradas para reinserción
+			for (auto& e : node->Entries())
+				eliminated.push_back(e);
+
+			delete node;
+			node = parent;
+		}
+		else {
+			// Ajustar MBR en el padre
+			for (auto& e : parent->Entries())
+				if (e.child == node)
+					e.mbr = node->ComputeMBR();
+
+			node = parent;
+		}
 	}
 }
 
@@ -266,16 +362,61 @@ std::ostream& CRTree<Traits>::Write(std::ostream& os) {
 }
 
 template <typename Traits>
-void CRTree<Traits>::Destroy(Node* node) {
-    if (!node)
-        return;
-
-    if (!node->IsLeaf()) {
-        for (auto& e : node->Entries())
-            Destroy(e.child);
-    }
-
-    delete node;
+void CRTree<Traits>::WriteToFile(const std::string path) {
+	std::ofstream file(path, std::ios::out);
+	if (!file)
+		throw std::runtime_error("Cannot open file for writing");
+	Write(file);
 }
 
+template <typename Traits>
+std::istream& CRTree<Traits>::Read(std::istream& is) {
+	Destroy(m_pRoot);
+	m_pRoot = nullptr;
 
+	std::function<Node*(Node*)> load = [&](Node* parent) -> Node* {
+		bool isLeaf;
+		size_t size;
+		is >> isLeaf >> size;
+
+		Node* node = new Node(isLeaf);
+		node->SetParent(parent);
+
+		for (size_t i = 0; i < size; ++i) {
+			Entry e;
+			is >> e.mbr.m_minX >> e.mbr.m_minY
+			   >> e.mbr.m_maxX >> e.mbr.m_maxY
+			   >> e.ref;
+
+			if (!isLeaf)
+				e.child = load(node);
+
+			node->Entries().push_back(e);
+		}
+		return node;
+	};
+
+	m_pRoot = load(nullptr);
+	return is;
+}
+
+template <typename Traits>
+void CRTree<Traits>::ReadFromFile(const std::string path) {
+	std::ifstream file(path, std::ios::in);
+	if (!file)
+		throw std::runtime_error("Cannot open file for reading");
+	Read(file);
+}
+
+template <typename Traits>
+void CRTree<Traits>::Destroy(Node* node) {
+	if (!node)
+		return;
+
+	if (!node->IsLeaf()) {
+		for (auto& e : node->Entries())
+			Destroy(e.child);
+	}
+
+	delete node;
+}
