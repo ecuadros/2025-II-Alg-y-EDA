@@ -11,7 +11,7 @@ void RTreeDemo() {
     CRTree<Traits> tree;
 
     // ---------------------------------------
-    // 1. Inserción básica
+    // Inserción básica
     // ---------------------------------------
     Rect r1{0, 0, 1, 1};
     Rect r2{2, 2, 3, 3};
@@ -33,10 +33,10 @@ void RTreeDemo() {
     tree.Insert(r8, 8);
     tree.Insert(r9, 9);
 
-    std::cout << "[OK] Inserciones realizadas\n";
+    std::cout << "Inserciones realizadas\n";
 
     // ---------------------------------------
-    // 2. Range Query simple
+    // Range Query test
     // ---------------------------------------
     Rect query{3, 3, 10, 10};
     std::vector<Ref> result;
@@ -48,29 +48,29 @@ void RTreeDemo() {
     std::cout << "\n";
 
     assert(!result.empty());
-    std::cout << "[OK] RangeQuery básico\n";
+    std::cout << "RangeQuery básico\n";
 
     // ---------------------------------------
-    // 3. Range Query vacío
+    // Range Query vacío
     // ---------------------------------------
     Rect emptyQuery{100, 100, 200, 200};
     result.clear();
     tree.RangeQuery(emptyQuery, result);
 
     assert(result.empty());
-    std::cout << "[OK] RangeQuery vacío\n";
+    std::cout << "RangeQuery vacío\n";
 
     // ---------------------------------------
-    // 4. Persistencia (Write)
+    // Persistencia (Write)
     // ---------------------------------------
     std::stringstream ss;
     tree.Write(ss);
 
     assert(!ss.str().empty());
-    std::cout << "[OK] Escritura en stream\n";
+    std::cout << "Escritura en stream\n";
 
     // ---------------------------------------
-    // 5. Inserción incremental + consultas
+    // Inserción incremental + consultas
     // ---------------------------------------
     for (int i = 20; i < 40; ++i) {
         Rect r{(float)i, (float)i, (float)i + 0.5f, (float)i + 0.5f};
@@ -82,5 +82,5 @@ void RTreeDemo() {
     tree.RangeQuery(largeQuery, result);
 
     assert(result.size() >= 9);
-    std::cout << "[OK] Inserciones incrementales\n";
+    std::cout << "Inserciones incrementales\n";
 }
