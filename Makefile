@@ -1,10 +1,11 @@
 CXX = g++
-CXXFLAGS = -std=c++17 -Wall -g -pthread # Añadido -pthread
-LDFLAGS = -pthread # Añadido -pthread
+CXXFLAGS = -std=c++17 -Wall -g -pthread
+LDFLAGS = -pthread
 
 TARGET = main
 SRCS = main.cpp \
-       DemoBTree.cpp
+       DemoBTree.cpp \
+       DemoRTree.cpp
 
 OBJS = $(SRCS:.cpp=.o)
 

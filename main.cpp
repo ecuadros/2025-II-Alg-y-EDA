@@ -1,5 +1,6 @@
 #include <iostream>
 #include "DemoBTree.h"
+#include "DemoRTree.h"
 
 using namespace std;
 
@@ -22,7 +23,8 @@ int main(){
     // DemoVector();
     // DemoLinkedList();
     // DemoDoubleLinkedList();
-    DemoBTree();
+    // DemoBTree();
+    DemoRTree();
     return 0;
 }
 
