@@ -1,12 +1,9 @@
 CXX = g++
-CXXFLAGS = -std=c++17 -Wall -g -pthread # Añadido -pthread
-LDFLAGS = -pthread # Añadido -pthread
+CXXFLAGS = -std=c++17 -Wall -g
+
 
 TARGET = main
-SRCS = main.cpp \
-       hilos.cpp \
-	   DemoVector.cpp \
-	   DemoList.cpp
+SRCS = main.cpp 
 
 OBJS = $(SRCS:.cpp=.o)
 
@@ -19,6 +16,9 @@ $(TARGET): $(OBJS)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 clean:
-	rm -f $(OBJS) $(TARGET)
+	-del /f /q $(OBJS) $(TARGET).exe
+
+run: $(TARGET)
+	./$(TARGET).exe
 
 .PHONY: all clean
