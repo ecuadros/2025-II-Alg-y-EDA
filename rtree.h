@@ -274,4 +274,35 @@ void RTree<Trait>::CondenseTree(PageType* node, std::vector<Entry>& orphanedEntr
     
 }
 
+template <typename Trait>
+void RTreePage<Trait>::Read(std::istream& is) {
+    is.read(reinterpret_cast<char*>(&m_IsLeaf), sizeof(bool));
+    
+    // Leemos cuántas entradas tiene almacenadas
+    size_t count = 0;
+    is.read(reinterpret_cast<char*>(&count), sizeof(size_t));
+
+    // Limpiamos y reservamos memoria para evitar realocaciones
+    m_Entries.clear();
+    m_Entries.reserve(count);
+
+    for (size_t i = 0; i < count; ++i) {
+        RectType mbr;
+        is.read(reinterpret_cast<char*>(&mbr), sizeof(RectType));
+
+        if (m_IsLeaf) {
+            ObjIDType id;
+            is.read(reinterpret_cast<char*>(&id), sizeof(ObjIDType));
+            
+            m_Entries.emplace_back(mbr, id);
+        } 
+        else {
+            RTreePage* child = new RTreePage(m_MinEntries, m_MaxEntries, false);
+            child->m_Parent = this;
+            child->Read(is);
+            m_Entries.emplace_back(mbr, child);
+        }
+    }
+}
+
 #endif
