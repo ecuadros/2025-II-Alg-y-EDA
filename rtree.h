@@ -1,162 +1,11 @@
 #ifndef __RTREE_H__
 #define __RTREE_H__
 
-#include <iostream>
+#include "rtreepage.h"
 #include <fstream>
-#include <vector>
 #include <utility>
-#include <cmath> 
-#include <algorithm>
-
-template <typename Trait> struct Rect;
-template <typename Trait> struct RTreeEntry;
-template <typename Trait> class RTreeNode;
-template <typename Trait> class RTree;
-
-// Traits for RTree with configurable node sizes
-template <typename _CoordsType, typename _DataType, size_t _MinNodes = 2, size_t _MaxNodes = 4>
-struct RTreeTrait 
-{
-    using CoordsType = _CoordsType;
-    using DataType = _DataType;
-    
-    // Compile-time validation of template parameters
-    static_assert(_MinNodes >= 1, "MinNodes must be at least 1");
-    static_assert(_MaxNodes >= _MinNodes, "MaxNodes must be >= MinNodes");
-    static_assert(_MaxNodes >= 2, "MaxNodes must be at least 2");
-    
-    // Configuration constants
-    static constexpr size_t MinNodes = _MinNodes;
-    static constexpr size_t MaxNodes = _MaxNodes;
-    
-    using CoordsType_t = _CoordsType;
-    using DataType_t = _DataType;
-};
-
-// MBR (Minimum Bounding Rectangle)
-template <typename Trait>
-struct Rect
-{
-    typedef typename Trait::CoordsType CoordsType;
-
-    CoordsType xMin, xMax, yMin, yMax;
-
-    Rect(CoordsType minX, CoordsType maxX, CoordsType minY, CoordsType maxY)
-        : xMin(minX), xMax(maxX), yMin(minY), yMax(maxY) 
-    {
-        if (xMin > xMax) std::swap(xMin, xMax);
-        if (yMin > yMax) std::swap(yMin, yMax);
-    }
-
-    Rect(CoordsType x, CoordsType y) : xMin(x), xMax(x), yMin(y), yMax(y) {}
-
-    // Default
-    Rect() : xMin(0), xMax(0), yMin(0), yMax(0) {}
-
-    bool IsValid() const {
-        return xMin <= xMax && yMin <= yMax;
-    }
-
-    bool Overlaps(const Rect& other) const // Intersection between rects
-    {
-        return xMin <= other.xMax && xMax >= other.xMin && yMin <= other.yMax && yMax >= other.yMin;
-    }
-
-    bool Contains(const Rect& other) const  // One includes the other
-    {
-        return xMin <= other.xMin && xMax >= other.xMax && yMin <= other.yMin && yMax >= other.yMax;
-    }    
-
-    bool operator==(const Rect& other) const
-    {
-        return xMin == other.xMin && yMin == other.yMin && xMax == other.xMax && yMax == other.yMax;
-    }
-
-    bool operator!=(const Rect& other) const
-    {
-        return !(*this == other);
-    }
-
-    CoordsType Area() const
-    {
-        return (xMax - xMin) * (yMax - yMin);
-    }
-
-    CoordsType Enlargement(const Rect& other) const // How much would this rect grow to include other
-    {
-        return Combine(other).Area() - Area();
-    }
-
-    Rect Combine(const Rect& other) const // Union
-    {
-        return Rect{std::min(xMin, other.xMin), std::max(xMax, other.xMax), 
-                   std::min(yMin, other.yMin), std::max(yMax, other.yMax)};
-    }
-};
-
-// Entry for each node
-template <typename Trait>
-struct RTreeEntry
-{
-    typedef typename Trait::DataType DataType;
-    typedef Rect<Trait> RectType;
-
-    RectType rect;          // MBR
-    DataType data;          // For leaf entries
-    RTreeNode<Trait>* child; // For internal entries
-};
-
-// RTree Node
-template <typename Trait>
-class RTreeNode
-{
-    public:
-        typedef typename Trait::CoordsType CoordsType;
-        typedef typename Trait::DataType DataType;
-        typedef Rect<Trait> RectType;
-        typedef RTreeEntry<Trait> Entry;
-
-        int level = 0; // Leaf 
-        std::vector<Entry> entries; 
-
-        bool IsLeaf() const
-        {
-            return level == 0; 
-        }
-
-        RectType CalculateMBR() const
-        {
-            if (entries.empty()) {
-                // Return default/invalid rect for empty nodes
-                return RectType{};
-            }
-            RectType mbr = entries[0].rect;
-            for ( size_t i = 1; i < entries.size(); ++i)
-                mbr = mbr.Combine(entries[i].rect);
-            return mbr;
-        }
-
-        size_t ChooseBestChild(const RectType& rect) const
-        {
-            size_t best = 0; // Assume first child is the best
-            CoordsType minEnlargement = entries[0].rect.Enlargement(rect);
-            CoordsType minArea = entries[0].rect.Area(); 
-
-            for ( size_t i = 1; i < entries.size(); ++i ) // Comparing with the other children
-            {
-                CoordsType enl = entries[i].rect.Enlargement(rect);
-                CoordsType area = entries[i].rect.Area();
-
-                if ( enl < minEnlargement || (enl == minEnlargement && area < minArea )) 
-                {
-                    minEnlargement = enl;
-                    minArea = area;
-                    best = i;
-                }
-            }
-            return best;
-        }
-};
+#include <functional>
+#include <cmath>
 
 template <typename Trait>
 class RTree
@@ -168,7 +17,7 @@ class RTree
         typedef RTreeEntry<Trait> Entry;
         typedef RTreeNode<Trait> Node;
         
-        // Results of range query(MBR + Data)
+        // Results of range query (MBR + Data)
         typedef std::pair<RectType, DataType> QueryResult;
 
     private:
@@ -188,11 +37,11 @@ class RTree
         
         ~RTree() { Destroy(m_Root); }
       
-       // Insert element with MBR and dataa
+       // Insert element with MBR and data
        void Insert(CoordsType xMin, CoordsType yMin, CoordsType xMax, CoordsType yMax, const DataType& data)
        {
               Entry entry;
-              entry.rect = {xMin, yMin, xMax, yMax};
+              entry.rect = RectType{xMin, xMax, yMin, yMax};
               entry.data = data;
               entry.child = nullptr;
               
@@ -216,10 +65,10 @@ class RTree
               ++m_Count;
        }
        
-       //Delete element looking for MBR and data
+       // Delete element looking for MBR and data
        bool Remove(CoordsType xMin, CoordsType yMin, CoordsType xMax, CoordsType yMax, const DataType& data)
        {
-              RectType targetRect = {xMin, yMin, xMax, yMax};
+              RectType targetRect{xMin, xMax, yMin, yMax};
               std::vector<Node*> reinsertList;
               
               if (RemoveRec(targetRect, data, m_Root, reinsertList))
@@ -265,11 +114,11 @@ class RTree
               return true;
        }
 
-       // RangeQuery: Rerturn all elements that intersects with the given MBR
+       // RangeQuery: Return all elements that intersects with the given MBR
        std::vector<QueryResult> RangeQuery(CoordsType xMin, CoordsType yMin, CoordsType xMax, CoordsType yMax) const
        {
               std::vector<QueryResult> results;
-              RectType queryRect = {xMin, yMin, xMax, yMax};
+              RectType queryRect{xMin, xMax, yMin, yMax};
               SearchRec(m_Root, queryRect, results);
               return results;
        }
@@ -299,7 +148,6 @@ class RTree
               return true;
        }
        
-
        size_t size() const { return m_Count; }
        bool empty() const { return m_Count == 0; }
        
@@ -309,6 +157,21 @@ class RTree
        {
               os << "RTree [" << m_Count << " elementos]\n";
               PrintNode(os, m_Root, 0);
+       }
+
+       // Variadic template traversal , applies function to all leaf entries
+       template<typename Func, typename... Args>
+       void ForEach(Func&& func, Args&&... args) const
+       {
+              ForEachRec(m_Root, std::forward<Func>(func), std::forward<Args>(args)...);
+       }
+
+       // Specialized print using custom function
+       template<typename Func, typename... Args>
+       void PrintWith(Func&& func, Args&&... args) const
+       {
+              std::cout << "RTree [" << m_Count << " elementos] - Custom traversal:\n";
+              ForEach(std::forward<Func>(func), std::forward<Args>(args)...);
        }
 
 private:
@@ -362,10 +225,9 @@ private:
               }
        }
        
-       //  Guttman Quadratic split
+       // Guttman Quadratic split
        void Split(Node* node, const Entry& entry, Node*& newNode)
        {
-
               std::vector<Entry> all = node->entries;
               all.push_back(entry);
               
@@ -402,7 +264,7 @@ private:
               std::vector<bool> used(all.size(), false);
               used[seed1] = used[seed2] = true;
               
-              // PickNext: Distribute the rest s
+              // PickNext: Distribute the rest
               for (size_t remaining = all.size() - 2; remaining > 0; --remaining)
               {
                      if (node->entries.size() + remaining <= Trait::MinNodes)
@@ -446,21 +308,21 @@ private:
               }
        }
        
-       // Recursive delete ( use MBR ) 
+       // Recursive delete (use MBR) 
        bool RemoveRec(const RectType& targetRect, const DataType& data, Node* node, std::vector<Node*>& reinsertList)
        {
               if (!node->IsLeaf())
               {
-                     // Intern node
+                     // Internal node
                      for (size_t i = 0; i < node->entries.size(); ++i)
                      {
-                            // Only explores if child MBR contains target
+                            // Only explore if child MBR contains target
                             if (!node->entries[i].rect.Contains(targetRect))
                                    continue;
                             
                             if (!RemoveRec(targetRect, data, node->entries[i].child, reinsertList))
                             {
-                                   // Actualizar MBR del hijo
+                                   // Update child MBR
                                    if (node->entries[i].child->entries.empty())
                                    {
                                           delete node->entries[i].child;
@@ -493,7 +355,7 @@ private:
                                    return false;  
                             }
                      }
-                     return true;  //Not found
+                     return true;  // Not found
               }
        }
        
@@ -548,7 +410,7 @@ private:
                      {
                             Insert(entry.rect.xMin, entry.rect.yMin,
                                    entry.rect.xMax, entry.rect.yMax, entry.data);
-                            --m_Count;  // Compensante Insert increment (the entry is already counted)
+                            --m_Count;  // Compensate Insert increment (entry already counted)
                      }
               }
               else
@@ -575,7 +437,6 @@ private:
               }
        }
        
-
        void WriteNode(std::ostream& os, Node* node) const
        {
               os << node->level << " " << node->entries.size() << "\n";
@@ -629,6 +490,26 @@ private:
               }
        }
 
+       // Recursive variadic traversal implementation
+       template<typename Func, typename... Args>
+       void ForEachRec(Node* node, Func&& func, Args&&... args) const
+       {
+              if (!node) return;
+              
+              for (auto& entry : node->entries)
+              {
+                     if (node->IsLeaf())
+                     {
+                            // Apply function to leaf entries
+                            func(entry.rect, entry.data, std::forward<Args>(args)...);
+                     }
+                     else
+                     {
+                            // Recurse into internal nodes
+                            ForEachRec(entry.child, std::forward<Func>(func), std::forward<Args>(args)...);
+                     }
+              }
+       }
 };
 
 #endif
