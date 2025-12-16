@@ -1,0 +1,5 @@
+ejemplo_rtree
+ejemplo_rtree_debug
+*.bin
+*.dSYM
+test_simple
