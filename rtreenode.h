@@ -3,6 +3,8 @@
 
 #include "rtree_rectangle.h"
 #include <cstddef>
+#include <algorithm>
+#include <cmath>
 #include <vector>
 #include <iostream>
 #include <string>
@@ -24,7 +26,7 @@ struct Branch
     ObjIDType   m_Data;     // if leaf
 
     // clear all
-    Branch(): m_Child(nullptr), m_Data(0) {}
+    Branch(): m_Child(nullptr), m_Data{} {}
 };
 
 template <typename Trait>
