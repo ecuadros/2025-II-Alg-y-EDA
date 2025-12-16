@@ -7,7 +7,8 @@ SRCS = main.cpp \
        hilos.cpp \
 	   DemoVector.cpp \
 	   ContainersDemo.cpp \
-	   DemoBTree.cpp 
+	   DemoBTree.cpp \
+	   DemoRTree.cpp
 
 OBJS = $(SRCS:.cpp=.o)
 
