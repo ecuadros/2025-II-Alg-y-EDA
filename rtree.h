@@ -28,9 +28,8 @@ class RTree
 
     ~RTree()
     {
-        // TODO: implement full tree deletion traversing the nodes
-        // for now, just delete root (memory leak for other nodes)
-        delete m_Root;
+        _DestroySubtree(m_Root);
+        m_Root = nullptr;
     }
 
     bool Insert(const RectType& rect, const ObjIDType& id)
@@ -63,11 +62,11 @@ class RTree
         return true;
     }
 
-    size_t Search(RectType& searchRect, vector<ObjIDType>& results)
+    vector<ObjIDType> Search(const RectType& searchRect)
     {
-        results.clear();
+        vector<ObjIDType> results;
         _Search(m_Root, searchRect, results);
-        return results.size();
+        return results;
     }
 
     friend ostream& operator<<(ostream& os, RTree& tree)
@@ -78,14 +77,10 @@ class RTree
 
     friend istream& operator>>(istream& is, RTree& tree)
     {
-        // because we delete existing root
-        delete tree.m_Root;
-
-        tree.m_Root = new NodeType(0);
-        if (!tree.m_Root->Read(is))
+        RTree temp;
+        if (temp.m_Root->Read(is))
         {
-            delete tree.m_Root;
-            tree.m_Root = new NodeType(0);
+            swap(tree.m_Root, temp.m_Root);
         }
         return is;
     }
@@ -118,6 +113,23 @@ class RTree
     }
 
     private:
+        void _DestroySubtree(NodeType* node)
+        {
+            if (node == nullptr) return;
+
+            if (!node->isLeaf())
+            {
+                for (size_t i = 0; i < node->m_Count; ++i)
+                {
+                    NodeType* child = node->m_Branches[i].m_Child;
+                    node->m_Branches[i].m_Child = nullptr;
+                    _DestroySubtree(child);
+                }
+            }
+
+            delete node;
+        }
+
         NodeType* _Insert(NodeType* node, BranchType& branch)
         {
             if (node -> isLeaf())
@@ -198,7 +210,7 @@ class RTree
             return bestIndex;
         }
 
-        void _Search(NodeType* node, RectType& searchRect, vector<ObjIDType>& results)
+        void _Search(NodeType* node, const RectType& searchRect, vector<ObjIDType>& results)
         {
             for (size_t i = 0; i < node -> m_Count; ++i)
             {
