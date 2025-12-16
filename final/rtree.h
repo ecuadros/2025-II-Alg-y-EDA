@@ -4,6 +4,7 @@
 #include <iostream>
 #include <vector>
 #include <fstream>
+#include <mutex>
 #include "rtreenode.h"
 
 #define DEFAULT_RTREE_MAX_ENTRIES 4
@@ -31,14 +32,21 @@ public:
     bool WriteToFile(const std::string& filename);
     bool ReadFromFile(const std::string& filename);
 
-    size_t GetHeight() const { return m_Height; }
-    size_t GetSize() const { return m_Size; }
+    size_t GetHeight() const {
+        std::lock_guard<std::mutex> lock(m_Mutex);
+        return m_Height;
+    }
+    size_t GetSize() const {
+        std::lock_guard<std::mutex> lock(m_Mutex);
+        return m_Size;
+    }
 
 protected:
     RTNode* m_Root;
     size_t m_Height;
     size_t m_MaxEntries;
     size_t m_Size;
+    mutable std::mutex m_Mutex;
 
     void WriteNode(std::ofstream& ofs, RTNode* node);
     RTNode* ReadNode(std::ifstream& ifs, bool isLeaf);
@@ -65,6 +73,8 @@ void CRTree<Trait>::DestroyTree(RTNode* node) {
 
 template <typename Trait>
 bool CRTree<Trait>::Insert(const Rectangle<CoordType>& rect, const ObjIDType objID) {
+    std::lock_guard<std::mutex> lock(m_Mutex);
+
     rt_ErrorCode error = m_Root->Insert(rect, objID);
 
     if (error == rt_overflow) {
@@ -98,6 +108,8 @@ bool CRTree<Trait>::Insert(const Rectangle<CoordType>& rect, const ObjIDType obj
 
 template <typename Trait>
 bool CRTree<Trait>::Remove(const Rectangle<CoordType>& rect, const ObjIDType objID) {
+    std::lock_guard<std::mutex> lock(m_Mutex);
+
     rt_ErrorCode error = m_Root->Remove(rect, objID);
 
     if (error == rt_ok || error == rt_underflow) {
@@ -110,11 +122,14 @@ bool CRTree<Trait>::Remove(const Rectangle<CoordType>& rect, const ObjIDType obj
 
 template <typename Trait>
 void CRTree<Trait>::RangeQuery(const Rectangle<CoordType>& range, std::vector<ObjIDType>& results) {
+    std::lock_guard<std::mutex> lock(m_Mutex);
     m_Root->RangeQuery(range, results);
 }
 
 template <typename Trait>
 bool CRTree<Trait>::WriteToFile(const std::string& filename) {
+    std::lock_guard<std::mutex> lock(m_Mutex);
+
     std::ofstream ofs(filename, std::ios::binary);
     if (!ofs.is_open()) {
         return false;
@@ -160,6 +175,8 @@ void CRTree<Trait>::WriteNode(std::ofstream& ofs, RTNode* node) {
 
 template <typename Trait>
 bool CRTree<Trait>::ReadFromFile(const std::string& filename) {
+    std::lock_guard<std::mutex> lock(m_Mutex);
+
     std::ifstream ifs(filename, std::ios::binary);
     if (!ifs.is_open()) {
         return false;
