@@ -305,4 +305,25 @@ void RTreePage<Trait>::Read(std::istream& is) {
     }
 }
 
+template <typename Trait>
+void RTreePage<Trait>::Write(std::ostream& os) const {
+    os.write(reinterpret_cast<const char*>(&m_IsLeaf), sizeof(bool));
+
+    size_t count = m_Entries.size();
+    os.write(reinterpret_cast<const char*>(&count), sizeof(size_t));
+
+    for (const auto& entry : m_Entries) {
+        os.write(reinterpret_cast<const char*>(&entry.mbr), sizeof(RectType));
+
+        if (m_IsLeaf) {
+            os.write(reinterpret_cast<const char*>(&entry.objID), sizeof(ObjIDType));
+        } 
+        else {
+            if (entry.childPtr) {
+                entry.childPtr->Write(os);
+            }
+        }
+    }
+}
+
 #endif
