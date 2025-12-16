@@ -27,7 +27,7 @@ void demo_basic_2d() {
     std::cout << "\n=== Demo 1: Inserción y Búsqueda Básica (2D) ===\n\n";
 
     using Traits = RTreeTraits<double, 2, 8>;
-    using RTree2D = CRTree<Traits>;
+    using RTree2D = RTree<Traits>;
     using Box2D = BoxND<double, 2>;
 
     RTree2D tree;
@@ -111,7 +111,7 @@ void demo_rectangles_2d() {
     std::cout << "\n=== Demo 2: Rectángulos e Intersecciones (2D) ===\n\n";
 
     using Traits = RTreeTraits<double, 2, 8>;
-    using RTree2D = CRTree<Traits>;
+    using RTree2D = RTree<Traits>;
     using Box2D = BoxND<double, 2>;
 
     RTree2D tree;
@@ -166,7 +166,7 @@ void demo_3d_objects() {
     std::cout << "\n=== Demo 3: Objetos en el Espacio (3D) ===\n\n";
 
     using Traits = RTreeTraits<float, 3, 12>;
-    using RTree3D = CRTree<Traits>;
+    using RTree3D = RTree<Traits>;
     using Box3D = BoxND<float, 3>;
 
     RTree3D tree;
@@ -220,7 +220,7 @@ void demo_deletion() {
     std::cout << "\n=== Demo 4: Eliminación de Elementos ===\n\n";
 
     using Traits = RTreeTraits<double, 2, 16>;  // Cambio a M=16 para evitar problemas
-    using RTree2D = CRTree<Traits>;
+    using RTree2D = RTree<Traits>;
     using Box2D = BoxND<double, 2>;
 
     RTree2D tree;
@@ -273,7 +273,7 @@ void demo_persistence() {
     std::cout << "\n=== Demo 5: Persistencia - Guardar y Cargar ===\n\n";
     
     using Traits = RTreeTraits<double, 2, 16>;  // M=16 para mejor estabilidad
-    using RTree2D = CRTree<Traits>;
+    using RTree2D = RTree<Traits>;
     using Box2D = BoxND<double, 2>;
 
     const std::string filename = "rtree_demo.bin";
@@ -353,7 +353,7 @@ void demo_performance() {
     
     /* CÓDIGO EN DESARROLLO:
     using Traits = RTreeTraits<double, 2, 32>;  // M=32 para mejor manejo de datos masivos
-    using RTree2D = CRTree<Traits>;
+    using RTree2D = RTree<Traits>;
     using Box2D = BoxND<double, 2>;
 
     RTree2D tree;
@@ -421,7 +421,7 @@ void demo_edge_cases() {
     std::cout << "\n=== Demo 7: Casos Extremos y Validación ===\n\n";
 
     using Traits = RTreeTraits<double, 2, 8>;
-    using RTree2D = CRTree<Traits>;
+    using RTree2D = RTree<Traits>;
     using Box2D = BoxND<double, 2>;
 
     RTree2D tree;
@@ -479,7 +479,7 @@ void demo_gps_system() {
     std::cout << "\n=== Demo 8: Sistema GPS - Búsqueda de Puntos de Interés ===\n\n";
 
     using Traits = RTreeTraits<double, 2, 12>;
-    using RTree2D = CRTree<Traits>;
+    using RTree2D = RTree<Traits>;
     using Box2D = BoxND<double, 2>;
 
     RTree2D poi_tree; // Points of Interest

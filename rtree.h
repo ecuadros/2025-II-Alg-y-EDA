@@ -23,8 +23,8 @@ struct BoxND {
   using Scalar = ScalarT;
   static constexpr size_t Dim = DimV;
 
-  std::array<Scalar, Dim> m_min{}; /
-  std::array<Scalar, Dim> m_max{}; 
+  std::array<Scalar, Dim> m_min{};
+  std::array<Scalar, Dim> m_max{};
 
   /**
    * @brief Crea una caja vacía (volumen cero con límites infinitos invertidos)
@@ -164,12 +164,12 @@ struct RTreeTraits {
 };
 
 /**
- * @class CRTree
+ * @class RTree
  * @brief R-Tree N-dimensional con split cuadrático
  * @tparam Traits Configuración del árbol (ver RTreeTraits)
  */
 template<class Traits>
-class CRTree {
+class RTree {
 public:
   using Scalar = typename Traits::Scalar;
   static constexpr size_t Dim = Traits::Dim;
@@ -236,7 +236,7 @@ public:
   /**
    * @brief Constructor por defecto
    */
-  CRTree() : m_pRoot(std::make_unique<Node>(true)) {
+  RTree() : m_pRoot(std::make_unique<Node>(true)) {
     if (M < 4) throw std::invalid_argument("M must be >= 4");
     if (m < 2) throw std::invalid_argument("m must be >= 2");
     if (m > M) throw std::invalid_argument("m must be <= M");
