@@ -33,7 +33,7 @@ class RTree
         delete m_Root;
     }
 
-    bool Insert(RectType& rect, const ObjIDType& id)
+    bool Insert(const RectType& rect, const ObjIDType& id)
     {
         BranchType newBranch;
         newBranch.m_rect = rect;
@@ -90,11 +90,11 @@ class RTree
         return is;
     }
 
-    bool Remove(RectType& rect, const ObjIDType& id)
+    bool Remove(const RectType& rect, const ObjIDType& id)
     {
         vector<BranchType> orphans;
         bool removed = _Remove(m_Root, rect, id, orphans);
-        if (removed) return true;
+        if (!removed) return false;
 
         if (m_Root -> isEmpty() && !(m_Root -> isLeaf()))
         {
@@ -160,7 +160,11 @@ class RTree
 
         size_t _ChooseSubtree(NodeType* node, RectType& rect)
         {
-            size_t bestIndex = -1;
+            if (node -> isEmpty())
+            {
+                return 0;
+            }
+            size_t bestIndex = 0;
             ElemType minEnlargement = numeric_limits<ElemType>::max();
             ElemType minArea = numeric_limits<ElemType>::max();
 
@@ -229,15 +233,14 @@ class RTree
             }
         }
 
-        bool _Remove(NodeType* node, RectType& rect, ObjIDType id, vector<BranchType>& orphans)
+        bool _Remove(NodeType* node, const RectType& rect, ObjIDType id, vector<BranchType>& orphans)
         {
             if (node -> isLeaf())
             {
                 for (size_t i = 0; i < node -> m_Count; ++i)
                 {
-                    if (node -> m_Branches[i].m_Data == id)
+                    if (node -> m_Branches[i].m_Data == id && node -> m_Branches[i].m_rect.Intersects(rect))
                     {
-                        // found!
                         node -> RemoveBranch(i);
                         return true;
                     }
