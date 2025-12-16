@@ -29,6 +29,7 @@ public:
     void RangeQuery(const Rectangle<CoordType>& range, std::vector<ObjIDType>& results);
 
     bool WriteToFile(const std::string& filename);
+    bool ReadFromFile(const std::string& filename);
 
     size_t GetHeight() const { return m_Height; }
     size_t GetSize() const { return m_Size; }
@@ -40,6 +41,7 @@ protected:
     size_t m_Size;
 
     void WriteNode(std::ofstream& ofs, RTNode* node);
+    RTNode* ReadNode(std::ifstream& ifs, bool isLeaf);
     void DestroyTree(RTNode* node);
 };
 
@@ -154,6 +156,64 @@ void CRTree<Trait>::WriteNode(std::ofstream& ofs, RTNode* node) {
             WriteNode(ofs, node->m_Children[i]);
         }
     }
+}
+
+template <typename Trait>
+bool CRTree<Trait>::ReadFromFile(const std::string& filename) {
+    std::ifstream ifs(filename, std::ios::binary);
+    if (!ifs.is_open()) {
+        return false;
+    }
+
+    DestroyTree(m_Root);
+
+    ifs.read(reinterpret_cast<char*>(&m_Height), sizeof(m_Height));
+    ifs.read(reinterpret_cast<char*>(&m_MaxEntries), sizeof(m_MaxEntries));
+    ifs.read(reinterpret_cast<char*>(&m_Size), sizeof(m_Size));
+
+    bool isLeaf = (m_Height == 1);
+    m_Root = ReadNode(ifs, isLeaf);
+
+    ifs.close();
+    return true;
+}
+
+template <typename Trait>
+CRTreeNode<Trait>* CRTree<Trait>::ReadNode(std::ifstream& ifs, bool isLeaf) {
+    bool isNull;
+    ifs.read(reinterpret_cast<char*>(&isNull), sizeof(isNull));
+
+    if (isNull) {
+        return nullptr;
+    }
+
+    bool nodeIsLeaf;
+    size_t count;
+
+    ifs.read(reinterpret_cast<char*>(&nodeIsLeaf), sizeof(nodeIsLeaf));
+    ifs.read(reinterpret_cast<char*>(&count), sizeof(count));
+
+    RTNode* node = new RTNode(m_MaxEntries, nodeIsLeaf);
+    node->m_Count = count;
+
+    for (size_t i = 0; i < count; i++) {
+        Rectangle<CoordType> mbr;
+        ObjIDType objID;
+
+        ifs.read(reinterpret_cast<char*>(&mbr), sizeof(Rectangle<CoordType>));
+        ifs.read(reinterpret_cast<char*>(&objID), sizeof(ObjIDType));
+
+        node->m_Entries[i] = tagRTreeEntry<CoordType, ObjIDType>(mbr, objID);
+    }
+
+    if (!nodeIsLeaf) {
+        for (size_t i = 0; i <= count; i++) {
+            node->m_Children[i] = ReadNode(ifs, false);
+        }
+    }
+
+    node->UpdateMBR();
+    return node;
 }
 
 #endif
