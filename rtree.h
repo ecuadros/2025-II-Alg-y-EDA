@@ -48,6 +48,11 @@ public:
     // Eliminación Thread-Safe
     bool Remove(const RectType& rect, const ObjIDType& id);
 
+    std::vector<ObjIDType> Search(const RectType& searchRect);
+
+    void Search(const RectType& searchRect, std::function<bool(const ObjIDType&)> visitor);
+
+    
 protected:
     PageType* m_Root;
     size_t              m_MaxEntries;
@@ -68,6 +73,7 @@ protected:
 
     // Función auxiliar para encontrar la hoja que contiene el dato
     PageType* FindLeaf(PageType* node, const RectType& rect, const ObjIDType& id);
+
 };
 
 
@@ -131,29 +137,27 @@ bool RTree<Trait>::CheckIntersection(const RectType& r1, const RectType& r2) con
 }
 
 template <typename Trait>
-std::vector<typename Trait::ObjIDType> RTree<Trait>::Search(const RectType& searchRect) {
+void RTree<Trait>::Search(const RectType& searchRect, std::function<bool(const ObjIDType&)> visitor) {
     std::shared_lock<std::shared_mutex> lk(m_mtx);
-    std::vector<ObjIDType> results;
-    
-    // Lambda recursiva para recorrer el árbol
-    std::function<void(PageType*)> searchRecursive = 
-        [&](PageType* node) {
+    if (!m_Root) return;
+
+    // Lambda que retorna bool para permitir cancelación temprana
+    std::function<bool(PageType*)> recursiveSearch = 
+        [&](PageType* node) -> bool {
             for (const auto& entry : node->m_Entries) {
-              
-                if (CheckIntersection(searchRect, entry.mbr)) { 
+                if (CheckIntersection(searchRect, entry.mbr)) {
                     if (node->IsLeaf()) {
-                        // Es una hoja y el objeto está dentro (o intersecta) el rango
-                        results.push_back(entry.objID);
+                        // Llamamos al usuario. Si retorna false, detenemos todo.
+                        if (!visitor(entry.objID)) return false; 
                     } else {
-                        // Es un nodo interno, bajamos a explorar esa rama
-                        searchRecursive(entry.childPtr);
+                        if (!recursiveSearch(entry.childPtr)) return false;
                     }
                 }
             }
+            return true; // Continuar búsqueda
         };
 
-    if (m_Root) searchRecursive(m_Root);
-    return results;
+    recursiveSearch(m_Root);
 }
 
 template <typename Trait>
