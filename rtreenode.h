@@ -217,6 +217,15 @@ class RTreeNode
 
         return areaAfter - areaBefore;
     }
+
+    void RemoveBranch(size_t index)
+    {
+        if (index >= m_Count) return;
+
+        // move last branch to index
+        m_Branches[index] = m_Branches[m_Count - 1];
+        m_Count--; // and reduce count because one less branch
+    }
 };
 
 #endif // __RTREENODE_H__

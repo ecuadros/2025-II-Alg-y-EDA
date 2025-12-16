@@ -90,6 +90,33 @@ class RTree
         return is;
     }
 
+    bool Remove(RectType& rect, const ObjIDType& id)
+    {
+        vector<BranchType> orphans;
+        bool removed = _Remove(m_Root, rect, id, orphans);
+        if (removed) return true;
+
+        if (m_Root -> isEmpty() && !(m_Root -> isLeaf()))
+        {
+            delete m_Root;
+            m_Root = new NodeType(0);
+        }
+        else if (m_Root -> hasSingleChild() && !(m_Root -> isLeaf()))
+        {
+            // if root has single child, make child the new root
+            NodeType* singleChild = m_Root -> m_Branches[0].m_Child;
+            m_Root -> m_Branches[0].m_Child = nullptr;
+            delete m_Root;
+            m_Root = singleChild;
+        }
+
+        for (auto& branch : orphans)
+        {
+            _ReInsert(branch);
+        }
+        return true;
+    }
+
     private:
         NodeType* _Insert(NodeType* node, BranchType& branch)
         {
@@ -183,6 +210,75 @@ class RTree
                         _Search(branch.m_Child, searchRect, results);
                     }
                 }
+            }
+        }
+
+        void _ReInsert(BranchType& branch)
+        {
+            if (branch.m_Child != nullptr)
+            {
+                for (size_t i = 0; i < branch.m_Child -> m_Count; ++i)
+                {
+                    _ReInsert(branch.m_Child -> m_Branches[i]);
+                }
+                delete branch.m_Child;
+            }
+            else
+            {
+                Insert(branch.m_rect, branch.m_Data);
+            }
+        }
+
+        bool _Remove(NodeType* node, RectType& rect, ObjIDType id, vector<BranchType>& orphans)
+        {
+            if (node -> isLeaf())
+            {
+                for (size_t i = 0; i < node -> m_Count; ++i)
+                {
+                    if (node -> m_Branches[i].m_Data == id)
+                    {
+                        // found!
+                        node -> RemoveBranch(i);
+                        return true;
+                    }
+                }
+                return false;
+            }
+            else
+            {
+                for (size_t i = 0; i < node -> m_Count; ++ i)
+                {
+                    RectType& currentRectangle = node -> m_Branches[i].m_rect;
+                    if (currentRectangle.Intersects(rect))
+                    {
+                        NodeType* childNode = node -> m_Branches[i].m_Child;
+                        bool removed = _Remove(childNode, rect, id, orphans);
+                        if (removed)
+                        {
+                            if (childNode -> isUnderflow())
+                            {
+                                for (size_t k = 0; k < childNode -> m_Count; ++k)
+                                {
+                                    orphans.push_back(childNode -> m_Branches[k]);
+                                }
+
+                                for (size_t k = 0; k < childNode -> m_Count; ++ k)
+                                {
+                                    childNode -> m_Branches[k].m_Child = nullptr;
+                                }
+
+                                delete childNode;
+                                node -> RemoveBranch(i);
+                            }
+                            else
+                            {
+                                node -> m_Branches[i].m_rect = childNode -> getNodeMBR();
+                            }
+                            return true;
+                        }
+                    }
+                }
+                return false;
             }
         }
 };
