@@ -1,42 +1,37 @@
-#include <iostream>
-#include "vector.h"
-#include "DemoVector.h"
-#include "hilos.h"
-#include "linkedlist.h"
-#include "doublelinkedlist.h"
+#include "RTree.h"
 
-using namespace std;
+int main()
+{
+    CRTree<RTreeTraits2D> t;
 
-/* Revisado por:
-   1. Ernesto Cuadros-Vargas
-   4. Héctor Bobbio Hermoza 
-   2. Jharvy Jonas Cadillo Tarazona
-   20. Ortiz Lozano Eric Hernan
-   22. Chandler Steven Perez Cueva
-*/
+    using rect_2 = Rect<float, 2>;
 
-// Forma 1 de Compilar: 
-// g++ -std=c++17 -Wall -g -pthread -o main main.cpp
-// Forma #2 de Compilar (requiere el archivo Makefile)
-// make
+    t.insert(rect_2({0, 0}, {2, 2}), 10);
+    t.insert(rect_2({5, 5}, {6, 6}), 20);
+    t.insert(rect_2({1, 1}, {3, 3}), 30);
 
-int main(){
-    cout << "Hello Alg y EDA-UNI" << endl;
-    // DemoThreads();
-    [[maybe_unused]] int x = 5;
-    // DemoVector();
-    DemoLinkedList();
-    DemoDoubleLinkedList();
+    auto res = t.search(rect_2({1, 1}, {2.5f, 2.5f}));
+    std::cout << "query results:\n";
+    for (auto id : res)
+        std::cout << "  " << id << "\n";
+
+    t.remove(rect_2({1, 1}, {3, 3}), 30);
+
+    if (!t.write_to_file("rtree_saved.txt"))
+    {
+        return 1;
+    }
+
+    CRTree<RTreeTraits2D> t2;
+    if (!t2.read_from_file("rtree_saved.txt"))
+    {
+        return 1;
+    }
+
+    auto res2 = t2.search(rect_2({-1, -1}, {10, 10}));
+    std::cout << "after reload:\n";
+    for (auto id : res2)
+        std::cout << "  " << id << "\n";
+
     return 0;
 }
-
-// int main(int nArgs, char *pArgs[]){
-//     cout << "Hello Alg y EDA-UNI (forma #2)" << endl;
-//     int i;
-//     for(i = 0 ; i < nArgs ; ++i){
-//         cout << pArgs[i] << endl;
-//     }
-// }
-
-
-
