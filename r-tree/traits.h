@@ -1,13 +1,17 @@
 #ifndef _TRAITS_H_
 #define _TRAITS_H_
 
-template <typename _T, typename _Ref>
-struct RTreeTrait{
-    using  T          = _T;
-    using  Ref        = _Ref;
-    using  size_t M   =  10;
-    using  size_t m   =  6;
-    using  size_t DIM =  2;
+/**
+ * @brief Traits structure template
+ * Users must specialize this for their types
+ */
+template<typename T, size_t DIM, typename Ref>
+struct RTreeTraits {
+    using value_type = T;
+    using RefType = Ref;
+    static constexpr size_t DIM = DIM;
+    static constexpr size_t M = 50;  
+    static constexpr size_t m = 20;  
 };
 
 template <typename _T>

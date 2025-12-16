@@ -7,9 +7,9 @@
 #include <shared_mutex>
 using namespace std;
 
-/*
-*
-**/
+template <typename Traits>
+class RNode;
+
 /**
  * @brief Point in an N-dimensional space.
  * @tparam Traits Traits class that must provide `T` (value type) and `DIM` (dimension).
@@ -85,6 +85,8 @@ struct MBR{
 
     MBR(const PointType& minPoint, const PointType& maxPoint)
         : min(minPoint), max(maxPoint) {}
+    
+    MBR(const PointType& point) : min(point), max(point) {}
 
     /**
      * @brief Check whether the MBR contains a point.
@@ -163,6 +165,21 @@ struct MBR{
             center[i] = (min[i] + max[i]) / value_type(2);
         }
         return center;
+    }
+
+    /*
+    * @brief Compute Euclidean distance between centers of this and another MBR.
+    * @param other Other MBR.
+    */
+    value_type centerDistance(const MBR& other) const {
+        PointType c1 = center();
+        PointType c2 = other.center();
+        value_type dist = value_type(0);
+        for(size_t i = 0; i < DIM; ++i) {
+            value_type diff = c1[i] - c2[i];
+            dist += diff * diff;
+        }
+        return std::sqrt(dist);
     }
 
     /**
@@ -323,6 +340,9 @@ public:
     RNode(size_t level, bool isRoot = false, bool isLeaf = true)
         : m_Level(level), m_isRoot(isRoot), m_isLeaf(isLeaf) {}
 
+    RNode(MBRType mbr, std::vector<EntryType> entries, size_t level, bool isRoot = false, bool isLeaf = true)
+        : m_Level(level), m_isRoot(isRoot), m_isLeaf(isLeaf), m_MBR(mbr), m_Entries(entries) {}
+
     /**
      * @brief Copy constructor for RNode.
      * @param other RNode to copy from.
@@ -343,6 +363,7 @@ public:
     **/
     RNode& operator=(const RNode& other) {
         if(this != &other) {
+            scoped_lock lock(m_mutex, other.m_mutex);
             m_Level = other.m_Level;
             m_MaxEntry = other.m_MaxEntry;
             m_MinEntry = other.m_MinEntry;
@@ -359,13 +380,16 @@ public:
      * @param other RNode to move from.
     **/
     RNode(RNode&& other) noexcept
-        : m_Level(other.m_Level),
-          m_MaxEntry(other.m_MaxEntry),
-          m_MinEntry(other.m_MinEntry),
-          m_isRoot(other.m_isRoot),
-          m_isLeaf(other.m_isLeaf),
-          m_Entries(std::move(other.m_Entries)),
-          m_MBR(std::move(other.m_MBR)) {}
+        : m_mutex(), {
+            scoped_lock lock(m_mutexother.m_mutex);
+            m_Level = other.m_Level;
+            m_MaxEntry = other.m_MaxEntry;
+            m_MinEntry = other.m_MinEntry;
+            m_isRoot = other.m_isRoot;
+            m_isLeaf = other.m_isLeaf;
+            m_Entries = std::move(other.m_Entries);
+            m_MBR = other.m_MBR;
+          }
     
     /**
      * @brief Destructor for RNode.
@@ -507,6 +531,161 @@ public:
 
         return bestIndex;
     }
+
+    void range_query(const MBRType& query, std::vector<Ref>& results) const {
+        std::shared_lock lock(m_mutex);
+        
+        
+        if(this->IsLeaf()) {
+            for(const auto& entry : m_Entries) {
+                if(entry.mbr.overloaps(query)) {
+                    results.push_back(entry.ref);
+                }
+            }
+        } else {
+            for(const auto& entry : m_Entries) {
+                if(entry.mbr.overloaps(query)) {
+                    entry.childNode->range_query(query, results);
+                }
+            }
+        }
+    }
+
+    std::pair<EntryType, EntryType> QuadraticSplit(const EntryType& newEntry) {
+        std::unique_lock lock(m_mutex);
+        
+        m_Entries.push_back(newEntry);
+        
+        size_t seed1 = 0, seed2 = 0;
+        value_type maxDistance = value_type(0);
+        
+        for(size_t i = 0; i < m_Entries.size(); ++i) {
+            for(size_t j = i + 1; j < m_Entries.size(); ++j) {
+                value_type distance = m_Entries[i].mbr.centerDistance(m_Entries[j].mbr);
+                if(distance > maxDistance) {
+                    maxDistance = distance;
+                    seed1 = i;
+                    seed2 = j;
+                }
+            }
+        }
+        
+        std::vector<EntryType> group1, group2;
+        group1.push_back(m_Entries[seed1]);
+        group2.push_back(m_Entries[seed2]);
+        
+        std::vector<EntryType> remaining;
+        for(size_t i = 0; i < m_Entries.size(); ++i) {
+            if(i != seed1 && i != seed2) {
+                remaining.push_back(m_Entries[i]);
+            }
+        }
+        
+        while(!remaining.empty()) {
+            size_t nextIndex = 0;
+            value_type maxDiff = value_type(0);
+            
+            for(size_t i = 0; i < remaining.size(); ++i) {
+                value_type d1 = ComputeGroupExpansion(group1, remaining[i]);
+                value_type d2 = ComputeGroupExpansion(group2, remaining[i]);
+                value_type diff = std::abs(d1 - d2);
+                
+                if(diff > maxDiff) {
+                    maxDiff = diff;
+                    nextIndex = i;
+                }
+            }
+            
+            MBRType group1MBR = ComputeGroupMBR(group1);
+            MBRType group2MBR = ComputeGroupMBR(group2);
+            
+            value_type expansion1 = group1MBR.increase(remaining[nextIndex].mbr);
+            value_type expansion2 = group2MBR.increase(remaining[nextIndex].mbr);
+            
+            if(expansion1 < expansion2 || 
+               (expansion1 == expansion2 && group1.size() < group2.size())) {
+                group1.push_back(remaining[nextIndex]);
+            } else {
+                group2.push_back(remaining[nextIndex]);
+            }
+            
+            remaining.erase(remaining.begin() + nextIndex);
+        }
+        
+        MBRType mbr1 = ComputeGroupMBR(group1);
+        MBRType mbr2 = ComputeGroupMBR(group2);
+        
+        return std::make_pair(
+            EntryType(mbr1, static_cast<RNode<Traits>*>(nullptr)),
+            EntryType(mbr2, static_cast<RNode<Traits>*>(nullptr))
+        );
+    }
+
+    std::vector<EntryType> GetEntries() const {
+        std::shared_lock lock(m_mutex);
+        return m_Entries;
+    }
+
+    /**
+     * @brief Print node information to output stream.
+     * @param os Output stream.
+     */
+    void Print(ostream &os) const {
+        std::shared_lock lock(m_mutex);
+        os << "RNode(Level: " << m_Level
+           << ", isRoot: " << m_isRoot
+           << ", isLeaf: " << m_isLeaf
+           << ", NumEntries: " << m_Entries.size()
+           << ", MBR: " << m_MBR << ")\n";
+        for(const auto& entry : m_Entries) {
+            os << "  ";
+            entry.Print(os);
+            os << "\n";
+        }
+    }
+
+    /**
+     * @brief Read node data from input stream.
+     * @param is Input stream.
+     */
+    void Read(istream &is) {
+        std::unique_lock lock(m_mutex);
+        is >> m_Level >> m_isRoot >> m_isLeaf;
+        size_t numEntries;
+        is >> numEntries;
+        m_Entries.resize(numEntries);
+        for(size_t i = 0; i < numEntries; ++i) {
+            is >> m_Entries[i];
+        }
+        UpdateMBR();
+    }
+
+private:
+    MBRType ComputeGroupMBR(const std::vector<EntryType>& group) const {
+        if(group.empty()) return MBRType();
+        
+        MBRType mbr = group[0].mbr;
+        for(size_t i = 1; i < group.size(); ++i) {
+            mbr.expand(group[i].mbr);
+        }
+        return mbr;
+    }
+
+    value_type ComputeGroupExpansion(const std::vector<EntryType>& group, 
+                                    const EntryType& entry) const {
+        MBRType groupMBR = ComputeGroupMBR(group);
+        return groupMBR.increase(entry.mbr);
+    }
 };
+
+std::istream& operator>>(std::istream &is, RNode<Traits> &node) {
+    node.Read(is);
+    return is;
+}
+
+std::ostream& operator<<(std::ostream &os, const RNode<Traits> &node) {
+    node.Print(os);
+    return os;
+}
 
 #endif // _NODE_H_ //
