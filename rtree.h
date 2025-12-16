@@ -1,7 +1,6 @@
 #ifndef RTREE_H
 #define RTREE_H
 
-
 #include <array>
 #include <vector>
 #include <memory>
@@ -14,17 +13,23 @@
 #include <stdexcept>
 #include <functional>
 
-// ============================================================
-//  Box N-Dimensional (Rect equivalente para N dimensiones)
-// ============================================================
+/**
+ * @brief Caja delimitadora N-dimensional (AABB - Axis-Aligned Bounding Box)
+ * @tparam ScalarT Tipo escalar para las coordenadas (float, double, etc.)
+ * @tparam DimV Número de dimensiones
+ */
 template<class ScalarT, size_t DimV>
 struct BoxND {
   using Scalar = ScalarT;
   static constexpr size_t Dim = DimV;
 
-  std::array<Scalar, Dim> m_min{};
-  std::array<Scalar, Dim> m_max{};
+  std::array<Scalar, Dim> m_min{}; /
+  std::array<Scalar, Dim> m_max{}; 
 
+  /**
+   * @brief Crea una caja vacía (volumen cero con límites infinitos invertidos)
+   * @return Caja vacía
+   */
   static BoxND Empty() {
     BoxND b{};
     for (size_t d = 0; d < Dim; ++d) {
@@ -34,12 +39,20 @@ struct BoxND {
     return b;
   }
 
+  /**
+   * @brief Verifica si la caja está vacía
+   * @return true si min > max en alguna dimensión
+   */
   bool IsEmpty() const {
     for (size_t d = 0; d < Dim; ++d) 
       if (m_min[d] > m_max[d]) return true;
     return false;
   }
 
+  /**
+   * @brief Verifica si la caja es válida (min <= max en todas las dimensiones)
+   * @return true si la caja es válida
+   */
   bool IsValid() const {
     for (size_t d = 0; d < Dim; ++d) {
       if (m_min[d] > m_max[d]) return false;
@@ -47,6 +60,10 @@ struct BoxND {
     return true;
   }
 
+  /**
+   * @brief Calcula el área/volumen/hipervolumen de la caja
+   * @return Producto de las longitudes en cada dimensión
+   */
   Scalar Area() const {
     if (IsEmpty()) return Scalar{0};
     Scalar v = Scalar{1};
@@ -58,6 +75,11 @@ struct BoxND {
     return v;
   }
 
+  /**
+   * @brief Verifica si esta caja intersecta con otra
+   * @param other Otra caja a verificar
+   * @return true si las cajas se superponen
+   */
   bool Intersects(const BoxND& other) const {
     for (size_t d = 0; d < Dim; ++d) {
       if (m_max[d] < other.m_min[d] || other.m_max[d] < m_min[d]) 
@@ -66,6 +88,12 @@ struct BoxND {
     return true;
   }
 
+  /**
+   * @brief Combina dos cajas en su envolvente mínima (MBR)
+   * @param a Primera caja
+   * @param b Segunda caja
+   * @return Caja que contiene a ambas
+   */
   static BoxND Combine(const BoxND& a, const BoxND& b) {
     if (a.IsEmpty()) return b;
     if (b.IsEmpty()) return a;
@@ -77,33 +105,56 @@ struct BoxND {
     return out;
   }
 
+  /**
+   * @brief Calcula el incremento de área al combinar dos cajas
+   * @param cur Caja actual
+   * @param add Caja a añadir
+   * @return Diferencia de área (nueva - actual)
+   */
   static Scalar Enlargement(const BoxND& cur, const BoxND& add) {
     return Combine(cur, add).Area() - cur.Area();
   }
 
+  /**
+   * @brief Expande esta caja para incluir otra (modifica in-place)
+   * @param add Caja a incluir
+   */
   void ExpandInPlace(const BoxND& add) {
     *this = Combine(*this, add);
   }
 };
 
-// ============================================================
-//  Traits por defecto
-// ============================================================
+/**
+ * @brief Traits para configurar el comportamiento del R-Tree
+ * @tparam ScalarT Tipo escalar para coordenadas
+ * @tparam DimV Número de dimensiones
+ * @tparam Mv Número máximo de entradas por nodo (M)
+ */
 template<class ScalarT, size_t DimV, size_t Mv = 16>
 struct RTreeTraits {
   using Scalar = ScalarT;
   static constexpr size_t Dim = DimV;
   using Box = BoxND<Scalar, Dim>;
-  using Value = std::uint64_t;
+  using Value = std::uint64_t; 
 
-  static constexpr size_t M = Mv;
-  static constexpr size_t m = (Mv + 1) / 2;
+  static constexpr size_t M = Mv;           ///< Máximo de entradas por nodo
+  static constexpr size_t m = (Mv + 1) / 2; ///< Mínimo de entradas por nodo
 
+  /**
+   * @brief Serializa un valor al stream
+   * @param os Stream de salida
+   * @param v Valor a serializar
+   */
   static void SerializeValue(std::ostream& os, Value v) {
     os.write(reinterpret_cast<const char*>(&v), sizeof(Value));
     if (!os) throw std::runtime_error("serialize_value failed");
   }
   
+  /**
+   * @brief Deserializa un valor desde el stream
+   * @param is Stream de entrada
+   * @return Valor deserializado
+   */
   static Value DeserializeValue(std::istream& is) {
     Value v{};
     is.read(reinterpret_cast<char*>(&v), sizeof(Value));
@@ -112,9 +163,11 @@ struct RTreeTraits {
   }
 };
 
-// ============================================================
-//  RTree - Implementación N-dimensional
-// ============================================================
+/**
+ * @class CRTree
+ * @brief R-Tree N-dimensional con split cuadrático
+ * @tparam Traits Configuración del árbol (ver RTreeTraits)
+ */
 template<class Traits>
 class CRTree {
 public:
@@ -180,20 +233,39 @@ private:
   };
 
 public:
+  /**
+   * @brief Constructor por defecto
+   */
   CRTree() : m_pRoot(std::make_unique<Node>(true)) {
     if (M < 4) throw std::invalid_argument("M must be >= 4");
     if (m < 2) throw std::invalid_argument("m must be >= 2");
     if (m > M) throw std::invalid_argument("m must be <= M");
   }
 
+  /**
+   * @brief Elimina todos los elementos del árbol
+   */
   void Clear() {
     m_pRoot = std::make_unique<Node>(true);
     m_size = 0;
   }
 
+  /**
+   * @brief Retorna el número de elementos en el árbol
+   */
   size_t Size() const noexcept { return m_size; }
+  
+  /**
+   * @brief Verifica si el árbol está vacío
+   * @return true si no hay elementos
+   */
   bool Empty() const noexcept { return m_size == 0; }
 
+  /**
+   * @brief Inserta un elemento en el árbol
+   * @param id Identificador único
+   * @param box Caja delimitadora
+   */
   void Insert(Value id, const Box& box) {
     if (!box.IsValid()) {
       throw std::invalid_argument("Invalid box: min must be <= max in all dimensions");
@@ -212,6 +284,11 @@ public:
     ++m_size;
   }
 
+  /**
+   * @brief Elimina un elemento del árbol
+   * @param id Identificador a eliminar
+   * @return true si se eliminó, false si no existía
+   */
   bool Delete(Value id) {
     std::vector<Node*> path;
     Node* leaf = FindLeaf(m_pRoot.get(), id, path);
@@ -239,12 +316,21 @@ public:
     return true;
   }
 
+  /**
+   * @brief Busca elementos que intersectan con la región
+   * @param query Región de búsqueda
+   * @return IDs de elementos encontrados
+   */
   std::vector<Value> RangeQuery(const Box& query) const {
     std::vector<Value> out;
     RangeQueryRecursive(m_pRoot.get(), query, out);
     return out;
   }
 
+  /**
+   * @brief Guarda el árbol en disco
+   * @param path Ruta del archivo
+   */
   void WriteToFile(const std::string& path) const {
     std::ofstream os(path, std::ios::binary);
     if (!os) throw std::runtime_error("Cannot open for writing: " + path);
@@ -267,6 +353,10 @@ public:
     if (!os) throw std::runtime_error("Failed while writing tree.");
   }
 
+  /**
+   * @brief Carga el árbol desde disco
+   * @param path Ruta del archivo
+   */
   void ReadFromFile(const std::string& path) {
     std::ifstream is(path, std::ios::binary);
     if (!is) throw std::runtime_error("Cannot open for reading: " + path);
@@ -292,9 +382,15 @@ public:
   }
 
 private:
-  std::unique_ptr<Node> m_pRoot;
-  size_t m_size = 0;
+  std::unique_ptr<Node> m_pRoot; 
+  size_t m_size = 0;              
 
+  /**
+   * @brief Selecciona el subárbol óptimo para inserción
+   * @param n Nodo actual (interno)
+   * @param box Caja a insertar
+   * @return Índice de la mejor entrada hijo
+   */
   static size_t ChooseSubtree(const Node* n, const Box& box) {
     size_t best = 0;
     Scalar best_enl = std::numeric_limits<Scalar>::infinity();
@@ -313,6 +409,12 @@ private:
     return best;
   }
 
+  /**
+   * @brief Encuentra la hoja apropiada para insertar una caja
+   * @param root Raíz del subárbol
+   * @param box Caja a insertar
+   * @return Par (nodo hoja, camino desde raíz)
+   */
   static std::pair<Node*, std::vector<Node*>> ChooseLeaf(Node* root, const Box& box) {
     std::vector<Node*> path;
     Node* cur = root;
@@ -324,6 +426,13 @@ private:
     return {cur, path};
   }
 
+  /**
+   * @brief Busca recursivamente la hoja que contiene un valor
+   * @param cur Nodo actual
+   * @param id Identificador a buscar
+   * @param path Camino desde la raíz (out parameter)
+   * @return Puntero a la hoja si se encuentra, nullptr si no
+   */
   static Node* FindLeaf(Node* cur, Value id, std::vector<Node*>& path) {
     path.push_back(cur);
 
@@ -345,7 +454,11 @@ private:
     return nullptr;
   }
 
-  // Split mejorado con validaciones adicionales para M pequeños
+  /**
+   * @brief Divide un nodo usando el algoritmo cuadrático de Guttman
+   * @param n Nodo a dividir (con M+1 entradas)
+   * @return Nodo hermano creado
+   */
   std::unique_ptr<Node> SplitQuadratic(Node* n) {
     auto sibling = std::make_unique<Node>(n->m_isLeaf);
     const size_t total = n->m_entries.size();
@@ -505,6 +618,12 @@ private:
     return sibling;
   }
 
+  /**
+   * @brief Ajusta el árbol después de una inserción con posible split
+   * @param path Camino desde la raíz hasta el nodo modificado
+   * @param n Nodo modificado
+   * @param nn Hermano creado por split (nullptr si no hubo split)
+   */
   void AdjustAfterInsert(std::vector<Node*>& path, Node* n, std::unique_ptr<Node> nn) {
     while (!path.empty()) {
       Node* parent = path.back();
@@ -545,6 +664,11 @@ private:
     }
   }
 
+  /**
+   * @brief Recolecta recursivamente todas las entradas hoja de un subárbol
+   * @param sub Subárbol a recorrer
+   * @param out Vector donde se almacenan las entradas (out parameter)
+   */
   void CollectLeafEntries(Node& sub, std::vector<Entry>& out) {
     if (sub.m_isLeaf) {
       for (auto& e : sub.m_entries) {
@@ -559,6 +683,11 @@ private:
     }
   }
 
+  /**
+   * @brief Condensa el árbol eliminando nodos con underflow
+   * @param path Camino desde la raíz hasta el nodo modificado
+   * @param orphan_leaf_entries Entradas huérfanas a reinsertar (out parameter)
+   */
   void CondenseTree(std::vector<Node*>& path, std::vector<Entry>& orphan_leaf_entries) {
     if (path.size() <= 1) {
       if (!path.empty()) path[0]->RecalcMBR();
@@ -595,6 +724,9 @@ private:
     m_pRoot->RecalcMBR();
   }
 
+  /**
+   * @brief Reduce la altura del árbol si la raíz tiene un solo hijo
+   */
   void ShrinkRoot() {
     if (!m_pRoot->m_isLeaf && m_pRoot->m_entries.size() == 1) {
       m_pRoot = std::move(m_pRoot->m_entries[0].m_child);
@@ -605,6 +737,14 @@ private:
     m_pRoot->RecalcMBR();
   }
 
+  /**
+   * @brief Búsqueda recursiva por rango
+   * @param n Nodo actual
+   * @param q Caja de consulta
+   * @param out Vector de resultados (out parameter)
+   * 
+   * Poda ramas que no intersectan con la consulta
+   */
   static void RangeQueryRecursive(const Node* n, const Box& q, std::vector<Value>& out) {
     if (!n->m_mbr.Intersects(q)) return;
 
