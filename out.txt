@@ -1,329 +1,51 @@
---- Probando BTree con orden ascendente por defecto ---
-        0->28
-        1->2
-    2->5
-        3->56
-        4->42
-        5->32
-    6->33
-        7->34
-        8->9
-        9->13
-A->14
-        B->35
-        C->38
-        D->1
-    E->22
-        F->43
-        G->54
-    H->50
-        I->51
-        J->4
-    K->11
-        L->12
-        M->58
-N->29
-        O->18
-        P->19
-    Q->20
-        R->25
-        S->26
-        T->7
-    U->36
-        V->55
-        W->31
-        X->3
-Y->46
-        Z->47
-        a->48
-        b->30
-    c->21
-        d->44
-        e->57
-        f->37
-    g->8
-        h->15
-        i->16
-    j->17
-        k->49
-        l->60
-m->61
-        n->62
-        o->23
-    p->27
-        q->39
-        r->40
-    s->41
-        t->45
-        u->52
-        v->53
-    w->24
-        x->6
-        y->59
-        z->10
-------------------------------------------
 
+ R-Tree: 
+Insertando rectangulos en el R-Tree...
+Estructura del R-Tree:
+	{80,10,90,20}->7
+	{35,5,45,15}->6
+	{10,10,20,20}->1
+	{15,15,25,25}->2
+{10,5,90,25}->-1
+	{10,80,20,90}->8
+	{5,45,15,55}->5
+	{70,70,80,80}->4
+	{30,30,40,40}->3
+	{50,50,60,60}->9
+	{55,55,65,65}->10
+	{90,90,100,100}->11
+{5,30,100,100}->-1
 
---- Probando la busqueda ---
-Buscando ]: No encontrado ]
-Buscando *: No encontrado *
-Buscando [: No encontrado [
-Buscando ┬: No encontrado ┬
-Buscando ¿: No encontrado ¿
-Buscando {: No encontrado {
-Buscando 3: Encontrado 3, ID = 56
-Buscando 4: Encontrado 4, ID = 42
-Buscando 5: Encontrado 5, ID = 32
-Buscando 6: Encontrado 6, ID = 33
-Buscando 7: Encontrado 7, ID = 34
-Buscando 8: Encontrado 8, ID = 9
-Buscando 9: Encontrado 9, ID = 13
-Buscando A: Encontrado A, ID = 14
-Buscando B: Encontrado B, ID = 35
-Buscando C: Encontrado C, ID = 38
-Buscando D: Encontrado D, ID = 1
-Buscando E: Encontrado E, ID = 22
-Buscando F: Encontrado F, ID = 43
-Buscando G: Encontrado G, ID = 54
-Buscando H: Encontrado H, ID = 50
-Buscando I: Encontrado I, ID = 51
-Buscando J: Encontrado J, ID = 4
-Buscando K: Encontrado K, ID = 11
-Buscando L: Encontrado L, ID = 12
-Buscando M: Encontrado M, ID = 58
-Buscando N: Encontrado N, ID = 29
-Buscando O: Encontrado O, ID = 18
-Buscando P: Encontrado P, ID = 19
-Buscando Q: Encontrado Q, ID = 20
-Buscando *: No encontrado *
-------------------------------------------
+ Busqueda en el R-Tree
+Buscando rectangulos que intersectan con el area: {18,18,35,35}
+Resultados (IDs): 1 2 3 
 
+ Probando Borrado, Escritura y Lectura: 
+Arbol antes de borrar:
+{10,10,20,20}->1
+{15,15,25,25}->2
+{30,30,40,40}->3
+{70,70,80,80}->4
+{5,45,15,55}->5
+{35,5,45,15}->6
+{50,50,60,60}->9
 
---- Probando BTree con orden descendente antes de ser movido ---
-        z->10
-        y->59
-        x->6
-    w->24
-        v->53
-        u->52
-    t->45
-        s->41
-        r->40
-    q->39
-        p->27
-        o->23
-n->62
-        m->61
-        l->60
-    k->49
-        j->17
-        i->16
-    h->15
-        g->8
-        f->37
-        e->57
-    d->44
-        c->21
-        b->30
-        a->48
-Z->47
-        Y->46
-        X->3
-    W->31
-        V->55
-        U->36
-        T->7
-    S->26
-        R->25
-        Q->20
-P->19
-        O->18
-        N->29
-        M->58
-    L->12
-        K->11
-        J->4
-        I->51
-    H->50
-        G->54
-        F->43
-        E->22
-    D->1
-        C->38
-        B->35
-        A->14
-9->13
-        8->9
-        7->34
-    6->33
-        5->32
-        4->42
-        3->56
-    2->5
-        1->2
-        0->28
+Borrando rectangulo con ID 9 y area {50,50,60,60}
+Borrado exitoso.
+Arbol despues de borrar:
+{10,10,20,20}->1
+{15,15,25,25}->2
+{30,30,40,40}->3
+{70,70,80,80}->4
+{5,45,15,55}->5
+{35,5,45,15}->6
 
---- Moviendo el arbol bt_desc a bt_moved ---
-Arbol movido (bt_moved):
-        z->10
-        y->59
-        x->6
-    w->24
-        v->53
-        u->52
-    t->45
-        s->41
-        r->40
-    q->39
-        p->27
-        o->23
-n->62
-        m->61
-        l->60
-    k->49
-        j->17
-        i->16
-    h->15
-        g->8
-        f->37
-        e->57
-    d->44
-        c->21
-        b->30
-        a->48
-Z->47
-        Y->46
-        X->3
-    W->31
-        V->55
-        U->36
-        T->7
-    S->26
-        R->25
-        Q->20
-P->19
-        O->18
-        N->29
-        M->58
-    L->12
-        K->11
-        J->4
-        I->51
-    H->50
-        G->54
-        F->43
-        E->22
-    D->1
-        C->38
-        B->35
-        A->14
-9->13
-        8->9
-        7->34
-    6->33
-        5->32
-        4->42
-        3->56
-    2->5
-        1->2
-        0->28
-Arbol original (bt_desc) despues de mover:
-(El arbol esta vacio)
-------------------------------------------
-
-
---- Probando ForEach con funcion lambda ---
-Clave: g en nivel 1
-Clave: h en nivel 2
-Clave: i en nivel 2
-Clave: j en nivel 1
-Clave: k en nivel 2
-Clave: l en nivel 2
-Clave: m en nivel 0
-Clave: n en nivel 2
-Clave: o en nivel 2
-Clave: p en nivel 1
-Clave: q en nivel 2
-Clave: r en nivel 2
-Clave: s en nivel 1
-Clave: t en nivel 2
-Clave: u en nivel 2
-Clave: v en nivel 2
-Clave: w en nivel 1
-Clave: x en nivel 2
-Clave: y en nivel 2
-Clave: z en nivel 2
-
---- Probando Write y Read ---
-Guardando el arbol 'bt' en 'btree.dat'...
-Guardado con exito
-Cargando desde 'btree.txt' a 'bt_loaded' 
-Cargado con exito:
-        0->28
-        1->2
-    2->5
-        3->56
-        4->42
-        5->32
-    6->33
-        7->34
-        8->9
-        9->13
-A->14
-        B->35
-        C->38
-        D->1
-    E->22
-        F->43
-        G->54
-    H->50
-        I->51
-        J->4
-    K->11
-        L->12
-        M->58
-N->29
-        O->18
-        P->19
-    Q->20
-        R->25
-        S->26
-        T->7
-    U->36
-        V->55
-        W->31
-        X->3
-Y->46
-        Z->47
-        a->48
-        b->30
-    c->21
-        d->44
-        e->57
-        f->37
-    g->8
-        h->15
-        i->16
-    j->17
-        k->49
-        l->60
-m->61
-        n->62
-        o->23
-    p->27
-        q->39
-        r->40
-    s->41
-        t->45
-        u->52
-        v->53
-    w->24
-        x->6
-        y->59
-        z->10
-------------------------------------------
-
-
---- Probando iteradores ---
-Recorriendo el arbol 'bt' con iteradores...
-0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz
+Guardando arbol en 'rtree.dat'...
+Cargando arbol desde 'rtree.dat'...
+Arbol cargado:
+{10,10,20,20}->1
+{15,15,25,25}->2
+{30,30,40,40}->3
+{70,70,80,80}->4
+{5,45,15,55}->5
+{35,5,45,15}->6

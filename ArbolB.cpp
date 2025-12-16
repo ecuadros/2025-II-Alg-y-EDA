@@ -1,85 +1,90 @@
 #include <time.h>
 #include <stdlib.h>
 #include "btree.h"
+#include <fstream>
 #include <string>
-
-const char * keys1 = "D1XJ2xTg8zKL9AhijOPQcEowRSp0NbW567BUfCqrs4FdtYZakHIuvGV3eMylmn";
-const char * keys2 = "]*[¨{3456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz*";
-const char * keys3 = "DYZakHIUwxVJ203ejOP9Qc8AdtuEop1XvTRghSNbW567BfiCqrs4FGMyzKLlmn";
+#include <vector>
 
 const int BTreeSize = 3;
-int main (int argc, char ** argv){
-    int result, i;
-    cout <<  " BTree con orden ascendente por defecto " << endl;
-    // BTree con orden ascendente (std::less por defecto)
-    BTree<BTreeTrait<char, int>> bt(BTreeSize);
-    cout << bt;
-    for (i = 0; keys1[i]; ++i) {
-        result = bt.Insert(keys1[i], i+1);
-    }
-    cout << bt;
-       
-    cout << "\n Busqueda" << endl;
-    for (i = 0; keys2[i]; ++i) {
-        cout << "Buscando " << keys2[i] << ": ";
-        int ObjID = bt.Search(keys2[i]);
-        if (ObjID != -1)
-            cout << "Encontrado " << keys2[i] << ", ID = " << ObjID << endl;
-        else
-            cout <<"No encontrado " << keys2[i] << endl;
-    }
-    cout << "\n BTree con orden descendente antes de ser movido" << endl;
-    BTree<BTreeDescTrait<char, int>> bt_desc(BTreeSize);
-    for (i = 0; keys1[i]; i++) {
-        result = bt_desc.Insert(keys1[i], i+1); 
-    }
-    cout << bt_desc;
+void DemoRTree() {
+    cout << "\n R-Tree: " << endl;
 
-    cout << "\n Move el arbol bt_desc a bt_moved ---" << endl;
-    BTree<BTreeDescTrait<char, int>> bt_moved(std::move(bt_desc));
 
-    cout << "Arbol movido (bt_moved):" << endl;
-    cout << bt_moved;
+    BTree<RTreeTrait<int>> rtree(BTreeSize);
+    
+    // ejemplo
+    std::vector<std::pair<Rect, int>> data = {
+        {{10, 10, 20, 20}, 1}, {{15, 15, 25, 25}, 2}, {{30, 30, 40, 40}, 3},
+        {{70, 70, 80, 80}, 4}, {{5, 45, 15, 55}, 5},  {{35, 5, 45, 15}, 6},
+        {{80, 10, 90, 20}, 7}, {{10, 80, 20, 90}, 8}, {{50, 50, 60, 60}, 9},
+        {{55, 55, 65, 65}, 10},{{90, 90, 100, 100}, 11} 
+    };
 
-    cout << "Arbol original (bt_desc) despues de mover:" << endl;
-    if (bt_desc.size() == 0) {
-        cout << "El arbol esta vacio" << endl;
-    } else {
-        cout << bt_desc;
+    cout << "Insertando rectangulos en el R-Tree..." << endl;
+    for (const auto& pair : data) {
+        rtree.Insert(pair.first, pair.second);
     }
 
-    cout << "------------------------------------------\n" << endl;
-    cout << "\n--- Probando ForEach con funcion lambda ---" << endl;
-    bt.ForEach(0, [](const auto& info, size_t level) {
-        if (info.key > 'f') {
-                std::cout << "Clave: " << info.key << " en nivel " << level << std::endl;
-        }
-    });
-    cout << "\nWrite y Read" << endl;
-    // Write
-    cout << "\nGuardando el arbol 'bt' en 'btree.dat'" << endl;
-    ofstream outFile("btree.txt");
-    if (outFile) {
-        bt.Write(outFile);
-        outFile.close();
-        cout << "Guardado con exito" << endl;
-    }
+    cout << "Estructura del R-Tree:" << endl;
+    cout << rtree;
 
-    // Read
-    BTree<BTreeTrait<char, int>> bt_loaded(BTreeSize);
-    cout << "\nCargando desde btree.txt a bt_loaded " << endl;
-    ifstream inFile("btree.txt");
-    if (inFile) {
-        bt_loaded.Read(inFile);
-        inFile.close();
-        cout << "Cargado con exito:" << endl;
-        cout << bt_loaded;
-        
-    }
-    cout << "\n Recorrido con iteradores" << endl;   
-    for (auto it = bt.begin(); it != bt.end(); ++it) {
-        cout << (*it).key;
-    }
+    cout << "\n Busqueda en el R-Tree" << endl;
+    Rect areaDeBusqueda = {18, 18, 35, 35};
+    cout << "Buscando rectangulos que intersectan con el area: " << areaDeBusqueda << endl;
+
+    std::vector<int> resultados = rtree.Search(areaDeBusqueda);
+
+    cout << "Resultados (IDs): ";
+    for (int id : resultados) { cout << id << " "; }
     cout << endl;
+}
+
+void DemoRTree_Delete_Read_Write() {
+    cout << "\n Probando Borrado, Escritura y Lectura: " << endl;
+    BTree<RTreeTrait<int>> rtree(BTreeSize);
+
+    std::vector<std::pair<Rect, int>> data = {
+        {{10, 10, 20, 20}, 1}, {{15, 15, 25, 25}, 2}, {{30, 30, 40, 40}, 3},
+        {{70, 70, 80, 80}, 4}, {{5, 45, 15, 55}, 5},  {{35, 5, 45, 15}, 6},
+        {{50, 50, 60, 60}, 9}
+    };
+    for (const auto& pair : data) {
+        rtree.Insert(pair.first, pair.second);
+    }
+
+    cout << "Arbol antes de borrar:" << endl;
+    cout << rtree;
+
+    // Borrado
+    Rect to_delete_rect = {50, 50, 60, 60};
+    int to_delete_id = 9;
+    cout << "\nBorrando rectangulo con ID " << to_delete_id << " y area " << to_delete_rect << endl;
+    if (rtree.Remove(to_delete_rect, to_delete_id)) {
+        cout << "Borrado exitoso." << endl;
+    } else {
+        cout << "No se pudo borrar." << endl;
+    }
+    cout << "Arbol despues de borrar:" << endl;
+    cout << rtree;
+
+    // Write en disco
+    cout << "\nGuardando arbol en 'rtree.dat'..." << endl;
+    ofstream outFile("rtree.dat");
+    rtree.Write(outFile);
+    outFile.close();
+
+    // Leer del disco
+    BTree<RTreeTrait<int>> rtree_loaded(BTreeSize);
+    cout << "Cargando arbol desde 'rtree.dat'..." << endl;
+    ifstream inFile("rtree.dat");
+    rtree_loaded.Read(inFile);
+    inFile.close();
+    cout << "Arbol cargado:" << endl;
+    cout << rtree_loaded;
+}
+
+int main (int argc, char ** argv){
+    DemoRTree();
+    DemoRTree_Delete_Read_Write();
     return 1;
 }

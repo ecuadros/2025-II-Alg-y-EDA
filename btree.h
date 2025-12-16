@@ -11,9 +11,52 @@
 #include <utility>
 #include <mutex> 
 #include <iterator>
+#include <vector>
 #include <fstream>
-#include "btreepage.h"
 #define DEFAULT_BTREE_ORDER 3
+
+/**
+ * @struct Rect
+ * @brief Representa un rectángulo en 2D, la clave para el R-Tree.
+ */
+struct Rect {
+    int x1, y1, x2, y2;
+
+    int area() const { return (x2 - x1) * (y2 - y1); }
+
+    // para el area necesaria
+    static int expansionNecesaria(const Rect& contenedor, const Rect& nuevo) {
+        Rect r = unir(contenedor, nuevo);
+        return r.area() - contenedor.area();
+    }
+
+    // MBR de dos rectángulos.
+    static Rect unir(const Rect& a, const Rect& b) {
+        return {std::min(a.x1, b.x1), std::min(a.y1, b.y1),
+                std::max(a.x2, b.x2), std::max(a.y2, b.y2)};
+    }
+
+    // comprueba si hay solapamiento con otro.
+    bool intersecta(const Rect& otro) const {
+        return !(x2 < otro.x1 || x1 > otro.x2 || y2 < otro.y1 || y1 > otro.y2);
+    }
+};
+
+inline std::ostream& operator<<(std::ostream& os, const Rect& r) {
+    os << "{" << r.x1 << "," << r.y1 << "," << r.x2 << "," << r.y2 << "}";
+    return os;
+};
+
+inline std::istream& operator>>(std::istream& is, Rect& r) {
+    char c1, c2, c3, c4, c5;
+    // formato {x1,y1,x2,y2}
+    is >> c1 >> r.x1 >> c2 >> r.y1 >> c3 >> r.x2 >> c4 >> r.y2 >> c5;
+    // por si hay un error en el formtao
+    if (c1 != '{' || c2 != ',' || c3 != ',' || c4 != ',' || c5 != '}') {
+        is.setstate(std::ios_base::failbit); 
+    }
+    return is;
+}
 
 const size_t MaxHeight = 5; 
 
@@ -43,10 +86,25 @@ template <typename _keyType, typename _ObjIDType>
 struct BTreeDescTrait : public BTreeTrait<_keyType, _ObjIDType, std::greater<_keyType>> {};
 
 /**
+ * @struct RTreeTrait
+ * @brief Define los tipos para un R-Tree. La clave es un Rect.
+ * @tparam _ObjIDType El tipo de dato para los IDs de objeto.
+ */
+template <typename _ObjIDType>
+struct RTreeTrait {
+    using keyType   = Rect;       // La clave es un Rectángulo
+    using ObjIDType = _ObjIDType; // El ID del objeto
+    struct NoCompare {}; using Compare = NoCompare;
+};
+
+/**
  * @class BTree
  * @brief Implementa una estructura de datos B-Tree.
  * @tparam Trait Un struct que define los tipos usados por el B-Tree.
  */
+
+#include "btreepage.h"
+
 template <typename Trait>
 class BTree // this is the full version of the BTree
 {
@@ -257,15 +315,10 @@ public:
        /**
         * @brief Busca una clave en el árbol.
         * @param key La clave a buscar.
-        * @return El ID del objeto si se encuentra, de lo contrario -1.
+        * @return Devolver una lista de resultados.
         */
-       ObjIDType       Search (const keyType key)
-       {      
-              std::lock_guard<std::shared_mutex> lock(m_Mutex);
-              ObjIDType ObjID = -1;
-              m_Root.Search(key, ObjID);
-              return ObjID;
-       }
+       std::vector<ObjIDType> Search(const keyType& areaBusqueda);
+
        /// Devuelve el número total de claves en el árbol.
        size_t            size()  const { std::shared_lock<std::shared_mutex> lock(m_Mutex); return m_NumKeys; }
        /// Devuelve la altura del árbol.
@@ -280,8 +333,7 @@ public:
               m_Root.Print(os);
        }
 
-       /// Devuelve un iterador al primer elemento del árbol.
-       iterator begin() {
+      iterator begin() {
               std::lock_guard<std::shared_mutex> lock(m_Mutex);
               BTNode* pNode = &m_Root;
               if (!pNode || pNode->m_KeyCount == 0) {
@@ -347,15 +399,41 @@ protected:
 template <typename Trait>
 bool BTree<Trait>::Insert(const keyType key, const ObjIDType ObjID){
        std::lock_guard<std::shared_mutex> lock(m_Mutex);
-       bt_ErrorCode error = m_Root.Insert(key, ObjID);
-       if( error == bt_duplicate )
-               return false;
+       
+       BTNode* pNewNode = nullptr;
+       bt_ErrorCode error = m_Root.Insert(key, ObjID, &pNewNode);
+
        m_NumKeys++;
+
        if( error == bt_overflow ){
-               m_Root.SplitRoot();
+               BTNode* pLeftChild = new BTNode(std::move(m_Root));
+               
+               // reinicializar m_Root
+               m_Root.m_MaxKeys = 2 * m_Order + 1;
+               m_Root.m_Unique = m_Unique;
+               m_Root.Create();
+               m_Root.SetMaxKeysForChilds(m_Order);
+
+               // el nodo es el hijo derecho.
+               BTNode* pRightChild = pNewNode;
+
+               // establecer la nueva raíz como padre de los hijos
+               pLeftChild->SetParent(&m_Root);
+               pRightChild->SetParent(&m_Root);
+               m_Root.AddChild(pLeftChild);
+               m_Root.AddChild(pRightChild);
                m_Height++;
        }
        return true;
+}
+
+template <typename Trait>
+std::vector<typename Trait::ObjIDType> BTree<Trait>::Search(const keyType& areaBusqueda)
+{
+    std::shared_lock<std::shared_mutex> lock(m_Mutex);
+    std::vector<ObjIDType> resultados;
+    m_Root.Search(areaBusqueda, resultados);
+    return resultados;
 }
 
 template <typename Trait>
@@ -383,18 +461,30 @@ void BTree<Trait>::Read(istream& is) {
 template <typename Trait>
 bool BTree<Trait>::Remove (const keyType key, const ObjIDType ObjID)
 {
-       std::lock_guard<std::shared_mutex> lock(m_Mutex);
-       bt_ErrorCode error = m_Root.Remove(key, ObjID);
-       if( error == bt_duplicate || error == bt_nofound )
-               return false;
-       m_NumKeys--;
+    std::lock_guard<std::shared_mutex> lock(m_Mutex);
+    
+    std::vector<ObjectInfo> reinsert_list;
+    bool found = m_Root.Remove(key, ObjID, reinsert_list);
 
-       if( error == bt_rootmerged )
-               m_Height--;
-       return true;
+    if (!found) return false;
+
+    m_NumKeys--;
+
+    // reinsertar los nodos que tuvieron underflow
+    for (const auto& entry : reinsert_list) {
+        Insert(entry.key, entry.ObjID);
+    }
+
+    // si hay solo 1 hijo, se convierte en la nueva raíz
+    if (m_Root.m_KeyCount == 1 && m_Height > 1 && m_Root.m_SubPages[0] != nullptr) {
+        m_Root = std::move(*m_Root.m_SubPages[0]);
+        m_Height--;
+    }
+
+    return true;
 }
 
-/// Sobrecarga del operador << para imprimir el B-Tree.
+/// Sobrecarga del operador << para imprimir el R-Tree.
 template <typename Trait>
 std::ostream& operator<<(std::ostream& os, const BTree<Trait>& tree) {
     tree.Print(os);
