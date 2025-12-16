@@ -2,6 +2,7 @@
 #define __RTREE_RECTANGLE_H__
 
 #include <iostream>
+#include <limits> // infinity
 
 using namespace std;
 
@@ -15,7 +16,12 @@ struct Rectangle
     ElemType m_min[Trait::NumDims];
     ElemType m_max[Trait::NumDims];
 
-    Rectangle() {}
+    Rectangle() {
+        for (size_t i = 0; i < Trait::NumDims; ++i) {
+            m_min[i] = numeric_limits<ElemType>::max();     // +infinity
+            m_max[i] = numeric_limits<ElemType>::lowest();  // -infinity
+        }
+    }
 
     // to set manually
     void Set(const ElemType* min, const ElemType* max)
