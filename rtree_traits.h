@@ -59,7 +59,7 @@ struct Rectangle {
     }
 };
 
-// Traits para configurar el R-Tree (similar a BTreeTrait)
+
 template <typename _CoordType, size_t _Dim, typename _ObjIDType>
 struct RTreeTrait {
     using CoordType = _CoordType;

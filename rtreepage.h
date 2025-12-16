@@ -45,6 +45,15 @@ public:
     // Calcular el MBR que cubre todas las entradas de esta página
     RectType GetNodeMBR() const;
 
+    // Elimina una entrada específica 
+    bool RemoveEntry(const ObjIDType& id);
+
+    // Método auxiliar para buscar el índice de una entrada que coincida con el ID
+    int FindEntryIndex(const ObjIDType& id) const;
+
+    // Recalcula el MBR de este nodo basándose en sus entradas actuales
+    void RecalculateMBR();
+
 protected:
     size_t m_MinEntries;
     size_t m_MaxEntries;
@@ -166,6 +175,35 @@ typename Trait::RectType RTreePage<Trait>::GetNodeMBR() const {
         hull.Merge(m_Entries[i].mbr);
     }
     return hull;
+}
+
+//borrado
+template <typename Trait>
+int RTreePage<Trait>::FindEntryIndex(const ObjIDType& id) const {
+    for (size_t i = 0; i < m_Entries.size(); ++i) {
+        if (m_Entries[i].objID == id) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+template <typename Trait>
+bool RTreePage<Trait>::RemoveEntry(const ObjIDType& id) {
+    int idx = FindEntryIndex(id);
+    if (idx == -1) return false;
+
+    // Eliminar usando swap con el último para eficiencia vector
+    if (idx != m_Entries.size() - 1) {
+        std::swap(m_Entries[idx], m_Entries.back());
+    }
+    m_Entries.pop_back();
+    return true;
+}
+
+template <typename Trait>
+void RTreePage<Trait>::RecalculateMBR() {
+
 }
 
 #endif

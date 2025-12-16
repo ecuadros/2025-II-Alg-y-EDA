@@ -45,6 +45,8 @@ public:
         std::shared_lock<std::shared_mutex> lk(m_mtx);
         return m_Height;
     }
+    // Eliminación Thread-Safe
+    bool Remove(const RectType& rect, const ObjIDType& id);
 
 protected:
     PageType* m_Root;
@@ -60,6 +62,12 @@ protected:
     
     // Helper para verificar intersección si el RectType no tiene el método
     bool CheckIntersection(const RectType& r1, const RectType& r2) const;
+
+    // Elimina nodos vacíos/pobres y devuelve una lista de entradas "huerfanas" para reinsertar.
+    void CondenseTree(PageType* leafNode, std::vector<Entry>& orphanedEntries);
+
+    // Función auxiliar para encontrar la hoja que contiene el dato
+    PageType* FindLeaf(PageType* node, const RectType& rect, const ObjIDType& id);
 };
 
 
@@ -146,6 +154,120 @@ std::vector<typename Trait::ObjIDType> RTree<Trait>::Search(const RectType& sear
 
     if (m_Root) searchRecursive(m_Root);
     return results;
+}
+
+template <typename Trait>
+bool RTree<Trait>::Remove(const RectType& rect, const ObjIDType& id) {
+    std::unique_lock<std::shared_mutex> lk(m_mtx);
+
+    // 1. Encontrar la hoja que contiene el dato
+    PageType* leaf = FindLeaf(m_Root, rect, id);
+    if (!leaf) return false; 
+
+    // 2. Eliminar la entrada de la hoja
+    bool removed = leaf->RemoveEntry(id);
+    if (!removed) return false;
+
+    // 3. CondenseTree: Ajustar MBRs hacia arriba y eliminar nodos con underflow
+    std::vector<Entry> orphanedEntries;
+    CondenseTree(leaf, orphanedEntries);
+
+    // 4. Ajustar la raíz si quedó con un solo hijo (reducción de altura)
+    if (!m_Root->IsLeaf() && m_Root->Count() == 1) {
+        PageType* newRoot = m_Root->m_Entries[0].childPtr;
+        newRoot->m_Parent = nullptr;
+        
+        m_Root->m_Entries.clear(); // Evitar borrado recursivo accidental
+        delete m_Root;
+        m_Root = newRoot;
+        m_Height--;
+    } 
+    else if (m_Root->IsLeaf() && m_Root->Count() == 0) {
+        // Árbol totalmente vacío, reseteamos altura
+        m_Height = 1;
+    }
+
+    // 5. Re-insertar entradas huérfanas (datos de nodos eliminados por underflow)
+    for(const auto& e : orphanedEntries) {
+        if(e.childPtr == nullptr) { // Es un dato hoja
+             Entry newE = e;
+             rt_ErrorCode r = m_Root->Insert(newE);
+             
+             if(r == rt_overflow) {
+                 Entry dummy;
+                 PageType* sib = m_Root->SplitNode(dummy);
+                 SplitRoot(m_Root, sib);
+                 m_Height++;
+             }
+        }
+    }
+
+    m_NumObjs--;
+    return true;
+}
+
+template <typename Trait>
+typename RTree<Trait>::PageType* RTree<Trait>::FindLeaf(PageType* node, const RectType& rect, const ObjIDType& id) {
+    if (node->IsLeaf()) {
+        // Búsqueda secuencial en la hoja
+        for (const auto& entry : node->m_Entries) {
+            if (entry.objID == id) return node;
+        }
+        return nullptr;
+    }
+
+    // Si es interno, buscamos en los hijos cuyo MBR contenga al objeto
+    for (const auto& entry : node->m_Entries) {
+        if (entry.mbr.Contains(rect)) {
+             PageType* res = FindLeaf(entry.childPtr, rect, id);
+             if (res) return res;
+        }
+    }
+    return nullptr;
+}
+
+template <typename Trait>
+void RTree<Trait>::CondenseTree(PageType* node, std::vector<Entry>& orphanedEntries) {
+    PageType* parent = nullptr;
+    Entry* entryInParent = nullptr;
+
+    // Subimos desde la hoja hasta la raíz
+    while (node != m_Root) {
+        parent = node->m_Parent;
+        
+        // Localizar la entrada en el padre que apunta al nodo actual
+        int idxInParent = -1;
+        for(size_t i=0; i < parent->m_Entries.size(); ++i) {
+            if(parent->m_Entries[i].childPtr == node) {
+                idxInParent = i;
+                entryInParent = &parent->m_Entries[i];
+                break;
+            }
+        }
+
+        // Caso 1: Underflow (el nodo tiene menos entradas de las permitidas)
+        if (node->Count() < m_MinEntries) {
+            if (idxInParent != -1) {
+                parent->m_Entries.erase(parent->m_Entries.begin() + idxInParent);
+            }
+            
+            for (const auto& e : node->m_Entries) {
+                orphanedEntries.push_back(e);
+            }
+            
+            // Eliminamos el nodo físico
+            node->m_Entries.clear(); 
+            delete node;
+            
+        } else {
+            // Caso 2: El nodo está sano, solo actualizamos su MBR en el padre
+            if (entryInParent) {
+                entryInParent->mbr = node->GetNodeMBR();
+            }
+        }
+        node = parent;
+    }
+    
 }
 
 #endif
