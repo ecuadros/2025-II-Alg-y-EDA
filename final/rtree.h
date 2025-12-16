@@ -25,6 +25,7 @@ public:
 
     bool Insert(const Rectangle<CoordType>& rect, const ObjIDType objID);
     bool Remove(const Rectangle<CoordType>& rect, const ObjIDType objID);
+    void RangeQuery(const Rectangle<CoordType>& range, std::vector<ObjIDType>& results);
 
     size_t GetHeight() const { return m_Height; }
     size_t GetSize() const { return m_Size; }
@@ -99,6 +100,11 @@ bool CRTree<Trait>::Remove(const Rectangle<CoordType>& rect, const ObjIDType obj
     }
 
     return false;
+}
+
+template <typename Trait>
+void CRTree<Trait>::RangeQuery(const Rectangle<CoordType>& range, std::vector<ObjIDType>& results) {
+    m_Root->RangeQuery(range, results);
 }
 
 #endif

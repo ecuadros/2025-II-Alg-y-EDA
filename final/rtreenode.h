@@ -75,6 +75,7 @@ public:
 
     rt_ErrorCode Insert(const Rectangle<CoordType>& rect, const ObjIDType objID);
     rt_ErrorCode Remove(const Rectangle<CoordType>& rect, const ObjIDType objID);
+    void RangeQuery(const Rectangle<CoordType>& range, std::vector<ObjIDType>& results);
 
     Rectangle<CoordType> GetMBR() const;
     void UpdateMBR();
@@ -319,6 +320,27 @@ rt_ErrorCode CRTreeNode<Trait>::Remove(const Rectangle<CoordType>& rect, const O
     }
 
     return rt_nofound;
+}
+
+template <typename Trait>
+void CRTreeNode<Trait>::RangeQuery(const Rectangle<CoordType>& range, std::vector<ObjIDType>& results) {
+    if (!m_MBR.intersects(range)) {
+        return;
+    }
+
+    if (m_IsLeaf) {
+        for (size_t i = 0; i < m_Count; i++) {
+            if (m_Entries[i].mbr.intersects(range)) {
+                results.push_back(m_Entries[i].objID);
+            }
+        }
+    } else {
+        for (size_t i = 0; i <= m_Count; i++) {
+            if (m_Children[i]) {
+                m_Children[i]->RangeQuery(range, results);
+            }
+        }
+    }
 }
 
 #endif
