@@ -24,6 +24,7 @@ public:
     ~CRTree();
 
     bool Insert(const Rectangle<CoordType>& rect, const ObjIDType objID);
+    bool Remove(const Rectangle<CoordType>& rect, const ObjIDType objID);
 
     size_t GetHeight() const { return m_Height; }
     size_t GetSize() const { return m_Size; }
@@ -82,6 +83,18 @@ bool CRTree<Trait>::Insert(const Rectangle<CoordType>& rect, const ObjIDType obj
 
     if (error != rt_duplicate) {
         m_Size++;
+        return true;
+    }
+
+    return false;
+}
+
+template <typename Trait>
+bool CRTree<Trait>::Remove(const Rectangle<CoordType>& rect, const ObjIDType objID) {
+    rt_ErrorCode error = m_Root->Remove(rect, objID);
+
+    if (error == rt_ok || error == rt_underflow) {
+        m_Size--;
         return true;
     }
 

@@ -74,6 +74,7 @@ public:
     ~CRTreeNode();
 
     rt_ErrorCode Insert(const Rectangle<CoordType>& rect, const ObjIDType objID);
+    rt_ErrorCode Remove(const Rectangle<CoordType>& rect, const ObjIDType objID);
 
     Rectangle<CoordType> GetMBR() const;
     void UpdateMBR();
@@ -276,6 +277,48 @@ void CRTreeNode<Trait>::SplitNode(RTNode*& newNode) {
         UpdateMBR();
         newNode->UpdateMBR();
     }
+}
+
+template <typename Trait>
+rt_ErrorCode CRTreeNode<Trait>::Remove(const Rectangle<CoordType>& rect, const ObjIDType objID) {
+    if (!m_MBR.intersects(rect)) {
+        return rt_nofound;
+    }
+
+    if (m_IsLeaf) {
+        for (size_t i = 0; i < m_Count; i++) {
+            if (m_Entries[i].objID == objID &&
+                m_Entries[i].mbr.min_x == rect.min_x &&
+                m_Entries[i].mbr.min_y == rect.min_y &&
+                m_Entries[i].mbr.max_x == rect.max_x &&
+                m_Entries[i].mbr.max_y == rect.max_y) {
+
+                for (size_t j = i; j < m_Count - 1; j++) {
+                    m_Entries[j] = m_Entries[j + 1];
+                }
+                m_Count--;
+                UpdateMBR();
+
+                if (IsUnderflow()) {
+                    return rt_underflow;
+                }
+                return rt_ok;
+            }
+        }
+        return rt_nofound;
+    }
+
+    for (size_t i = 0; i <= m_Count; i++) {
+        if (m_Children[i]) {
+            rt_ErrorCode error = m_Children[i]->Remove(rect, objID);
+            if (error != rt_nofound) {
+                UpdateMBR();
+                return error;
+            }
+        }
+    }
+
+    return rt_nofound;
 }
 
 #endif
