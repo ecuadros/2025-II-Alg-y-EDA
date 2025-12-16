@@ -10,7 +10,7 @@ void DemoRTree() {
     cout << "\n R-Tree: " << endl;
 
 
-    BTree<RTreeTrait<int>> rtree(BTreeSize);
+    RTree<RTreeTrait<int>> rtree(BTreeSize);
     
     // ejemplo
     std::vector<std::pair<Rect, int>> data = {
@@ -20,7 +20,7 @@ void DemoRTree() {
         {{55, 55, 65, 65}, 10},{{90, 90, 100, 100}, 11} 
     };
 
-    cout << "Insertando rectangulos en el R-Tree..." << endl;
+    cout << "Rectangulos en el R-Tree" << endl;
     for (const auto& pair : data) {
         rtree.Insert(pair.first, pair.second);
     }
@@ -40,8 +40,8 @@ void DemoRTree() {
 }
 
 void DemoRTree_Delete_Read_Write() {
-    cout << "\n Probando Borrado, Escritura y Lectura: " << endl;
-    BTree<RTreeTrait<int>> rtree(BTreeSize);
+    cout << "\nBorrado, Escritura y Lectura: " << endl;
+    RTree<RTreeTrait<int>> rtree(BTreeSize);
 
     std::vector<std::pair<Rect, int>> data = {
         {{10, 10, 20, 20}, 1}, {{15, 15, 25, 25}, 2}, {{30, 30, 40, 40}, 3},
@@ -68,14 +68,14 @@ void DemoRTree_Delete_Read_Write() {
     cout << rtree;
 
     // Write en disco
-    cout << "\nGuardando arbol en 'rtree.dat'..." << endl;
+    cout << "\nGuardando arbol en 'rtree.dat'" << endl;
     ofstream outFile("rtree.dat");
     rtree.Write(outFile);
     outFile.close();
 
     // Leer del disco
-    BTree<RTreeTrait<int>> rtree_loaded(BTreeSize);
-    cout << "Cargando arbol desde 'rtree.dat'..." << endl;
+    RTree<RTreeTrait<int>> rtree_loaded(BTreeSize);
+    cout << "Cargando arbol desde 'rtree.dat'" << endl;
     ifstream inFile("rtree.dat");
     rtree_loaded.Read(inFile);
     inFile.close();

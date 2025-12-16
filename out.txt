@@ -40,8 +40,8 @@ Arbol despues de borrar:
 {5,45,15,55}->5
 {35,5,45,15}->6
 
-Guardando arbol en 'rtree.dat'...
-Cargando arbol desde 'rtree.dat'...
+Guardando arbol en 'rtree.dat'
+Cargando arbol desde 'rtree.dat'
 Arbol cargado:
 {10,10,20,20}->1
 {15,15,25,25}->2

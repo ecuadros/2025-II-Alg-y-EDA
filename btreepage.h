@@ -17,8 +17,8 @@
 // TODO: #4 integrarlo al recorrer ( no trivial ) (DONE)
 
 
-template <typename Trait>
-class BTree;
+template <typename Trait> // Declaración anticipada para la clase principal del árbol.
+class RTree;
 
 using namespace std;
 /// Códigos de error para las operaciones del B-Tree.
@@ -105,7 +105,7 @@ template <typename Trait>
 class CBTreePage //: public SimpleIndex <keyType>
 // this is the in-memory version of the CBTreePage
 {
-       friend class BTree<Trait>;
+       friend class RTree<Trait>;
        typedef typename Trait::keyType  keyType;
        typedef typename Trait::ObjIDType  ObjIDType; 
        typedef typename Trait::Compare  Compare;
@@ -424,11 +424,6 @@ typename CBTreePage<Trait>::ObjectInfo* CBTreePage<Trait>::FirstThat(size_t leve
         }
         if (std::invoke(func, m_Keys[i], level, std::forward<Args>(args)...)) {
             return &m_Keys[i];
-        }
-    }
-    if (m_SubPages[m_KeyCount]) {
-        if ((pTmp = m_SubPages[m_KeyCount]->FirstThat(level + 1, std::forward<Func>(func), std::forward<Args>(args)...))) {
-            return pTmp;
         }
     }
     return nullptr;

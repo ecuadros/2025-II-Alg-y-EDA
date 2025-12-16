@@ -98,15 +98,15 @@ struct RTreeTrait {
 };
 
 /**
- * @class BTree
- * @brief Implementa una estructura de datos B-Tree.
- * @tparam Trait Un struct que define los tipos usados por el B-Tree.
+ * @class RTree
+ * @brief Implementa una estructura de datos R-Tree, adaptada de una base de B-Tree.
+ * @tparam Trait Un struct que define los tipos usados por el R-Tree.
  */
 
 #include "btreepage.h"
 
 template <typename Trait>
-class BTree // this is the full version of the BTree
+class RTree
 {
        typedef typename Trait::keyType    keyType;
        typedef typename Trait::ObjIDType    ObjIDType;
@@ -115,23 +115,23 @@ class BTree // this is the full version of the BTree
 
 public:
        /**
-        * @class ForwardBTreeIterator
-        * @brief Un iterador hacia adelante para el B-Tree.
+        * @class ForwardIterator
+        * @brief Un iterador hacia adelante para el árbol.
         */
-       class ForwardBTreeIterator {
+       class ForwardIterator {
        public:
               using iterator_category = std::forward_iterator_tag;
               using value_type = typename BTNode::ObjectInfo;
               using pointer = value_type*;
               using reference = value_type&;
 
-              ForwardBTreeIterator(BTree* pTree, BTNode* pNode = nullptr, size_t keyIndex = 0)
+              ForwardIterator(RTree* pTree, BTNode* pNode = nullptr, size_t keyIndex = 0)
                      : m_pTree(pTree), m_pNode(pNode), m_keyIndex(keyIndex) {}
 
               reference operator*() const { return m_pNode->m_Keys[m_keyIndex]; }
               pointer operator->() const { return &m_pNode->m_Keys[m_keyIndex]; }
 
-              ForwardBTreeIterator& operator++() {
+              ForwardIterator& operator++() {
                      if (!m_pNode) {
                          return *this;
                      }
@@ -174,33 +174,33 @@ public:
                      return *this;
               }
 
-              bool operator==(const ForwardBTreeIterator& other) const { return m_pNode == other.m_pNode && m_keyIndex == other.m_keyIndex; }
-              bool operator!=(const ForwardBTreeIterator& other) const { return !(*this == other); }
+              bool operator==(const ForwardIterator& other) const { return m_pNode == other.m_pNode && m_keyIndex == other.m_keyIndex; }
+              bool operator!=(const ForwardIterator& other) const { return !(*this == other); }
 
        private:
-              BTree*  m_pTree;
+              RTree*  m_pTree;
               BTNode* m_pNode;
               size_t m_keyIndex;
        };
 
        /**
-        * @class BackwardBTreeIterator
-        * @brief Un iterador hacia atrás para el B-Tree.
+        * @class BackwardIterator
+        * @brief Un iterador hacia atrás para el árbol.
         */
-       class BackwardBTreeIterator {
+       class BackwardIterator {
        public:
               using iterator_category = std::forward_iterator_tag;
               using value_type = typename BTNode::ObjectInfo;
               using pointer = value_type*;
               using reference = value_type&;
 
-              BackwardBTreeIterator(BTree* pTree, BTNode* pNode = nullptr, size_t keyIndex = 0)
+              BackwardIterator(RTree* pTree, BTNode* pNode = nullptr, size_t keyIndex = 0)
                      : m_pTree(pTree), m_pNode(pNode), m_keyIndex(keyIndex) {}
 
               reference operator*() const { return m_pNode->m_Keys[m_keyIndex]; }
               pointer operator->() const { return &m_pNode->m_Keys[m_keyIndex]; }
 
-              BackwardBTreeIterator& operator++() {
+              BackwardIterator& operator++() {
                      if (!m_pNode) { // Si estamos en rend(), no hacemos nada.
                          return *this;
                      }
@@ -243,27 +243,27 @@ public:
                      return *this;
               }
 
-              bool operator==(const BackwardBTreeIterator& other) const { return m_pNode == other.m_pNode && m_keyIndex == other.m_keyIndex; }
-              bool operator!=(const BackwardBTreeIterator& other) const { return !(*this == other); }
+              bool operator==(const BackwardIterator& other) const { return m_pNode == other.m_pNode && m_keyIndex == other.m_keyIndex; }
+              bool operator!=(const BackwardIterator& other) const { return !(*this == other); }
 
        private:
-              BTree*  m_pTree;
+              RTree*  m_pTree;
               BTNode* m_pNode;
               size_t m_keyIndex;
        };
 
-       using iterator = ForwardBTreeIterator;
-       using reverse_iterator = BackwardBTreeIterator;
+       using iterator = ForwardIterator;
+       using reverse_iterator = BackwardIterator;
        typedef typename BTNode::ObjectInfo      ObjectInfo;
 
 public:
        /**
-        * @brief Constructor del B-Tree.
+        * @brief Constructor del R-Tree.
         * @param order El orden del árbol.
         * @param unique Verdadero si las claves deben ser únicas.
         */
 public:
-       BTree(size_t order = DEFAULT_BTREE_ORDER, bool unique = true)
+       RTree(size_t order = DEFAULT_BTREE_ORDER, bool unique = true)
               : m_Order(order),
                 m_Root(2 * order  + 1, unique),
                 m_NumKeys(0),
@@ -273,10 +273,10 @@ public:
               m_Height = 1;
        }
        /**
-        * @brief Constructor por movimiento.
-        * @param other El B-Tree a mover.
+        * @brief Constructor por movimiento
+        * @param other El R-Tree a mover.
         */
-       BTree(BTree&& other) noexcept
+       RTree(RTree&& other) noexcept
        {
               std::scoped_lock lock(m_Mutex, other.m_Mutex);
  
@@ -287,7 +287,7 @@ public:
               m_Unique  = std::exchange(other.m_Unique, false);
        }
        /// @brief Destructor.
-       ~BTree() {}
+       ~RTree() {}
        //int           Open (char * name, int mode);
        //int           Create (char * name, int mode);
        //int           Close ();
@@ -397,7 +397,7 @@ protected:
 };     
 
 template <typename Trait>
-bool BTree<Trait>::Insert(const keyType key, const ObjIDType ObjID){
+bool RTree<Trait>::Insert(const keyType key, const ObjIDType ObjID){
        std::lock_guard<std::shared_mutex> lock(m_Mutex);
        
        BTNode* pNewNode = nullptr;
@@ -428,7 +428,7 @@ bool BTree<Trait>::Insert(const keyType key, const ObjIDType ObjID){
 }
 
 template <typename Trait>
-std::vector<typename Trait::ObjIDType> BTree<Trait>::Search(const keyType& areaBusqueda)
+std::vector<typename Trait::ObjIDType> RTree<Trait>::Search(const keyType& areaBusqueda)
 {
     std::shared_lock<std::shared_mutex> lock(m_Mutex);
     std::vector<ObjIDType> resultados;
@@ -437,7 +437,7 @@ std::vector<typename Trait::ObjIDType> BTree<Trait>::Search(const keyType& areaB
 }
 
 template <typename Trait>
-void BTree<Trait>::Write(ostream& os) {
+void RTree<Trait>::Write(ostream& os) {
     std::lock_guard<std::shared_mutex> lock(m_Mutex);
     os << m_Order << "\n";
     os << m_Unique << "\n";
@@ -447,7 +447,7 @@ void BTree<Trait>::Write(ostream& os) {
 }
 
 template <typename Trait>
-void BTree<Trait>::Read(istream& is) {
+void RTree<Trait>::Read(istream& is) {
     std::lock_guard<std::shared_mutex> lock(m_Mutex);
     is >> m_Order >> m_Unique >> m_NumKeys >> m_Height;
 
@@ -459,7 +459,7 @@ void BTree<Trait>::Read(istream& is) {
 }
 
 template <typename Trait>
-bool BTree<Trait>::Remove (const keyType key, const ObjIDType ObjID)
+bool RTree<Trait>::Remove (const keyType key, const ObjIDType ObjID)
 {
     std::lock_guard<std::shared_mutex> lock(m_Mutex);
     
@@ -486,7 +486,7 @@ bool BTree<Trait>::Remove (const keyType key, const ObjIDType ObjID)
 
 /// Sobrecarga del operador << para imprimir el R-Tree.
 template <typename Trait>
-std::ostream& operator<<(std::ostream& os, const BTree<Trait>& tree) {
+std::ostream& operator<<(std::ostream& os, const RTree<Trait>& tree) {
     tree.Print(os);
     return os;
 }
