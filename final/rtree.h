@@ -47,7 +47,7 @@ protected:
 
 template <typename Trait>
 CRTree<Trait>::CRTree(size_t maxEntries)
-    : m_MaxEntries(maxEntries), m_Height(1), m_Size(0) {
+    : m_Root(nullptr), m_Height(1), m_MaxEntries(maxEntries), m_Size(0) {
     m_Root = new RTNode(maxEntries, true);
 }
 
@@ -179,7 +179,7 @@ bool CRTree<Trait>::ReadFromFile(const std::string& filename) {
 }
 
 template <typename Trait>
-CRTreeNode<Trait>* CRTree<Trait>::ReadNode(std::ifstream& ifs, bool isLeaf) {
+CRTreeNode<Trait>* CRTree<Trait>::ReadNode(std::ifstream& ifs, bool) {
     bool isNull;
     ifs.read(reinterpret_cast<char*>(&isNull), sizeof(isNull));
 

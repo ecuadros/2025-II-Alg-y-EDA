@@ -209,7 +209,7 @@ void CRTreeNode<Trait>::PickSeeds(size_t& seed1, size_t& seed2) {
     seed1 = 0;
     seed2 = 1;
 
-    for (size_t i = 0; i < m_Count; i++) {
+    for (size_t i = 0; i <= m_Count; i++) {
         for (size_t j = i + 1; j <= m_Count; j++) {
             Rectangle<CoordType> combined = m_Entries[i].mbr;
             combined.expand(m_Entries[j].mbr);
