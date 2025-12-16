@@ -17,10 +17,9 @@ struct RTreeTrait
     using CoordsType = _CoordsType;
     using DataType = _DataType;
     
-    // Compile-time validation of template parameters
+    // Compile time validation of template parameters
     static_assert(_MinNodes >= 1, "MinNodes must be at least 1");
     static_assert(_MaxNodes >= _MinNodes, "MaxNodes must be >= MinNodes");
-    static_assert(_MaxNodes >= 2, "MaxNodes must be at least 2");
     
     // Configuration constants
     static constexpr size_t MinNodes = _MinNodes;
@@ -39,19 +38,17 @@ struct Rect
 
     CoordsType xMin, xMax, yMin, yMax;
 
-    // Constructor principal con validación simple
     Rect(CoordsType minX, CoordsType maxX, CoordsType minY, CoordsType maxY)
         : xMin(minX), xMax(maxX), yMin(minY), yMax(maxY) 
     {
-        // Si los parámetros están mal, los intercambiamos automáticamente
         if (xMin > xMax) std::swap(xMin, xMax);
         if (yMin > yMax) std::swap(yMin, yMax);
     }
 
-    // Constructor para un punto (rectángulo de área cero)
+    // Constructor for point 
     Rect(CoordsType x, CoordsType y) : xMin(x), xMax(x), yMin(y), yMax(y) {}
 
-    // Constructor por defecto crea un rectángulo en el origen
+    // Default
     Rect() : xMin(0), xMax(0), yMin(0), yMax(0) {}
 
     // Método simple de validación

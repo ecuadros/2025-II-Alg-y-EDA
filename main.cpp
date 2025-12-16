@@ -4,7 +4,8 @@
 // #include "hilos.h"
 // #include "linkedlist.h"
 // #include "doublelinkedlist.h"
-#include "DemoBtree.h"
+// #include "DemoBtree.h"
+#include "DemoRtree.h"
 
 using namespace std;
 
@@ -28,7 +29,8 @@ int main(){
     // DemoVector();
     // DemoLinkedList();
     // DemoDoubleLinkedList();
-    DemoBTree();
+    //DemoBTree();
+    DemoRTree();
     return 0;
 }
 
