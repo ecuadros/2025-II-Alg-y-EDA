@@ -13,50 +13,70 @@
 #include <iterator>
 #include <vector>
 #include <fstream>
+#include <array>
 #define DEFAULT_BTREE_ORDER 3
 
 /**
- * @struct Rect
- * @brief Representa un rectángulo en 2D, la clave para el R-Tree.
+ * @struct HyperRect
+ * @brief Representa un hiper-rectángulo en N dimensiones.
+ * @tparam Dim El número de dimensiones.
  */
-struct Rect {
-    int x1, y1, x2, y2;
+template <size_t Dim>
+struct HyperRect {
+    std::array<int, Dim> min_coords;
+    std::array<int, Dim> max_coords;
 
-    int area() const { return (x2 - x1) * (y2 - y1); }
-
-    // para el area necesaria
-    static int expansionNecesaria(const Rect& contenedor, const Rect& nuevo) {
-        Rect r = unir(contenedor, nuevo);
-        return r.area() - contenedor.area();
+    // calculo el volumen
+    int volume() const {
+        int vol = 1;
+        for (size_t i = 0; i < Dim; ++i) {
+            vol *= (max_coords[i] - min_coords[i]);
+        }
+        return vol;
     }
 
-    // MBR de dos rectángulos.
-    static Rect unir(const Rect& a, const Rect& b) {
-        return {std::min(a.x1, b.x1), std::min(a.y1, b.y1),
-                std::max(a.x2, b.x2), std::max(a.y2, b.y2)};
+    // calculo el volumen de expansión 
+    static int expansionNecesaria(const HyperRect& contenedor, const HyperRect& nuevo) {
+        HyperRect r = unir(contenedor, nuevo);
+        return r.volume() - contenedor.volume();
     }
 
-    // comprueba si hay solapamiento con otro.
-    bool intersecta(const Rect& otro) const {
-        return !(x2 < otro.x1 || x1 > otro.x2 || y2 < otro.y1 || y1 > otro.y2);
+    // creo MBR de dos hiperrectangulos.
+    static HyperRect unir(const HyperRect& a, const HyperRect& b) {
+        HyperRect result;
+        for (size_t i = 0; i < Dim; ++i) {
+            result.min_coords[i] = std::min(a.min_coords[i], b.min_coords[i]);
+            result.max_coords[i] = std::max(a.max_coords[i], b.max_coords[i]);
+        }
+        return result;
+    }
+
+    // comprueba si este hiper-rectángulo se solapa con otro
+    bool intersecta(const HyperRect& otro) const {
+        for (size_t i = 0; i < Dim; ++i) {
+            if (max_coords[i] < otro.min_coords[i] || min_coords[i] > otro.max_coords[i]) {
+                return false; // no hay solapamiento y no hay intersección
+            }
+        }
+        return true;
+         // hay solapamiento
+    }
+
+    // comprueba la igualdad exacta 
+    bool operator==(const HyperRect& otro) const {
+        return min_coords == otro.min_coords && max_coords == otro.max_coords;
     }
 };
 
-inline std::ostream& operator<<(std::ostream& os, const Rect& r) {
-    os << "{" << r.x1 << "," << r.y1 << "," << r.x2 << "," << r.y2 << "}";
+template <size_t Dim>
+inline std::ostream& operator<<(std::ostream& os, const HyperRect<Dim>& r) {
+    os << "{";
+    for(size_t i = 0; i < Dim; ++i) os << r.min_coords[i] << (i == Dim - 1 ? "" : ",");
+    os << "},{";
+    for(size_t i = 0; i < Dim; ++i) os << r.max_coords[i] << (i == Dim - 1 ? "" : ",");
+    os << "}";
     return os;
 };
-
-inline std::istream& operator>>(std::istream& is, Rect& r) {
-    char c1, c2, c3, c4, c5;
-    // formato {x1,y1,x2,y2}
-    is >> c1 >> r.x1 >> c2 >> r.y1 >> c3 >> r.x2 >> c4 >> r.y2 >> c5;
-    // por si hay un error en el formtao
-    if (c1 != '{' || c2 != ',' || c3 != ',' || c4 != ',' || c5 != '}') {
-        is.setstate(std::ios_base::failbit); 
-    }
-    return is;
-}
 
 const size_t MaxHeight = 5; 
 
@@ -89,10 +109,11 @@ struct BTreeDescTrait : public BTreeTrait<_keyType, _ObjIDType, std::greater<_ke
  * @struct RTreeTrait
  * @brief Define los tipos para un R-Tree. La clave es un Rect.
  * @tparam _ObjIDType El tipo de dato para los IDs de objeto.
+ * @tparam Dim El número de dimensiones.
  */
-template <typename _ObjIDType>
+template <typename _ObjIDType, size_t Dim>
 struct RTreeTrait {
-    using keyType   = Rect;       // La clave es un Rectángulo
+    using keyType   = HyperRect<Dim>; // La clave es un HiperRectángulo
     using ObjIDType = _ObjIDType; // El ID del objeto
     struct NoCompare {}; using Compare = NoCompare;
 };
@@ -114,146 +135,6 @@ class RTree
        typedef CBTreePage <Trait> BTNode;// useful shorthand
 
 public:
-       /**
-        * @class ForwardIterator
-        * @brief Un iterador hacia adelante para el árbol.
-        */
-       class ForwardIterator {
-       public:
-              using iterator_category = std::forward_iterator_tag;
-              using value_type = typename BTNode::ObjectInfo;
-              using pointer = value_type*;
-              using reference = value_type&;
-
-              ForwardIterator(RTree* pTree, BTNode* pNode = nullptr, size_t keyIndex = 0)
-                     : m_pTree(pTree), m_pNode(pNode), m_keyIndex(keyIndex) {}
-
-              reference operator*() const { return m_pNode->m_Keys[m_keyIndex]; }
-              pointer operator->() const { return &m_pNode->m_Keys[m_keyIndex]; }
-
-              ForwardIterator& operator++() {
-                     if (!m_pNode) {
-                         return *this;
-                     }
- 
-                     if (m_pNode->m_SubPages[0] != nullptr) {
-                         BTNode* pCursor = m_pNode->m_SubPages[m_keyIndex + 1];
-                         while (pCursor && pCursor->m_SubPages[0] != nullptr) {
-                             pCursor = pCursor->m_SubPages[0];
-                         }
-                         m_pNode = pCursor;
-                         m_keyIndex = 0;
-                     } else { // Es un nodo hoja o el último hijo de un nodo interno
-                         m_keyIndex++;
-                         if (m_keyIndex < m_pNode->m_KeyCount) {
-                             return *this;
-                         }
-                         BTNode* pCurrent = m_pNode;
-                         BTNode* pParent = pCurrent->m_pParent;
-                         size_t pos = 0;
-                         if (pParent) {
-                            while(pos <= pParent->m_KeyCount && pParent->m_SubPages[pos] != pCurrent) pos++;
-                         }
-
-                         while (pParent != nullptr && pos == pParent->m_KeyCount + 1) {
-                             pCurrent = pParent;
-                             pParent = pParent->m_pParent;
-                             if (pParent) {
-                                pos = 0;
-                                while(pos <= pParent->m_KeyCount && pParent->m_SubPages[pos] != pCurrent) pos++;
-                             }
-                         }
-
-                         if (pParent == nullptr) {
-                             m_pNode = nullptr;
-                         } else {
-                             m_pNode = pParent;
-                             m_keyIndex = pos;
-                         }
-                     }
-                     return *this;
-              }
-
-              bool operator==(const ForwardIterator& other) const { return m_pNode == other.m_pNode && m_keyIndex == other.m_keyIndex; }
-              bool operator!=(const ForwardIterator& other) const { return !(*this == other); }
-
-       private:
-              RTree*  m_pTree;
-              BTNode* m_pNode;
-              size_t m_keyIndex;
-       };
-
-       /**
-        * @class BackwardIterator
-        * @brief Un iterador hacia atrás para el árbol.
-        */
-       class BackwardIterator {
-       public:
-              using iterator_category = std::forward_iterator_tag;
-              using value_type = typename BTNode::ObjectInfo;
-              using pointer = value_type*;
-              using reference = value_type&;
-
-              BackwardIterator(RTree* pTree, BTNode* pNode = nullptr, size_t keyIndex = 0)
-                     : m_pTree(pTree), m_pNode(pNode), m_keyIndex(keyIndex) {}
-
-              reference operator*() const { return m_pNode->m_Keys[m_keyIndex]; }
-              pointer operator->() const { return &m_pNode->m_Keys[m_keyIndex]; }
-
-              BackwardIterator& operator++() {
-                     if (!m_pNode) { // Si estamos en rend(), no hacemos nada.
-                         return *this;
-                     }
-
-                     if (m_pNode->m_SubPages[0] != nullptr) {
-                         BTNode* pCursor = m_pNode->m_SubPages[m_keyIndex];
-                         while (pCursor && pCursor->m_SubPages[pCursor->m_KeyCount]) {
-                             pCursor = pCursor->m_SubPages[pCursor->m_KeyCount];
-                         }
-                         m_pNode = pCursor;
-                         m_keyIndex = pCursor ? pCursor->m_KeyCount - 1 : 0;
-                     } else {
-                         if (m_keyIndex > 0) {
-                             m_keyIndex--;
-                         } else {
-                             BTNode* pCurrent = m_pNode;
-                             BTNode* pParent = pCurrent->m_pParent;
-                             size_t pos = 0;
-                             if (pParent) {
-                                while(pos <= pParent->m_KeyCount && pParent->m_SubPages[pos] != pCurrent) pos++;
-                             }
-
-                             while (pParent != nullptr && pos == 0) {
-                                 pCurrent = pParent;
-                                 pParent = pParent->m_pParent;
-                                 if (pParent) {
-                                    pos = 0;
-                                    while(pos <= pParent->m_KeyCount && pParent->m_SubPages[pos] != pCurrent) pos++;
-                                 }
-                             }
-
-                             if (pParent == nullptr) {
-                                 m_pNode = nullptr;
-                             } else {
-                                 m_pNode = pParent;
-                                 m_keyIndex = pos - 1;
-                             }
-                         }
-                     }
-                     return *this;
-              }
-
-              bool operator==(const BackwardIterator& other) const { return m_pNode == other.m_pNode && m_keyIndex == other.m_keyIndex; }
-              bool operator!=(const BackwardIterator& other) const { return !(*this == other); }
-
-       private:
-              RTree*  m_pTree;
-              BTNode* m_pNode;
-              size_t m_keyIndex;
-       };
-
-       using iterator = ForwardIterator;
-       using reverse_iterator = BackwardIterator;
        typedef typename BTNode::ObjectInfo      ObjectInfo;
 
 public:
@@ -332,39 +213,6 @@ public:
               std::shared_lock<std::shared_mutex> lock(m_Mutex);
               m_Root.Print(os);
        }
-
-      iterator begin() {
-              std::lock_guard<std::shared_mutex> lock(m_Mutex);
-              BTNode* pNode = &m_Root;
-              if (!pNode || pNode->m_KeyCount == 0) {
-                  return end();
-              }
-              while (pNode && pNode->m_SubPages[0] != nullptr) {
-                     pNode = pNode->m_SubPages[0];
-              }
-              return iterator(this, pNode, 0);
-       }
-       /// Devuelve un iterador al elemento siguiente al último.
-       iterator end() { return iterator(this, nullptr, 0); }
-
-       /// Devuelve un iterador inverso al último elemento.
-       reverse_iterator rbegin() {
-              std::lock_guard<std::shared_mutex> lock(m_Mutex);
-              BTNode* pNode = &m_Root;
-              if (!pNode || pNode->m_KeyCount == 0) {
-                  return rend();
-              }
-              while (pNode && pNode->m_SubPages[pNode->m_KeyCount]) {
-                  pNode = pNode->m_SubPages[pNode->m_KeyCount];
-              }
-              if (pNode && pNode->m_KeyCount > 0) {
-                  return reverse_iterator(this, pNode, pNode->m_KeyCount - 1);
-              }
-              return rend();
-       }
-       /// Devuelve un iterador inverso al elemento anterior al primero.
-       reverse_iterator rend() { return reverse_iterator(this, nullptr, 0); }
-
 
        /**
         * @brief Aplica una función a cada elemento del árbol en orden.

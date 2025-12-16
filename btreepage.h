@@ -275,13 +275,13 @@ bt_ErrorCode CBTreePage<Trait>::Insert(const keyType& key, const ObjIDType ObjID
         int min_expansion = -1;
 
         for (size_t i = 0; i < m_KeyCount; ++i) {
-            int expansion = Rect::expansionNecesaria(m_Keys[i].key, key);
+            int expansion = keyType::expansionNecesaria(m_Keys[i].key, key);
             if (best_child_idx == -1 || expansion < min_expansion) {
                 min_expansion = expansion;
                 best_child_idx = i;
             } else if (expansion == min_expansion) {
-                // en empate se elege el mas pequeño
-                if (m_Keys[i].key.area() < m_Keys[best_child_idx].key.area()) {
+                // en empate se elige el de menor volumen
+                if (m_Keys[i].key.volume() < m_Keys[best_child_idx].key.volume()) {
                     best_child_idx = i;
                 }
             }
@@ -290,8 +290,8 @@ bt_ErrorCode CBTreePage<Trait>::Insert(const keyType& key, const ObjIDType ObjID
         BTPage* pNewChildNode = nullptr;
         bt_ErrorCode error = m_SubPages[best_child_idx]->Insert(key, ObjID, &pNewChildNode);
 
-        // ajuste del MBR del padre
-        m_Keys[best_child_idx].key = Rect::unir(m_Keys[best_child_idx].key, key);
+        // ajuste del MBR del padre para que contenga la nueva clave
+        m_Keys[best_child_idx].key = keyType::unir(m_Keys[best_child_idx].key, key);
 
         if (error == bt_overflow) { 
             // se tiene que añadir pNewChildNode
@@ -436,9 +436,7 @@ bool CBTreePage<Trait>::Remove(const keyType& key, const ObjIDType ObjID, std::v
     if (is_leaf) {
         for (size_t i = 0; i < m_KeyCount; ++i) {
             // comparacion por ID y por rectángulos
-            if (m_Keys[i].ObjID == ObjID && 
-                m_Keys[i].key.x1 == key.x1 && m_Keys[i].key.y1 == key.y1 &&
-                m_Keys[i].key.x2 == key.x2 && m_Keys[i].key.y2 == key.y2) 
+            if (m_Keys[i].ObjID == ObjID && m_Keys[i].key == key) 
             {
                 ::remove(m_Keys, i);
                 m_KeyCount--;
@@ -602,7 +600,7 @@ typename Trait::keyType CBTreePage<Trait>::CalculateMBR() {
     if (m_KeyCount == 0) return {};
     keyType mbr = m_Keys[0].key;
     for (size_t i = 1; i < m_KeyCount; ++i) {
-        mbr = Rect::unir(mbr, m_Keys[i].key);
+        mbr = keyType::unir(mbr, m_Keys[i].key);
     }
     return mbr;
 }
@@ -644,22 +642,22 @@ void CBTreePage<Trait>::QuadraticSplit(ObjectInfo& new_entry, BTPage* pNewNode) 
         int next_idx = PickNext(all_entries, mbr1, mbr2);
         ObjectInfo next_entry = all_entries[next_idx];
 
-        int expansion1 = Rect::expansionNecesaria(mbr1, next_entry.key);
-        int expansion2 = Rect::expansionNecesaria(mbr2, next_entry.key);
+        int expansion1 = keyType::expansionNecesaria(mbr1, next_entry.key);
+        int expansion2 = keyType::expansionNecesaria(mbr2, next_entry.key);
 
         if (expansion1 < expansion2) {
             this->m_Keys[this->m_KeyCount++] = next_entry;
-            mbr1 = Rect::unir(mbr1, next_entry.key);
+            mbr1 = keyType::unir(mbr1, next_entry.key);
         } else if (expansion2 < expansion1) {
             pNewNode->m_Keys[pNewNode->m_KeyCount++] = next_entry;
-            mbr2 = Rect::unir(mbr2, next_entry.key);
+            mbr2 = keyType::unir(mbr2, next_entry.key);
         } else { // Empate
-            if (mbr1.area() < mbr2.area()) {
+            if (mbr1.volume() < mbr2.volume()) {
                 this->m_Keys[this->m_KeyCount++] = next_entry;
-                mbr1 = Rect::unir(mbr1, next_entry.key);
+                mbr1 = keyType::unir(mbr1, next_entry.key);
             } else {
                 pNewNode->m_Keys[pNewNode->m_KeyCount++] = next_entry;
-                mbr2 = Rect::unir(mbr2, next_entry.key);
+                mbr2 = keyType::unir(mbr2, next_entry.key);
             }
         }
         all_entries.erase(all_entries.begin() + next_idx);
@@ -711,22 +709,22 @@ void CBTreePage<Trait>::QuadraticSplit(BTPage* new_child, BTPage* pNewNode) {
         int next_idx = PickNext(all_entries, mbr1, mbr2);
         BTPage* next_child = all_children[next_idx];
 
-        int expansion1 = Rect::expansionNecesaria(mbr1, next_child->CalculateMBR());
-        int expansion2 = Rect::expansionNecesaria(mbr2, next_child->CalculateMBR());
+        int expansion1 = keyType::expansionNecesaria(mbr1, next_child->CalculateMBR());
+        int expansion2 = keyType::expansionNecesaria(mbr2, next_child->CalculateMBR());
 
         if (expansion1 < expansion2) {
             this->AddChild(next_child);
-            mbr1 = Rect::unir(mbr1, next_child->CalculateMBR());
+            mbr1 = keyType::unir(mbr1, next_child->CalculateMBR());
         } else if (expansion2 < expansion1) {
             pNewNode->AddChild(next_child);
-            mbr2 = Rect::unir(mbr2, next_child->CalculateMBR());
+            mbr2 = keyType::unir(mbr2, next_child->CalculateMBR());
         } else { // Empate
-            if (mbr1.area() < mbr2.area()) {
+            if (mbr1.volume() < mbr2.volume()) {
                 this->AddChild(next_child);
-                mbr1 = Rect::unir(mbr1, next_child->CalculateMBR());
+                mbr1 = keyType::unir(mbr1, next_child->CalculateMBR());
             } else {
                 pNewNode->AddChild(next_child);
-                mbr2 = Rect::unir(mbr2, next_child->CalculateMBR());
+                mbr2 = keyType::unir(mbr2, next_child->CalculateMBR());
             }
         }
         all_entries.erase(all_entries.begin() + next_idx);
@@ -740,8 +738,8 @@ void CBTreePage<Trait>::PickSeeds(std::vector<ObjectInfo>& entries, int& seed1, 
     seed1 = 0; seed2 = 1;
     for (size_t i = 0; i < entries.size(); ++i) {
         for (size_t j = i + 1; j < entries.size(); ++j) {
-            keyType combined = Rect::unir(entries[i].key, entries[j].key);
-            int waste = combined.area() - entries[i].key.area() - entries[j].key.area();
+            keyType combined = keyType::unir(entries[i].key, entries[j].key);
+            int waste = combined.volume() - entries[i].key.volume() - entries[j].key.volume();
             if (waste > max_waste) {
                 max_waste = waste;
                 seed1 = i;
@@ -756,8 +754,8 @@ int CBTreePage<Trait>::PickNext(std::vector<ObjectInfo>& entries, keyType& mbr1,
     int max_diff = -1;
     int next = 0;
     for (size_t i = 0; i < entries.size(); ++i) {
-        int expansion1 = Rect::expansionNecesaria(mbr1, entries[i].key);
-        int expansion2 = Rect::expansionNecesaria(mbr2, entries[i].key);
+        int expansion1 = keyType::expansionNecesaria(mbr1, entries[i].key);
+        int expansion2 = keyType::expansionNecesaria(mbr2, entries[i].key);
         int diff = std::abs(expansion1 - expansion2);
         if (diff > max_diff) {
             max_diff = diff;
