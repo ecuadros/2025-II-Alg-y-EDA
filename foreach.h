@@ -1,52 +1,52 @@
-#ifndef __FOREACH_H__
-#define __FOREACH_H__
-#include <iostream>
+// #ifndef __FOREACH_H__
+// #define __FOREACH_H__
+// #include <iostream>
 
-template <typename Iterator, typename Function >
-void foreach(Iterator begin, Iterator end, Function func){
-    auto iter = begin;
-    for(; iter != end ; ++iter )
-        func( *iter );
-}
-
-// V1.0
-// template <typename Container, typename Func>
-// void foreach(Container &container, Func fn){
-//     // typename Container::iterator iter = container.begin();
-//     auto iter = container.begin();
-//     for(; iter != container.end() ; iter++ )
-//         fn( *iter );
+// template <typename Iterator, typename Function >
+// void foreach(Iterator begin, Iterator end, Function func){
+//     auto iter = begin;
+//     for(; iter != end ; ++iter )
+//         func( *iter );
 // }
 
-// V1.1
-template <typename Container, typename Function>
-void foreach(Container &container, Function func){
-    foreach(container.begin(), container.end(), func);
-}
+// // V1.0
+// // template <typename Container, typename Func>
+// // void foreach(Container &container, Func fn){
+// //     // typename Container::iterator iter = container.begin();
+// //     auto iter = container.begin();
+// //     for(; iter != container.end() ; iter++ )
+// //         fn( *iter );
+// // }
 
-// Variadic templates
-template<typename Iterator, typename Function, typename... Args>
-void foreach (Iterator begin, Iterator end,
-              Function func, Args const&... args){   
-    for (auto iter = begin; begin != end; ++iter)
-        std::invoke(func, *iter, args...);
-}
-
-// template<typename Callable, typename... Args>
-// decltype(auto) call(Callable op, Args&&... args)
-// {
-//     if constexpr(is_void_v<invoke_result_t<Callable, Args...>>)
-//     { std::cout << "Function is returning: void!" << std::endl;
-//       invoke(forward<Callable>(op), forward<Args>(args)...);
-//       //...  // do something before we return
-//       return;
-//     }
-//     else // return type is not void:
-//     { auto ret = invoke(forward<Callable>(op), forward<Args>(args)...);
-//       std::cout << "Function is returning: " << type_name<decltype(ret)>() << std::endl;
-//       //...  // do something (with ret) before we return
-//       return ret;
-//     }
+// // V1.1
+// template <typename Container, typename Function>
+// void foreach(Container &container, Function func){
+//     foreach(container.begin(), container.end(), func);
 // }
 
-#endif // __FOREACH_H__
+// // Variadic templates
+// template<typename Iterator, typename Function, typename... Args>
+// void foreach (Iterator begin, Iterator end,
+//               Function func, Args const&... args){   
+//     for (auto iter = begin; begin != end; ++iter)
+//         std::invoke(func, *iter, args...);
+// }
+
+// // template<typename Callable, typename... Args>
+// // decltype(auto) call(Callable op, Args&&... args)
+// // {
+// //     if constexpr(is_void_v<invoke_result_t<Callable, Args...>>)
+// //     { std::cout << "Function is returning: void!" << std::endl;
+// //       invoke(forward<Callable>(op), forward<Args>(args)...);
+// //       //...  // do something before we return
+// //       return;
+// //     }
+// //     else // return type is not void:
+// //     { auto ret = invoke(forward<Callable>(op), forward<Args>(args)...);
+// //       std::cout << "Function is returning: " << type_name<decltype(ret)>() << std::endl;
+// //       //...  // do something (with ret) before we return
+// //       return ret;
+// //     }
+// // }
+
+// #endif // __FOREACH_H__

@@ -1,6 +1,6 @@
-#ifndef __HILOS_T__
-#define __HILOS_T__
+// #ifndef __HILOS_T__
+// #define __HILOS_T__
 
-void DemoThreads();
+// void DemoThreads();
 
-#endif // __HILOS_T__
+// #endif // __HILOS_T__

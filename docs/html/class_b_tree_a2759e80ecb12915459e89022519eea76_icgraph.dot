@@ -1,0 +1,44 @@
+digraph "BTree::size"
+{
+ // INTERACTIVE_SVG=YES
+ // LATEX_PDF_SIZE
+  bgcolor="transparent";
+  edge [fontname=Helvetica,fontsize=10,labelfontname=Helvetica,labelfontsize=10];
+  node [fontname=Helvetica,fontsize=10,shape=box,height=0.2,width=0.4];
+  rankdir="RL";
+  Node1 [id="Node000001",label="BTree::size",height=0.2,width=0.4,color="gray40", fillcolor="grey60", style="filled", fontcolor="black",tooltip=" "];
+  Node1 -> Node2 [id="edge1_Node000001_Node000002",dir="back",color="steelblue1",style="solid",tooltip=" "];
+  Node2 [id="Node000002",label="insert_at",height=0.2,width=0.4,color="grey40", fillcolor="white", style="filled",URL="$btreepage_8h.html#ae6a54dec1a8743bcdc1a556d81898995",tooltip=" "];
+  Node2 -> Node3 [id="edge2_Node000002_Node000003",dir="back",color="steelblue1",style="solid",tooltip=" "];
+  Node3 [id="Node000003",label="CBTreePage::Insert",height=0.2,width=0.4,color="grey40", fillcolor="white", style="filled",URL="$class_c_b_tree_page.html#ad686759227acd1a1ca896978dfe565ac",tooltip=" "];
+  Node2 -> Node4 [id="edge3_Node000002_Node000004",dir="back",color="steelblue1",style="solid",tooltip=" "];
+  Node4 [id="Node000004",label="CBTreePage::RedistributeL2R",height=0.2,width=0.4,color="grey40", fillcolor="white", style="filled",URL="$class_c_b_tree_page.html#a6f63f587ea032d81cc4359ff0f4662e8",tooltip=" "];
+  Node4 -> Node5 [id="edge4_Node000004_Node000005",dir="back",color="steelblue1",style="solid",tooltip=" "];
+  Node5 [id="Node000005",label="CBTreePage::Redistribute\lWith1Brother",height=0.2,width=0.4,color="grey40", fillcolor="white", style="filled",URL="$class_c_b_tree_page.html#ad2d5711b8cc6d980cb3718670649d862",tooltip=" "];
+  Node5 -> Node3 [id="edge5_Node000005_Node000003",dir="back",color="steelblue1",style="solid",tooltip=" "];
+  Node5 -> Node6 [id="edge6_Node000005_Node000006",dir="back",color="steelblue1",style="solid",tooltip=" "];
+  Node6 [id="Node000006",label="CBTreePage::TreatUnderflow",height=0.2,width=0.4,color="grey40", fillcolor="white", style="filled",URL="$class_c_b_tree_page.html#a025a25cde873b963c696cad430882be5",tooltip=" "];
+  Node6 -> Node7 [id="edge7_Node000006_Node000007",dir="back",color="steelblue1",style="solid",tooltip=" "];
+  Node7 [id="Node000007",label="CBTreePage::Remove",height=0.2,width=0.4,color="grey40", fillcolor="white", style="filled",URL="$class_c_b_tree_page.html#af81d245adfaabedcf75c3810c8ea0b3d",tooltip=" "];
+  Node4 -> Node8 [id="edge8_Node000004_Node000008",dir="back",color="steelblue1",style="solid",tooltip=" "];
+  Node8 [id="Node000008",label="CBTreePage::Redistribute\lWith2Brothers",height=0.2,width=0.4,color="grey40", fillcolor="white", style="filled",URL="$class_c_b_tree_page.html#ac2084083de43832e0a723624c2956836",tooltip="RedistributeWith2Brothers function it considers two brothers m_SubPages[pos-1] && m_SubPages[pos+1] i..."];
+  Node8 -> Node6 [id="edge9_Node000008_Node000006",dir="back",color="steelblue1",style="solid",tooltip=" "];
+  Node2 -> Node9 [id="edge10_Node000002_Node000009",dir="back",color="steelblue1",style="solid",tooltip=" "];
+  Node9 [id="Node000009",label="CBTreePage::RedistributeR2L",height=0.2,width=0.4,color="grey40", fillcolor="white", style="filled",URL="$class_c_b_tree_page.html#ab581f5c827c5b8edec5e79737ad12d32",tooltip=" "];
+  Node9 -> Node5 [id="edge11_Node000009_Node000005",dir="back",color="steelblue1",style="solid",tooltip=" "];
+  Node9 -> Node8 [id="edge12_Node000009_Node000008",dir="back",color="steelblue1",style="solid",tooltip=" "];
+  Node2 -> Node10 [id="edge13_Node000002_Node000010",dir="back",color="steelblue1",style="solid",tooltip=" "];
+  Node10 [id="Node000010",label="CBTreePage::SplitChild",height=0.2,width=0.4,color="grey40", fillcolor="white", style="filled",URL="$class_c_b_tree_page.html#a6a5a3cc493d12bb0d53c8e191ce88d01",tooltip=" "];
+  Node10 -> Node3 [id="edge14_Node000010_Node000003",dir="back",color="steelblue1",style="solid",tooltip=" "];
+  Node1 -> Node11 [id="edge15_Node000001_Node000011",dir="back",color="steelblue1",style="solid",tooltip=" "];
+  Node11 [id="Node000011",label="main",height=0.2,width=0.4,color="grey40", fillcolor="white", style="filled",URL="$main_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4",tooltip=" "];
+  Node1 -> Node12 [id="edge16_Node000001_Node000012",dir="back",color="steelblue1",style="solid",tooltip=" "];
+  Node12 [id="Node000012",label="operator\<\<",height=0.2,width=0.4,color="grey40", fillcolor="white", style="filled",URL="$btree_8h.html#a69a068d2a155510aade8f6e827779399",tooltip=" "];
+  Node1 -> Node13 [id="edge17_Node000001_Node000013",dir="back",color="steelblue1",style="solid",tooltip=" "];
+  Node13 [id="Node000013",label="remove",height=0.2,width=0.4,color="grey40", fillcolor="white", style="filled",URL="$btreepage_8h.html#a73cd4fa0f275e25b629b57369155001f",tooltip=" "];
+  Node13 -> Node14 [id="edge18_Node000013_Node000014",dir="back",color="steelblue1",style="solid",tooltip=" "];
+  Node14 [id="Node000014",label="CBTreePage::Merge",height=0.2,width=0.4,color="grey40", fillcolor="white", style="filled",URL="$class_c_b_tree_page.html#a9e9fb952d0e648270e00cd0d7770f577",tooltip=" "];
+  Node14 -> Node7 [id="edge19_Node000014_Node000007",dir="back",color="steelblue1",style="solid",tooltip=" "];
+  Node13 -> Node9 [id="edge20_Node000013_Node000009",dir="back",color="steelblue1",style="solid",tooltip=" "];
+  Node13 -> Node7 [id="edge21_Node000013_Node000007",dir="back",color="steelblue1",style="solid",tooltip=" "];
+}

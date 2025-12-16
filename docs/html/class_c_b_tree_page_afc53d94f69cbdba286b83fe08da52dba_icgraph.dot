@@ -1,0 +1,18 @@
+digraph "CBTreePage::GetFreeCellsOnRight"
+{
+ // INTERACTIVE_SVG=YES
+ // LATEX_PDF_SIZE
+  bgcolor="transparent";
+  edge [fontname=Helvetica,fontsize=10,labelfontname=Helvetica,labelfontsize=10];
+  node [fontname=Helvetica,fontsize=10,shape=box,height=0.2,width=0.4];
+  rankdir="RL";
+  Node1 [id="Node000001",label="CBTreePage::GetFreeCells\lOnRight",height=0.2,width=0.4,color="gray40", fillcolor="grey60", style="filled", fontcolor="black",tooltip=" "];
+  Node1 -> Node2 [id="edge1_Node000001_Node000002",dir="back",color="steelblue1",style="solid",tooltip=" "];
+  Node2 [id="Node000002",label="CBTreePage::Redistribute\lWith1Brother",height=0.2,width=0.4,color="grey40", fillcolor="white", style="filled",URL="$class_c_b_tree_page.html#ad2d5711b8cc6d980cb3718670649d862",tooltip=" "];
+  Node2 -> Node3 [id="edge2_Node000002_Node000003",dir="back",color="steelblue1",style="solid",tooltip=" "];
+  Node3 [id="Node000003",label="CBTreePage::Insert",height=0.2,width=0.4,color="grey40", fillcolor="white", style="filled",URL="$class_c_b_tree_page.html#ad686759227acd1a1ca896978dfe565ac",tooltip=" "];
+  Node2 -> Node4 [id="edge3_Node000002_Node000004",dir="back",color="steelblue1",style="solid",tooltip=" "];
+  Node4 [id="Node000004",label="CBTreePage::TreatUnderflow",height=0.2,width=0.4,color="grey40", fillcolor="white", style="filled",URL="$class_c_b_tree_page.html#a025a25cde873b963c696cad430882be5",tooltip=" "];
+  Node4 -> Node5 [id="edge4_Node000004_Node000005",dir="back",color="steelblue1",style="solid",tooltip=" "];
+  Node5 [id="Node000005",label="CBTreePage::Remove",height=0.2,width=0.4,color="grey40", fillcolor="white", style="filled",URL="$class_c_b_tree_page.html#af81d245adfaabedcf75c3810c8ea0b3d",tooltip=" "];
+}
