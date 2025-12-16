@@ -15,10 +15,17 @@ all: $(TARGET)
 $(TARGET): $(OBJS)
 	$(CXX) $(LDFLAGS) $^ -o $@
 
+# R-Tree demo
+demo_rtree: demo_rtree.o
+	$(CXX) $(LDFLAGS) $^ -o $@
+
+demo_rtree.o: demo_rtree.cpp rtree.h
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 clean:
-	rm -f $(OBJS) $(TARGET)
+	rm -f $(OBJS) demo_rtree.o $(TARGET) demo_rtree
 
 .PHONY: all clean
