@@ -7,8 +7,6 @@
 #include <random>
 #include "rtree.h"
 
-using namespace rtree_nd;
-
 // ============================================================
 // Helper para imprimir boxes
 // ============================================================

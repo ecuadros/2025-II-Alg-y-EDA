@@ -14,10 +14,6 @@
 #include <stdexcept>
 #include <functional>
 
-namespace rtree_nd {
-
-using std::size_t;
-
 // ============================================================
 //  Box N-Dimensional (Rect equivalente para N dimensiones)
 // ============================================================
@@ -703,5 +699,4 @@ private:
   }
 };
 
-} 
 #endif 
