@@ -4,7 +4,15 @@
 #include "node.h"
 #include <memory>
 #include <iostream>
+#include <cstdint>
+#include <fstream>
+#include <shared_mutex>
 
+/*
+ * @brief R-Tree implementation for N-dimensional points.
+ * @tparam Traits Traits class that must provide `T` (value type), `DIM` (dimension),
+ *                 `M` (maximum number of entries per node), and `m` (minimum number of entries per node).
+ */
 template<typename Traits>
 class RTree {
 public:
@@ -23,20 +31,104 @@ private:
     Node* m_Root;
     size_t m_Height;
     size_t m_Count;
+    mutable std::shared_mutex m_mutex;
+
+    /*
+    * @brief Recursively write a node and its children to a binary stream.
+    * @param out Output stream.
+    * @param node Node to write.
+    */
+    static void writeNodeRecursive(std::ostream& out, const Node* node) {
+        if(!node) return;
+        size_t level = node->GetHeight();
+        bool isRoot = node->IsRoot();
+        bool isLeaf = node->IsLeaf();
+        out.write(reinterpret_cast<const char*>(&level), sizeof(level));
+        out.write(reinterpret_cast<const char*>(&isRoot), sizeof(isRoot));
+        out.write(reinterpret_cast<const char*>(&isLeaf), sizeof(isLeaf));
+
+        auto entries = node->GetEntries();
+        size_t numEntries = entries.size();
+        out.write(reinterpret_cast<const char*>(&numEntries), sizeof(numEntries));
+
+        for(const auto &entry : entries) {
+            uint8_t hasChild = entry.childNode != nullptr ? 1 : 0;
+            out.write(reinterpret_cast<const char*>(&hasChild), sizeof(hasChild));
+            entry.WriteToStream(out);
+            if(hasChild) {
+                writeNodeRecursive(out, entry.childNode);
+            }
+        }
+    }
+
+    /*
+    * @brief Recursively read a node and its children from a binary stream.
+    * @param in Input stream.
+    * @return Pointer to the newly created node.
+    */
+    static Node* readNodeRecursive(std::istream& in) {
+        size_t level;
+        bool isRoot, isLeaf;
+        in.read(reinterpret_cast<char*>(&level), sizeof(level));
+        in.read(reinterpret_cast<char*>(&isRoot), sizeof(isRoot));
+        in.read(reinterpret_cast<char*>(&isLeaf), sizeof(isLeaf));
+
+        Node* node = new Node(level, isRoot, isLeaf);
+
+        size_t numEntries = 0;
+        in.read(reinterpret_cast<char*>(&numEntries), sizeof(numEntries));
+        for(size_t i = 0; i < numEntries; ++i) {
+            uint8_t hasChild = 0;
+            in.read(reinterpret_cast<char*>(&hasChild), sizeof(hasChild));
+            EntryType e;
+            e.ReadFromStream(in);
+            if(hasChild) {
+                Node* child = readNodeRecursive(in);
+                e.childNode = child;
+            } else {
+                e.childNode = nullptr;
+            }
+            node->addEntry(e);
+        }
+        return node;
+    }
+
+    /*
+    * @brief Recursively delete a node and all its children.
+    * @param n Node to delete.
+    */
+    static void deleteNodeRecursive(Node* n) {
+        if(!n) return;
+        if(!n->IsLeaf()) {
+            auto entries = n->GetEntries();
+            for(const auto &en : entries) if(en.childNode) deleteNodeRecursive(en.childNode);
+        }
+        delete n;
+    }
 
 public:
+
+    /*
+    * @brief Constructs an empty R-Tree.
+    */
     RTree() {
         m_Root = new Node(0, true, true);
         m_Height = 1;
         m_Count = 0;
     }
 
+    /*
+    * @brief Copy constructor.  
+    */
     RTree(const RTree& other) {
         m_Root = new Node(*(other.m_Root));
         m_Height = other.m_Height;
         m_Count = other.m_Count;
     }
 
+    /*
+    * @brief Move constructor.
+    */
     RTree( RTree&& other ) noexcept {
         m_Root = other.m_Root;
         m_Height = other.m_Height;
@@ -46,6 +138,9 @@ public:
         other.m_Count = 0;
     }
 
+    /*
+    * @brief Assignment operator.
+    */
     RTree& operator=(const RTree& other) {
         if(this != &other) {
             Clear();
@@ -61,18 +156,70 @@ public:
     }
 
     /**
-     * @brief Vacía completamente el árbol
+     * @brief Save entire tree to a binary file (pre-order).
+     * @param filename Path to output file.
+     */
+    void SaveToFile(const char* filename) const {
+        std::shared_lock<std::shared_mutex> lock(m_mutex);
+        if(!m_Root) return;
+        std::ofstream os(filename, std::ios::binary);
+        if(!os.is_open()) return;
+
+        uint32_t magic = 0x52545245; // 'RTRE'
+        uint32_t version = 1;
+        os.write(reinterpret_cast<const char*>(&magic), sizeof(magic));
+        os.write(reinterpret_cast<const char*>(&version), sizeof(version));
+
+        // recursive writer (use static helper)
+        writeNodeRecursive(os, m_Root);
+        os.close();
+    }
+
+    /**
+     * @brief Load tree from a binary file previously written with SaveToFile.
+     * @param filename Path to input file.
+     */
+    void LoadFromFile(const char* filename) {
+        std::unique_lock<std::shared_mutex> lock(m_mutex);
+        std::ifstream is(filename, std::ios::binary);
+        if(!is.is_open()) return;
+
+        uint32_t magic = 0;
+        uint32_t version = 0;
+        is.read(reinterpret_cast<char*>(&magic), sizeof(magic));
+        is.read(reinterpret_cast<char*>(&version), sizeof(version));
+        if(magic != 0x52545245) return; 
+
+        if(m_Root) {
+            deleteNodeRecursive(m_Root);
+            m_Root = nullptr;
+            m_Height = 0;
+            m_Count = 0;
+        }
+
+        m_Root = readNodeRecursive(is);
+        if(m_Root) m_Height = m_Root->GetHeight();
+
+        is.close();
+    }
+
+    /**
+     * @brief Clears the entire tree, deallocating all nodes.
+     *
+     * This will remove all nodes and reset the tree to an empty state.
      */
     void Clear() {
-        if (m_root) {
-            DeleteSubtree(m_root);
-            m_root = nullptr;
-            m_height = 0;
+        std::unique_lock<std::shared_mutex> lock(m_mutex);
+        if (m_Root) {
+            DeleteSubtree(m_Root);
+            m_Root = nullptr;
+            m_Height = 0;
         }
     }
 
     /**
-     * @brief Elimina recursivamente un subárbol
+     * @brief Recursively deletes a subtree rooted at the given node.
+     * @param node Pointer to the root of the subtree to delete. If null, no action is taken.
      */
     void DeleteSubtree(NodeType* node) {
         if (!node) return;
@@ -90,9 +237,9 @@ public:
     }
 
     /**
-     * @brief Inserta un nuevo punto con referencia en el R-Tree
-     * @param point Punto a insertar
-     * @param ref Referencia asociada al punto
+     * @brief Inserts a new point with an associated reference into the R-Tree.
+     * @param point The point to insert.
+     * @param ref Reference associated with the inserted point.
      */
     void Insert(const PointType& point, RefType ref) {
         MBRType mbr(point);
@@ -100,13 +247,14 @@ public:
     }
 
     /**
-     * @brief Inserta un MBR con referencia en el R-Tree
-     * @param mbr MBR a insertar
-     * @param ref Referencia asociada
+     * @brief Inserts an MBR with an associated reference into the R-Tree.
+     * @param mbr The minimum bounding rectangle to insert.
+     * @param ref Reference associated with the inserted MBR.
      */
     void Insert(const MBRType& mbr, RefType ref) {
+        std::unique_lock<std::shared_mutex> lock(m_mutex);
         EntryType newEntry(mbr, ref);
-        
+
         NodeType* leaf = ChooseLeaf(mbr);
         
         //Añadir entry al nodo hoja
@@ -120,13 +268,14 @@ public:
     }
 
     /**
-     * @brief Elimina una entrada del R-Tree
-     * @param mbr MBR de la entrada a eliminar
-     * @param ref Referencia de la entrada
-     * @return true si se encontró y eliminó, false en caso contrario
+     * @brief Removes an entry that matches the given MBR and reference from the R-Tree.
+     * @param mbr The MBR of the entry to remove.
+     * @param ref The reference of the entry to remove.
+     * @return true if the entry was found and removed; false otherwise.
      */
     bool Delete(const MBRType& mbr, RefType ref) {
-        NodeType* leaf = FindLeaf(m_root, mbr, ref);
+        std::unique_lock<std::shared_mutex> lock(m_mutex);
+        NodeType* leaf = FindLeaf(m_Root, mbr, ref);
         if (!leaf) return false;
         
         size_t index;
@@ -150,31 +299,36 @@ public:
     }
 
     /**
-     * @brief Busca todas las entradas que se solapan con el MBR de consulta
-     * @param query MBR de consulta
-     * @return Vector de referencias que se solapan
+     * @brief Searches for all entries overlapping the query MBR.
+     * @param query Query MBR used for the range search.
+     * @return Vector of references corresponding to entries that overlap the query.
      */
     std::vector<RefType> Search(const MBRType& query) const {
+        std::shared_lock<std::shared_mutex> lock(m_mutex);
         std::vector<RefType> results;
-        if (m_root) {
-            m_root->range_query(query, results);
+        if (m_Root) {
+            m_Root->range_query(query, results);
         }
         return results;
     }
 
     /**
-     * @brief Verifica si el árbol está vacío
+     * @brief Checks whether the tree is empty.
+     * @return true if the tree contains no entries or the root is null; false otherwise.
      */
     bool Empty() const {
-        return !m_root || m_root->GetNumberOfEntries() == 0;
+        std::shared_lock<std::shared_mutex> lock(m_mutex);
+        return !m_Root || m_Root->GetNumberOfEntries() == 0;
     }
 
     /**
-     * @brief Imprime la estructura del árbol (para debugging)
+     * @brief Prints the structure of the tree for debugging purposes.
+     * @param os Output stream used to write the tree representation.
      */
     void Print(std::ostream& os) const {
-        if (m_root) {
-            m_root->Print(os, 0);
+        std::shared_lock<std::shared_mutex> lock(m_mutex);
+        if (m_Root) {
+            m_Root->Print(os, 0);
         } else {
             os << "Empty RTree\n";
         }
@@ -182,7 +336,9 @@ public:
 
 private:
     /**
-     * @brief Algoritmo ChooseLeaf de Guttman
+     * @brief Guttman's ChooseLeaf algorithm: selects a leaf node suitable for insertion.
+     * @param mbr The MBR being inserted.
+     * @return Pointer to the chosen leaf node where the entry should be added.
      */
     NodeType* ChooseLeaf(const MBRType& mbr) {
         NodeType* currentNode = m_root;
@@ -194,7 +350,10 @@ private:
     }
 
     /**
-     * @brief Ajusta el árbol después de una inserción
+     * @brief Adjusts the tree after an insertion, propagating MBR updates upward
+     * and handling node splits when they occur.
+     * @param node The node where adjustments begin (typically the leaf).
+     * @param splitNode Optional node produced by a split that must be inserted into the parent.
      */
     void AdjustTree(NodeType* node, NodeType* splitNode) {
         while (!node->IsRoot()) {

@@ -5,6 +5,8 @@
 #include <iostream>
 #include <mutex>
 #include <shared_mutex>
+#include <fstream>
+#include <cmath>
 using namespace std;
 
 template <typename Traits>
@@ -49,6 +51,34 @@ struct Point{
         for(size_t i = 0; i < DIM; ++i) {
             is >> coordinates[i];
         }
+    }
+
+    /**
+     * @brief Write point binary representation to an output stream.
+     * @param os Output stream (binary).
+     */
+    void WriteToStream(std::ostream &os) const {
+        os.write(reinterpret_cast<const char*>(coordinates.data()), sizeof(value_type) * DIM);
+    }
+
+    /**
+     * @brief Read point binary representation from an input stream.
+     * @param is Input stream (binary).
+     */
+    void ReadFromStream(std::istream &is) {
+        is.read(reinterpret_cast<char*>(coordinates.data()), sizeof(value_type) * DIM);
+    }
+
+    void WriteToDisk(char* filename){
+        ofstream file(filename, ios::binary);
+        file.write(reinterpret_cast<char*>(coordinates.data()), sizeof(value_type) * DIM);
+        file.close();
+    }
+
+    void ReadFromDisk(char* filename){
+        ifstream file(filename, ios::binary);
+        file.read(reinterpret_cast<char*>(coordinates.data()), sizeof(value_type) * DIM);
+        file.close();
     }
 };
 
@@ -203,6 +233,37 @@ struct MBR{
         max.Read(is);
     }
 
+    /**
+     * @brief Write MBR binary representation to an output stream.
+     * @param os Output stream (binary).
+     */
+    void WriteToStream(std::ostream &os) const {
+        min.WriteToStream(os);
+        max.WriteToStream(os);
+    }
+
+    /**
+     * @brief Read MBR binary representation from an input stream.
+     * @param is Input stream (binary).
+     */
+    void ReadFromStream(std::istream &is) {
+        min.ReadFromStream(is);
+        max.ReadFromStream(is);
+    }
+
+    /**
+     * @brief Convenience wrappers to read/write from a filename.
+     */
+    void WriteToDisk(const char* filename) const {
+        std::ofstream os(filename, std::ios::binary | std::ios::app);
+        WriteToStream(os);
+    }
+
+    void ReadFromDisk(const char* filename) {
+        std::ifstream is(filename, std::ios::binary);
+        ReadFromStream(is);
+    }
+
 };
 
 template <typename Traits>
@@ -273,6 +334,40 @@ struct Entry{
     void Read(istream &is) {
         mbr.Read(is);
         is >> ref;
+    }
+
+    /**
+     * @brief Write Entry to output stream (binary). Note: childNode pointers are not serialized.
+     * @param os Output stream.
+     */
+    void WriteToStream(std::ostream &os) const {
+        mbr.WriteToStream(os);
+        // write ref (leaf reference). If this entry is internal, ref should contain
+        // a meaningful placeholder or be ignored by the higher-level logic.
+        os.write(reinterpret_cast<const char*>(&ref), sizeof(Ref));
+    }
+
+    /**
+     * @brief Read Entry from input stream (binary).
+     * @param is Input stream.
+     */
+    void ReadFromStream(std::istream &is) {
+        mbr.ReadFromStream(is);
+        is.read(reinterpret_cast<char*>(&ref), sizeof(Ref));
+        childNode = nullptr; // pointers cannot be reconstructed here
+    }
+
+    /**
+     * @brief Convenience wrappers for filename-based IO.
+     */
+    void WriteToDisk(const char* filename) const {
+        std::ofstream os(filename, std::ios::binary | std::ios::app);
+        WriteToStream(os);
+    }
+
+    void ReadFromDisk(const char* filename) {
+        std::ifstream is(filename, std::ios::binary);
+        ReadFromStream(is);
     }
 };
 
@@ -675,6 +770,36 @@ private:
                                     const EntryType& entry) const {
         MBRType groupMBR = ComputeGroupMBR(group);
         return groupMBR.increase(entry.mbr);
+    }
+
+    void WriteToDisk(char* filename){
+        std::ofstream file(filename, std::ios::binary);
+        if(!file.is_open()) return;
+        file.write(reinterpret_cast<const char*>(&m_Level), sizeof(size_t));
+        file.write(reinterpret_cast<const char*>(&m_isRoot), sizeof(bool));
+        file.write(reinterpret_cast<const char*>(&m_isLeaf), sizeof(bool));
+        size_t numEntries = m_Entries.size();
+        file.write(reinterpret_cast<const char*>(&numEntries), sizeof(size_t));
+        for(const auto& entry : m_Entries) {
+            entry.WriteToStream(file);
+        }
+        file.close();
+    }
+
+    void ReadFromDisk(char* filename){
+        std::ifstream file(filename, std::ios::binary);
+        if(!file.is_open()) return;
+        file.read(reinterpret_cast<char*>(&m_Level), sizeof(size_t));
+        file.read(reinterpret_cast<char*>(&m_isRoot), sizeof(bool));
+        file.read(reinterpret_cast<char*>(&m_isLeaf), sizeof(bool));
+        size_t numEntries;
+        file.read(reinterpret_cast<char*>(&numEntries), sizeof(size_t));
+        m_Entries.resize(numEntries);
+        for(size_t i = 0; i < numEntries; ++i) {
+            m_Entries[i].ReadFromStream(file);
+        }
+        UpdateMBR();
+        file.close();
     }
 };
 
