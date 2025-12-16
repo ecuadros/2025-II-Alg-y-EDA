@@ -25,7 +25,25 @@ struct Point{
         }
         os << ")";
     }
+
+    void Read(istream &is) {
+        for(size_t i = 0; i < DIM; ++i) {
+            is >> coordinates[i];
+        }
+    }
 };
+
+template <typename Traits>
+std::istream& operator>>(std::istream &is, Point<Traits> &point) {
+    point.Read(is);
+    return is;
+}
+
+template <typename Traits>
+std::ostream& operator<<(std::ostream &os, const Point<Traits> &point) {
+    point.Print(os);
+    return os;
+}
 
 template <typename Traits>
 struct MBR{
@@ -94,24 +112,43 @@ struct MBR{
         os << "]";
     }
 
+    void Read(istream &is) {
+        min.Read(is);
+        max.Read(is);
+    }
+
 };
+
+template <typename Traits>
+std::istream& operator>>(std::istream &is, MBR<Traits> &mbr) {
+    mbr.Read(is);
+    return is;
+}
+
+template <typename Traits>
+std::ostream& operator<<(std::ostream &os, const MBR<Traits> &mbr) {
+    mbr.Print(os);
+    return os;
+}
 
 template <typename Traits>
 struct Entry{
     using value_type = Traits::T;
     using Ref        = Traits::Ref;
     using DIM        = Traits::DIM;
+    using Node       = RNode<Traits>;
+    using MBRType    = MBR<Traits>;
 
 
-    MBR<value_type,DIM>       mbr;
-    Node<value_type,DIM,Ref>* childNode = nullptr; //  internal nodes
-    Ref              ref; //leaf nodes
+    MBRType        mbr;
+    Node*          childNode = nullptr; //  internal nodes
+    Ref            ref; //leaf nodes
 
     Entry() {}
 
-    Entry(const MBR<T,DIM>& mbrBox, Ref reference)
+    Entry(const MBRType& mbrBox, Ref reference)
         : mbr(mbrBox), ref(reference) {}
-    Entry(const MBR<T,DIM>& mbrBox, Node<T,DIM,Ref>* child)
+    Entry(const MBRType& mbrBox, Node* child)
         : mbr(mbrBox), childNode(child) {}
 
     bool isLeafEntry() const {
@@ -127,7 +164,24 @@ struct Entry{
             os << ", ChildNode: " << childNode;
         }
     }
+
+    void Read(istream &is) {
+        mbr.Read(is);
+        is >> ref;
+    }
 };
+
+template <typename Traits>
+std::istream& operator>>(std::istream &is, Entry<Traits> &entry) {
+    entry.Read(is);
+    return is;
+}   
+
+template <typename Traits>  
+std::ostream& operator<<(std::ostream &os, const Entry<Traits> &entry) {
+    entry.Print(os);
+    return os;
+}
 
 // R-Tree Node
 template <typename Traits>
