@@ -63,6 +63,25 @@ class RTree
         return true;
     }
 
+    friend ostream& operator<<(ostream& os, RTree& tree)
+    {
+        tree.m_Root -> Print(os, 0);
+        return os;
+    }
+
+    friend istream& operator>>(istream& is, RTree& tree)
+    {
+        // because we delete existing root
+        delete tree.m_Root;
+
+        tree.m_Root = new NodeType(0);
+        if (!tree.m_Root->Read(is))
+        {
+            delete tree.m_Root;
+            tree.m_Root = new NodeType(0);
+        }
+        return is;
+    }
 
     private:
         NodeType* _Insert(NodeType* node, BranchType& branch)

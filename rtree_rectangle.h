@@ -66,6 +66,50 @@ struct Rectangle
         return *this;
     }
 
+    // print
+    void Print(ostream& os)
+    {
+        os << "[";
+        for(size_t i=0; i<Trait::NumDims; ++i)
+        {
+            os << "(" << (size_t)m_min[i] << ", " << (size_t)m_max[i] << ")";
+            if(i < Trait::NumDims - 1)
+                os << ", ";
+        }
+        os << "]";
+    }
+
+    // Format: [(min, max), (min, max), ...]
+    bool Read(istream& is)
+    {
+        char bracket, paren, comma;
+        ElemType minVal, maxVal;
+
+        is >> bracket;  // '['
+
+        for (size_t i = 0; i < Trait::NumDims; ++i)
+        {
+            is >> paren;    // '('
+            is >> minVal;
+            is >> comma;    // ','
+            is >> maxVal;
+            is >> paren;    // ')'
+
+            m_min[i] = minVal;
+            m_max[i] = maxVal;
+
+            if (i < Trait::NumDims - 1)
+            {
+                is >> comma;  // ','
+            }
+        }
+
+        is >> bracket;  // ']'
+
+        return is.good();
+    }
+
+    // ascii print with | - separators
     void AsciiPrint() const
     {
         for(size_t i=0; i<Trait::NumDims; ++i)

@@ -87,6 +87,65 @@ class RTreeNode
         return mbr;
     }
 
+    void Print(ostream& os, size_t indent = 0)
+    {
+        string tab(indent * 2, ' ');
+        os << tab << "Node Level: " << m_Level << ", Count: " << m_Count << endl;
+        for (size_t i = 0; i < m_Count; i++)
+        {
+            os << tab << " Branch " << i << ": ";
+            m_Branches[i].m_rect.Print(os);
+            if (!isLeaf())
+            {
+                os << endl;
+                m_Branches[i].m_Child->Print(os, indent + 4);
+            }
+            else
+            {
+                os << ", Data ID: " << m_Branches[i].m_Data << endl;
+            }
+        }
+    }
+
+    // format: "Node Level: X, Count: Y"
+    bool Read(istream& is)
+    {
+        string word;
+        char comma;
+
+        // "Node Level: X, Count: Y"
+        is >> word >> word;      // "Node" "Level:"
+        is >> m_Level;           // X
+        is >> comma;             // ","
+        is >> word;              // "Count:"
+        is >> m_Count;           // Y
+
+        if (!is) return false;
+
+        // all branches
+        for (size_t i = 0; i < m_Count; ++i)
+        {
+            is >> word >> word;  // "Branch" "N:"
+
+            if (!m_Branches[i].m_rect.Read(is)) return false;
+
+            if (isLeaf())
+            {
+                // ", Data ID: X"
+                is >> comma;             // ","
+                is >> word >> word;      // "Data" "ID:"
+                is >> m_Branches[i].m_Data;
+                m_Branches[i].m_Child = nullptr;
+            }
+            else
+            {
+                m_Branches[i].m_Child = new NodeType(0);
+                if (!m_Branches[i].m_Child->Read(is)) return false;
+            }
+        }
+        return true;
+    }
+
     void PickSeeds(size_t& seed1, size_t& seed2)
     {
         ElemType maxWaste = -1;
