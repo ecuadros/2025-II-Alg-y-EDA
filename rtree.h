@@ -63,6 +63,13 @@ class RTree
         return true;
     }
 
+    size_t Search(RectType& searchRect, vector<ObjIDType>& results)
+    {
+        results.clear();
+        _Search(m_Root, searchRect, results);
+        return results.size();
+    }
+
     friend ostream& operator<<(ostream& os, RTree& tree)
     {
         tree.m_Root -> Print(os, 0);
@@ -158,6 +165,25 @@ class RTree
             }
 
             return bestIndex;
+        }
+
+        void _Search(NodeType* node, RectType& searchRect, vector<ObjIDType>& results)
+        {
+            for (size_t i = 0; i < node -> m_Count; ++i)
+            {
+                BranchType& branch = node -> m_Branches[i];
+                if (branch.m_rect.Intersects(searchRect))
+                {
+                    if (node -> isLeaf())
+                    {
+                        results.push_back(branch.m_Data);
+                    }
+                    else
+                    {
+                        _Search(branch.m_Child, searchRect, results);
+                    }
+                }
+            }
         }
 };
 
