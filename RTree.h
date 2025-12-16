@@ -117,6 +117,16 @@ struct Rect
         is >> c;
         return is;
     }
+
+    friend bool operator==(const Rect& a, const Rect& b)
+    {
+        for (int i = 0; i < D; ++i)
+        {
+            if (a.min_pt.coords[i] != b.min_pt.coords[i] || a.max_pt.coords[i] != b.max_pt.coords[i])
+                return false;
+        }
+        return true;
+    }
 };
 
 template <typename Traits>
@@ -186,7 +196,7 @@ public:
     CRTree() : root_(new node_type(true)) {}
     ~CRTree() { delete root_; }
 
-    void insert(const rect_type& r, const data_type& data)
+    void insert(const rect_type& r, const data_type& data, bool increase_size = true)
     {
         entry_type e;
         e.mbr = r;
@@ -194,7 +204,7 @@ public:
         e.p_child = nullptr;
 
         insert_entry(root_, e);
-        ++size_;
+        size_ += increase_size;
     }
 
     std::vector<data_type> search(const rect_type& query) const
@@ -213,7 +223,7 @@ public:
         auto& v = leaf->entries_;
         auto it = std::find_if(v.begin(), v.end(), [&](const entry_type& e)
         {
-            return e.data == data;
+            return e.data == data && e.mbr == r;
         });
         if (it == v.end())
             return false;
@@ -553,7 +563,7 @@ private:
         if (node->is_leaf())
         {
             for (const auto& e : node->entries_)
-                insert(e.mbr, e.data);
+                insert(e.mbr, e.data, false);
             return;
         }
         for (const auto& e : node->entries_)
