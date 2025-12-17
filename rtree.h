@@ -1,6 +1,6 @@
 /**
- * @file rtree.h
- * @brief R-Tree
+ * @file Rtree.h
+ * @brief R-Tree N-Dimensional
  * 
  * TODOs:
  *   1. Insert      
@@ -8,7 +8,6 @@
  *   3. RangeQuery    
  *   4. ReadFromDisk  
  *   5. WriteToDisk   
- * 
  */
 
 #ifndef __RTREE_H__
@@ -17,88 +16,122 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <array>
 #include <algorithm>
 #include <limits>
 #include <cmath>
 #include <string>
+#include <stdexcept>
 
 /**
- * @brief Trait para configurar tipos del RTree
- * @tparam _CoordType Tipo de coordenadas (int, float, double)
- * @tparam _DataType  Tipo de datos a almacenar
+ * @brief Trait para configurar el RTree
  */
-template <typename _CoordType, typename _DataType>
+template <typename _CoordType, typename _DataType, size_t _N>
 struct RTreeTrait {
     using CoordType = _CoordType;
     using DataType = _DataType;
+    static const size_t N = _N;
 };
 
 /**
- * @brief MBR - Minimum Bounding Rectangle 
+ * @brief MBR N-Dimensional (Minimum Bounding Rectangle)
  */
-template <typename CoordType>
+template <typename CoordType, size_t N>
 struct MBR {
-    CoordType x_min, y_min, x_max, y_max;
+    std::array<CoordType, N> minCoord;
+    std::array<CoordType, N> maxCoord;
     
-    MBR() : x_min(std::numeric_limits<CoordType>::max()),
-            y_min(std::numeric_limits<CoordType>::max()),
-            x_max(std::numeric_limits<CoordType>::lowest()),
-            y_max(std::numeric_limits<CoordType>::lowest()) {}
+    MBR() {
+        minCoord.fill(std::numeric_limits<CoordType>::max());
+        maxCoord.fill(std::numeric_limits<CoordType>::lowest());
+    }
     
-    MBR(CoordType xmin, CoordType ymin, CoordType xmax, CoordType ymax)
-        : x_min(xmin), y_min(ymin), x_max(xmax), y_max(ymax) {}
+    MBR(const std::array<CoordType, N>& minC, const std::array<CoordType, N>& maxC)
+        : minCoord(minC), maxCoord(maxC) {}
     
+    // Área 
     CoordType Area() const {
-        return (x_max > x_min && y_max > y_min) ? 
-               (x_max - x_min) * (y_max - y_min) : 0;
+        CoordType area = 1;
+        for (size_t i = 0; i < N; ++i) {
+            if (maxCoord[i] <= minCoord[i]) return 0;
+            area *= (maxCoord[i] - minCoord[i]);
+        }
+        return area;
     }
     
+    // Área combinada con otro MBR
     CoordType EnlargedArea(const MBR& o) const {
-        return (std::max(x_max, o.x_max) - std::min(x_min, o.x_min)) *
-               (std::max(y_max, o.y_max) - std::min(y_min, o.y_min));
+        CoordType area = 1;
+        for (size_t i = 0; i < N; ++i) {
+            area *= (std::max(maxCoord[i], o.maxCoord[i]) - 
+                     std::min(minCoord[i], o.minCoord[i]));
+        }
+        return area;
     }
     
-    CoordType Enlargement(const MBR& o) const { return EnlargedArea(o) - Area(); }
+    // Enlargement: cuánto crece el área 
+    CoordType Enlargement(const MBR& o) const { 
+        return EnlargedArea(o) - Area(); 
+    }
     
+    // Expand: expande para contener otro MBR
     void Expand(const MBR& o) {
-        x_min = std::min(x_min, o.x_min); y_min = std::min(y_min, o.y_min);
-        x_max = std::max(x_max, o.x_max); y_max = std::max(y_max, o.y_max);
+        for (size_t i = 0; i < N; ++i) {
+            minCoord[i] = std::min(minCoord[i], o.minCoord[i]);
+            maxCoord[i] = std::max(maxCoord[i], o.maxCoord[i]);
+        }
     }
     
+    // Intersects: verifica solapamiento
     bool Intersects(const MBR& o) const {
-        return !(x_max < o.x_min || x_min > o.x_max ||
-                 y_max < o.y_min || y_min > o.y_max);
+        for (size_t i = 0; i < N; ++i) {
+            if (maxCoord[i] < o.minCoord[i] || minCoord[i] > o.maxCoord[i])
+                return false;
+        }
+        return true;
     }
     
+    // Contains: verifica contención completa
     bool Contains(const MBR& o) const {
-        return x_min <= o.x_min && x_max >= o.x_max &&
-               y_min <= o.y_min && y_max >= o.y_max;
+        for (size_t i = 0; i < N; ++i) {
+            if (minCoord[i] > o.minCoord[i] || maxCoord[i] < o.maxCoord[i])
+                return false;
+        }
+        return true;
     }
     
     bool operator==(const MBR& o) const {
-        return x_min == o.x_min && y_min == o.y_min &&
-               x_max == o.x_max && y_max == o.y_max;
+        return minCoord == o.minCoord && maxCoord == o.maxCoord;
     }
     
     friend std::ostream& operator<<(std::ostream& os, const MBR& r) {
-        return os << "[(" << r.x_min << "," << r.y_min << ")-(" 
-                  << r.x_max << "," << r.y_max << ")]";
+        os << "[(";
+        for (size_t i = 0; i < N; ++i) {
+            os << r.minCoord[i];
+            if (i < N-1) os << ",";
+        }
+        os << ")-(";
+        for (size_t i = 0; i < N; ++i) {
+            os << r.maxCoord[i];
+            if (i < N-1) os << ",";
+        }
+        os << ")]";
+        return os;
     }
 };
 
-// Forward declaration
 template <typename Trait> class RTree;
 
 /**
- * @brief Nodo del R-Tree
- * Contiene entries que pueden ser hojas (con datos)
+ * @brief Nodo del R-Tree N-Dimensional
  */
 template <typename Trait>
 class RTreeNode {
 public:
     using CoordType = typename Trait::CoordType;
     using DataType = typename Trait::DataType;
-    using Rect = MBR<CoordType>;
+    static const size_t N = Trait::N;
+    using Rect = MBR<CoordType, N>;
     
     struct Entry {
         Rect mbr;
@@ -110,11 +143,10 @@ public:
     };
 
 private:
-    std::vector<Entry> entries;     ///< Entradas del nodo
-    RTreeNode* parent;              ///< Puntero al padre (nullptr si es raíz)
-    size_t maxEntries;              ///< M: máximo de entradas
-    size_t minEntries;              ///< m: mínimo de entradas
-    bool isLeaf;                    ///< true si es hoja, false si es interno
+    std::vector<Entry> entries;
+    RTreeNode* parent;
+    size_t maxEntries, minEntries;
+    bool isLeaf;
     friend class RTree<Trait>;
 
 public:
@@ -138,7 +170,7 @@ public:
         return mbr;
     }
     
-    // ChooseLeaf: selecciona hoja con menor expansión de área
+    // ChooseLeaf: Selecciona hoja para inserción
     RTreeNode* ChooseLeaf(const Rect& mbr) {
         if (isLeaf) return this;
         
@@ -149,6 +181,7 @@ public:
         for (auto& e : entries) {
             CoordType enl = e.mbr.Enlargement(mbr);
             CoordType area = e.mbr.Area();
+            // Desempate por menor área
             if (enl < minEnl || (enl == minEnl && area < minArea)) {
                 minEnl = enl; minArea = area; best = e.child;
             }
@@ -156,9 +189,12 @@ public:
         return best->ChooseLeaf(mbr);
     }
     
-    // Split: divide el nodo usando algoritmo cuadrático de Guttman
+    //
+    // Split: Divide nodo usando algoritmo cuadrático
+    // Incluye PickSeeds y PickNext 
+    //
     RTreeNode* Split() {
-        // PickSeeds: encontrar par que maximiza espacio desperdiciado
+        // PickSeeds : encontrar par con mayor desperdicio
         size_t seed1 = 0, seed2 = 1;
         CoordType maxWaste = std::numeric_limits<CoordType>::lowest();
         
@@ -171,7 +207,7 @@ public:
             }
         }
         
-        // Crear nuevo nodo y distribuir semillas
+        // Crear nuevo nodo y asignar semillas a cada grupo
         RTreeNode* newNode = new RTreeNode(maxEntries, minEntries, isLeaf);
         newNode->parent = parent;
         std::vector<Entry> allEntries = std::move(entries);
@@ -186,7 +222,7 @@ public:
         
         // PickNext: distribuir resto de entradas
         while (remaining > 0) {
-            // Si un grupo necesita todas las restantes para minEntries
+            // QS2: Si un grupo necesita todas las restantes para tener m
             if (entries.size() + remaining == minEntries) {
                 for (size_t i = 0; i < allEntries.size(); ++i)
                     if (!assigned[i]) { entries.push_back(allEntries[i]); assigned[i] = true; }
@@ -202,23 +238,36 @@ public:
             Rect mbr1 = ComputeMBR(), mbr2 = newNode->ComputeMBR();
             size_t bestIdx = 0;
             CoordType maxDiff = std::numeric_limits<CoordType>::lowest();
-            bool assignToFirst = true;
+            CoordType bestD1 = 0, bestD2 = 0;
             
             for (size_t i = 0; i < allEntries.size(); ++i) {
                 if (assigned[i]) continue;
                 CoordType d1 = mbr1.Enlargement(allEntries[i].mbr);
                 CoordType d2 = mbr2.Enlargement(allEntries[i].mbr);
-                if (std::abs(d1 - d2) > maxDiff) {
-                    maxDiff = std::abs(d1 - d2); bestIdx = i; assignToFirst = (d1 <= d2);
+                CoordType diff = std::abs(d1 - d2);
+                if (diff > maxDiff) {
+                    maxDiff = diff; bestIdx = i; bestD1 = d1; bestD2 = d2;
                 }
             }
             
-            (assignToFirst ? entries : newNode->entries).push_back(allEntries[bestIdx]);
+            // Asignar al grupo con menor enlargement, desempatar por área y cantidad
+            if (bestD1 < bestD2) {
+                entries.push_back(allEntries[bestIdx]);
+            } else if (bestD2 < bestD1) {
+                newNode->entries.push_back(allEntries[bestIdx]);
+            } else {
+                // Desempate por área, luego por cantidad de entradas
+                CoordType area1 = mbr1.Area(), area2 = mbr2.Area();
+                if (area1 < area2 || (area1 == area2 && entries.size() <= newNode->entries.size()))
+                    entries.push_back(allEntries[bestIdx]);
+                else
+                    newNode->entries.push_back(allEntries[bestIdx]);
+            }
             assigned[bestIdx] = true;
             --remaining;
         }
         
-        // Actualizar padres si es nodo interno
+        // Actualizar punteros padre en nodos internos
         if (!isLeaf) {
             for (auto& e : entries) if (e.child) e.child->parent = this;
             for (auto& e : newNode->entries) if (e.child) e.child->parent = newNode;
@@ -226,7 +275,9 @@ public:
         return newNode;
     }
     
-    // RangeQuery: búsqueda por rango
+    //
+    // RangeQuery: Búsqueda por rango
+    //
     void RangeQuery(const Rect& query, std::vector<std::pair<Rect, DataType>>& results) const {
         for (const auto& e : entries) {
             if (e.mbr.Intersects(query)) {
@@ -236,7 +287,9 @@ public:
         }
     }
     
-    // FindLeaf: encuentra nodo hoja que contiene una entrada
+    //
+    // FindLeaf: Encuentra hoja que contiene entrada
+    //
     RTreeNode* FindLeaf(const Rect& mbr, const DataType& data, size_t& idx) {
         if (isLeaf) {
             for (size_t i = 0; i < entries.size(); ++i) {
@@ -246,8 +299,9 @@ public:
             }
             return nullptr;
         }
+        // Usar Intersects como dice el paper
         for (auto& e : entries) {
-            if (e.mbr.Contains(mbr)) {
+            if (e.mbr.Intersects(mbr)) {
                 RTreeNode* found = e.child->FindLeaf(mbr, data, idx);
                 if (found) return found;
             }
@@ -255,7 +309,7 @@ public:
         return nullptr;
     }
     
-    // CollectEntries: recolecta entradas hoja para reinserción
+    // CollectEntries: recolecta entradas para reinserción 
     void CollectEntries(std::vector<std::pair<Rect, DataType>>& result) {
         if (isLeaf) {
             for (const auto& e : entries) result.push_back({e.mbr, e.data});
@@ -264,18 +318,16 @@ public:
         }
     }
     
-    // Write: escribe nodo a stream
     void Write(std::ostream& os) const {
         os << isLeaf << " " << entries.size() << "\n";
         for (const auto& e : entries) {
-            os << e.mbr.x_min << " " << e.mbr.y_min << " "
-               << e.mbr.x_max << " " << e.mbr.y_max << " ";
+            for (size_t i = 0; i < N; ++i) os << e.mbr.minCoord[i] << " ";
+            for (size_t i = 0; i < N; ++i) os << e.mbr.maxCoord[i] << " ";
             if (isLeaf) os << e.data << "\n";
             else { os << "\n"; e.child->Write(os); }
         }
     }
     
-    // Read: lee nodo desde stream
     void Read(std::istream& is) {
         size_t count;
         is >> isLeaf >> count;
@@ -283,7 +335,8 @@ public:
         
         for (size_t i = 0; i < count; ++i) {
             Entry e;
-            is >> e.mbr.x_min >> e.mbr.y_min >> e.mbr.x_max >> e.mbr.y_max;
+            for (size_t d = 0; d < N; ++d) is >> e.mbr.minCoord[d];
+            for (size_t d = 0; d < N; ++d) is >> e.mbr.maxCoord[d];
             if (isLeaf) {
                 is >> e.data; e.child = nullptr;
             } else {
@@ -295,44 +348,46 @@ public:
         }
     }
     
-    // Print: imprime nodo recursivamente
     void Print(std::ostream& os, int level = 0) const {
         std::string indent(level * 2, ' ');
-        os << indent << "[" << (isLeaf ? "HOJA" : "INTERNO") << "] " 
+        os << indent << "[" << (isLeaf ? "Hoja" : "Interno") << "] " 
            << ComputeMBR() << " (n=" << entries.size() << ")\n";
         
         for (size_t i = 0; i < entries.size(); ++i) {
             os << indent << "  " << entries[i].mbr;
-            if (isLeaf) os << " -> data=" << entries[i].data << "\n";
+            if (isLeaf) os << " -> " << entries[i].data << "\n";
             else { os << "\n"; entries[i].child->Print(os, level + 2); }
         }
     }
 };
 
 /**
- * @brief R-Tree 
- * @tparam Trait Configuración de tipos (RTreeTrait)
-*/
+ * @brief R-Tree N-Dimensional
+ */
 template <typename Trait>
 class RTree {
 public:
     using CoordType = typename Trait::CoordType;
     using DataType = typename Trait::DataType;
-    using Rect = MBR<CoordType>;
+    static const size_t N = Trait::N;
+    using Rect = MBR<CoordType, N>;
     using Node = RTreeNode<Trait>;
     using Entry = typename Node::Entry;
+    using Point = std::array<CoordType, N>;
 
 private:
-    Node* root;           ///< Raíz del árbol
-    size_t maxEntries;    ///< M: máximo entradas por nodo
-    size_t minEntries;    ///< m: mínimo entradas por nodo  
-    size_t height;        ///< Altura del árbol
-    size_t numEntries;    ///< Total de elementos insertados
+    Node* root;
+    size_t maxEntries, minEntries, height, numEntries;
 
 public:
-    // Constructor: M = max entradas, m = min entradas
+    
+    // Constructor
     RTree(size_t M = 4, size_t m = 2) 
         : maxEntries(M), minEntries(m), height(1), numEntries(0) {
+        if (m > M/2) 
+            throw std::invalid_argument("Error: m debe ser <= M/2 ");
+        if (M < 2)
+            throw std::invalid_argument("Error: M debe ser >= 2");
         root = new Node(M, m, true);
     }
     
@@ -341,23 +396,29 @@ public:
     size_t Size() const { return numEntries; }
     size_t Height() const { return height; }
 
-    // 1. INSERCIÓN
-    void Insert(CoordType x1, CoordType y1, CoordType x2, CoordType y2, 
-                const DataType& data) {
-        Rect mbr(x1, y1, x2, y2);
-        Node* leaf = root->ChooseLeaf(mbr);
-        leaf->entries.push_back(Entry(mbr, data));
-        AdjustTree(leaf);
+    //
+    // Insert: Inserta nueva entrada
+    //
+    void Insert(const Point& minP, const Point& maxP, const DataType& data) {
+        Rect mbr(minP, maxP);
+        Node* leaf = root->ChooseLeaf(mbr);  
+        leaf->entries.push_back(Entry(mbr, data)); 
+        AdjustTree(leaf);  
+        // Crecimiento de raíz se maneja en AdjustTree
         ++numEntries;
     }
 
 private:
-    // AdjustTree: propaga cambios hacia la raíz
+    //
+    // AdjustTree: Propaga cambios hacia la raíz
+    //
     void AdjustTree(Node* node) {
         Node* splitNode = node->IsOverflow() ? node->Split() : nullptr;
         
+        // Si es raíz, verificar si hay split
         if (node == root) {
             if (splitNode) {
+                // Crear nueva raíz
                 Node* newRoot = new Node(maxEntries, minEntries, false);
                 newRoot->entries.push_back(Entry(node->ComputeMBR(), node));
                 newRoot->entries.push_back(Entry(splitNode->ComputeMBR(), splitNode));
@@ -368,30 +429,35 @@ private:
             return;
         }
         
+        // Ajustar MBR del padre
         Node* parent = node->parent;
         for (auto& e : parent->entries)
             if (e.child == node) { e.mbr = node->ComputeMBR(); break; }
         
+        // Propagar split
         if (splitNode) {
             parent->entries.push_back(Entry(splitNode->ComputeMBR(), splitNode));
             splitNode->parent = parent;
         }
+        
+        // Subir al siguiente nivel
         AdjustTree(parent);
     }
 
 public:
-    // 2. BORRADO
-     bool Remove(CoordType x1, CoordType y1, CoordType x2, CoordType y2, 
-                const DataType& data) {
-        Rect mbr(x1, y1, x2, y2);
+    //
+    // Remove: Elimina entrada del árbol
+    //
+    bool Remove(const Point& minP, const Point& maxP, const DataType& data) {
+        Rect mbr(minP, maxP);
         size_t idx;
-        Node* leaf = root->FindLeaf(mbr, data, idx);
+        Node* leaf = root->FindLeaf(mbr, data, idx);  
         if (!leaf) return false;
         
-        leaf->entries.erase(leaf->entries.begin() + idx);
+        leaf->entries.erase(leaf->entries.begin() + idx);  
         
         std::vector<std::pair<Rect, DataType>> orphans;
-        CondenseTree(leaf, orphans);
+        CondenseTree(leaf, orphans);  
         
         // Reducir altura si raíz tiene un solo hijo
         while (!root->IsLeaf() && root->Size() == 1) {
@@ -403,21 +469,24 @@ public:
             --height;
         }
         
-        // Reinsertar huérfanos
+        // Reinsertar entradas de nodos eliminados
         for (const auto& o : orphans) {
-            Insert(o.first.x_min, o.first.y_min, o.first.x_max, o.first.y_max, o.second);
-            --numEntries;
+            Insert(o.first.minCoord, o.first.maxCoord, o.second);
+            --numEntries;  // Compensar incremento de Insert
         }
         --numEntries;
         return true;
     }
 
 private:
-    // CondenseTree: rebalancea después de eliminación
+    //
+    // CondenseTree: Rebalancea después de eliminación
+    //
     void CondenseTree(Node* node, std::vector<std::pair<Rect, DataType>>& orphans) {
-        if (node == root) return;
+        if (node == root) return;  
         Node* parent = node->parent;
         
+        // Eliminar nodo con underflow
         if (node->IsUnderflow()) {
             node->CollectEntries(orphans);
             for (auto it = parent->entries.begin(); it != parent->entries.end(); ++it) {
@@ -426,56 +495,52 @@ private:
             if (!node->isLeaf) node->entries.clear();
             delete node;
         } else {
+            // Ajustar MBR
             for (auto& e : parent->entries)
                 if (e.child == node) { e.mbr = node->ComputeMBR(); break; }
         }
+        // Subir nivel
         CondenseTree(parent, orphans);
     }
 
 public:
-    // 3. RANGE QUERY
-    std::vector<std::pair<Rect, DataType>> RangeQuery(
-            CoordType x1, CoordType y1, CoordType x2, CoordType y2) const {
+    //
+    // RangeQuery: Búsqueda espacial
+    //
+    std::vector<std::pair<Rect, DataType>> RangeQuery(const Point& minP, const Point& maxP) const {
         std::vector<std::pair<Rect, DataType>> results;
-        root->RangeQuery(Rect(x1, y1, x2, y2), results);
+        root->RangeQuery(Rect(minP, maxP), results);
         return results;
     }
-    
-    std::vector<std::pair<Rect, DataType>> SearchPoint(CoordType x, CoordType y) const {
-        return RangeQuery(x, y, x, y);
-    }
 
-    // 4. READ FROM DISK
     void ReadFromDisk(const std::string& filename) {
         std::ifstream file(filename);
         if (!file.is_open()) throw std::runtime_error("No se pudo abrir: " + filename);
         
+        size_t dims;
         delete root;
-        file >> maxEntries >> minEntries >> height >> numEntries;
+        file >> dims >> maxEntries >> minEntries >> height >> numEntries;
         root = new Node(maxEntries, minEntries, true);
         root->Read(file);
         file.close();
-        std::cout << "R-Tree cargado desde '" << filename << "' (" << numEntries << " entradas)\n";
+        std::cout << "R-Tree " << N << "D cargado (" << numEntries << " entradas)\n";
     }
 
-    // 5. WRITE TO DISK
     void WriteToDisk(const std::string& filename) const {
         std::ofstream file(filename);
         if (!file.is_open()) throw std::runtime_error("No se pudo crear: " + filename);
         
-        file << maxEntries << " " << minEntries << " " << height << " " << numEntries << "\n";
+        file << N << " " << maxEntries << " " << minEntries << " " << height << " " << numEntries << "\n";
         root->Write(file);
         file.close();
-        std::cout << "R-Tree guardado en '" << filename << "' (" << numEntries << " entradas)\n";
+        std::cout << "R-Tree " << N << "D guardado (" << numEntries << " entradas)\n";
     }
 
-    // Imprimir árbol
     void Print(std::ostream& os = std::cout) const {
-        os << "\n=== R-TREE [M=" << maxEntries << ", m=" << minEntries 
+        os << "\n=== R-Tree " << N << "D [M=" << maxEntries << ", m=" << minEntries 
            << ", h=" << height << ", n=" << numEntries << "] ===\n";
         root->Print(os);
-        os << "==================\n";
     }
 };
 
-#endif 
+#endif
