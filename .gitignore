@@ -2,4 +2,5 @@ main
 *.o
 main.dSYM
 *.txt
+*.zip
 generated-docs/
